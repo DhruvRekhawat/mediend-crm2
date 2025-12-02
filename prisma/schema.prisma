@@ -1,0 +1,275 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  MD
+  SALES_HEAD
+  TEAM_LEAD
+  BD
+  INSURANCE_HEAD
+  PL_HEAD
+  HR_HEAD
+  ADMIN
+}
+
+enum Circle {
+  North
+  South
+  East
+  West
+  Central
+}
+
+enum PipelineStage {
+  SALES
+  INSURANCE
+  PL
+  COMPLETED
+  LOST
+}
+
+enum TargetType {
+  BD
+  TEAM
+}
+
+enum PeriodType {
+  WEEK
+  MONTH
+}
+
+enum TargetMetric {
+  LEADS_CLOSED
+  NET_PROFIT
+  BILL_AMOUNT
+  SURGERIES_DONE
+}
+
+enum BonusRuleType {
+  PERCENT_ABOVE_TARGET
+  FIXED_COUNT
+}
+
+enum InsuranceCaseStatus {
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  QUERY
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  role          UserRole
+  teamId        String?
+  team          Team?    @relation("TeamMembers", fields: [teamId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  createdLeads          Lead[]              @relation("LeadCreator")
+  assignedLeads         Lead[]              @relation("LeadBD")
+  updatedLeads           Lead[]              @relation("LeadUpdater")
+  leadStageEvents       LeadStageEvent[]
+  createdTargets        Target[]            @relation("TargetCreator")
+  salesHeadTeams        Team[]              @relation("SalesHead")
+  insuranceCases        InsuranceCase[]
+  plRecords             PLRecord[]
+
+  @@index([email])
+  @@index([role])
+  @@index([teamId])
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  circle      Circle
+  salesHeadId String
+  salesHead   User     @relation("SalesHead", fields: [salesHeadId], references: [id])
+  members     User[]   @relation("TeamMembers")
+  targets     Target[] @relation
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([salesHeadId])
+  @@index([circle])
+}
+
+model Lead {
+  id                String        @id @default(cuid())
+  leadRef           String        @unique
+  patientName       String
+  age               Int
+  sex               String
+  phoneNumber       String
+  alternateNumber   String?
+  attendantName     String?
+  bdId              String
+  bd                User          @relation("LeadBD", fields: [bdId], references: [id])
+  status            String
+  pipelineStage     PipelineStage @default(SALES)
+  circle            Circle
+  city              String
+  category          String?
+  treatment         String
+  anesthesia        String?
+  quantityGrade     String?
+  surgeonName       String?
+  surgeonType       String?
+  hospitalName      String
+  modeOfPayment     String?
+  discount          Float         @default(0)
+  copay             Float         @default(0)
+  deduction         Float         @default(0)
+  settledTotal      Float         @default(0)
+  billAmount        Float         @default(0)
+  insuranceName     String?
+  tpa               String?
+  sumInsured        Float?
+  roomRent          Float?
+  icu               Float?
+  capping            Float?
+  arrivalDate       DateTime?
+  arrivalTime       String?
+  surgeryDate       DateTime?
+  operationTime     String?
+  implantType       String?
+  implantAmount     Float         @default(0)
+  instrument        String?
+  consumables       String?
+  createdById       String
+  createdBy         User          @relation("LeadCreator", fields: [createdById], references: [id])
+  createdDate       DateTime      @default(now())
+  updatedById       String
+  updatedBy         User          @relation("LeadUpdater", fields: [updatedById], references: [id])
+  updatedDate       DateTime      @updatedAt
+  remarks           String?
+  source            String?
+  campaignName      String?
+  bdeName           String?
+  conversionDate    DateTime?
+  mediendProfit     Float         @default(0)
+  hospitalShare     Float         @default(0)
+  doctorShare       Float         @default(0)
+  othersShare       Float         @default(0)
+  netProfit         Float         @default(0)
+  ticketSize        Float         @default(0)
+
+  // Relations
+  stageEvents       LeadStageEvent[]
+  insuranceCase     InsuranceCase?
+  plRecord          PLRecord?
+
+  @@index([bdId])
+  @@index([status])
+  @@index([pipelineStage])
+  @@index([circle])
+  @@index([city])
+  @@index([hospitalName])
+  @@index([treatment])
+  @@index([source])
+  @@index([createdDate])
+  @@index([conversionDate])
+  @@index([surgeryDate])
+}
+
+model LeadStageEvent {
+  id          String        @id @default(cuid())
+  leadId      String
+  lead        Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fromStage   PipelineStage
+  toStage     PipelineStage
+  changedById String
+  changedBy   User          @relation(fields: [changedById], references: [id])
+  changedAt   DateTime      @default(now())
+  note        String?
+
+  @@index([leadId])
+  @@index([changedAt])
+}
+
+model Target {
+  id            String        @id @default(cuid())
+  targetType    TargetType
+  targetForId   String // Can be User.id or Team.id depending on targetType
+  teamId        String?
+  team          Team?         @relation(fields: [teamId], references: [id])
+  periodType    PeriodType
+  periodStartDate DateTime
+  periodEndDate   DateTime
+  metric        TargetMetric
+  targetValue   Float
+  createdById   String
+  createdBy     User          @relation("TargetCreator", fields: [createdById], references: [id])
+  bonusRules    BonusRule[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([targetType, targetForId])
+  @@index([periodStartDate, periodEndDate])
+  @@index([teamId])
+}
+
+model BonusRule {
+  id              String          @id @default(cuid())
+  targetId        String
+  target          Target          @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  ruleType        BonusRuleType
+  thresholdValue  Float
+  bonusAmount     Float?
+  bonusPercentage Float?
+  capAmount       Float?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([targetId])
+}
+
+model InsuranceCase {
+  id            String              @id @default(cuid())
+  leadId        String              @unique
+  lead          Lead                @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  caseStatus    InsuranceCaseStatus @default(IN_PROGRESS)
+  approvalAmount Float?
+  tpaRemarks    String?
+  submittedAt   DateTime            @default(now())
+  approvedAt    DateTime?
+  handledById   String?
+  handledBy     User?               @relation(fields: [handledById], references: [id])
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([leadId])
+  @@index([caseStatus])
+  @@index([submittedAt])
+}
+
+model PLRecord {
+  id                  String    @id @default(cuid())
+  leadId              String    @unique
+  lead                Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  finalProfit         Float     @default(0)
+  hospitalPayoutStatus String?  // e.g., "PENDING", "PAID", "PARTIAL"
+  doctorPayoutStatus   String?   // e.g., "PENDING", "PAID", "PARTIAL"
+  mediendInvoiceStatus String?  // e.g., "PENDING", "SENT", "PAID"
+  closedAt            DateTime?
+  handledById         String?
+  handledBy           User?     @relation(fields: [handledById], references: [id])
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([leadId])
+  @@index([closedAt])
+}
+
