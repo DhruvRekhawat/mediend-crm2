@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
         },
       })
 
-      const leaderboard = bdStats.map((stat) => {
+      const leaderboard = bdStats.map((stat: any) => {
         const bd = bds.find((b) => b.id === stat.bdId)
         return {
           bdId: stat.bdId,
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
 
       const teamMap = new Map<string, { name: string; closedLeads: number; netProfit: number }>()
 
-      teamStats.forEach((stat) => {
+      teamStats.forEach((stat: any) => {
         const bd = bds.find((b) => b.id === stat.bdId)
         if (bd?.team) {
           const existing = teamMap.get(bd.team.id) || { name: bd.team.name, closedLeads: 0, netProfit: 0 }
