@@ -33,7 +33,7 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
   return response.data as T
 }
 
-export async function apiPost<T>(endpoint: string, data: any): Promise<T> {
+export async function apiPost<T>(endpoint: string, data: unknown): Promise<T> {
   const response = await apiRequest<T>(endpoint, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -44,7 +44,7 @@ export async function apiPost<T>(endpoint: string, data: any): Promise<T> {
   return response.data as T
 }
 
-export async function apiPatch<T>(endpoint: string, data: any): Promise<T> {
+export async function apiPatch<T>(endpoint: string, data: unknown): Promise<T> {
   const response = await apiRequest<T>(endpoint, {
     method: 'PATCH',
     body: JSON.stringify(data),

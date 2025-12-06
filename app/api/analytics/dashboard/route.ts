@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma, Circle } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -21,16 +22,16 @@ export async function GET(request: NextRequest) {
     const circle = searchParams.get('circle')
     const city = searchParams.get('city')
 
-    const dateFilter: any = {}
+    const dateFilter: Prisma.DateTimeFilter = {}
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
-    const where: any = {
+    const where: Prisma.LeadWhereInput = {
       pipelineStage: 'COMPLETED',
       conversionDate: dateFilter,
     }
 
-    if (circle) where.circle = circle
+    if (circle) where.circle = circle as Circle
     if (city) where.city = city
 
     // Role-based filtering

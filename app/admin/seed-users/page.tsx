@@ -7,18 +7,33 @@ import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Loader2, Users } from 'lucide-react'
 
+interface SeedUser {
+  role: string
+  email: string
+  password?: string
+}
+
+interface SeedResult {
+  message: string
+  users: SeedUser[]
+}
+
 export default function SeedUsersPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<SeedResult | null>(null)
 
   const handleSeed = async () => {
     setIsLoading(true)
     try {
-      const data = await apiPost('/api/admin/seed-users', {})
+      const data = await apiPost<SeedResult>('/api/admin/seed-users', {})
       setResult(data)
       toast.success('Users created successfully!')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to seed users')
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Failed to seed users')
+      } else {
+        toast.error('Failed to seed users')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -71,7 +86,7 @@ export default function SeedUsersPage() {
                   Users Created Successfully!
                 </h3>
                 <div className="space-y-2 text-sm">
-                  {result.users?.map((user: any, idx: number) => (
+                  {result.users?.map((user, idx) => (
                     <div key={idx} className="p-2 bg-white dark:bg-gray-800 rounded border">
                       <div className="font-medium">{user.role}</div>
                       <div className="text-muted-foreground">

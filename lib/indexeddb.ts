@@ -5,7 +5,7 @@ interface MediendDB extends DBSchema {
     key: string
     value: {
       key: string
-      data: any
+      data: unknown
       timestamp: number
     }
     indexes: { 'by-timestamp': number }
@@ -14,7 +14,7 @@ interface MediendDB extends DBSchema {
     key: string
     value: {
       key: string
-      data: any
+      data: unknown
       timestamp: number
     }
     indexes: { 'by-timestamp': number }
@@ -23,7 +23,7 @@ interface MediendDB extends DBSchema {
     key: string
     value: {
       key: string
-      data: any
+      data: unknown
       timestamp: number
     }
   }
@@ -60,7 +60,7 @@ export async function getDB(): Promise<IDBPDatabase<MediendDB>> {
   return dbInstance
 }
 
-export async function cacheLeads(key: string, data: any): Promise<void> {
+export async function cacheLeads<T>(key: string, data: T): Promise<void> {
   const db = await getDB()
   await db.put('leads', {
     key,
@@ -69,7 +69,7 @@ export async function cacheLeads(key: string, data: any): Promise<void> {
   })
 }
 
-export async function getCachedLeads(key: string): Promise<any | null> {
+export async function getCachedLeads<T>(key: string): Promise<T | null> {
   const db = await getDB()
   const cached = await db.get('leads', key)
   if (!cached) return null
@@ -81,10 +81,10 @@ export async function getCachedLeads(key: string): Promise<any | null> {
     return null
   }
 
-  return cached.data
+  return cached.data as T
 }
 
-export async function cacheAnalytics(key: string, data: any): Promise<void> {
+export async function cacheAnalytics<T>(key: string, data: T): Promise<void> {
   const db = await getDB()
   await db.put('analytics', {
     key,
@@ -93,7 +93,7 @@ export async function cacheAnalytics(key: string, data: any): Promise<void> {
   })
 }
 
-export async function getCachedAnalytics(key: string): Promise<any | null> {
+export async function getCachedAnalytics<T>(key: string): Promise<T | null> {
   const db = await getDB()
   const cached = await db.get('analytics', key)
   if (!cached) return null
@@ -105,10 +105,10 @@ export async function getCachedAnalytics(key: string): Promise<any | null> {
     return null
   }
 
-  return cached.data
+  return cached.data as T
 }
 
-export async function saveFilters(key: string, filters: any): Promise<void> {
+export async function saveFilters<T>(key: string, filters: T): Promise<void> {
   const db = await getDB()
   await db.put('filters', {
     key,
@@ -117,10 +117,10 @@ export async function saveFilters(key: string, filters: any): Promise<void> {
   })
 }
 
-export async function getFilters(key: string): Promise<any | null> {
+export async function getFilters<T>(key: string): Promise<T | null> {
   const db = await getDB()
   const cached = await db.get('filters', key)
-  return cached?.data || null
+  return (cached?.data as T) || null
 }
 
 export async function clearCache(): Promise<void> {

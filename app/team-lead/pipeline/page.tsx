@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/protected-route'
 import { KanbanBoard } from '@/components/kanban-board'
 import { useAuth } from '@/hooks/use-auth'
 import { useState } from 'react'
+import { User } from '@prisma/client'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { useLead } from '@/hooks/use-leads'
 import { Button } from '@/components/ui/button'
@@ -20,11 +21,11 @@ export default function TeamLeadPipelinePage() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const { lead, updateLead } = useLead(selectedLeadId)
 
-  const { data: teamBDs } = useQuery<any[]>({
+  const { data: teamBDs } = useQuery<User[]>({
     queryKey: ['users', 'team', user?.teamId],
     queryFn: async () => {
       if (!user?.teamId) return []
-      return apiGet<any[]>(`/api/users?teamId=${user.teamId}&role=BD`)
+      return apiGet<User[]>(`/api/users?teamId=${user.teamId}&role=BD`)
     },
     enabled: !!user?.teamId,
   })
@@ -91,7 +92,7 @@ export default function TeamLeadPipelinePage() {
                   <div>
                     <Label>Assign to BD</Label>
                     <Select
-                      value={lead.bdId}
+                      value={(lead.bdId as string) || ''}
                       onValueChange={handleReassign}
                     >
                       <SelectTrigger>
@@ -100,7 +101,7 @@ export default function TeamLeadPipelinePage() {
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        {teamBDs?.map((bd: any) => (
+                        {teamBDs?.map((bd: User) => (
                           <SelectItem key={bd.id} value={bd.id}>
                             {bd.name} ({bd.email})
                           </SelectItem>

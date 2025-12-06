@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma, InsuranceCaseStatus } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate')
     const caseStatus = searchParams.get('caseStatus')
 
-    const where: any = {
+    const where: Prisma.InsuranceCaseWhereInput = {
       lead: {
         pipelineStage: 'INSURANCE',
       },
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (caseStatus) {
-      where.caseStatus = caseStatus
+      where.caseStatus = caseStatus as InsuranceCaseStatus
     }
 
     const cases = await prisma.insuranceCase.findMany({

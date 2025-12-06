@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { hashPassword } from '@/lib/auth'
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role')
     const teamId = searchParams.get('teamId')
 
-    const where: any = {}
-    if (role) where.role = role
+    const where: Prisma.UserWhereInput = {}
+    // if (role) where.role = role 
     if (teamId) where.teamId = teamId
 
     const users = await prisma.user.findMany({
@@ -97,11 +98,11 @@ export async function POST(request: NextRequest) {
     const { passwordHash: _passwordHash, ...safeUser } = newUser
 
     return successResponse(safeUser, 'User created successfully')
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse('Invalid request data', 400)
     }
-    if (error.code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return errorResponse('Email already exists', 400)
     }
     console.error('Error creating user:', error)

@@ -13,6 +13,28 @@ import { toast } from 'sonner'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
+import { Lead } from '@/hooks/use-leads'
+
+interface TeamReport {
+  teamName: string
+  closedLeads: number
+  netProfit: number
+}
+
+interface BDReport {
+  bdName: string
+  teamName?: string
+  closedLeads: number
+  netProfit: number
+}
+
+interface HospitalReport {
+  hospital: string
+  count: number
+  profit: number
+}
+
+type ReportData = TeamReport | BDReport | HospitalReport
 
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<'team' | 'bd' | 'hospital'>('team')
@@ -35,8 +57,12 @@ export default function ReportsPage() {
       const data = await fetchReportData()
       exportToPDF(data, reportType, dateRange)
       toast.success('PDF exported successfully')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to export PDF')
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Failed to export PDF')
+      } else {
+        toast.error('Failed to export PDF')
+      }
     }
   }
 
@@ -45,8 +71,12 @@ export default function ReportsPage() {
       const data = await fetchReportData()
       exportToExcel(data, reportType, dateRange)
       toast.success('Excel file exported successfully')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to export Excel')
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Failed to export Excel')
+      } else {
+        toast.error('Failed to export Excel')
+      }
     }
   }
 
@@ -59,11 +89,11 @@ export default function ReportsPage() {
 
     switch (reportType) {
       case 'team':
-        return apiGet<any[]>(`/api/analytics/leaderboard?type=team&${params.toString()}`)
+        return apiGet<TeamReport[]>(`/api/analytics/leaderboard?type=team&${params.toString()}`)
       case 'bd':
-        return apiGet<any[]>(`/api/analytics/leaderboard?type=bd&${params.toString()}`)
+        return apiGet<BDReport[]>(`/api/analytics/leaderboard?type=bd&${params.toString()}`)
       case 'hospital':
-        const leads = await apiGet<any[]>(`/api/leads?${params.toString()}&pipelineStage=COMPLETED`)
+        const leads = await apiGet<Lead[]>(`/api/leads?${params.toString()}&pipelineStage=COMPLETED`)
         return groupByHospital(leads)
       default:
         return []
@@ -87,7 +117,7 @@ export default function ReportsPage() {
             <CardContent className="space-y-4">
               <div>
                 <Label>Report Type</Label>
-                <Select value={reportType} onValueChange={(value: any) => setReportType(value)}>
+                <Select value={reportType} onValueChange={(value: 'team' | 'bd' | 'hospital') => setReportType(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -165,7 +195,7 @@ export default function ReportsPage() {
   )
 }
 
-function exportToPDF(data: any[], reportType: string, dateRange: { startDate: string; endDate: string }) {
+function exportToPDF(data: ReportData[], reportType: string, dateRange: { startDate: string; endDate: string }) {
   const doc = new jsPDF()
   const title = `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Performance Report`
   const period = `${dateRange.startDate} to ${dateRange.endDate}`
@@ -175,12 +205,13 @@ function exportToPDF(data: any[], reportType: string, dateRange: { startDate: st
   doc.setFontSize(12)
   doc.text(`Period: ${period}`, 14, 30)
 
-  let tableData: any[][] = []
+  let tableData: (string | number)[][] = []
   let columns: string[] = []
 
   if (reportType === 'team') {
     columns = ['Rank', 'Team Name', 'Closed Leads', 'Net Profit']
-    tableData = data.map((team, idx) => [
+    const teamData = data as TeamReport[]
+    tableData = teamData.map((team, idx) => [
       idx + 1,
       team.teamName,
       team.closedLeads,
@@ -188,7 +219,8 @@ function exportToPDF(data: any[], reportType: string, dateRange: { startDate: st
     ])
   } else if (reportType === 'bd') {
     columns = ['Rank', 'BD Name', 'Team', 'Closed Leads', 'Net Profit']
-    tableData = data.map((bd, idx) => [
+    const bdData = data as BDReport[]
+    tableData = bdData.map((bd, idx) => [
       idx + 1,
       bd.bdName,
       bd.teamName || 'No Team',
@@ -197,7 +229,8 @@ function exportToPDF(data: any[], reportType: string, dateRange: { startDate: st
     ])
   } else if (reportType === 'hospital') {
     columns = ['Rank', 'Hospital', 'Surgeries', 'Net Profit']
-    tableData = data.map((hosp, idx) => [
+    const hospitalData = data as HospitalReport[]
+    tableData = hospitalData.map((hosp, idx) => [
       idx + 1,
       hosp.hospital,
       hosp.count,
@@ -214,18 +247,20 @@ function exportToPDF(data: any[], reportType: string, dateRange: { startDate: st
   doc.save(`${reportType}-performance-${dateRange.startDate}-${dateRange.endDate}.pdf`)
 }
 
-function exportToExcel(data: any[], reportType: string, dateRange: { startDate: string; endDate: string }) {
-  let worksheetData: any[] = []
+function exportToExcel(data: ReportData[], reportType: string, dateRange: { startDate: string; endDate: string }) {
+  let worksheetData: unknown[] = []
 
   if (reportType === 'team') {
-    worksheetData = data.map((team, idx) => ({
+    const teamData = data as TeamReport[]
+    worksheetData = teamData.map((team, idx) => ({
       Rank: idx + 1,
       'Team Name': team.teamName,
       'Closed Leads': team.closedLeads,
       'Net Profit': team.netProfit,
     }))
   } else if (reportType === 'bd') {
-    worksheetData = data.map((bd, idx) => ({
+    const bdData = data as BDReport[]
+    worksheetData = bdData.map((bd, idx) => ({
       Rank: idx + 1,
       'BD Name': bd.bdName,
       Team: bd.teamName || 'No Team',
@@ -233,7 +268,8 @@ function exportToExcel(data: any[], reportType: string, dateRange: { startDate: 
       'Net Profit': bd.netProfit,
     }))
   } else if (reportType === 'hospital') {
-    worksheetData = data.map((hosp, idx) => ({
+    const hospitalData = data as HospitalReport[]
+    worksheetData = hospitalData.map((hosp, idx) => ({
       Rank: idx + 1,
       Hospital: hosp.hospital,
       Surgeries: hosp.count,
@@ -251,7 +287,7 @@ function exportToExcel(data: any[], reportType: string, dateRange: { startDate: 
   )
 }
 
-function groupByHospital(leads: any[]): Array<{ hospital: string; count: number; profit: number }> {
+function groupByHospital(leads: Lead[]): Array<HospitalReport> {
   const grouped: Record<string, { count: number; profit: number }> = {}
 
   leads.forEach((lead) => {

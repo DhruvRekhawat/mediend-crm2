@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -21,8 +22,8 @@ export async function PATCH(
     const { id } = await params
     const body = await request.json()
 
-    const updateData: any = {
-      handledById: user.id,
+    const updateData: Prisma.InsuranceCaseUpdateInput = {
+      handledBy: { connect: { id: user.id } },
       updatedAt: new Date(),
     }
 
@@ -53,7 +54,7 @@ export async function PATCH(
     }
 
     return successResponse(updatedCase, 'Insurance case updated successfully')
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating insurance case:', error)
     return errorResponse('Failed to update insurance case', 500)
   }

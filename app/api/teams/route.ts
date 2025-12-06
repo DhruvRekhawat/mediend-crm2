@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     })
 
     return successResponse(team, 'Team created successfully')
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse('Invalid request data', 400)
     }

@@ -30,17 +30,43 @@ export interface Lead {
   remarks?: string
   status?: string
   pipelineStage?: string
-  [key: string]: any
+  leadRef?: string
+  insuranceName?: string
+  tpa?: string
+  sumInsured?: number
+  netProfit?: number
+  source?: string
+  bdId?: string
+  bd?: {
+    id: string
+    name: string
+    email: string
+  }
+  insuranceCase?: {
+    caseStatus: string
+    approvalAmount?: number
+    tpaRemarks?: string
+    submittedAt?: string
+    approvedAt?: string | null
+  }
+  plRecord?: {
+    finalProfit?: number
+    hospitalPayoutStatus?: string
+    doctorPayoutStatus?: string
+    mediendInvoiceStatus?: string
+    closedAt?: string | null
+  }
+  [key: string]: unknown
 }
 
 export function useLeads(filters: LeadFilters = {}) {
   const queryClient = useQueryClient()
-  const [cachedData, setCachedData] = useState<any>(null)
+  const [cachedData, setCachedData] = useState<Lead[] | null>(null)
 
   const cacheKey = `leads_${JSON.stringify(filters)}`
 
   useEffect(() => {
-    getCachedLeads(cacheKey).then((data) => {
+    getCachedLeads<Lead[]>(cacheKey).then((data) => {
       if (data) {
         setCachedData(data)
       }
@@ -54,17 +80,17 @@ export function useLeads(filters: LeadFilters = {}) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value) params.append(key, value)
       })
-      const data = await apiGet<any[]>(`/api/leads?${params.toString()}`)
+      const data = await apiGet<Lead[]>(`/api/leads?${params.toString()}`)
       await cacheLeads(cacheKey, data)
       return data
     },
     enabled: true,
-    placeholderData: cachedData,
+    placeholderData: cachedData || undefined,
   })
 
   const createLeadMutation = useMutation({
-    mutationFn: async (leadData: any) => {
-      return apiPost('/api/leads', leadData)
+    mutationFn: async (leadData: Partial<Lead>) => {
+      return apiPost<Lead>('/api/leads', leadData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] })
@@ -72,15 +98,15 @@ export function useLeads(filters: LeadFilters = {}) {
   })
 
   const updateLeadMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      return apiPatch(`/api/leads/${id}`, data)
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Lead> }) => {
+      return apiPatch<Lead>(`/api/leads/${id}`, data)
     },
     onMutate: async ({ id, data }) => {
       // Optimistic update
       await queryClient.cancelQueries({ queryKey: ['leads'] })
       const previousLeads = queryClient.getQueryData(['leads', filters])
       
-      queryClient.setQueryData(['leads', filters], (old: any[]) => {
+      queryClient.setQueryData(['leads', filters], (old: Lead[] | undefined) => {
         if (!old) return old
         return old.map((lead) => (lead.id === id ? { ...lead, ...data } : lead))
       })
@@ -118,14 +144,14 @@ export function useLead(id: string | null) {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Partial<Lead>) => {
       return apiPatch(`/api/leads/${id}`, data)
     },
     onMutate: async (data) => {
       await queryClient.cancelQueries({ queryKey: ['lead', id] })
       const previousLead = queryClient.getQueryData(['lead', id])
       
-      queryClient.setQueryData(['lead', id], (old: any) => {
+      queryClient.setQueryData(['lead', id], (old: Lead | undefined) => {
         if (!old) return old
         return { ...old, ...data }
       })

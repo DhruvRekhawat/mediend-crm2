@@ -33,11 +33,11 @@ export default function MDDashboardPage() {
 
   const cacheKey = `md_dashboard_${dateRange.startDate}_${dateRange.endDate}`
 
-  useEffect(() => {
-    getCachedAnalytics(cacheKey).then((data) => {
-      if (data) setCachedData(data)
-    })
-  }, [cacheKey])
+  // useEffect(() => {
+  //   getCachedAnalytics(cacheKey).then((data) => {
+  //     if (data) setCachedData(data)
+  //   })
+  // }, [cacheKey])
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['analytics', 'dashboard', dateRange],

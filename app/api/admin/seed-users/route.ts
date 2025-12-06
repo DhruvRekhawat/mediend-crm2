@@ -127,9 +127,10 @@ export async function POST(request: NextRequest) {
         circle: 'North',
       },
     }, 'Users seeded successfully')
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error seeding users:', error)
-    return errorResponse(`Failed to seed users: ${error.message}`, 500)
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return errorResponse(`Failed to seed users: ${message}`, 500)
   }
 }
 

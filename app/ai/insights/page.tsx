@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 
 interface QueryResult {
   answer: string
-  data?: any[]
+  data?: Record<string, unknown>[]
   type: 'text' | 'table' | 'chart'
 }
 
@@ -146,9 +146,9 @@ export default function AIInsightsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {result.data.slice(0, 10).map((row: any, idx) => (
+                        {result.data.slice(0, 10).map((row, idx) => (
                           <TableRow key={idx}>
-                            {Object.values(row).map((value: any, cellIdx) => (
+                            {Object.values(row).map((value, cellIdx) => (
                               <TableCell key={cellIdx}>
                                 {typeof value === 'number' ? value.toLocaleString('en-IN') : String(value)}
                               </TableCell>
@@ -204,7 +204,7 @@ async function processAIQuery(query: string): Promise<QueryResult> {
     const topHospital = hospitalStats[0]
     return {
       answer: `The best performing hospital${treatment ? ` for ${treatment}` : ''} is ${topHospital?.hospital || 'N/A'} with ${topHospital?.count || 0} surgeries and ₹${(topHospital?.profit || 0).toLocaleString('en-IN')} net profit.`,
-      data: hospitalStats.slice(0, 5).map((h: any) => ({
+      data: hospitalStats.slice(0, 5).map((h) => ({
         Hospital: h.hospital,
         Surgeries: h.count,
         'Net Profit': `₹${h.profit.toLocaleString('en-IN')}`,
@@ -225,7 +225,7 @@ async function processAIQuery(query: string): Promise<QueryResult> {
     const topSource = sourceStats[0]
     return {
       answer: `The best performing source${treatment ? ` for ${treatment}` : ''} is ${topSource?.source || 'N/A'} with ${topSource?.conversions || 0} conversions and a ${topSource?.conversionRate || 0}% conversion rate.`,
-      data: sourceStats.slice(0, 5).map((s: any) => ({
+      data: sourceStats.slice(0, 5).map((s) => ({
         Source: s.source,
         Leads: s.leads,
         Conversions: s.conversions,
@@ -315,7 +315,7 @@ function extractTreatment(query: string): string | null {
   return null
 }
 
-function groupByHospital(leads: any[]): Array<{ hospital: string; count: number; profit: number }> {
+function groupByHospital(leads: Lead[]): Array<{ hospital: string; count: number; profit: number }> {
   const grouped: Record<string, { count: number; profit: number }> = {}
 
   leads.forEach((lead) => {
@@ -332,7 +332,7 @@ function groupByHospital(leads: any[]): Array<{ hospital: string; count: number;
     .sort((a, b) => b.profit - a.profit)
 }
 
-function groupBySource(leads: any[]): Array<{
+function groupBySource(leads: Lead[]): Array<{
   source: string
   leads: number
   conversions: number

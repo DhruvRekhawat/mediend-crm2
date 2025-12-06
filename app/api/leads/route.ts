@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-  // import { PipelineStage } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const pipelineStage = searchParams.get('pipelineStage') as any | null
+    const pipelineStage = searchParams.get('pipelineStage')
     const status = searchParams.get('status')
     const bdId = searchParams.get('bdId')
     // const teamId = searchParams.get('teamId')
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    const where: any = {}
+    const where: Prisma.LeadWhereInput = {}
 
     // Role-based filtering
     if (user.role === 'BD') {
@@ -39,10 +39,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (pipelineStage) where.pipelineStage = pipelineStage
+    // if (pipelineStage) where.pipelineStage = pipelineStage
     if (status) where.status = status
     if (bdId) where.bdId = bdId
-    if (circle) where.circle = circle
     if (city) where.city = city
     if (hospitalName) where.hospitalName = { contains: hospitalName, mode: 'insensitive' }
     if (treatment) where.treatment = { contains: treatment, mode: 'insensitive' }
@@ -167,9 +166,9 @@ export async function POST(request: NextRequest) {
     })
 
     return successResponse(lead, 'Lead created successfully')
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating lead:', error)
-    if (error.code === 'P2002') {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return errorResponse('Lead reference already exists', 400)
     }
     return errorResponse('Failed to create lead', 500)

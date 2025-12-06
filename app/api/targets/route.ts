@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma, TargetType, PeriodType } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     const targetForId = searchParams.get('targetForId')
     const periodType = searchParams.get('periodType')
 
-    const where: any = {}
+    const where: Prisma.TargetWhereInput = {}
 
     // Role-based filtering
     if (user.role === 'BD') {
@@ -51,9 +52,9 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    if (targetType) where.targetType = targetType
+    if (targetType) where.targetType = targetType as TargetType
     if (targetForId) where.targetForId = targetForId
-    if (periodType) where.periodType = periodType
+    if (periodType) where.periodType = periodType as PeriodType
 
     const targets = await prisma.target.findMany({
       where,

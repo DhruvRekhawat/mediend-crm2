@@ -1,6 +1,7 @@
 'use client'
 
 import { useSortable } from '@dnd-kit/sortable'
+import { Lead } from '@/hooks/use-leads'
 import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +9,7 @@ import { Calendar, MapPin, Building2, User } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface LeadCardProps {
-  lead: any
+  lead: Lead
   onClick?: () => void
   showBD?: boolean
 }
@@ -61,17 +62,17 @@ export function LeadCard({ lead, onClick, showBD = false }: LeadCardProps) {
 
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3" />
-            <span>{lead.city}, {lead.circle}</span>
+            <span>{lead.city}</span>
           </div>
 
           <div className="text-xs font-medium">{lead.treatment}</div>
 
-          {lead.updatedDate && (
+          {/* {lead.updatedDate && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
               <span>Updated {format(new Date(lead.updatedDate), 'MMM d, yyyy')}</span>
             </div>
-          )}
+          )} */}
 
           {lead.source && (
             <Badge variant="secondary" className="text-xs">

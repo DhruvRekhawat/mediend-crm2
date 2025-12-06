@@ -11,7 +11,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 
-import { useLeads, LeadFilters } from '@/hooks/use-leads'
+import { useLeads, LeadFilters, Lead } from '@/hooks/use-leads'
 import { KanbanColumn } from './kanban-column'
 import { LeadCard } from './lead-card'
 
@@ -37,7 +37,7 @@ const LEAD_STATUSES = [
 interface KanbanBoardProps {
   filters?: LeadFilters
   showBDColumn?: boolean
-  onLeadClick?: (lead: any) => void
+  onLeadClick?: (lead: Lead) => void
 }
 
 export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }: KanbanBoardProps) {
@@ -53,14 +53,15 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
   )
 
   const leadsByStatus = useMemo(() => {
-    const grouped: Record<string, any[]> = {}
+    const grouped: Record<string, Lead[]> = {}
     LEAD_STATUSES.forEach((status) => {
       grouped[status] = []
     })
 
     leads.forEach((lead) => {
-      if (grouped[lead.status]) {
-        grouped[lead.status].push(lead)
+      const status = lead.status || 'Other'
+      if (grouped[status]) {
+        grouped[status].push(lead)
       } else {
         // Handle unknown statuses
         if (!grouped['Other']) {
@@ -90,7 +91,7 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
     if (!LEAD_STATUSES.includes(newStatus)) {
       const droppedLead = leads.find((l) => l.id === newStatus)
       if (droppedLead) {
-        newStatus = droppedLead.status
+        newStatus = droppedLead.status || ''
       } else {
         return
       }

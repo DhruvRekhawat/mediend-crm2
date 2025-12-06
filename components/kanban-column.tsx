@@ -4,12 +4,13 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Lead } from '@/hooks/use-leads'
 import { LeadCard } from './lead-card'
 
 interface KanbanColumnProps {
   status: string
-  leads: any[]
-  onLeadClick?: (lead: any) => void
+  leads: Lead[]
+  onLeadClick?: (lead: Lead) => void
   showBD?: boolean
 }
 

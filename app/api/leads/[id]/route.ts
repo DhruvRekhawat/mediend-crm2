@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-// import { PipelineStage } from '@prisma/client'
+import { Prisma, PipelineStage } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
@@ -104,8 +104,8 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const updateData: any = {
-      updatedById: user.id,
+    const updateData: Prisma.LeadUpdateInput = {
+      updatedBy: { connect: { id: user.id } },
       updatedDate: new Date(),
     }
 
@@ -115,12 +115,12 @@ export async function PATCH(
         data: {
           leadId: lead.id,
           fromStage: lead.pipelineStage,
-          toStage: body.pipelineStage as any,
+          toStage: body.pipelineStage as PipelineStage,
           changedById: user.id,
           note: body.stageChangeNote,
         },
       })
-      updateData.pipelineStage = body.pipelineStage
+      updateData.pipelineStage = body.pipelineStage as PipelineStage
     }
 
     // Update other fields
@@ -173,11 +173,12 @@ export async function PATCH(
       'othersShare',
       'netProfit',
       'ticketSize',
-    ]
+    ] as const
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        updateData[field] = body[field]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (updateData as any)[field] = body[field]
       }
     }
 
@@ -195,7 +196,7 @@ export async function PATCH(
           return errorResponse('Can only reassign to BDs in your team', 403)
         }
       }
-      updateData.bdId = body.bdId
+      updateData.bd = { connect: { id: body.bdId } }
     }
 
     const updatedLead = await prisma.lead.update({
@@ -211,7 +212,7 @@ export async function PATCH(
     })
 
     return successResponse(updatedLead, 'Lead updated successfully')
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating lead:', error)
     return errorResponse('Failed to update lead', 500)
   }

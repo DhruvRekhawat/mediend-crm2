@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPatch } from '@/lib/api-client'
+import { Lead } from '@/hooks/use-leads'
 import { useState, useEffect } from 'react'
 import { DollarSign, TrendingUp, FileText, CheckCircle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -29,10 +30,10 @@ export default function PLDashboardPage() {
       endDate: new Date().toISOString().split('T')[0],
     })
   }, [])
-  const [selectedRecord, setSelectedRecord] = useState<any>(null)
+  const [selectedRecord, setSelectedRecord] = useState<Lead | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: records, isLoading } = useQuery<any[]>({
+  const { data: records, isLoading } = useQuery<Lead[]>({
     queryKey: ['pl', 'records', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -40,8 +41,8 @@ export default function PLDashboardPage() {
         endDate: dateRange.endDate,
         pipelineStage: 'PL,COMPLETED',
       })
-      const leads = await apiGet<any[]>(`/api/leads?${params.toString()}`)
-      return leads.map((lead: any) => ({
+      const leads = await apiGet<Lead[]>(`/api/leads?${params.toString()}`)
+      return leads.map((lead: Lead) => ({
         ...lead,
         plRecord: lead.plRecord || {
           finalProfit: lead.netProfit || 0,
@@ -54,8 +55,8 @@ export default function PLDashboardPage() {
   })
 
   const updateRecordMutation = useMutation({
-    mutationFn: async ({ leadId, data }: { leadId: string; data: any }) => {
-      return apiPatch(`/api/leads/${leadId}`, {
+    mutationFn: async ({ leadId, data }: { leadId: string; data: Partial<Lead> }) => {
+      return apiPatch<Lead>(`/api/leads/${leadId}`, {
         ...data,
         plRecord: {
           update: data.plRecord,
@@ -67,15 +68,15 @@ export default function PLDashboardPage() {
       setSelectedRecord(null)
       toast.success('P/L record updated successfully')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Failed to update record')
     },
   })
 
-  const totalProfit = records?.reduce((sum: number, r: any) => sum + (r.plRecord?.finalProfit || 0), 0) || 0
+  const totalProfit = records?.reduce((sum: number, r: Lead) => sum + (r.plRecord?.finalProfit || 0), 0) || 0
   const avgTicketSize = records && records.length > 0 ? totalProfit / records.length : 0
   const pendingPayouts = records?.filter(
-    (r: any) =>
+    (r: Lead) =>
       r.plRecord?.hospitalPayoutStatus === 'PENDING' ||
       r.plRecord?.doctorPayoutStatus === 'PENDING'
   ).length || 0
@@ -177,7 +178,7 @@ export default function PLDashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {records?.map((record: any) => (
+                    {records?.map((record) => (
                       <TableRow key={record.id}>
                         <TableCell className="font-medium">{record.leadRef}</TableCell>
                         <TableCell>{record.patientName}</TableCell>
@@ -276,8 +277,8 @@ function PLRecordForm({
   onUpdate,
   isLoading,
 }: {
-  record: any
-  onUpdate: (data: any) => void
+  record: Lead
+  onUpdate: (data: Partial<Lead>) => void
   isLoading: boolean
 }) {
   const [formData, setFormData] = useState({

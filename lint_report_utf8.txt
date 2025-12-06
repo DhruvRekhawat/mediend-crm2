@@ -1,0 +1,113 @@
+﻿
+> mediend-crm-v2@0.1.0 lint
+> eslint
+
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\admin\seed-users\page.tsx
+  12:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\ai\insights\page.tsx
+   16:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  149:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  151:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  318:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  335:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\api\admin\seed-users\route.ts
+  6:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\api\analytics\dashboard\route.ts
+  24:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\api\analytics\leaderboard\route.ts
+   23:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   91:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\api\auth\logout\route.ts
+  1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\api\auth\me\route.ts
+  1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\api\users\route.ts
+  54:50  warning  '_passwordHash' is defined but never used           @typescript-eslint/no-unused-vars
+  98:27  warning  '_passwordHash' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\insurance\dashboard\page.tsx
+   34:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\login\page.tsx
+  21:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\pl\dashboard\page.tsx
+   33:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\reports\page.tsx
+   60:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  243:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\sales\targets\page.tsx
+   53:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   55:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   70:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  210:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  211:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  213:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  287:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\team-lead\dashboard\page.tsx
+   31:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\app\team-lead\pipeline\page.tsx
+   23:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   27:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\components\kanban-column.tsx
+  11:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\components\ui\shadcn-io\kanban\index.tsx
+  169:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  318:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\hooks\use-leads.ts
+   33:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\lib\api-utils.ts
+  5:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\lib\indexeddb.ts
+    8:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   17:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 66 problems (61 errors, 5 warnings)
+

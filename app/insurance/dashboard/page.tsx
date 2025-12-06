@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPatch } from '@/lib/api-client'
+import { Lead } from '@/hooks/use-leads'
 import { useState, useEffect } from 'react'
 import { FileCheck, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,10 +31,10 @@ export default function InsuranceDashboardPage() {
       endDate: new Date().toISOString().split('T')[0],
     })
   }, [])
-  const [selectedCase, setSelectedCase] = useState<any>(null)
+  const [selectedCase, setSelectedCase] = useState<Lead | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: cases, isLoading } = useQuery<any[]>({
+  const { data: cases, isLoading } = useQuery<Lead[]>({
     queryKey: ['insurance', 'cases', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -41,21 +42,21 @@ export default function InsuranceDashboardPage() {
         endDate: dateRange.endDate,
         pipelineStage: 'INSURANCE',
       })
-      const leads = await apiGet<any[]>(`/api/leads?${params.toString()}`)
-      return leads.map((lead: any) => ({
+      const leads = await apiGet<Lead[]>(`/api/leads?${params.toString()}`)
+      return leads.map((lead: Lead) => ({
         ...lead,
         insuranceCase: lead.insuranceCase || {
           caseStatus: 'IN_PROGRESS',
-          submittedAt: lead.updatedDate,
+          submittedAt: (lead.updatedDate as string) || new Date().toISOString(),
         },
       }))
     },
   })
 
   const updateCaseMutation = useMutation({
-    mutationFn: async ({ leadId, data }: { leadId: string; data: any }) => {
+    mutationFn: async ({ leadId, data }: { leadId: string; data: Partial<Lead> }) => {
       // Update lead and create/update insurance case
-      return apiPatch(`/api/leads/${leadId}`, {
+      return apiPatch<Lead>(`/api/leads/${leadId}`, {
         ...data,
         insuranceCase: {
           update: data.insuranceCase,
@@ -67,16 +68,16 @@ export default function InsuranceDashboardPage() {
       setSelectedCase(null)
       toast.success('Case updated successfully')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Failed to update case')
     },
   })
 
   const statusStats = {
-    IN_PROGRESS: cases?.filter((c: any) => c.insuranceCase?.caseStatus === 'IN_PROGRESS').length || 0,
-    APPROVED: cases?.filter((c: any) => c.insuranceCase?.caseStatus === 'APPROVED').length || 0,
-    REJECTED: cases?.filter((c: any) => c.insuranceCase?.caseStatus === 'REJECTED').length || 0,
-    QUERY: cases?.filter((c: any) => c.insuranceCase?.caseStatus === 'QUERY').length || 0,
+    IN_PROGRESS: cases?.filter((c: Lead) => c.insuranceCase?.caseStatus === 'IN_PROGRESS').length || 0,
+    APPROVED: cases?.filter((c: Lead) => c.insuranceCase?.caseStatus === 'APPROVED').length || 0,
+    REJECTED: cases?.filter((c: Lead) => c.insuranceCase?.caseStatus === 'REJECTED').length || 0,
+    QUERY: cases?.filter((c: Lead) => c.insuranceCase?.caseStatus === 'QUERY').length || 0,
   }
 
   const totalCases = cases?.length || 0
@@ -178,7 +179,7 @@ export default function InsuranceDashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {cases?.map((insuranceCase: any) => {
+                    {cases?.map((insuranceCase) => {
                       const caseStatus = insuranceCase.insuranceCase?.caseStatus || 'IN_PROGRESS'
                       return (
                         <TableRow key={insuranceCase.id}>
@@ -259,8 +260,8 @@ function CaseDetailForm({
   onUpdate,
   isLoading,
 }: {
-  insuranceCase: any
-  onUpdate: (data: any) => void
+  insuranceCase: Lead
+  onUpdate: (data: Partial<Lead>) => void
   isLoading: boolean
 }) {
   const [formData, setFormData] = useState({

@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import { useState } from 'react'
+import { Team, User } from '@prisma/client'
 import { Plus, Target } from 'lucide-react'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
@@ -50,25 +51,29 @@ export default function TargetsPage() {
     queryFn: () => apiGet<Target[]>(`/api/targets?targetType=${activeTab.toUpperCase()}`),
   })
 
-  const { data: teams } = useQuery<any[]>({
+  const { data: teams } = useQuery<Team[]>({
     queryKey: ['teams'],
-    queryFn: () => apiGet<any[]>('/api/teams'),
+    queryFn: () => apiGet<Team[]>('/api/teams'),
   })
 
-  const { data: users } = useQuery<any[]>({
+  const { data: users } = useQuery<User[]>({
     queryKey: ['users', 'BD'],
-    queryFn: () => apiGet<any[]>('/api/users?role=BD'),
+    queryFn: () => apiGet<User[]>('/api/users?role=BD'),
   })
 
   const createTargetMutation = useMutation({
-    mutationFn: (data: any) => apiPost('/api/targets', data),
+    mutationFn: (data: Partial<Target>) => apiPost('/api/targets', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['targets'] })
       setIsDialogOpen(false)
       toast.success('Target created successfully')
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to create target')
+    onError: (error) => {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Failed to create target')
+      } else {
+        toast.error('Failed to create target')
+      }
     },
   })
 
@@ -207,10 +212,10 @@ function CreateTargetForm({
   onSubmit,
   isLoading,
 }: {
-  teams: any[]
-  users: any[]
+  teams: Team[]
+  users: User[]
   targetType: 'team' | 'bd'
-  onSubmit: (data: any) => void
+  onSubmit: (data: Partial<Target>) => void
   isLoading: boolean
 }) {
   const [formData, setFormData] = useState({
@@ -225,7 +230,7 @@ function CreateTargetForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit({
-      targetType: targetType.toUpperCase(),
+      targetType: targetType.toUpperCase() as 'BD' | 'TEAM',
       ...formData,
       targetValue: parseFloat(formData.targetValue),
       periodStartDate: new Date(formData.periodStartDate).toISOString(),
@@ -284,7 +289,7 @@ function CreateTargetForm({
           <Label>Metric</Label>
           <Select
             value={formData.metric}
-            onValueChange={(value: any) => setFormData({ ...formData, metric: value })}
+            onValueChange={(value) => setFormData({ ...formData, metric: value as Target['metric'] })}
           >
             <SelectTrigger>
               <SelectValue />

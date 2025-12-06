@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 // Badge import removed
+import { User } from '@prisma/client'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
@@ -11,6 +12,14 @@ import { useState, useEffect } from 'react'
 import { Users, Target, TrendingUp, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+
+interface TeamStats {
+  totalLeads: number
+  totalSurgeries: number
+  totalProfit: number
+  avgTicketSize: number
+  conversionRate: number
+}
 
 export default function TeamLeadDashboardPage() {
   const { user } = useAuth()
@@ -28,21 +37,21 @@ export default function TeamLeadDashboardPage() {
     })
   }, [])
 
-  const { data: teamStats, isLoading } = useQuery<any>({
+  const { data: teamStats, isLoading } = useQuery<TeamStats>({
     queryKey: ['analytics', 'team', user?.teamId, dateRange],
     queryFn: async () => {
-      if (!user?.teamId) return null
+      if (!user?.teamId) throw new Error('No team ID')
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
         teamId: user.teamId,
       })
-      return apiGet(`/api/analytics/dashboard?${params.toString()}`)
+      return apiGet<TeamStats>(`/api/analytics/dashboard?${params.toString()}`)
     },
     enabled: !!user?.teamId,
   })
 
-  const { data: bdList } = useQuery<any[]>({
+  const { data: bdList } = useQuery<User[]>({
     queryKey: ['users', 'team', user?.teamId],
     queryFn: async () => {
       if (!user?.teamId) return []
@@ -149,7 +158,7 @@ export default function TeamLeadDashboardPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bdList?.map((bd: any) => (
+                    {bdList?.map((bd: User) => (
                       <TableRow key={bd.id}>
                         <TableCell className="font-medium">{bd.name}</TableCell>
                         <TableCell>{bd.email}</TableCell>

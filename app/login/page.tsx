@@ -18,8 +18,12 @@ export default function LoginPage() {
     try {
       await login({ email, password })
       toast.success('Login successful')
-    } catch (error: any) {
-      toast.error(error.message || 'Login failed')
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Login failed')
+      } else {
+        toast.error('Login failed')
+      }
     }
   }
 

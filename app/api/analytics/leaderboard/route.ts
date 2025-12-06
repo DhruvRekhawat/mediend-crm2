@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    const dateFilter: any = {}
+    const dateFilter: Prisma.DateTimeFilter = {}
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       const bds = await prisma.user.findMany({
         where: {
           id: {
-            in: bdStats.map((s: any) => s.bdId).filter((id: any) => id !== null),
+            in: bdStats.map((s) => s.bdId).filter((id): id is string => id !== null),
           },
           role: 'BD',
         },
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
         },
       })
 
-      const leaderboard = bdStats.map((stat: any) => {
+      const leaderboard = bdStats.map((stat) => {
         const bd = bds.find((b) => b.id === stat.bdId)
         return {
           bdId: stat.bdId,
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
       const bds = await prisma.user.findMany({
         where: {
           id: {
-            in: teamStats.map((s: any) => s.bdId).filter((id: any) => id !== null),
+            in: teamStats.map((s) => s.bdId).filter((id): id is string => id !== null),
           },
           role: 'BD',
         },
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
 
       const teamMap = new Map<string, { name: string; closedLeads: number; netProfit: number }>()
 
-      teamStats.forEach((stat: any) => {
+      teamStats.forEach((stat) => {
         const bd = bds.find((b) => b.id === stat.bdId)
         if (bd?.team) {
           const existing = teamMap.get(bd.team.id) || { name: bd.team.name, closedLeads: 0, netProfit: 0 }
