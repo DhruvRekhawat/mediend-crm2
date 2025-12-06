@@ -7,6 +7,7 @@ This API endpoint allows external systems to push lead generation data to the CR
 - **URL Path**: `/api/webhooks/leads`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
+- **Base URL**: `https://mediend-crm2.vercel.app`
 
 ---
 
@@ -79,7 +80,7 @@ Returned if there is an internal issue processing the request.
 ## Example Usage (cURL)
 
 ```bash
-curl -X POST https://your-domain.com/api/webhooks/leads \
+curl -X POST https://mediend-crm2.vercel.app/api/webhooks/leads \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_SECRET_KEY" \
   -d '{
