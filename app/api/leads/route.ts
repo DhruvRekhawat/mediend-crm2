@@ -3,8 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { PipelineStage } from '@prisma/client'
-
+  // import { PipelineStage } from '@prisma/client'
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
@@ -17,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const pipelineStage = searchParams.get('pipelineStage') as PipelineStage | null
+    const pipelineStage = searchParams.get('pipelineStage') as any | null
     const status = searchParams.get('status')
     const bdId = searchParams.get('bdId')
     const teamId = searchParams.get('teamId')

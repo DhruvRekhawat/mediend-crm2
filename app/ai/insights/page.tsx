@@ -17,6 +17,22 @@ interface QueryResult {
   type: 'text' | 'table' | 'chart'
 }
 
+interface LeaderboardEntry {
+  bdId?: string
+  bdName?: string
+  teamId?: string
+  teamName?: string
+  closedLeads: number
+  netProfit: number
+}
+
+interface Lead {
+  hospitalName?: string
+  source?: string
+  pipelineStage?: string
+  netProfit?: number
+}
+
 export default function AIInsightsPage() {
   const [query, setQuery] = useState('')
   const [lastQuery, setLastQuery] = useState('')
@@ -162,10 +178,10 @@ async function processAIQuery(query: string): Promise<QueryResult> {
       type: 'bd',
       ...timeRange,
     })
-    const data = await apiGet(`/api/analytics/leaderboard?${params.toString()}`)
+    const data = await apiGet<LeaderboardEntry[]>(`/api/analytics/leaderboard?${params.toString()}`)
     return {
       answer: `The best performing BD${timeRange.startDate ? ` in the selected period` : ''} is ${data[0]?.bdName || 'N/A'} with ${data[0]?.closedLeads || 0} closed leads and ₹${(data[0]?.netProfit || 0).toLocaleString('en-IN')} net profit.`,
-      data: data.slice(0, 5).map((bd: any) => ({
+      data: data.slice(0, 5).map((bd) => ({
         Rank: data.indexOf(bd) + 1,
         'BD Name': bd.bdName,
         'Team': bd.teamName,
@@ -183,7 +199,7 @@ async function processAIQuery(query: string): Promise<QueryResult> {
       ...extractTimeRange(query),
       ...(treatment ? { treatment } : {}),
     })
-    const leads = await apiGet(`/api/leads?${params.toString()}&pipelineStage=COMPLETED`)
+    const leads = await apiGet<Lead[]>(`/api/leads?${params.toString()}&pipelineStage=COMPLETED`)
     const hospitalStats = groupByHospital(leads)
     const topHospital = hospitalStats[0]
     return {
@@ -204,7 +220,7 @@ async function processAIQuery(query: string): Promise<QueryResult> {
       ...extractTimeRange(query),
       ...(treatment ? { treatment } : {}),
     })
-    const leads = await apiGet(`/api/leads?${params.toString()}`)
+    const leads = await apiGet<Lead[]>(`/api/leads?${params.toString()}`)
     const sourceStats = groupBySource(leads)
     const topSource = sourceStats[0]
     return {
@@ -226,10 +242,10 @@ async function processAIQuery(query: string): Promise<QueryResult> {
       type: 'team',
       ...extractTimeRange(query),
     })
-    const data = await apiGet(`/api/analytics/leaderboard?${params.toString()}`)
+    const data = await apiGet<LeaderboardEntry[]>(`/api/analytics/leaderboard?${params.toString()}`)
     return {
       answer: `The top performing team${extractTimeRange(query).startDate ? ' in the selected period' : ''} is ${data[0]?.teamName || 'N/A'} with ${data[0]?.closedLeads || 0} closed leads.`,
-      data: data.slice(0, 5).map((team: any) => ({
+      data: data.slice(0, 5).map((team) => ({
         Rank: data.indexOf(team) + 1,
         'Team Name': team.teamName,
         'Closed Leads': team.closedLeads,

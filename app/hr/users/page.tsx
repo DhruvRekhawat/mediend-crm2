@@ -15,28 +15,69 @@ import { useState } from 'react'
 import { Plus, Users, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 
+type UserRole = 'MD' | 'SALES_HEAD' | 'TEAM_LEAD' | 'BD' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'HR_HEAD' | 'ADMIN'
+
+interface Team {
+  id: string
+  name: string
+  circle: 'North' | 'South' | 'East' | 'West' | 'Central'
+  salesHeadId: string
+  salesHead?: {
+    id: string
+    name: string
+    email: string
+  }
+  members?: Array<{
+    id: string
+    name: string
+    email: string
+    role: UserRole
+  }>
+}
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  teamId: string | null
+  team?: {
+    id: string
+    name: string
+    circle: 'North' | 'South' | 'East' | 'West' | 'Central'
+  }
+}
+
+interface CreateUserData {
+  name: string
+  email: string
+  password: string
+  role: UserRole
+  teamId: string | null
+}
+
 export default function HRUsersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const queryClient = useQueryClient()
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['users'],
-    queryFn: () => apiGet('/api/users'),
+    queryFn: () => apiGet<User[]>('/api/users'),
   })
 
-  const { data: teams } = useQuery({
+  const { data: teams } = useQuery<Team[]>({
     queryKey: ['teams'],
-    queryFn: () => apiGet('/api/teams'),
+    queryFn: () => apiGet<Team[]>('/api/teams'),
   })
 
   const createUserMutation = useMutation({
-    mutationFn: (data: any) => apiPost('/api/users', data),
+    mutationFn: (data: CreateUserData) => apiPost<User>('/api/users', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       setIsDialogOpen(false)
       toast.success('User created successfully')
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error.message || 'Failed to create user')
     },
   })
@@ -89,7 +130,7 @@ export default function HRUsersPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {users?.filter((u: any) => u.role === 'BD').length || 0}
+                  {users?.filter((u) => u.role === 'BD').length || 0}
                 </div>
               </CardContent>
             </Card>
@@ -100,7 +141,7 @@ export default function HRUsersPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {users?.filter((u: any) => u.role === 'TEAM_LEAD').length || 0}
+                  {users?.filter((u) => u.role === 'TEAM_LEAD').length || 0}
                 </div>
               </CardContent>
             </Card>
@@ -137,7 +178,7 @@ export default function HRUsersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {users?.map((user: any) => (
+                    {users?.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
@@ -178,15 +219,15 @@ function CreateUserForm({
   onSubmit,
   isLoading,
 }: {
-  teams: any[]
-  onSubmit: (data: any) => void
+  teams: Team[]
+  onSubmit: (data: CreateUserData) => void
   isLoading: boolean
 }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'BD' as 'MD' | 'SALES_HEAD' | 'TEAM_LEAD' | 'BD' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'HR_HEAD' | 'ADMIN',
+    role: 'BD' as UserRole,
     teamId: '',
   })
 
@@ -244,7 +285,7 @@ function CreateUserForm({
           <Label>Role</Label>
           <Select
             value={formData.role}
-            onValueChange={(value: any) => setFormData({ ...formData, role: value })}
+            onValueChange={(value) => setFormData({ ...formData, role: value as UserRole })}
           >
             <SelectTrigger>
               <SelectValue />

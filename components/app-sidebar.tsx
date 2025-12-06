@@ -53,32 +53,20 @@ const navItems: NavItem[] = [
     roles: ['BD', 'TEAM_LEAD'],
   },
   {
-    title: 'Leads',
-    url: '/leads',
-    icon: FileText,
-    permission: 'leads:read',
-  },
-  {
     title: 'Targets',
-    url: '/targets',
+    url: '/sales/targets',
     icon: Target,
-    permission: 'targets:read',
-  },
-  {
-    title: 'Analytics',
-    url: '/analytics',
-    icon: BarChart3,
-    permission: 'analytics:read',
+    roles: ['SALES_HEAD'],
   },
   {
     title: 'Insurance',
-    url: '/insurance',
+    url: '/insurance/dashboard',
     icon: Shield,
     permission: 'insurance:read',
   },
   {
     title: 'P/L',
-    url: '/pl',
+    url: '/pl/dashboard',
     icon: DollarSign,
     permission: 'pl:read',
   },
@@ -119,6 +107,10 @@ export function AppSidebar() {
   }
 
   const filteredItems = navItems.filter((item) => {
+    // Admin users see all pages
+    if (user.role === 'ADMIN') {
+      return true
+    }
     // If item has specific roles, check if user role matches
     if (item.roles) {
       return item.roles.includes(user.role)
@@ -130,7 +122,7 @@ export function AppSidebar() {
     return false
   })
 
-  // Replace dashboard URL with role-specific dashboard
+  // Replace dashboard URL with role-specific dashboard and fix route mappings
   const itemsWithUrls = filteredItems.map((item) => {
     if (item.title === 'Dashboard') {
       return {
@@ -138,7 +130,7 @@ export function AppSidebar() {
         url: getDashboardUrl(user.role),
       }
     }
-    // Map other items to role-specific paths
+    // Map Pipeline to role-specific paths
     if (item.title === 'Pipeline') {
       if (user.role === 'BD') {
         return { ...item, url: '/bd/pipeline' }
@@ -146,19 +138,12 @@ export function AppSidebar() {
       if (user.role === 'TEAM_LEAD') {
         return { ...item, url: '/team-lead/pipeline' }
       }
+      // Admin can access BD pipeline as default
+      if (user.role === 'ADMIN') {
+        return { ...item, url: '/bd/pipeline' }
+      }
     }
-    if (item.title === 'Targets' && user.role === 'SALES_HEAD') {
-      return { ...item, url: '/sales/targets' }
-    }
-    if (item.title === 'Insurance' && user.role === 'INSURANCE_HEAD') {
-      return { ...item, url: '/insurance/dashboard' }
-    }
-    if (item.title === 'P/L' && user.role === 'PL_HEAD') {
-      return { ...item, url: '/pl/dashboard' }
-    }
-    if (item.title === 'Users' && user.role === 'HR_HEAD') {
-      return { ...item, url: '/hr/users' }
-    }
+    // All other items already have correct URLs in navItems
     return item
   })
 

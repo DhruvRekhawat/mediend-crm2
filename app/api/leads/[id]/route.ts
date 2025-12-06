@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { PipelineStage } from '@prisma/client'
+// import { PipelineStage } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
@@ -115,7 +115,7 @@ export async function PATCH(
         data: {
           leadId: lead.id,
           fromStage: lead.pipelineStage,
-          toStage: body.pipelineStage as PipelineStage,
+          toStage: body.pipelineStage as any,
           changedById: user.id,
           note: body.stageChangeNote,
         },

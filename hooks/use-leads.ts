@@ -19,6 +19,20 @@ export interface LeadFilters {
   endDate?: string
 }
 
+export interface Lead {
+  id: string
+  patientName?: string
+  age?: number
+  phoneNumber?: string
+  city?: string
+  hospitalName?: string
+  treatment?: string
+  remarks?: string
+  status?: string
+  pipelineStage?: string
+  [key: string]: any
+}
+
 export function useLeads(filters: LeadFilters = {}) {
   const queryClient = useQueryClient()
   const [cachedData, setCachedData] = useState<any>(null)
@@ -97,9 +111,9 @@ export function useLeads(filters: LeadFilters = {}) {
 export function useLead(id: string | null) {
   const queryClient = useQueryClient()
 
-  const query = useQuery({
+  const query = useQuery<Lead>({
     queryKey: ['lead', id],
-    queryFn: () => apiGet(`/api/leads/${id}`),
+    queryFn: () => apiGet<Lead>(`/api/leads/${id}`),
     enabled: !!id && !!id.length,
   })
 

@@ -273,3 +273,14 @@ model PLRecord {
   @@index([closedAt])
 }
 
+
+model IncomingLead {
+  id          String   @id @default(cuid())
+  source      String?
+  payload     Json
+  status      String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  receivedAt  DateTime @default(now())
+
+  @@index([status])
+  @@index([receivedAt])
+}

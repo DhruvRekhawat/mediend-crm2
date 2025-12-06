@@ -5,7 +5,7 @@ import { KanbanBoard } from '@/components/kanban-board'
 import { useAuth } from '@/hooks/use-auth'
 import { useState } from 'react'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { useLead } from '@/hooks/use-leads'
+import { useLead, type Lead } from '@/hooks/use-leads'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -39,7 +39,7 @@ export default function BDPipelinePage() {
                 <SheetDescription>View and update lead information</SheetDescription>
               </SheetHeader>
 
-              {lead && (
+              {lead ? (
                 <div className="mt-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -91,7 +91,7 @@ export default function BDPipelinePage() {
                     </Button>
                   </div>
                 </div>
-              )}
+              ) : null}
             </SheetContent>
           </Sheet>
         </div>
