@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       const bds = await prisma.user.findMany({
         where: {
           id: {
-            in: bdStats.map((s) => s.bdId),
+            in: bdStats.map((s: any) => s.bdId).filter((id: any) => id !== null),
           },
           role: 'BD',
         },
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       const bds = await prisma.user.findMany({
         where: {
           id: {
-            in: teamStats.map((s) => s.bdId),
+            in: teamStats.map((s: any) => s.bdId).filter((id: any) => id !== null),
           },
           role: 'BD',
         },
