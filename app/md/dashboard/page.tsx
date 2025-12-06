@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { getCachedAnalytics, cacheAnalytics } from '@/lib/indexeddb'
 import { useState, useEffect } from 'react'
-import { Calendar, TrendingUp, DollarSign, Users, Activity } from 'lucide-react'
+import { TrendingUp, DollarSign, Activity } from 'lucide-react'
 
 interface DashboardStats {
   totalSurgeries: number
@@ -18,9 +18,17 @@ interface DashboardStats {
 
 export default function MDDashboardPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
   })
+  useEffect(() => {
+    // eslint-disable-next-line
+    setDateRange({
+
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+    })
+  }, [])
   const [cachedData, setCachedData] = useState<DashboardStats | null>(null)
 
   const cacheKey = `md_dashboard_${dateRange.startDate}_${dateRange.endDate}`
@@ -33,7 +41,7 @@ export default function MDDashboardPage() {
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ['analytics', 'dashboard', dateRange],
-    queryFn: async () => {
+    queryFn: async (): Promise<DashboardStats> => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
@@ -42,7 +50,7 @@ export default function MDDashboardPage() {
       await cacheAnalytics(cacheKey, data)
       return data
     },
-    placeholderData: cachedData,
+    placeholderData: cachedData || undefined,
   })
 
   return (

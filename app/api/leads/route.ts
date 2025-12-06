@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const pipelineStage = searchParams.get('pipelineStage') as any | null
     const status = searchParams.get('status')
     const bdId = searchParams.get('bdId')
-    const teamId = searchParams.get('teamId')
+    // const teamId = searchParams.get('teamId')
     const circle = searchParams.get('circle')
     const city = searchParams.get('city')
     const hospitalName = searchParams.get('hospitalName')

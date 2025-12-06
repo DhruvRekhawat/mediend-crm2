@@ -12,20 +12,28 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPatch } from '@/lib/api-client'
-import { useState } from 'react'
-import { FileCheck, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { FileCheck, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 export default function InsuranceDashboardPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
   })
+  useEffect(() => {
+
+    // eslint-disable-next-line
+    setDateRange({
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+    })
+  }, [])
   const [selectedCase, setSelectedCase] = useState<any>(null)
   const queryClient = useQueryClient()
 
-  const { data: cases, isLoading } = useQuery({
+  const { data: cases, isLoading } = useQuery<any[]>({
     queryKey: ['insurance', 'cases', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -33,7 +41,7 @@ export default function InsuranceDashboardPage() {
         endDate: dateRange.endDate,
         pipelineStage: 'INSURANCE',
       })
-      const leads = await apiGet(`/api/leads?${params.toString()}`)
+      const leads = await apiGet<any[]>(`/api/leads?${params.toString()}`)
       return leads.map((lead: any) => ({
         ...lead,
         insuranceCase: lead.insuranceCase || {

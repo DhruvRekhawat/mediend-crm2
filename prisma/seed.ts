@@ -19,7 +19,7 @@ async function main() {
   } else {
     const passwordHash = await bcrypt.hash(adminPassword, 10)
     
-    const admin = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: adminEmail,
         passwordHash,
@@ -45,7 +45,7 @@ async function main() {
   if (!existingSalesHead) {
     const passwordHash = await bcrypt.hash(salesHeadPassword, 10)
     
-    const salesHead = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: salesHeadEmail,
         passwordHash,
@@ -65,7 +65,7 @@ async function main() {
   })
 
   if (!existingTeam && existingSalesHead) {
-    const team = await prisma.team.create({
+    await prisma.team.create({
       data: {
         name: 'North Team',
         circle: 'North',
@@ -87,7 +87,7 @@ async function main() {
     const passwordHash = await bcrypt.hash(bdPassword, 10)
     const team = await prisma.team.findFirst({ where: { name: 'North Team' } })
     
-    const bd = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: bdEmail,
         passwordHash,

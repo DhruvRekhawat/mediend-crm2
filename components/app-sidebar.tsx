@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Users,
   Target,
-  BarChart3,
   FileText,
   Shield,
   DollarSign,

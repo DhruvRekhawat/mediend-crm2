@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { successResponse, errorResponse } from '@/lib/api-utils'
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     // Create default admin user
     const adminPasswordHash = await hashPassword('Admin@123')
-    const admin = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'admin@mediend.com',
         passwordHash: adminPasswordHash,
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Create BD user
     const bdPasswordHash = await hashPassword('BD@123')
-    const bd = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'bd@mediend.com',
         passwordHash: bdPasswordHash,
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Create Insurance Head
     const insuranceHeadPasswordHash = await hashPassword('Insurance@123')
-    const insuranceHead = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'insurance@mediend.com',
         passwordHash: insuranceHeadPasswordHash,
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     // Create P/L Head
     const plHeadPasswordHash = await hashPassword('PL@123')
-    const plHead = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'pl@mediend.com',
         passwordHash: plHeadPasswordHash,
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     // Create HR Head
     const hrHeadPasswordHash = await hashPassword('HR@123')
-    const hrHead = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: 'hr@mediend.com',
         passwordHash: hrHeadPasswordHash,

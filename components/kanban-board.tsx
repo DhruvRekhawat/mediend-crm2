@@ -9,11 +9,11 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  useDroppable,
 } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+
 import { useLeads, LeadFilters } from '@/hooks/use-leads'
 import { KanbanColumn } from './kanban-column'
+import { LeadCard } from './lead-card'
 
 const LEAD_STATUSES = [
   'Hot Lead',
@@ -41,7 +41,7 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }: KanbanBoardProps) {
-  const { leads, updateLead, isUpdating } = useLeads(filters)
+  const { leads, updateLead } = useLeads(filters)
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(

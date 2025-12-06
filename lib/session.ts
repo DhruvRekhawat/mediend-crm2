@@ -53,7 +53,7 @@ export async function getSession(): Promise<SessionUser | null> {
       role: decoded.role as SessionUser['role'],
       teamId: decoded.teamId || null,
     }
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -94,7 +94,7 @@ export function getSessionFromRequest(request: Request): SessionUser | null {
       role: decoded.role as SessionUser['role'],
       teamId: decoded.teamId || null,
     }
-  } catch (error) {
+  } catch {
     return null
   }
 }

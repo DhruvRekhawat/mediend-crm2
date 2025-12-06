@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useState } from 'react'
-import { FileDown, FileSpreadsheet, FileText } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { FileSpreadsheet, FileText } from 'lucide-react'
 import { apiGet } from '@/lib/api-client'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
@@ -17,9 +17,17 @@ import * as XLSX from 'xlsx'
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<'team' | 'bd' | 'hospital'>('team')
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
   })
+  useEffect(() => {
+
+    // eslint-disable-next-line
+    setDateRange({
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+    })
+  }, [])
   const [circle, setCircle] = useState<string>('')
 
   const handleExportPDF = async () => {
@@ -51,11 +59,11 @@ export default function ReportsPage() {
 
     switch (reportType) {
       case 'team':
-        return apiGet(`/api/analytics/leaderboard?type=team&${params.toString()}`)
+        return apiGet<any[]>(`/api/analytics/leaderboard?type=team&${params.toString()}`)
       case 'bd':
-        return apiGet(`/api/analytics/leaderboard?type=bd&${params.toString()}`)
+        return apiGet<any[]>(`/api/analytics/leaderboard?type=bd&${params.toString()}`)
       case 'hospital':
-        const leads = await apiGet(`/api/leads?${params.toString()}&pipelineStage=COMPLETED`)
+        const leads = await apiGet<any[]>(`/api/leads?${params.toString()}&pipelineStage=COMPLETED`)
         return groupByHospital(leads)
       default:
         return []

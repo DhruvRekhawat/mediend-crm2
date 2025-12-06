@@ -18,7 +18,7 @@ async function verify() {
   };
 
   try {
-    const response = await fetch('http://localhost:3001/api/webhooks/leads', {
+    const response = await fetch('http://localhost:3000/api/webhooks/leads', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

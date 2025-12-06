@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { destroySession } from '@/lib/session'
 import { successResponse } from '@/lib/api-utils'
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   await destroySession()
   return successResponse({}, 'Logged out successfully')
 }

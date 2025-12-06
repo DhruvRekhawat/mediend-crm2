@@ -3,11 +3,11 @@
 import { ProtectedRoute } from '@/components/protected-route'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+// Badge import removed
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Users, Target, TrendingUp, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -15,11 +15,20 @@ import { Button } from '@/components/ui/button'
 export default function TeamLeadDashboardPage() {
   const { user } = useAuth()
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
   })
 
-  const { data: teamStats, isLoading } = useQuery({
+  useEffect(() => {
+
+    // eslint-disable-next-line
+    setDateRange({
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+    })
+  }, [])
+
+  const { data: teamStats, isLoading } = useQuery<any>({
     queryKey: ['analytics', 'team', user?.teamId, dateRange],
     queryFn: async () => {
       if (!user?.teamId) return null
@@ -33,7 +42,7 @@ export default function TeamLeadDashboardPage() {
     enabled: !!user?.teamId,
   })
 
-  const { data: bdList } = useQuery({
+  const { data: bdList } = useQuery<any[]>({
     queryKey: ['users', 'team', user?.teamId],
     queryFn: async () => {
       if (!user?.teamId) return []
@@ -49,7 +58,7 @@ export default function TeamLeadDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">Team Lead Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Your team's performance overview</p>
+              <p className="text-muted-foreground mt-1">Your team&apos;s performance overview</p>
             </div>
             <div className="flex gap-2">
               <Link href="/team-lead/pipeline">

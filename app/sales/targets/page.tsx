@@ -3,7 +3,7 @@
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+// Table imports removed
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import { useState } from 'react'
-import { Plus, Target, TrendingUp } from 'lucide-react'
+import { Plus, Target } from 'lucide-react'
 import { toast } from 'sonner'
 import { Progress } from '@/components/ui/progress'
 
@@ -50,14 +50,14 @@ export default function TargetsPage() {
     queryFn: () => apiGet<Target[]>(`/api/targets?targetType=${activeTab.toUpperCase()}`),
   })
 
-  const { data: teams } = useQuery({
+  const { data: teams } = useQuery<any[]>({
     queryKey: ['teams'],
-    queryFn: () => apiGet('/api/teams'),
+    queryFn: () => apiGet<any[]>('/api/teams'),
   })
 
-  const { data: users } = useQuery({
+  const { data: users } = useQuery<any[]>({
     queryKey: ['users', 'BD'],
-    queryFn: () => apiGet('/api/users?role=BD'),
+    queryFn: () => apiGet<any[]>('/api/users?role=BD'),
   })
 
   const createTargetMutation = useMutation({
@@ -149,11 +149,7 @@ export default function TargetsPage() {
 
 function TargetCard({ target }: { target: Target }) {
   const progress = target.progress || { actual: 0, percentage: 0, status: 'on_track' as const }
-  const statusColors = {
-    on_track: 'bg-green-500',
-    at_risk: 'bg-yellow-500',
-    completed: 'bg-blue-500',
-  }
+  // statusColors removed
 
   return (
     <Card>

@@ -20,11 +20,11 @@ export default function TeamLeadPipelinePage() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const { lead, updateLead } = useLead(selectedLeadId)
 
-  const { data: teamBDs } = useQuery({
+  const { data: teamBDs } = useQuery<any[]>({
     queryKey: ['users', 'team', user?.teamId],
     queryFn: async () => {
       if (!user?.teamId) return []
-      return apiGet(`/api/users?teamId=${user.teamId}&role=BD`)
+      return apiGet<any[]>(`/api/users?teamId=${user.teamId}&role=BD`)
     },
     enabled: !!user?.teamId,
   })

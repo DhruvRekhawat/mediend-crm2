@@ -4,7 +4,7 @@ import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { TrendingUp, Users, DollarSign, Target } from 'lucide-react'
@@ -28,11 +28,19 @@ interface LeaderboardEntry {
 
 export default function SalesDashboardPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
+    startDate: '',
+    endDate: '',
   })
+  useEffect(() => {
 
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+    // eslint-disable-next-line
+    setDateRange({
+      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+    })
+  }, [])
+
+  const { data: stats } = useQuery<DashboardStats>({
     queryKey: ['analytics', 'dashboard', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({

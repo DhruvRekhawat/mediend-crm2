@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Remove password hash from response
-    const safeUsers = users.map(({ passwordHash, ...user }) => user)
+    const safeUsers = users.map(({ passwordHash: _passwordHash, ...user }) => user)
 
     return successResponse(safeUsers)
   } catch (error) {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const { passwordHash: _, ...safeUser } = newUser
+    const { passwordHash: _passwordHash, ...safeUser } = newUser
 
     return successResponse(safeUser, 'User created successfully')
   } catch (error: any) {

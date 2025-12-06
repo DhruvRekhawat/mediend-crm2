@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/session'
 import { getUserById } from '@/lib/auth'
-import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { successResponse, unauthorizedResponse } from '@/lib/api-utils'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   const session = await getSession()
   if (!session) {
     return unauthorizedResponse()
