@@ -1,6 +1,5 @@
 'use client'
 
-import { ProtectedRoute } from '@/components/protected-route'
 import { KanbanBoard } from '@/components/kanban-board'
 import { useAuth } from '@/hooks/use-auth'
 import { useState } from 'react'
@@ -19,9 +18,8 @@ export default function BDPipelinePage() {
   const filters = user?.role === 'BD' ? { bdId: user.id } : {}
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
-        <div className="mx-auto max-w-[calc(100vw-3rem)]">
+    <div className="space-y-6">
+      <div className="mx-auto max-w-full">
           <div className="mb-6">
             <h1 className="text-3xl font-bold">My Pipeline</h1>
             <p className="text-muted-foreground mt-1">Manage your leads</p>
@@ -95,8 +93,7 @@ export default function BDPipelinePage() {
             </SheetContent>
           </Sheet>
         </div>
-      </div>
-    </ProtectedRoute>
+    </div>
   )
 }
 

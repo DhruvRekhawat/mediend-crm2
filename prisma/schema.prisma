@@ -65,6 +65,22 @@ enum InsuranceCaseStatus {
   QUERY
 }
 
+enum LeaveRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PunchDirection {
+  IN
+  OUT
+}
+
+enum PayrollComponentType {
+  ALLOWANCE
+  DEDUCTION
+}
+
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -85,6 +101,8 @@ model User {
   salesHeadTeams        Team[]              @relation("SalesHead")
   insuranceCases        InsuranceCase[]
   plRecords             PLRecord[]
+  employee              Employee?
+  approvedLeaves        LeaveRequest[] @relation("LeaveApprover")
 
   @@index([email])
   @@index([role])
@@ -283,4 +301,147 @@ model IncomingLead {
 
   @@index([status])
   @@index([receivedAt])
+}
+
+// HRMS Models
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  employees   Employee[]
+
+  @@index([name])
+}
+
+model Employee {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode  String    @unique
+  joinDate      DateTime?
+  salary        Float?
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  attendanceLogs AttendanceLog[]
+  leaveRequests  LeaveRequest[]
+  leaveBalances  LeaveBalance[]
+  payrollRecords PayrollRecord[]
+
+  @@index([userId])
+  @@index([employeeCode])
+  @@index([departmentId])
+}
+
+model AttendanceLog {
+  id              String         @id @default(cuid())
+  employeeId      String
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  logDate         DateTime
+  punchDirection  PunchDirection
+  temperature     Float          @default(0)
+  serialNumber    String?
+  createdAt       DateTime       @default(now())
+
+  @@unique([employeeId, logDate, punchDirection])
+  @@index([employeeId])
+  @@index([logDate])
+  @@index([punchDirection])
+}
+
+model LeaveTypeMaster {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  maxDays   Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[]
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model LeaveRequest {
+  id            String            @id @default(cuid())
+  employeeId    String
+  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId   String
+  leaveType     LeaveTypeMaster   @relation(fields: [leaveTypeId], references: [id])
+  startDate     DateTime
+  endDate       DateTime
+  days          Int
+  reason        String?
+  status        LeaveRequestStatus @default(PENDING)
+  approvedById  String?
+  approvedBy    User?             @relation("LeaveApprover", fields: [approvedById], references: [id])
+  approvedAt    DateTime?
+  remarks       String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate])
+  @@index([leaveTypeId])
+}
+
+model LeaveBalance {
+  id          String         @id @default(cuid())
+  employeeId  String
+  employee    Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId String
+  leaveType   LeaveTypeMaster @relation(fields: [leaveTypeId], references: [id])
+  allocated   Int            @default(0)
+  used        Int            @default(0)
+  remaining   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([employeeId, leaveTypeId])
+  @@index([employeeId])
+  @@index([leaveTypeId])
+}
+
+model PayrollRecord {
+  id            String            @id @default(cuid())
+  employeeId    String
+  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month         Int
+  year          Int
+  disbursedAt   DateTime
+  basicSalary   Float
+  grossSalary   Float
+  netSalary     Float
+  status        String            @default("PENDING")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  components    PayrollComponent[]
+
+  @@unique([employeeId, month, year])
+  @@index([employeeId])
+  @@index([month, year])
+}
+
+model PayrollComponent {
+  id              String              @id @default(cuid())
+  payrollRecordId String
+  payrollRecord   PayrollRecord       @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+  componentType   PayrollComponentType
+  name            String
+  amount          Float
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([payrollRecordId])
+  @@index([componentType])
 }

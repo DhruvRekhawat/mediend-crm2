@@ -44,6 +44,16 @@ export async function GET(request: NextRequest) {
             circle: true,
           },
         },
+        employee: {
+          include: {
+            department: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         name: 'asc',

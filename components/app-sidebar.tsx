@@ -12,6 +12,10 @@ import {
   Building2,
   LogOut,
   User,
+  Clock,
+  Calendar,
+  Wallet,
+  UserCircle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -81,6 +85,68 @@ const navItems: NavItem[] = [
     icon: FileText,
     permission: 'reports:export',
   },
+  // HRMS - Available to all users
+  {
+    title: 'My Attendance',
+    url: '/employee/attendance',
+    icon: Clock,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'My Leaves',
+    url: '/employee/leaves',
+    icon: Calendar,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'My Profile',
+    url: '/employee/profile',
+    icon: UserCircle,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'My Payroll',
+    url: '/employee/payroll',
+    icon: Wallet,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  // HR Management - Only for HR_HEAD and ADMIN
+  {
+    title: 'HR Attendance',
+    url: '/hr/attendance',
+    icon: Clock,
+    permission: 'hrms:attendance:read',
+  },
+  {
+    title: 'HR Leaves',
+    url: '/hr/leaves',
+    icon: Calendar,
+    permission: 'hrms:leaves:read',
+  },
+  {
+    title: 'HR Employees',
+    url: '/hr/employees',
+    icon: Users,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'HR Payroll',
+    url: '/hr/payroll',
+    icon: Wallet,
+    permission: 'hrms:payroll:read',
+  },
+  {
+    title: 'Departments',
+    url: '/hr/departments',
+    icon: Building2,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'Leave Types',
+    url: '/hr/leave-types',
+    icon: Calendar,
+    permission: 'hrms:leaves:read',
+  },
 ]
 
 function getDashboardUrl(role: string): string {
@@ -106,6 +172,10 @@ export function AppSidebar() {
   }
 
   const filteredItems = navItems.filter((item) => {
+    // HRMS items (starting with "My ") are available to all authenticated users
+    if (item.title.startsWith('My ')) {
+      return true
+    }
     // Admin users see all pages
     if (user.role === 'ADMIN') {
       return true
@@ -164,23 +234,73 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {itemsWithUrls.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link href={item.url}>
-                        <Icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {itemsWithUrls
+                .filter((item) => !item.title.startsWith('My '))
+                .map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                        <Link href={item.url}>
+                          <Icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>My HRMS</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {itemsWithUrls
+                .filter((item) => item.title.startsWith('My '))
+                .map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                        <Link href={item.url}>
+                          <Icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        {itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>HR Management</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {itemsWithUrls
+                  .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments')
+                  .map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                          <Link href={item.url}>
+                            <Icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>

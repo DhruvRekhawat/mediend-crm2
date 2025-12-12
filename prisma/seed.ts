@@ -1,7 +1,17 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
+import pkg from 'pg'
 
-const prisma = new PrismaClient()
+const { Pool } = pkg
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+})
+
+const adapter = new PrismaPg(pool)
+
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
   console.log('🌱 Starting database seed...')
@@ -100,6 +110,28 @@ async function main() {
     console.log('✅ Created BD user:')
     console.log(`   Email: ${bdEmail}`)
     console.log(`   Password: ${bdPassword}`)
+  }
+
+  // Create Leave Types Master
+  const leaveTypes = [
+    { name: 'Casual', maxDays: 12 },
+    { name: 'Paid', maxDays: 15 },
+    { name: 'Sick', maxDays: 10 },
+  ]
+
+  for (const leaveType of leaveTypes) {
+    const existing = await prisma.leaveTypeMaster.findUnique({
+      where: { name: leaveType.name },
+    })
+
+    if (!existing) {
+      await prisma.leaveTypeMaster.create({
+        data: leaveType,
+      })
+      console.log(`✅ Created leave type: ${leaveType.name} (${leaveType.maxDays} days)`)
+    } else {
+      console.log(`ℹ️  Leave type already exists: ${leaveType.name}`)
+    }
   }
 
   console.log('\n🎉 Seed completed successfully!')

@@ -1,0 +1,223 @@
+'use client'
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiGet, apiPost } from '@/lib/api-client'
+import { useState } from 'react'
+import { Plus, Calendar } from 'lucide-react'
+import { LeaveBalanceCard } from '@/components/hrms/LeaveBalanceCard'
+import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
+
+interface LeaveType {
+  id: string
+  name: string
+  maxDays: number
+  isActive: boolean
+}
+
+interface LeaveRequest {
+  id: string
+  leaveType: LeaveType
+  startDate: Date
+  endDate: Date
+  days: number
+  reason: string | null
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  approvedAt: Date | null
+  approvedBy: {
+    id: string
+    name: string
+    email: string
+  } | null
+  remarks: string | null
+}
+
+interface LeaveData {
+  requests: LeaveRequest[]
+  balances: Array<{
+    id: string
+    allocated: number
+    used: number
+    remaining: number
+    leaveType: LeaveType
+  }>
+}
+
+export default function EmployeeLeavesPage() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  const { data: leaveData, isLoading } = useQuery<LeaveData>({
+    queryKey: ['leaves', 'my'],
+    queryFn: () => apiGet<LeaveData>('/api/leaves/my'),
+  })
+
+  const { data: leaveTypes, isLoading: leaveTypesLoading, error: leaveTypesError } = useQuery<LeaveType[]>({
+    queryKey: ['leaveTypes'],
+    queryFn: () => apiGet<LeaveType[]>('/api/leaves/types?activeOnly=true'),
+  })
+
+  const applyLeaveMutation = useMutation({
+    mutationFn: (data: {
+      leaveTypeId: string
+      startDate: Date
+      endDate: Date
+      reason?: string
+    }) => apiPost<LeaveRequest>('/api/leaves/apply', {
+      ...data,
+      startDate: data.startDate.toISOString(),
+      endDate: data.endDate.toISOString(),
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leaves', 'my'] })
+      setIsDialogOpen(false)
+      toast.success('Leave application submitted successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to submit leave application')
+    },
+  })
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <Badge variant="default" className="font-medium">Approved</Badge>
+      case 'REJECTED':
+        return <Badge variant="destructive" className="font-medium">Rejected</Badge>
+      default:
+        return <Badge variant="secondary" className="font-medium">Pending</Badge>
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Leave Management</h1>
+          <p className="text-muted-foreground mt-1">Apply for leaves and view your leave balance</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Apply for Leave
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Apply for Leave</DialogTitle>
+              <DialogDescription>Submit a new leave request</DialogDescription>
+            </DialogHeader>
+            {leaveTypesLoading ? (
+              <div className="text-center py-4 text-muted-foreground">Loading leave types...</div>
+            ) : leaveTypesError ? (
+              <div className="text-center py-4 text-red-500">
+                Failed to load leave types. Please try again.
+              </div>
+            ) : leaveTypes && leaveTypes.length > 0 ? (
+              <LeaveApplicationForm
+                leaveTypes={leaveTypes}
+                onSubmit={(data) => applyLeaveMutation.mutate(data)}
+                isLoading={applyLeaveMutation.isPending}
+              />
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                No leave types available. Please contact HR.
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {leaveData?.balances && leaveData.balances.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Leave Balance</h2>
+          <LeaveBalanceCard balances={leaveData.balances} />
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Leave History</CardTitle>
+          <CardDescription>Your leave requests and their status</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Leave Type</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Days</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Approved By</TableHead>
+                  <TableHead>Remarks</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {leaveData?.requests.map((request) => (
+                  <TableRow key={request.id}>
+                    <TableCell className="font-medium">{request.leaveType.name}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {format(new Date(request.startDate), 'PPP')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {format(new Date(request.endDate), 'PPP')}
+                      </div>
+                    </TableCell>
+                    <TableCell><strong>{request.days}</strong> days</TableCell>
+                    <TableCell>{request.reason || 'N/A'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(request.status)}
+                        {request.approvedAt && (
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(request.approvedAt), 'MMM d')}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {request.approvedBy ? (
+                        <div>
+                          <p className="text-sm font-medium">{request.approvedBy.name}</p>
+                          <p className="text-xs text-muted-foreground">{request.approvedBy.email}</p>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{request.remarks || 'N/A'}</TableCell>
+                  </TableRow>
+                ))}
+                {(!leaveData?.requests || leaveData.requests.length === 0) && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                      No leave requests found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+

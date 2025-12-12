@@ -15,6 +15,16 @@ export type Permission =
   | 'pl:read'
   | 'pl:write'
   | 'reports:export'
+  | 'hrms:read'
+  | 'hrms:write'
+  | 'hrms:attendance:read'
+  | 'hrms:attendance:write'
+  | 'hrms:leaves:read'
+  | 'hrms:leaves:write'
+  | 'hrms:payroll:read'
+  | 'hrms:payroll:write'
+  | 'hrms:employees:read'
+  | 'hrms:employees:write'
 
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
@@ -63,6 +73,16 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'users:read',
     'users:write',
     'analytics:read',
+    'hrms:read',
+    'hrms:write',
+    'hrms:attendance:read',
+    'hrms:attendance:write',
+    'hrms:leaves:read',
+    'hrms:leaves:write',
+    'hrms:payroll:read',
+    'hrms:payroll:write',
+    'hrms:employees:read',
+    'hrms:employees:write',
   ],
   ADMIN: [
     'leads:read',
@@ -78,6 +98,16 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'pl:read',
     'pl:write',
     'reports:export',
+    'hrms:read',
+    'hrms:write',
+    'hrms:attendance:read',
+    'hrms:attendance:write',
+    'hrms:leaves:read',
+    'hrms:leaves:write',
+    'hrms:payroll:read',
+    'hrms:payroll:write',
+    'hrms:employees:read',
+    'hrms:employees:write',
   ],
 }
 
