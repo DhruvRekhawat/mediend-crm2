@@ -13,7 +13,7 @@ const updateLeaveTypeSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -25,6 +25,7 @@ export async function PATCH(
       return errorResponse('Forbidden', 403)
     }
 
+    const { id } = await params
     const body = await request.json()
     const data = updateLeaveTypeSchema.parse(body)
 
@@ -33,7 +34,7 @@ export async function PATCH(
       const existing = await prisma.leaveTypeMaster.findFirst({
         where: {
           name: data.name,
-          id: { not: params.id },
+          id: { not: id },
         },
       })
 
@@ -43,7 +44,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.leaveTypeMaster.update({
-      where: { id: params.id },
+      where: { id },
       data,
     })
 
@@ -59,7 +60,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -71,13 +72,15 @@ export async function DELETE(
       return errorResponse('Forbidden', 403)
     }
 
+    const { id } = await params
+
     // Check if leave type has any leave requests or balances
     const [leaveRequestsCount, leaveBalancesCount] = await Promise.all([
       prisma.leaveRequest.count({
-        where: { leaveTypeId: params.id },
+        where: { leaveTypeId: id },
       }),
       prisma.leaveBalance.count({
-        where: { leaveTypeId: params.id },
+        where: { leaveTypeId: id },
       }),
     ])
 
@@ -86,7 +89,7 @@ export async function DELETE(
     }
 
     await prisma.leaveTypeMaster.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return successResponse(null, 'Leave type deleted successfully')

@@ -7,13 +7,15 @@ import autoTable from 'jspdf-autotable'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
     if (!user) {
       return unauthorizedResponse()
     }
+
+    const { id } = await params
 
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
@@ -28,7 +30,7 @@ export async function GET(
     }
 
     const payrollRecord = await prisma.payrollRecord.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         components: true,
       },
@@ -62,7 +64,7 @@ export async function GET(
     yPos += 15
     
     // Salary Breakdown
-    const tableData: any[] = []
+    const tableData: Array<[string, string]> = []
     
     // Basic Salary
     tableData.push(['Basic Salary', formatCurrency(payrollRecord.basicSalary)])
@@ -102,7 +104,7 @@ export async function GET(
     })
     
     // Footer
-    const finalY = (doc as any).lastAutoTable.finalY + 10
+    const finalY = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY || 0) + 10
     doc.setFontSize(8)
     doc.text('This is a system generated document.', 105, finalY, { align: 'center' })
     

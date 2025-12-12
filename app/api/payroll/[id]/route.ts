@@ -6,7 +6,7 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -14,9 +14,7 @@ export async function GET(
       return unauthorizedResponse()
     }
 
-    // Handle params as Promise (Next.js 15) or object (Next.js 14)
-    const resolvedParams = await Promise.resolve(params)
-    const payrollId = resolvedParams.id
+    const { id: payrollId } = await params
 
     const payrollRecord = await prisma.payrollRecord.findUnique({
       where: { id: payrollId },

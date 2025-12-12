@@ -69,9 +69,9 @@ export default function HRLeavesPage() {
     mutationFn: async ({ id, status, remarks }: { id: string; status: 'APPROVED' | 'REJECTED'; remarks?: string }) => {
       try {
         return await apiPatch(`/api/leaves/${id}/approve`, { status, remarks })
-      } catch (error: any) {
+      } catch (error) {
         console.error('Approve mutation error:', error)
-        throw new Error(error?.message || 'Failed to update leave request')
+        throw new Error(error instanceof Error ? error.message : 'Failed to update leave request')
       }
     },
     onSuccess: () => {

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { groupAttendanceByDate } from '@/lib/hrms/attendance-utils'
+import { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get('fromDate')
     const toDate = searchParams.get('toDate')
 
-    const where: any = {
+    const where: Prisma.AttendanceLogWhereInput = {
       employeeId: employee.id,
     }
 

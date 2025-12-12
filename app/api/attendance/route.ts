@@ -4,6 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { groupAttendanceByDate } from '@/lib/hrms/attendance-utils'
+import { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const where: any = {}
+    const where: Prisma.AttendanceLogWhereInput = {}
 
     if (fromDate || toDate) {
       where.logDate = {}
@@ -82,7 +83,12 @@ export async function GET(request: NextRequest) {
     ])
 
     // Group by employee and date for better presentation
-    const employeeMap = new Map<string, any>()
+    interface GroupedRecord {
+      employee: typeof logs[0]['employee']
+      date: string
+      logs: typeof logs
+    }
+    const employeeMap = new Map<string, GroupedRecord>()
     
     for (const log of logs) {
       const key = `${log.employeeId}_${log.logDate.toISOString().split('T')[0]}`
@@ -98,8 +104,8 @@ export async function GET(request: NextRequest) {
 
     const grouped = Array.from(employeeMap.values()).map((item) => {
       const dayLogs = item.logs
-      const inLog = dayLogs.find((l: any) => l.punchDirection === 'IN')
-      const outLog = dayLogs.find((l: any) => l.punchDirection === 'OUT')
+      const inLog = dayLogs.find((l) => l.punchDirection === 'IN')
+      const outLog = dayLogs.find((l) => l.punchDirection === 'OUT')
       
       let workHours = null
       if (inLog && outLog) {

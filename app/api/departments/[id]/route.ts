@@ -4,6 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 const updateDepartmentSchema = z.object({
   name: z.string().min(1).optional(),
@@ -12,7 +13,7 @@ const updateDepartmentSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -24,6 +25,7 @@ export async function PATCH(
       return errorResponse('Forbidden', 403)
     }
 
+    const { id } = await params
     const body = await request.json()
     const data = updateDepartmentSchema.parse(body)
 
@@ -32,7 +34,7 @@ export async function PATCH(
       const existing = await prisma.department.findFirst({
         where: {
           name: data.name,
-          id: { not: params.id },
+          id: { not: id },
         },
       })
 
@@ -41,12 +43,12 @@ export async function PATCH(
       }
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.DepartmentUpdateInput = {}
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description
 
     const updated = await prisma.department.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         _count: {
@@ -69,7 +71,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -81,10 +83,12 @@ export async function DELETE(
       return errorResponse('Forbidden', 403)
     }
 
+    const { id } = await params
+
     // Check if department has employees
     const employeeCount = await prisma.employee.count({
       where: {
-        departmentId: params.id,
+        departmentId: id,
       },
     })
 
@@ -93,7 +97,7 @@ export async function DELETE(
     }
 
     await prisma.department.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return successResponse(null, 'Department deleted successfully')

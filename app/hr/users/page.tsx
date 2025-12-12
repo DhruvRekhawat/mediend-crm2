@@ -455,7 +455,7 @@ function EditEmployeeDialog({
     
     if (user.employee) {
       // Update existing employee
-      const updateData: any = {}
+      const updateData: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null } = {}
       if (formData.employeeCode) updateData.employeeCode = formData.employeeCode
       if (formData.joinDate) updateData.joinDate = formData.joinDate
       if (formData.salary) updateData.salary = parseFloat(formData.salary)

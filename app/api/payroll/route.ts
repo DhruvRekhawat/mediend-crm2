@@ -6,6 +6,7 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { calculatePayroll } from '@/lib/hrms/payroll-utils'
 import { PayrollComponentType } from '@prisma/client'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 const createPayrollSchema = z.object({
   employeeId: z.string(),
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const where: any = {}
+    const where: Prisma.PayrollRecordWhereInput = {}
 
     if (employeeId) {
       where.employeeId = employeeId

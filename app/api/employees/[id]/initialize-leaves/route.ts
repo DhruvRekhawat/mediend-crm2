@@ -7,7 +7,7 @@ import { initializeLeaveBalances } from '@/lib/hrms/leave-balance-utils'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -19,9 +19,11 @@ export async function POST(
       return errorResponse('Forbidden', 403)
     }
 
+    const { id } = await params
+
     // Check if employee exists
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     if (!employee) {

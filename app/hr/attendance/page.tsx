@@ -78,8 +78,8 @@ export default function HRAttendancePage() {
 
   const syncAttendanceMutation = useMutation({
     mutationFn: (data: { fromDate: string; toDate: string }) =>
-      apiPost('/api/attendance/sync', data),
-    onSuccess: (data: any) => {
+      apiPost<{ processed: number; skipped: number }>('/api/attendance/sync', data),
+    onSuccess: (data) => {
       toast.success(`Synced ${data.processed} records. Skipped ${data.skipped}.`)
       setIsSyncDialogOpen(false)
       refetch()

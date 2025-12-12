@@ -4,6 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
+import { Prisma } from '@prisma/client'
 
 const updateEmployeeSchema = z.object({
   employeeCode: z.string().optional(),
@@ -14,7 +15,7 @@ const updateEmployeeSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getSessionFromRequest(request)
@@ -26,6 +27,7 @@ export async function PATCH(
       return errorResponse('Forbidden', 403)
     }
 
+    const { id } = await params
     const body = await request.json()
     const data = updateEmployeeSchema.parse(body)
 
@@ -34,7 +36,7 @@ export async function PATCH(
       const existing = await prisma.employee.findFirst({
         where: {
           employeeCode: data.employeeCode,
-          id: { not: params.id },
+          id: { not: id },
         },
       })
 
@@ -43,14 +45,18 @@ export async function PATCH(
       }
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.EmployeeUpdateInput = {}
     if (data.employeeCode !== undefined) updateData.employeeCode = data.employeeCode
     if (data.joinDate !== undefined) updateData.joinDate = data.joinDate
     if (data.salary !== undefined) updateData.salary = data.salary
-    if (data.departmentId !== undefined) updateData.departmentId = data.departmentId
+    if (data.departmentId !== undefined) {
+      updateData.department = data.departmentId 
+        ? { connect: { id: data.departmentId } }
+        : { disconnect: true }
+    }
 
     const updated = await prisma.employee.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         user: {

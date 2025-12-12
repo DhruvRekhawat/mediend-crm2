@@ -52,7 +52,7 @@ export default function HREmployeesPage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
+    mutationFn: ({ id, data }: { id: string; data: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null } }) =>
       apiPatch<Employee>(`/api/employees/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] })
@@ -184,7 +184,7 @@ export default function HREmployeesPage() {
               employee={selectedEmployee}
               departments={departments || []}
               onSubmit={(data) => {
-                const updateData: any = {}
+                const updateData: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null } = {}
                 if (data.employeeCode) updateData.employeeCode = data.employeeCode
                 if (data.joinDate !== undefined) updateData.joinDate = data.joinDate
                 if (data.salary !== undefined) updateData.salary = data.salary

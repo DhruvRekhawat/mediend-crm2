@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { Prisma, LeaveRequestStatus } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,10 +23,10 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const where: any = {}
+    const where: Prisma.LeaveRequestWhereInput = {}
 
     if (status) {
-      where.status = status
+      where.status = status as LeaveRequestStatus
     }
 
     if (employeeId) {
