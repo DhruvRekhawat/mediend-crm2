@@ -84,7 +84,7 @@ export default function BDPipelinePage() {
 
   // Get unique statuses for filter
   const uniqueStatuses = useMemo(() => {
-    const statuses = new Set(leads.map((lead) => lead.status).filter(Boolean))
+    const statuses = new Set(leads.map((lead) => lead.status).filter((status): status is string => !!status))
     return Array.from(statuses).sort()
   }, [leads])
 
@@ -345,7 +345,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Sex</Label>
                       <Input
-                        value={lead.sex || ''}
+                        value={(lead.sex as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ sex: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -361,7 +361,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Alternate Number</Label>
                       <Input
-                        value={lead.alternateNumber || ''}
+                        value={(lead.alternateNumber as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ alternateNumber: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -369,7 +369,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Attendant Name</Label>
                       <Input
-                        value={lead.attendantName || ''}
+                        value={(lead.attendantName as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ attendantName: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -402,7 +402,7 @@ export default function BDPipelinePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Circle</Label>
-                      <Input value={lead.circle || ''} readOnly />
+                      <Input value={(lead.circle as string | undefined) || ''} readOnly />
                     </div>
                     <div>
                       <Label>City</Label>
@@ -430,7 +430,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Category</Label>
                       <Input
-                        value={lead.category || ''}
+                        value={(lead.category as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ category: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -446,7 +446,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Anesthesia</Label>
                       <Input
-                        value={lead.anesthesia || ''}
+                        value={(lead.anesthesia as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ anesthesia: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -454,7 +454,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Surgeon Name</Label>
                       <Input
-                        value={lead.surgeonName || ''}
+                        value={(lead.surgeonName as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ surgeonName: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -462,7 +462,7 @@ export default function BDPipelinePage() {
                     <div>
                       <Label>Surgeon Type</Label>
                       <Input
-                        value={lead.surgeonType || ''}
+                        value={(lead.surgeonType as string | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ surgeonType: e.target.value })}
                         disabled={isUpdating}
                       />
@@ -478,7 +478,7 @@ export default function BDPipelinePage() {
                       <Label>Bill Amount</Label>
                       <Input
                         type="number"
-                        value={lead.billAmount || ''}
+                        value={(lead.billAmount as number | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ billAmount: parseFloat(e.target.value) || 0 })}
                         disabled={isUpdating}
                       />
@@ -487,7 +487,7 @@ export default function BDPipelinePage() {
                       <Label>Discount</Label>
                       <Input
                         type="number"
-                        value={lead.discount || ''}
+                        value={(lead.discount as number | undefined) || ''}
                         onChange={(e) => handleUpdateLead({ discount: parseFloat(e.target.value) || 0 })}
                         disabled={isUpdating}
                       />
@@ -496,7 +496,7 @@ export default function BDPipelinePage() {
                       <Label>Net Profit</Label>
                       <Input
                         type="number"
-                        value={lead.netProfit || ''}
+                        value={(lead.netProfit as number | undefined) || ''}
                         readOnly
                         className="bg-muted"
                       />
@@ -505,7 +505,7 @@ export default function BDPipelinePage() {
                       <Label>Ticket Size</Label>
                       <Input
                         type="number"
-                        value={lead.ticketSize || ''}
+                        value={(lead.ticketSize as number | undefined) || ''}
                         readOnly
                         className="bg-muted"
                       />
@@ -521,7 +521,9 @@ export default function BDPipelinePage() {
                       <Label>Created Date</Label>
                       <Input
                         value={
-                          lead.createdDate ? format(new Date(lead.createdDate), 'PPpp') : ''
+                          lead.createdDate && typeof lead.createdDate === 'string'
+                            ? format(new Date(lead.createdDate), 'PPpp')
+                            : ''
                         }
                         readOnly
                       />
@@ -530,7 +532,9 @@ export default function BDPipelinePage() {
                       <Label>Last Updated</Label>
                       <Input
                         value={
-                          lead.updatedDate ? format(new Date(lead.updatedDate), 'PPpp') : ''
+                          lead.updatedDate && typeof lead.updatedDate === 'string'
+                            ? format(new Date(lead.updatedDate), 'PPpp')
+                            : ''
                         }
                         readOnly
                       />
@@ -540,7 +544,7 @@ export default function BDPipelinePage() {
                       <Input
                         type="datetime-local"
                         value={
-                          lead.arrivalDate
+                          lead.arrivalDate && typeof lead.arrivalDate === 'string'
                             ? format(new Date(lead.arrivalDate), "yyyy-MM-dd'T'HH:mm")
                             : ''
                         }
@@ -555,7 +559,7 @@ export default function BDPipelinePage() {
                       <Input
                         type="datetime-local"
                         value={
-                          lead.surgeryDate
+                          lead.surgeryDate && typeof lead.surgeryDate === 'string'
                             ? format(new Date(lead.surgeryDate), "yyyy-MM-dd'T'HH:mm")
                             : ''
                         }

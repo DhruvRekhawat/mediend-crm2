@@ -104,6 +104,20 @@ interface Lead {
   }
 }
 
+interface TeamDetails extends Team {
+  leads: Array<{
+    id: string
+    leadRef: string
+    patientName: string
+    status: string
+    city: string
+    bd?: {
+      id: string
+      name: string
+    }
+  }>
+}
+
 export default function TeamsManagementPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -151,9 +165,9 @@ export default function TeamsManagementPage() {
   })
 
   // Fetch team details
-  const { data: teamDetails, isLoading: teamDetailsLoading } = useQuery({
+  const { data: teamDetails, isLoading: teamDetailsLoading } = useQuery<TeamDetails>({
     queryKey: ['team', selectedTeam?.id],
-    queryFn: () => apiGet(`/api/teams/${selectedTeam?.id}`),
+    queryFn: () => apiGet<TeamDetails>(`/api/teams/${selectedTeam?.id}`),
     enabled: !!selectedTeam?.id && (showTeamDetails || showReassignLeads || showRemoveBds),
   })
 
@@ -240,7 +254,7 @@ export default function TeamsManagementPage() {
   // Auto-assign leads mutation
   const autoAssignLeadsMutation = useMutation({
     mutationFn: ({ teamId, circle }: { teamId: string; circle?: string }) =>
-      apiPost(`/api/teams/${teamId}/auto-assign-leads`, {
+      apiPost<{ assigned: number }>(`/api/teams/${teamId}/auto-assign-leads`, {
         circle,
         unassignedOnly: true,
       }),

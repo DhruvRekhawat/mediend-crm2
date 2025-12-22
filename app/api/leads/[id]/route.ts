@@ -177,7 +177,7 @@ export async function PATCH(
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (updateData as any)[field] = body[field]
       }
     }

@@ -106,7 +106,7 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
       
       // Find which bucket this status belongs to
       for (const bucket of STATUS_BUCKETS) {
-        if (bucket.statuses.includes(status)) {
+        if ((bucket.statuses as readonly string[]).includes(status)) {
           grouped[bucket.id].push(lead)
           found = true
           break
@@ -141,7 +141,7 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
       if (targetLead && targetLead.status) {
         // Find which bucket this status belongs to
         for (const bucket of STATUS_BUCKETS) {
-          if (bucket.statuses.includes(targetLead.status)) {
+          if ((bucket.statuses as readonly string[]).includes(targetLead.status)) {
             const currentLead = leads.find((l) => l.id === leadId)
             if (currentLead && currentLead.status !== targetLead.status) {
               updateLead({ id: leadId, data: { status: targetLead.status } })
@@ -163,7 +163,7 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
     // If dropped on a bucket, use the first status of that bucket
     // Or keep current status if it's already in that bucket
     const currentStatus = currentLead.status || ''
-    const isAlreadyInBucket = targetBucket.statuses.includes(currentStatus)
+    const isAlreadyInBucket = (targetBucket.statuses as readonly string[]).includes(currentStatus)
     
     if (!isAlreadyInBucket) {
       // Move to first status of the target bucket
@@ -203,7 +203,7 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
               onLeadClick={onLeadClick}
               showBD={showBDColumn}
               statusCounts={statusCounts}
-              bucketStatuses={bucket.statuses}
+              bucketStatuses={[...bucket.statuses]}
             />
           )
         })}

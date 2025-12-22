@@ -14,6 +14,12 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "lib/generated/**", // ignoring /lib/generated
   ]),
+  {
+    rules: {
+      // Allow usage of 'any' type.
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
