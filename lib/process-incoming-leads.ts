@@ -1,0 +1,410 @@
+import { prisma } from '@/lib/prisma'
+import { UserRole, Circle, PipelineStage } from '@prisma/client'
+import { hashPassword } from '@/lib/auth'
+
+interface IncomingLeadPayload {
+  id?: string
+  '0'?: string // id
+  Patient_Name?: string
+  '3'?: string // Patient_Name
+  Category?: string
+  '4'?: string // Category
+  Treatment?: string
+  '5'?: string // Treatment
+  BDM?: string
+  '6'?: string // BDM
+  TL?: string
+  '7'?: string // TL
+  Status?: string
+  '9'?: string // Status
+  Lead_Date?: string
+  '2'?: string // Lead_Date
+  LastRemarks?: string | null
+  '8'?: string | null // LastRemarks
+  month?: string
+  '1'?: string // month
+}
+
+/**
+ * Finds a BD user by name using multiple matching strategies
+ * Returns both the user ID and their team circle if available
+ */
+async function findBDByName(name: string): Promise<{
+  id: string
+  circle: Circle | null
+} | null> {
+  if (!name) return null
+
+  const trimmedName = name.trim()
+
+  // Try multiple matching strategies
+  // 1. Exact match (case-insensitive)
+  let user = await prisma.user.findFirst({
+    where: {
+      role: UserRole.BD,
+      name: {
+        equals: trimmedName,
+        mode: 'insensitive',
+      },
+    },
+    include: {
+      team: {
+        select: {
+          circle: true,
+        },
+      },
+    },
+  })
+
+  if (user) {
+    return {
+      id: user.id,
+      circle: user.team?.circle || null,
+    }
+  }
+
+  // 2. Contains match (partial)
+  user = await prisma.user.findFirst({
+    where: {
+      role: UserRole.BD,
+      name: {
+        contains: trimmedName,
+        mode: 'insensitive',
+      },
+    },
+    include: {
+      team: {
+        select: {
+          circle: true,
+        },
+      },
+    },
+  })
+
+  if (user) {
+    return {
+      id: user.id,
+      circle: user.team?.circle || null,
+    }
+  }
+
+  // 3. Try matching first name only (split by space)
+  const firstName = trimmedName.split(' ')[0]
+  if (firstName && firstName.length > 2) {
+    user = await prisma.user.findFirst({
+      where: {
+        role: UserRole.BD,
+        name: {
+          startsWith: firstName,
+          mode: 'insensitive',
+        },
+      },
+      include: {
+        team: {
+          select: {
+            circle: true,
+          },
+        },
+      },
+    })
+
+    if (user) {
+      return {
+        id: user.id,
+        circle: user.team?.circle || null,
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Creates a new BD user with default settings
+ * Returns the user ID and circle
+ */
+async function createBDUser(
+  name: string,
+  systemUserId: string
+): Promise<{ id: string; circle: Circle | null }> {
+  // Generate email from name (lowercase, replace spaces with dots)
+  const emailBase = name.toLowerCase().replace(/\s+/g, '.')
+  let email = `${emailBase}@mediend.local`
+  let counter = 1
+
+  // Ensure unique email
+  while (await prisma.user.findUnique({ where: { email } })) {
+    email = `${emailBase}${counter}@mediend.local`
+    counter++
+  }
+
+  // Get default team (first team available, or create one if none exists)
+  let team = await prisma.team.findFirst()
+  if (!team) {
+    // Create a default team if none exists
+    const salesHead = await prisma.user.findFirst({
+      where: { role: UserRole.SALES_HEAD },
+    })
+    if (!salesHead) {
+      throw new Error('No sales head found. Cannot create team for BD user.')
+    }
+
+    team = await prisma.team.create({
+      data: {
+        name: 'Default Team',
+        circle: Circle.North,
+        salesHeadId: salesHead.id,
+      },
+    })
+  }
+
+  // Create BD user
+  const defaultPassword = await hashPassword('Temp@123') // Temporary password
+  const newUser = await prisma.user.create({
+    data: {
+      email,
+      passwordHash: defaultPassword,
+      name: name.trim(),
+      role: UserRole.BD,
+      teamId: team.id,
+    },
+    include: {
+      team: {
+        select: {
+          circle: true,
+        },
+      },
+    },
+  })
+
+  return {
+    id: newUser.id,
+    circle: newUser.team?.circle || null,
+  }
+}
+
+/**
+ * Gets a default system user for createdById/updatedById
+ * Falls back to first ADMIN user, or first user found
+ */
+async function getDefaultSystemUser(): Promise<string> {
+  const admin = await prisma.user.findFirst({
+    where: { role: UserRole.ADMIN },
+  })
+  if (admin) return admin.id
+
+  const anyUser = await prisma.user.findFirst()
+  if (anyUser) return anyUser.id
+
+  throw new Error('No users found in system. Cannot process leads.')
+}
+
+/**
+ * Extracts value from payload using both named and numeric keys
+ * Always returns a string (converts numbers to strings) or null
+ */
+function getPayloadValue(
+  payload: IncomingLeadPayload,
+  namedKey: keyof IncomingLeadPayload,
+  numericKey: keyof IncomingLeadPayload
+): string | null {
+  const value = payload[namedKey] ?? payload[numericKey]
+  if (value === null || value === undefined) return null
+  // Convert to string if it's a number
+  return String(value)
+}
+
+/**
+ * Processes a single incoming lead payload and creates a Lead record
+ * @param autoCreateBD - If true, automatically create missing BD users
+ */
+export async function processIncomingLead(
+  incomingLeadId: string,
+  payload: IncomingLeadPayload | IncomingLeadPayload[],
+  autoCreateBD: boolean = false
+): Promise<{ success: boolean; leadId?: string; error?: string }> {
+  try {
+    // Handle array payload (take first item)
+    const leadData = Array.isArray(payload) ? payload[0] : payload
+    if (!leadData) {
+      return { success: false, error: 'Empty payload' }
+    }
+
+    // Extract fields from payload (support both named and numeric keys)
+    // Ensure leadId is always a string
+    const leadId = String(getPayloadValue(leadData, 'id', '0') || `LEAD-${Date.now()}`)
+    const patientName = getPayloadValue(leadData, 'Patient_Name', '3')
+    const category = getPayloadValue(leadData, 'Category', '4')
+    const treatment = getPayloadValue(leadData, 'Treatment', '5')
+    const bdmName = getPayloadValue(leadData, 'BDM', '6')
+    const status = getPayloadValue(leadData, 'Status', '9') || 'New Lead'
+    const leadDateStr = getPayloadValue(leadData, 'Lead_Date', '2')
+    const remarks = getPayloadValue(leadData, 'LastRemarks', '8') || null
+
+    // Validate required fields
+    if (!patientName) {
+      return { success: false, error: 'Missing patient name' }
+    }
+
+    if (!treatment) {
+      return { success: false, error: 'Missing treatment' }
+    }
+
+    // Find BD user by name
+    let bdId: string | null = null
+    let bdCircle: Circle = Circle.North // Default circle
+    if (bdmName) {
+      let bdInfo = await findBDByName(bdmName)
+      
+      // If not found and auto-create is enabled, create the BD user
+      if (!bdInfo && autoCreateBD) {
+        const systemUserId = await getDefaultSystemUser()
+        try {
+          bdInfo = await createBDUser(bdmName, systemUserId)
+          console.log(`Created new BD user: ${bdmName} (${bdInfo.id})`)
+        } catch (createError) {
+          return {
+            success: false,
+            error: `Failed to create BD user ${bdmName}: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
+          }
+        }
+      }
+      
+      if (!bdInfo) {
+        return {
+          success: false,
+          error: `BD user not found: ${bdmName}. ${autoCreateBD ? 'Auto-creation failed.' : 'Please ensure the user exists with role BD, or enable auto-create.'}`,
+        }
+      }
+      bdId = bdInfo.id
+      if (bdInfo.circle) {
+        bdCircle = bdInfo.circle
+      }
+    } else {
+      return { success: false, error: 'Missing BDM name' }
+    }
+
+    // Get default system user for createdBy/updatedBy
+    const systemUserId = await getDefaultSystemUser()
+
+    // Parse lead date
+    let createdDate = new Date()
+    if (leadDateStr) {
+      const parsedDate = new Date(leadDateStr)
+      if (!isNaN(parsedDate.getTime())) {
+        createdDate = parsedDate
+      }
+    }
+
+    // Check if lead with this leadRef already exists
+    const existingLead = await prisma.lead.findUnique({
+      where: { leadRef: leadId },
+    })
+
+    if (existingLead) {
+      // Update status to PROCESSED but don't create duplicate
+      await prisma.incomingLead.update({
+        where: { id: incomingLeadId },
+        data: { status: 'PROCESSED' },
+      })
+      return {
+        success: true,
+        leadId: existingLead.id,
+        error: 'Lead already exists, marked as processed',
+      }
+    }
+
+    // Create the lead with required defaults for missing fields
+    const lead = await prisma.lead.create({
+      data: {
+        leadRef: leadId,
+        patientName,
+        age: 0, // Default age (should be updated later)
+        sex: 'Not Specified', // Default sex
+        phoneNumber: '0000000000', // Default phone (should be updated later)
+        bdId,
+        status,
+        pipelineStage: PipelineStage.SALES,
+        circle: bdCircle, // Use BD's team circle if available
+        city: 'Not Specified', // Default city (should be updated later)
+        category: category || null,
+        treatment,
+        hospitalName: 'Not Specified', // Default hospital (should be updated later)
+        remarks: remarks || null,
+        source: 'external_api',
+        createdById: systemUserId,
+        updatedById: systemUserId,
+        createdDate,
+      },
+    })
+
+    // Update incoming lead status to PROCESSED
+    await prisma.incomingLead.update({
+      where: { id: incomingLeadId },
+      data: { status: 'PROCESSED' },
+    })
+
+    return { success: true, leadId: lead.id }
+  } catch (error) {
+    console.error('Error processing incoming lead:', error)
+    
+    // Mark as FAILED
+    try {
+      await prisma.incomingLead.update({
+        where: { id: incomingLeadId },
+        data: { status: 'FAILED' },
+      })
+    } catch (updateError) {
+      console.error('Error updating incoming lead status:', updateError)
+    }
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Processes all PENDING incoming leads
+ * @param autoCreateBD - If true, automatically create missing BD users
+ */
+export async function processAllPendingLeads(
+  autoCreateBD: boolean = false
+): Promise<{
+  processed: number
+  failed: number
+  results: Array<{ id: string; success: boolean; error?: string }>
+}> {
+  const pendingLeads = await prisma.incomingLead.findMany({
+    where: { status: 'PENDING' },
+    orderBy: { receivedAt: 'asc' },
+  })
+
+  const results: Array<{ id: string; success: boolean; error?: string }> = []
+  let processed = 0
+  let failed = 0
+
+  for (const incomingLead of pendingLeads) {
+    const result = await processIncomingLead(
+      incomingLead.id,
+      incomingLead.payload as IncomingLeadPayload | IncomingLeadPayload[],
+      autoCreateBD
+    )
+
+    results.push({
+      id: incomingLead.id,
+      success: result.success,
+      error: result.error,
+    })
+
+    if (result.success) {
+      processed++
+    } else {
+      failed++
+    }
+  }
+
+  return { processed, failed, results }
+}
+

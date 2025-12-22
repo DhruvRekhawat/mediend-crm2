@@ -22,7 +22,24 @@ export async function GET(request: NextRequest) {
       return errorResponse('Forbidden', 403)
     }
 
+    const { searchParams } = new URL(request.url)
+    const salesHeadId = searchParams.get('salesHeadId')
+
+    const where: any = {}
+
+    // Sales heads can only see their own teams (unless they're MD or ADMIN)
+    if (user.role === 'SALES_HEAD' && !salesHeadId) {
+      where.salesHeadId = user.id
+    } else if (salesHeadId) {
+      // If salesHeadId is provided, verify user can manage it
+      if (!canManageTeam(user, salesHeadId)) {
+        return errorResponse('Forbidden', 403)
+      }
+      where.salesHeadId = salesHeadId
+    }
+
     const teams = await prisma.team.findMany({
+      where,
       include: {
         salesHead: {
           select: {
@@ -37,6 +54,11 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             role: true,
+            _count: {
+              select: {
+                assignedLeads: true,
+              },
+            },
           },
         },
       },

@@ -62,6 +62,12 @@ const navItems: NavItem[] = [
     roles: ['SALES_HEAD'],
   },
   {
+    title: 'Teams',
+    url: '/sales/teams',
+    icon: Users,
+    roles: ['SALES_HEAD'],
+  },
+  {
     title: 'Insurance',
     url: '/insurance/dashboard',
     icon: Shield,

@@ -9,14 +9,25 @@ import { LeadCard } from './lead-card'
 
 interface KanbanColumnProps {
   status: string
+  bucketId: string
   leads: Lead[]
   onLeadClick?: (lead: Lead) => void
   showBD?: boolean
+  statusCounts?: Record<string, number>
+  bucketStatuses?: string[]
 }
 
-export function KanbanColumn({ status, leads, onLeadClick, showBD = false }: KanbanColumnProps) {
+export function KanbanColumn({
+  status,
+  bucketId,
+  leads,
+  onLeadClick,
+  showBD = false,
+  statusCounts = {},
+  bucketStatuses = [],
+}: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
-    id: status,
+    id: bucketId,
   })
 
   return (
@@ -32,6 +43,19 @@ export function KanbanColumn({ status, leads, onLeadClick, showBD = false }: Kan
             <CardTitle className="text-sm font-medium">{status}</CardTitle>
             <Badge variant="secondary">{leads.length}</Badge>
           </div>
+          {bucketStatuses.length > 0 && Object.keys(statusCounts).length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {bucketStatuses.map((s) => {
+                const count = statusCounts[s] || 0
+                if (count === 0) return null
+                return (
+                  <Badge key={s} variant="outline" className="text-xs">
+                    {s}: {count}
+                  </Badge>
+                )
+              })}
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
           <SortableContext
@@ -44,6 +68,9 @@ export function KanbanColumn({ status, leads, onLeadClick, showBD = false }: Kan
                 lead={lead}
                 onClick={() => onLeadClick?.(lead)}
                 showBD={showBD}
+                onStatusChange={(newStatus) => {
+                  // This will be handled by parent component
+                }}
               />
             ))}
           </SortableContext>
@@ -57,4 +84,3 @@ export function KanbanColumn({ status, leads, onLeadClick, showBD = false }: Kan
     </div>
   )
 }
-

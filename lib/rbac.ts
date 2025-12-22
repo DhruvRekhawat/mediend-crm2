@@ -43,6 +43,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'targets:write',
     'analytics:read',
     'reports:export',
+    'users:read',
+    'users:write',
   ],
   TEAM_LEAD: [
     'leads:read',

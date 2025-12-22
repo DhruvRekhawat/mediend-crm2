@@ -50,7 +50,7 @@ export default function ReportsPage() {
       endDate: new Date().toISOString().split('T')[0],
     })
   }, [])
-  const [circle, setCircle] = useState<string>('')
+  const [circle, setCircle] = useState<string>('all')
 
   const handleExportPDF = async () => {
     try {
@@ -84,7 +84,7 @@ export default function ReportsPage() {
     const params = new URLSearchParams({
       startDate: dateRange.startDate,
       endDate: dateRange.endDate,
-      ...(circle ? { circle } : {}),
+      ...(circle && circle !== 'all' ? { circle } : {}),
     })
 
     switch (reportType) {
@@ -155,7 +155,7 @@ export default function ReportsPage() {
                     <SelectValue placeholder="All Circles" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Circles</SelectItem>
+                    <SelectItem value="all">All Circles</SelectItem>
                     <SelectItem value="North">North</SelectItem>
                     <SelectItem value="South">South</SelectItem>
                     <SelectItem value="East">East</SelectItem>
