@@ -256,13 +256,13 @@ const navItems: NavItem[] = [
     title: 'MD Messages',
     url: '/md/anonymous-messages',
     icon: Mail,
-    roles: ['MD'],
+    roles: ['MD', 'ADMIN'],
   },
   {
     title: 'MD Appointments',
     url: '/md/appointments',
     icon: CalendarCheck,
-    roles: ['MD'],
+    roles: ['MD', 'ADMIN'],
   },
   // Finance Management - Only for FINANCE_HEAD, MD, and ADMIN
   {
@@ -512,7 +512,7 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-        {itemsWithUrls.some((item) => item.title.startsWith('MD ')) && (
+        {(user.role === 'MD' || user.role === 'ADMIN') && (
           <SidebarGroup>
             <SidebarGroupLabel>MD Portal</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -524,10 +524,10 @@ export function AppSidebar() {
                     const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                     return (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('MD ', '')}>
                           <Link href={item.url}>
                             <Icon />
-                            <span>{item.title}</span>
+                            <span>{item.title.replace('MD ', '')}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

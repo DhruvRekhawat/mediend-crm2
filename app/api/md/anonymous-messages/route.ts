@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    // Only MD can view anonymous messages
-    if (user.role !== 'MD') {
+    // Only MD and ADMIN can view anonymous messages
+    if (user.role !== 'MD' && user.role !== 'ADMIN') {
       return errorResponse('Forbidden', 403)
     }
 
@@ -33,7 +33,7 @@ export async function PATCH(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'MD') {
+    if (user.role !== 'MD' && user.role !== 'ADMIN') {
       return errorResponse('Forbidden', 403)
     }
 

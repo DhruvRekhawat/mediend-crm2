@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'MD') {
+    if (user.role !== 'MD' && user.role !== 'ADMIN') {
       return errorResponse('Forbidden', 403)
     }
 
@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'MD') {
+    if (user.role !== 'MD' && user.role !== 'ADMIN') {
       return errorResponse('Forbidden', 403)
     }
 
