@@ -81,6 +81,53 @@ enum PayrollComponentType {
   DEDUCTION
 }
 
+enum DocumentType {
+  OFFER_LETTER
+  APPRAISAL_LETTER
+  EXPERIENCE_LETTER
+  RELIEVING_LETTER
+}
+
+enum FeedbackStatus {
+  PENDING
+  REVIEWED
+  ACKNOWLEDGED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AppointmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  PENDING
+  SHORTLISTED
+  REJECTED
+  HIRED
+}
+
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -312,7 +359,8 @@ model Department {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  employees   Employee[]
+  employees      Employee[]
+  supportTickets SupportTicket[]
 
   @@index([name])
 }
@@ -326,13 +374,25 @@ model Employee {
   salary        Float?
   departmentId  String?
   department    Department? @relation(fields: [departmentId], references: [id])
+  dateOfBirth   DateTime?
+  aadharNumber  String?
+  panNumber     String?
+  aadharDocUrl  String?
+  panDocUrl     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  attendanceLogs AttendanceLog[]
-  leaveRequests  LeaveRequest[]
-  leaveBalances  LeaveBalance[]
-  payrollRecords PayrollRecord[]
+  attendanceLogs       AttendanceLog[]
+  leaveRequests        LeaveRequest[]
+  leaveBalances        LeaveBalance[]
+  payrollRecords       PayrollRecord[]
+  documents            EmployeeDocument[]
+  feedbacks            Feedback[]
+  mdAppointments       MDAppointment[]
+  mentalHealthRequests MentalHealthRequest[]
+  supportTickets       SupportTicket[]
+  incrementRequests    IncrementRequest[]
+  ijpApplications      IJPApplication[]
 
   @@index([userId])
   @@index([employeeCode])
@@ -444,4 +504,164 @@ model PayrollComponent {
 
   @@index([payrollRecordId])
   @@index([componentType])
+}
+
+// Employee Documents (Offer Letter, Appraisal, etc.)
+model EmployeeDocument {
+  id           String       @id @default(cuid())
+  employeeId   String
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  documentType DocumentType
+  documentUrl  String?
+  metadata     Json?
+  generatedAt  DateTime     @default(now())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([employeeId])
+  @@index([documentType])
+}
+
+// Feedback 360 - Employee submits, HR reviews
+model Feedback {
+  id         String         @id @default(cuid())
+  employeeId String
+  employee   Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  content    String
+  status     FeedbackStatus @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Anonymous Messages to MD - No user info stored
+model AnonymousMessage {
+  id        String   @id @default(cuid())
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// MD Appointment Requests
+model MDAppointment {
+  id            String            @id @default(cuid())
+  employeeId    String
+  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  preferredDate DateTime?
+  reason        String
+  status        AppointmentStatus @default(PENDING)
+  remarks       String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Mental Health Support Requests (48hr SLA)
+model MentalHealthRequest {
+  id          String        @id @default(cuid())
+  employeeId  String
+  employee    Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  reason      String?
+  status      RequestStatus @default(PENDING)
+  hrResponse  String?
+  respondedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Help Support Tickets (48hr SLA)
+model SupportTicket {
+  id           String         @id @default(cuid())
+  employeeId   String
+  employee     Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department     @relation(fields: [departmentId], references: [id])
+  subject      String
+  description  String
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  response     String?
+  respondedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([employeeId])
+  @@index([departmentId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+// Increment Requests
+model IncrementRequest {
+  id                 String        @id @default(cuid())
+  employeeId         String
+  employee           Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  currentSalary      Float
+  requestedAmount    Float?
+  reason             String
+  achievements       String?
+  documents          Json?
+  status             RequestStatus @default(PENDING)
+  approvalPercentage Float?
+  hrRemarks          String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Internal Job Postings
+model InternalJobPosting {
+  id           String           @id @default(cuid())
+  title        String
+  description  String
+  department   String?
+  requirements String?
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  applications IJPApplication[]
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+// IJP Applications / Referrals
+model IJPApplication {
+  id            String             @id @default(cuid())
+  postingId     String
+  posting       InternalJobPosting @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  referredById  String
+  referrer      Employee           @relation(fields: [referredById], references: [id], onDelete: Cascade)
+  candidateName String
+  candidateEmail String?
+  candidatePhone String?
+  resumeUrl     String
+  description   String?
+  documents     Json?
+  status        ApplicationStatus  @default(PENDING)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([postingId])
+  @@index([referredById])
+  @@index([status])
+  @@index([createdAt])
 }

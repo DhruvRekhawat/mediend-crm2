@@ -7,19 +7,17 @@ import { initializeLeaveBalances } from '@/lib/hrms/leave-balance-utils'
 import { z } from 'zod'
 import { Prisma } from '@prisma/client'
 
-const updateEmployeeSchema = z.object({
-  employeeCode: z.string().optional(),
-  joinDate: z.string().transform((str) => new Date(str)).optional().nullable(),
-  salary: z.number().positive().optional().nullable(),
-  departmentId: z.string().optional().nullable(),
-})
-
 const createEmployeeSchema = z.object({
   userId: z.string(),
   employeeCode: z.string(),
   joinDate: z.string().transform((str) => new Date(str)).optional().nullable(),
   salary: z.number().positive().optional().nullable(),
   departmentId: z.string().optional().nullable(),
+  dateOfBirth: z.string().transform((str) => new Date(str)).optional().nullable(),
+  aadharNumber: z.string().max(12).optional().nullable(),
+  panNumber: z.string().max(10).optional().nullable(),
+  aadharDocUrl: z.string().url().optional().nullable().or(z.literal('')),
+  panDocUrl: z.string().url().optional().nullable().or(z.literal('')),
 })
 
 export async function POST(request: NextRequest) {
@@ -61,6 +59,11 @@ export async function POST(request: NextRequest) {
         joinDate: data.joinDate || null,
         salary: data.salary || null,
         departmentId: data.departmentId || null,
+        dateOfBirth: data.dateOfBirth || null,
+        aadharNumber: data.aadharNumber || null,
+        panNumber: data.panNumber || null,
+        aadharDocUrl: data.aadharDocUrl || null,
+        panDocUrl: data.panDocUrl || null,
       },
       include: {
         user: {

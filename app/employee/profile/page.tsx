@@ -3,14 +3,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { User, Mail, Hash, Calendar, DollarSign, Building } from 'lucide-react'
+import { User, Mail, Hash, Calendar, DollarSign, Building, Cake } from 'lucide-react'
 import { format } from 'date-fns'
+import { BirthdayCard } from '@/components/birthday-card'
 
 interface Employee {
   id: string
   employeeCode: string
   joinDate: Date | null
   salary: number | null
+  dateOfBirth: Date | null
   user: {
     id: string
     name: string
@@ -41,6 +43,9 @@ export default function EmployeeProfilePage() {
 
   return (
     <div className="space-y-6">
+      {/* Birthday Wish Card */}
+      <BirthdayCard />
+
       <div>
         <h1 className="text-3xl font-bold">My Profile</h1>
         <p className="text-muted-foreground mt-1">View your employee details</p>
@@ -81,6 +86,17 @@ export default function EmployeeProfilePage() {
                   <p className="font-medium">{employee.employeeCode}</p>
                 </div>
               </div>
+              {employee.dateOfBirth && (
+                <div className="flex items-center gap-3">
+                  <Cake className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Date of Birth</p>
+                    <p className="font-medium">
+                      {format(new Date(employee.dateOfBirth), 'PPP')}
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

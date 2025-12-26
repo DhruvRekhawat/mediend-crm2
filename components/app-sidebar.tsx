@@ -16,6 +16,14 @@ import {
   Calendar,
   Wallet,
   UserCircle,
+  MessageSquare,
+  ShieldCheck,
+  CalendarCheck,
+  Heart,
+  Ticket,
+  TrendingUp,
+  Briefcase,
+  Mail,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -116,6 +124,55 @@ const navItems: NavItem[] = [
     icon: Wallet,
     roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
   },
+  {
+    title: 'My Documents',
+    url: '/employee/documents',
+    icon: FileText,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'My Feedback',
+    url: '/employee/feedback',
+    icon: MessageSquare,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'My Tickets',
+    url: '/employee/tickets',
+    icon: Ticket,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'My Increment',
+    url: '/employee/increment',
+    icon: TrendingUp,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  // Employee Services
+  {
+    title: 'Svc Anonymous Msg',
+    url: '/employee/anonymous-message',
+    icon: ShieldCheck,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'Svc MD Appointment',
+    url: '/employee/md-appointment',
+    icon: CalendarCheck,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'Svc Mental Health',
+    url: '/employee/mental-health',
+    icon: Heart,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'Svc Job Postings',
+    url: '/employee/ijp',
+    icon: Briefcase,
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+  },
   // HR Management - Only for HR_HEAD and ADMIN
   {
     title: 'HR Attendance',
@@ -153,6 +210,55 @@ const navItems: NavItem[] = [
     icon: Calendar,
     permission: 'hrms:leaves:read',
   },
+  {
+    title: 'HR Documents',
+    url: '/hr/documents',
+    icon: FileText,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'HR Feedback',
+    url: '/hr/feedback',
+    icon: MessageSquare,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'HR Mental Health',
+    url: '/hr/mental-health',
+    icon: Heart,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'HR Tickets',
+    url: '/hr/tickets',
+    icon: Ticket,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'HR Increments',
+    url: '/hr/increments',
+    icon: TrendingUp,
+    permission: 'hrms:employees:read',
+  },
+  {
+    title: 'HR IJP',
+    url: '/hr/ijp',
+    icon: Briefcase,
+    permission: 'hrms:employees:read',
+  },
+  // MD Only
+  {
+    title: 'MD Messages',
+    url: '/md/anonymous-messages',
+    icon: Mail,
+    roles: ['MD'],
+  },
+  {
+    title: 'MD Appointments',
+    url: '/md/appointments',
+    icon: CalendarCheck,
+    roles: ['MD'],
+  },
 ]
 
 function getDashboardUrl(role: string): string {
@@ -178,8 +284,8 @@ export function AppSidebar() {
   }
 
   const filteredItems = navItems.filter((item) => {
-    // HRMS items (starting with "My ") are available to all authenticated users
-    if (item.title.startsWith('My ')) {
+    // HRMS items (starting with "My " or "Svc ") are available to all authenticated users
+    if (item.title.startsWith('My ') || item.title.startsWith('Svc ')) {
       return true
     }
     // Admin users see all pages
@@ -241,7 +347,14 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {itemsWithUrls
-                .filter((item) => !item.title.startsWith('My '))
+                .filter((item) => 
+                  !item.title.startsWith('My ') && 
+                  !item.title.startsWith('Svc ') && 
+                  !item.title.startsWith('HR ') && 
+                  !item.title.startsWith('MD ') &&
+                  item.title !== 'Departments' &&
+                  item.title !== 'Leave Types'
+                )
                 .map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
@@ -282,13 +395,61 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Services</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {itemsWithUrls
+                .filter((item) => item.title.startsWith('Svc '))
+                .map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Svc ', '')}>
+                        <Link href={item.url}>
+                          <Icon />
+                          <span>{item.title.replace('Svc ', '')}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
           <SidebarGroup>
             <SidebarGroupLabel>HR Management</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {itemsWithUrls
-                  .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments')
+                  .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments' || item.title === 'Leave Types')
+                  .map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                          <Link href={item.url}>
+                            <Icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        {itemsWithUrls.some((item) => item.title.startsWith('MD ')) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>MD Portal</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {itemsWithUrls
+                  .filter((item) => item.title.startsWith('MD '))
                   .map((item) => {
                     const Icon = item.icon
                     const isActive = pathname === item.url || pathname.startsWith(item.url + '/')

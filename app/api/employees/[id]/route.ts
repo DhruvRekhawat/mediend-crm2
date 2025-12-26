@@ -11,6 +11,11 @@ const updateEmployeeSchema = z.object({
   joinDate: z.string().transform((str) => new Date(str)).optional().nullable(),
   salary: z.number().positive().optional().nullable(),
   departmentId: z.string().optional().nullable(),
+  dateOfBirth: z.string().transform((str) => new Date(str)).optional().nullable(),
+  aadharNumber: z.string().max(12).optional().nullable(),
+  panNumber: z.string().max(10).optional().nullable(),
+  aadharDocUrl: z.string().url().optional().nullable().or(z.literal('')),
+  panDocUrl: z.string().url().optional().nullable().or(z.literal('')),
 })
 
 export async function PATCH(
@@ -54,6 +59,11 @@ export async function PATCH(
         ? { connect: { id: data.departmentId } }
         : { disconnect: true }
     }
+    if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth
+    if (data.aadharNumber !== undefined) updateData.aadharNumber = data.aadharNumber
+    if (data.panNumber !== undefined) updateData.panNumber = data.panNumber
+    if (data.aadharDocUrl !== undefined) updateData.aadharDocUrl = data.aadharDocUrl || null
+    if (data.panDocUrl !== undefined) updateData.panDocUrl = data.panDocUrl || null
 
     const updated = await prisma.employee.update({
       where: { id },

@@ -28,6 +28,21 @@ export async function POST(request: NextRequest) {
       return errorResponse('Employee record not found', 404)
     }
 
+    // Check 6-month probation period
+    if (employee.joinDate) {
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+      
+      if (employee.joinDate > sixMonthsAgo) {
+        const probationEndDate = new Date(employee.joinDate)
+        probationEndDate.setMonth(probationEndDate.getMonth() + 6)
+        return errorResponse(
+          `You are in probation period. Leave applications will be available after ${probationEndDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`,
+          400
+        )
+      }
+    }
+
     const body = await request.json()
     const { leaveTypeId, startDate, endDate, reason } = applyLeaveSchema.parse(body)
 

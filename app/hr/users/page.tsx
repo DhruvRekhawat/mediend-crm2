@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useState } from 'react'
-import { Plus, Users, UserPlus, Edit, Hash, Calendar, DollarSign, Building } from 'lucide-react'
+import { Plus, Users, UserPlus, Edit, Hash, Calendar, DollarSign, Building, CreditCard, FileText, Cake, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -41,6 +41,11 @@ interface Employee {
   joinDate: Date | null
   salary: number | null
   departmentId: string | null
+  dateOfBirth: Date | null
+  aadharNumber: string | null
+  panNumber: string | null
+  aadharDocUrl: string | null
+  panDocUrl: string | null
   department?: {
     id: string
     name: string
@@ -406,6 +411,11 @@ function EditEmployeeDialog({
     joinDate: user.employee?.joinDate ? format(new Date(user.employee.joinDate), 'yyyy-MM-dd') : '',
     salary: user.employee?.salary?.toString() || '',
     departmentId: user.employee?.departmentId || 'none',
+    dateOfBirth: user.employee?.dateOfBirth ? format(new Date(user.employee.dateOfBirth), 'yyyy-MM-dd') : '',
+    aadharNumber: user.employee?.aadharNumber || '',
+    panNumber: user.employee?.panNumber || '',
+    aadharDocUrl: user.employee?.aadharDocUrl || '',
+    panDocUrl: user.employee?.panDocUrl || '',
   })
 
   const createEmployeeMutation = useMutation({
@@ -415,6 +425,11 @@ function EditEmployeeDialog({
       joinDate?: string | null
       salary?: number | null
       departmentId?: string | null
+      dateOfBirth?: string | null
+      aadharNumber?: string | null
+      panNumber?: string | null
+      aadharDocUrl?: string | null
+      panDocUrl?: string | null
     }) => apiPost('/api/employees', data),
     onSuccess: () => {
       toast.success('Employee record created successfully')
@@ -432,9 +447,13 @@ function EditEmployeeDialog({
       joinDate?: string | null
       salary?: number | null
       departmentId?: string | null
+      dateOfBirth?: string | null
+      aadharNumber?: string | null
+      panNumber?: string | null
+      aadharDocUrl?: string | null
+      panDocUrl?: string | null
     }) => {
       if (user.employee) {
-        // Update existing employee
         return apiPatch(`/api/employees/${user.employee.id}`, data)
       } else {
         throw new Error('Employee record not found')
@@ -455,12 +474,17 @@ function EditEmployeeDialog({
     
     if (user.employee) {
       // Update existing employee
-      const updateData: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null } = {}
-      if (formData.employeeCode) updateData.employeeCode = formData.employeeCode
-      if (formData.joinDate) updateData.joinDate = formData.joinDate
-      if (formData.salary) updateData.salary = parseFloat(formData.salary)
-      if (formData.departmentId !== undefined) updateData.departmentId = formData.departmentId === 'none' ? null : formData.departmentId || null
-      updateEmployeeMutation.mutate(updateData)
+      updateEmployeeMutation.mutate({
+        employeeCode: formData.employeeCode || undefined,
+        joinDate: formData.joinDate || null,
+        salary: formData.salary ? parseFloat(formData.salary) : null,
+        departmentId: formData.departmentId === 'none' ? null : formData.departmentId || null,
+        dateOfBirth: formData.dateOfBirth || null,
+        aadharNumber: formData.aadharNumber || null,
+        panNumber: formData.panNumber || null,
+        aadharDocUrl: formData.aadharDocUrl || null,
+        panDocUrl: formData.panDocUrl || null,
+      })
     } else {
       // Create new employee
       if (!formData.employeeCode) {
@@ -473,6 +497,11 @@ function EditEmployeeDialog({
         joinDate: formData.joinDate || null,
         salary: formData.salary ? parseFloat(formData.salary) : null,
         departmentId: formData.departmentId === 'none' ? null : formData.departmentId || null,
+        dateOfBirth: formData.dateOfBirth || null,
+        aadharNumber: formData.aadharNumber || null,
+        panNumber: formData.panNumber || null,
+        aadharDocUrl: formData.aadharDocUrl || null,
+        panDocUrl: formData.panDocUrl || null,
       })
     }
   }
@@ -499,34 +528,47 @@ function EditEmployeeDialog({
             </p>
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label>Employee Code *</Label>
-            <Input
-              value={formData.employeeCode}
-              onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Employee Code *</Label>
+              <Input
+                value={formData.employeeCode}
+                onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
+                required
+                placeholder="e.g., EMP001"
+              />
+            </div>
+            <div>
+              <Label>Date of Birth</Label>
+              <Input
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+              />
+            </div>
           </div>
 
-          <div>
-            <Label>Join Date</Label>
-            <Input
-              type="date"
-              value={formData.joinDate}
-              onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <Label>Salary</Label>
-            <Input
-              type="number"
-              value={formData.salary}
-              onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-              min={0}
-              step="0.01"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Join Date</Label>
+              <Input
+                type="date"
+                value={formData.joinDate}
+                onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Salary</Label>
+              <Input
+                type="number"
+                value={formData.salary}
+                onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                min={0}
+                step="0.01"
+                placeholder="Monthly salary"
+              />
+            </div>
           </div>
 
           <div>
@@ -549,7 +591,62 @@ function EditEmployeeDialog({
             </Select>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="border-t pt-4 mt-4">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Identity Documents
+            </h4>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Aadhar Number</Label>
+                <Input
+                  value={formData.aadharNumber}
+                  onChange={(e) => setFormData({ ...formData, aadharNumber: e.target.value })}
+                  placeholder="12-digit Aadhar number"
+                  maxLength={12}
+                  pattern="[0-9]{12}"
+                />
+              </div>
+              <div>
+                <Label>PAN Number</Label>
+                <Input
+                  value={formData.panNumber}
+                  onChange={(e) => setFormData({ ...formData, panNumber: e.target.value.toUpperCase() })}
+                  placeholder="e.g., ABCDE1234F"
+                  maxLength={10}
+                  pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label>Aadhar Document URL</Label>
+                <Input
+                  value={formData.aadharDocUrl}
+                  onChange={(e) => setFormData({ ...formData, aadharDocUrl: e.target.value })}
+                  placeholder="URL to uploaded Aadhar document"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload document separately and paste URL
+                </p>
+              </div>
+              <div>
+                <Label>PAN Document URL</Label>
+                <Input
+                  value={formData.panDocUrl}
+                  onChange={(e) => setFormData({ ...formData, panDocUrl: e.target.value })}
+                  placeholder="URL to uploaded PAN document"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Upload document separately and paste URL
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button
               type="button"
               variant="outline"

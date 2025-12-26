@@ -48,26 +48,26 @@ export async function POST(request: NextRequest) {
     for (const log of logs) {
       try {
         // Skip invalid employee codes
-        if (!log.EmployeeCode || log.EmployeeCode === '0' || log.EmployeeCode.trim() === '') {
+        if (!log.EmpCode || log.EmpCode === '0' || log.EmpCode.trim() === '') {
           skipped++
           continue
         }
 
-        const employeeId = employeeCodeMap.get(log.EmployeeCode)
+        const employeeId = employeeCodeMap.get(log.EmpCode)
         if (!employeeId) {
           skipped++
           continue
         }
 
-        // Parse log date
-        const logDate = new Date(log.LogDate)
+        // Parse log date from IOTime
+        const logDate = new Date(log.IOTime)
         if (isNaN(logDate.getTime())) {
           errors++
           continue
         }
 
-        // Normalize punch direction
-        const punchDirection = normalizePunchDirection(log.PunchDirection)
+        // Normalize punch direction from IOMode
+        const punchDirection = normalizePunchDirection(log.IOMode)
 
         // Check for duplicate
         const existing = await prisma.attendanceLog.findUnique({
@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
             employeeId,
             logDate,
             punchDirection,
-            temperature: log.Temperature || 0,
-            serialNumber: log.SerialNumber || null,
+            temperature: 0, // Not available in new API
+            serialNumber: log.DeviceKey || null,
           },
         })
 

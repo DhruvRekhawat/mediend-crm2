@@ -15,14 +15,15 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
   const pathname = usePathname()
   const { user, isLoading } = useAuth()
   
-  // Don't show sidebar on login page or payslip page
+  // Don't show sidebar on login page, payslip page, or document view page
   const isLoginPage = pathname === '/login'
   const isPayslipPage = pathname?.includes('/payroll/') && pathname?.includes('/slip')
+  const isDocumentViewPage = pathname?.includes('/documents/') && pathname?.includes('/view')
   
-  // Show sidebar if user is authenticated and not on login page or payslip page
-  const shouldShowSidebar = !isLoading && user && !isLoginPage && !isPayslipPage
+  // Show sidebar if user is authenticated and not on special pages
+  const shouldShowSidebar = !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage
 
-  if (isLoginPage || isPayslipPage) {
+  if (isLoginPage || isPayslipPage || isDocumentViewPage) {
     return <>{children}</>
   }
 
