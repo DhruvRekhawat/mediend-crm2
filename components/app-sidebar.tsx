@@ -24,6 +24,11 @@ import {
   TrendingUp,
   Briefcase,
   Mail,
+  BookOpen,
+  FolderTree,
+  CheckCircle,
+  BarChart3,
+  CreditCard,
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -104,74 +109,74 @@ const navItems: NavItem[] = [
     title: 'My Attendance',
     url: '/employee/attendance',
     icon: Clock,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Leaves',
     url: '/employee/leaves',
     icon: Calendar,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Profile',
     url: '/employee/profile',
     icon: UserCircle,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Payroll',
     url: '/employee/payroll',
     icon: Wallet,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Documents',
     url: '/employee/documents',
     icon: FileText,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Feedback',
     url: '/employee/feedback',
     icon: MessageSquare,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Tickets',
     url: '/employee/tickets',
     icon: Ticket,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'My Increment',
     url: '/employee/increment',
     icon: TrendingUp,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   // Employee Services
   {
     title: 'Svc Anonymous Msg',
     url: '/employee/anonymous-message',
     icon: ShieldCheck,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'Svc MD Appointment',
     url: '/employee/md-appointment',
     icon: CalendarCheck,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'Svc Mental Health',
     url: '/employee/mental-health',
     icon: Heart,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   {
     title: 'Svc Job Postings',
     url: '/employee/ijp',
     icon: Briefcase,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN'],
+    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'],
   },
   // HR Management - Only for HR_HEAD and ADMIN
   {
@@ -259,6 +264,43 @@ const navItems: NavItem[] = [
     icon: CalendarCheck,
     roles: ['MD'],
   },
+  // Finance Management - Only for FINANCE_HEAD, MD, and ADMIN
+  {
+    title: 'Fin Ledger',
+    url: '/finance/ledger',
+    icon: BookOpen,
+    permission: 'finance:read',
+  },
+  {
+    title: 'Fin Parties',
+    url: '/finance/parties',
+    icon: Building2,
+    permission: 'finance:read',
+  },
+  {
+    title: 'Fin Heads',
+    url: '/finance/heads',
+    icon: FolderTree,
+    permission: 'finance:read',
+  },
+  {
+    title: 'Fin Payment Modes',
+    url: '/finance/payment-modes',
+    icon: CreditCard,
+    permission: 'finance:read',
+  },
+  {
+    title: 'Fin Approvals',
+    url: '/finance/approvals',
+    icon: CheckCircle,
+    permission: 'finance:approve',
+  },
+  {
+    title: 'Fin Reports',
+    url: '/finance/reports',
+    icon: BarChart3,
+    permission: 'finance:read',
+  },
 ]
 
 function getDashboardUrl(role: string): string {
@@ -270,6 +312,7 @@ function getDashboardUrl(role: string): string {
     INSURANCE_HEAD: '/insurance/dashboard',
     PL_HEAD: '/pl/dashboard',
     HR_HEAD: '/hr/users',
+    FINANCE_HEAD: '/finance/ledger',
     ADMIN: '/admin/dashboard',
   }
   return routes[role] || '/dashboard'
@@ -352,6 +395,7 @@ export function AppSidebar() {
                   !item.title.startsWith('Svc ') && 
                   !item.title.startsWith('HR ') && 
                   !item.title.startsWith('MD ') &&
+                  !item.title.startsWith('Fin ') &&
                   item.title !== 'Departments' &&
                   item.title !== 'Leave Types'
                 )
@@ -434,6 +478,31 @@ export function AppSidebar() {
                           <Link href={item.url}>
                             <Icon />
                             <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+        {itemsWithUrls.some((item) => item.title.startsWith('Fin ')) && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Finance</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {itemsWithUrls
+                  .filter((item) => item.title.startsWith('Fin '))
+                  .map((item) => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Fin ', '')}>
+                          <Link href={item.url}>
+                            <Icon />
+                            <span>{item.title.replace('Fin ', '')}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

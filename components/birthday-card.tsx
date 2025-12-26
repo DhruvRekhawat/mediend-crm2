@@ -25,7 +25,7 @@ export function BirthdayCard() {
   }
 
   return (
-    <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 text-white border-0 shadow-xl">
+    <Card className="relative overflow-hidden bg-linear-to-br from-purple-500 via-pink-500 to-orange-400 text-white border-0 shadow-xl">
 
 
       <CardContent className="relative py-8 text-center">

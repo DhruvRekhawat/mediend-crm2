@@ -25,6 +25,10 @@ export type Permission =
   | 'hrms:payroll:write'
   | 'hrms:employees:read'
   | 'hrms:employees:write'
+  | 'finance:read'
+  | 'finance:write'
+  | 'finance:masters:write'
+  | 'finance:approve'
 
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
@@ -34,6 +38,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'users:read',
     'insurance:read',
     'pl:read',
+    'finance:read',
+    'finance:approve',
   ],
   SALES_HEAD: [
     'leads:read',
@@ -86,6 +92,12 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:employees:read',
     'hrms:employees:write',
   ],
+  FINANCE_HEAD: [
+    'analytics:read',
+    'finance:read',
+    'finance:write',
+    'finance:masters:write',
+  ],
   ADMIN: [
     'leads:read',
     'leads:write',
@@ -110,6 +122,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:payroll:write',
     'hrms:employees:read',
     'hrms:employees:write',
+    'finance:read',
+    'finance:write',
+    'finance:masters:write',
+    'finance:approve',
   ],
 }
 

@@ -17,6 +17,7 @@ enum UserRole {
   INSURANCE_HEAD
   PL_HEAD
   HR_HEAD
+  FINANCE_HEAD
   ADMIN
 }
 
@@ -150,6 +151,11 @@ model User {
   plRecords             PLRecord[]
   employee              Employee?
   approvedLeaves        LeaveRequest[] @relation("LeaveApprover")
+  
+  // Finance Ledger Relations
+  createdLedgerEntries  LedgerEntry[]       @relation("LedgerCreator")
+  approvedLedgerEntries LedgerEntry[]       @relation("LedgerApprover")
+  ledgerAuditLogs       LedgerAuditLog[]    @relation("LedgerAuditPerformer")
 
   @@index([email])
   @@index([role])
@@ -664,4 +670,168 @@ model IJPApplication {
   @@index([referredById])
   @@index([status])
   @@index([createdAt])
+}
+
+// ==========================================
+// Finance Ledger Module
+// ==========================================
+
+enum PartyType {
+  BUYER
+  SELLER
+  VENDOR
+  CLIENT
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum LedgerStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum FinancePaymentType {
+  EXPENSE
+  NON_EXPENSE
+}
+
+enum LedgerAuditAction {
+  CREATED
+  UPDATED
+  APPROVED
+  REJECTED
+}
+
+// Party Master - Centralized list of all parties
+model PartyMaster {
+  id           String     @id @default(cuid())
+  name         String
+  partyType    PartyType
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  gstNumber    String?
+  panNumber    String?
+  address      String?
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([name])
+  @@index([partyType])
+  @@index([isActive])
+}
+
+// Head Master - Categories for transactions
+model HeadMaster {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  department  String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([name])
+  @@index([isActive])
+}
+
+// Payment Type Master - Expense classification
+model PaymentTypeMaster {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  paymentType FinancePaymentType
+  description String?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([paymentType])
+  @@index([isActive])
+}
+
+// Payment Mode Master - Bank accounts/cash with balances
+model PaymentModeMaster {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  description    String?
+  openingBalance Float    @default(0)
+  currentBalance Float    @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  ledgerEntries LedgerEntry[]
+
+  @@index([name])
+  @@index([isActive])
+}
+
+// Ledger Entry - Core transaction record
+model LedgerEntry {
+  id                String          @id @default(cuid())
+  serialNumber      String          @unique
+  transactionType   TransactionType
+  transactionDate   DateTime        @default(now())
+  partyId           String
+  party             PartyMaster     @relation(fields: [partyId], references: [id])
+  description       String
+  headId            String
+  head              HeadMaster      @relation(fields: [headId], references: [id])
+  paymentTypeId     String
+  paymentType       PaymentTypeMaster @relation(fields: [paymentTypeId], references: [id])
+  paymentAmount     Float?          // For DEBIT entries
+  receivedAmount    Float?          // For CREDIT entries
+  paymentModeId     String
+  paymentMode       PaymentModeMaster @relation(fields: [paymentModeId], references: [id])
+  openingBalance    Float           // Snapshot at time of transaction
+  currentBalance    Float           // Balance after transaction (calculated)
+  status            LedgerStatus    @default(PENDING)
+  rejectionReason   String?
+  createdById       String
+  createdBy         User            @relation("LedgerCreator", fields: [createdById], references: [id])
+  approvedById      String?
+  approvedBy        User?           @relation("LedgerApprover", fields: [approvedById], references: [id])
+  approvedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  auditLogs LedgerAuditLog[]
+
+  @@index([serialNumber])
+  @@index([transactionType])
+  @@index([transactionDate])
+  @@index([partyId])
+  @@index([headId])
+  @@index([paymentModeId])
+  @@index([status])
+  @@index([createdById])
+}
+
+// Ledger Audit Log - Tracks all changes and approvals
+model LedgerAuditLog {
+  id            String            @id @default(cuid())
+  ledgerEntryId String
+  ledgerEntry   LedgerEntry       @relation(fields: [ledgerEntryId], references: [id], onDelete: Cascade)
+  action        LedgerAuditAction
+  previousData  Json?
+  newData       Json?
+  reason        String?
+  performedById String
+  performedBy   User              @relation("LedgerAuditPerformer", fields: [performedById], references: [id])
+  performedAt   DateTime          @default(now())
+
+  @@index([ledgerEntryId])
+  @@index([action])
+  @@index([performedAt])
 }

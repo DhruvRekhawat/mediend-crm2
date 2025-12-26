@@ -2,14 +2,65 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { successResponse, errorResponse } from '@/lib/api-utils'
+import { UserRole } from '@prisma/client'
+
+const VALID_ROLES = Object.values(UserRole)
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if users already exist
+    const body = await request.json().catch(() => null)
+
+    // If body is provided, create a single user
+    if (body && body.email) {
+      const { email, password, name, role, teamId } = body
+
+      if (!email || !password || !name || !role) {
+        return errorResponse('Missing required fields: email, password, name, role', 400)
+      }
+
+      if (!VALID_ROLES.includes(role)) {
+        return errorResponse(`Invalid role. Valid roles: ${VALID_ROLES.join(', ')}`, 400)
+      }
+
+      // Check if user already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      })
+
+      if (existingUser) {
+        return errorResponse('User with this email already exists', 400)
+      }
+
+      const passwordHash = await hashPassword(password)
+      const user = await prisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          name,
+          role,
+          ...(teamId && { teamId }),
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          teamId: true,
+          createdAt: true,
+        },
+      })
+
+      return successResponse({
+        message: 'User created successfully',
+        user,
+      })
+    }
+
+    // No body provided - seed all default users
     const existingUsers = await prisma.user.findMany()
     
     if (existingUsers.length > 0) {
-      return errorResponse('Users already exist. Use /api/users to create new users.', 400)
+      return errorResponse('Users already exist. Pass user data in body to create individual users.', 400)
     }
 
     // Create default admin user
@@ -88,44 +139,29 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Create Finance Head
+    const financeHeadPasswordHash = await hashPassword('Finance@123')
+    await prisma.user.create({
+      data: {
+        email: 'finance@mediend.com',
+        passwordHash: financeHeadPasswordHash,
+        name: 'Finance Head',
+        role: 'FINANCE_HEAD',
+      },
+    })
+
     return successResponse({
       message: 'Default users created successfully',
       users: [
-        {
-          email: 'admin@mediend.com',
-          password: 'Admin@123',
-          role: 'ADMIN',
-        },
-        {
-          email: 'saleshead@mediend.com',
-          password: 'SalesHead@123',
-          role: 'SALES_HEAD',
-        },
-        {
-          email: 'bd@mediend.com',
-          password: 'BD@123',
-          role: 'BD',
-        },
-        {
-          email: 'insurance@mediend.com',
-          password: 'Insurance@123',
-          role: 'INSURANCE_HEAD',
-        },
-        {
-          email: 'pl@mediend.com',
-          password: 'PL@123',
-          role: 'PL_HEAD',
-        },
-        {
-          email: 'hr@mediend.com',
-          password: 'HR@123',
-          role: 'HR_HEAD',
-        },
+        { email: 'admin@mediend.com', password: 'Admin@123', role: 'ADMIN' },
+        { email: 'saleshead@mediend.com', password: 'SalesHead@123', role: 'SALES_HEAD' },
+        { email: 'bd@mediend.com', password: 'BD@123', role: 'BD' },
+        { email: 'insurance@mediend.com', password: 'Insurance@123', role: 'INSURANCE_HEAD' },
+        { email: 'pl@mediend.com', password: 'PL@123', role: 'PL_HEAD' },
+        { email: 'hr@mediend.com', password: 'HR@123', role: 'HR_HEAD' },
+        { email: 'finance@mediend.com', password: 'Finance@123', role: 'FINANCE_HEAD' },
       ],
-      team: {
-        name: 'North Team',
-        circle: 'North',
-      },
+      team: { name: 'North Team', circle: 'North' },
     }, 'Users seeded successfully')
   } catch (error) {
     console.error('Error seeding users:', error)
@@ -133,4 +169,3 @@ export async function POST(request: NextRequest) {
     return errorResponse(`Failed to seed users: ${message}`, 500)
   }
 }
-

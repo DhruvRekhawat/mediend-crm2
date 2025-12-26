@@ -1,0 +1,382 @@
+'use client'
+
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useQuery } from '@tanstack/react-query'
+import { apiGet } from '@/lib/api-client'
+import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye } from 'lucide-react'
+import { format } from 'date-fns'
+import Link from 'next/link'
+
+interface LedgerEntry {
+  id: string
+  serialNumber: string
+  transactionType: 'CREDIT' | 'DEBIT'
+  transactionDate: string
+  description: string
+  paymentAmount: number | null
+  receivedAmount: number | null
+  openingBalance: number
+  currentBalance: number
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  rejectionReason: string | null
+  party: {
+    id: string
+    name: string
+    partyType: string
+  }
+  head: {
+    id: string
+    name: string
+    department: string | null
+  }
+  paymentType: {
+    id: string
+    name: string
+    paymentType: string
+  }
+  paymentMode: {
+    id: string
+    name: string
+  }
+  createdBy: {
+    id: string
+    name: string
+    email: string
+  }
+  approvedBy: {
+    id: string
+    name: string
+    email: string
+  } | null
+}
+
+interface LedgerResponse {
+  data: LedgerEntry[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
+interface Party {
+  id: string
+  name: string
+}
+
+interface Head {
+  id: string
+  name: string
+}
+
+interface PaymentMode {
+  id: string
+  name: string
+}
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+export default function LedgerPage() {
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [partyFilter, setPartyFilter] = useState<string>('all')
+  const [headFilter, setHeadFilter] = useState<string>('all')
+  const [paymentModeFilter, setPaymentModeFilter] = useState<string>('all')
+
+  // Fetch ledger entries
+  const { data: ledgerData, isLoading } = useQuery<LedgerResponse>({
+    queryKey: ['ledger', search, typeFilter, statusFilter, partyFilter, headFilter, paymentModeFilter],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (search) params.set('search', search)
+      if (typeFilter !== 'all') params.set('transactionType', typeFilter)
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (partyFilter !== 'all') params.set('partyId', partyFilter)
+      if (headFilter !== 'all') params.set('headId', headFilter)
+      if (paymentModeFilter !== 'all') params.set('paymentModeId', paymentModeFilter)
+      return apiGet<LedgerResponse>(`/api/finance/ledger?${params.toString()}`)
+    },
+  })
+
+  // Fetch masters for filters
+  const { data: partiesData } = useQuery({
+    queryKey: ['parties-list'],
+    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&limit=100'),
+  })
+
+  const { data: headsData } = useQuery({
+    queryKey: ['heads-list'],
+    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&limit=100'),
+  })
+
+  const { data: modesData } = useQuery({
+    queryKey: ['modes-list'],
+    queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=100'),
+  })
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Approved</Badge>
+      case 'REJECTED':
+        return <Badge variant="destructive">Rejected</Badge>
+      default:
+        return <Badge variant="secondary">Pending</Badge>
+    }
+  }
+
+  const getTransactionIcon = (type: string) => {
+    if (type === 'CREDIT') {
+      return <ArrowUpCircle className="h-5 w-5 text-green-600" />
+    }
+    return <ArrowDownCircle className="h-5 w-5 text-red-600" />
+  }
+
+  // Calculate totals for filtered entries
+  const totals = ledgerData?.data.reduce(
+    (acc, entry) => {
+      if (entry.status === 'APPROVED') {
+        if (entry.transactionType === 'CREDIT') {
+          acc.credits += entry.receivedAmount || 0
+        } else {
+          acc.debits += entry.paymentAmount || 0
+        }
+      }
+      return acc
+    },
+    { credits: 0, debits: 0 }
+  ) || { credits: 0, debits: 0 }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Finance Ledger</h1>
+          <p className="text-muted-foreground mt-1">View and manage all financial transactions</p>
+        </div>
+        <Link href="/finance/ledger/new">
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            New Entry
+          </Button>
+        </Link>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Credits (In)</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.credits)}</p>
+              </div>
+              <ArrowUpCircle className="h-8 w-8 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Debits (Out)</p>
+                <p className="text-2xl font-bold text-red-600">{formatCurrency(totals.debits)}</p>
+              </div>
+              <ArrowDownCircle className="h-8 w-8 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Net (Credits - Debits)</p>
+                <p className={`text-2xl font-bold ${totals.credits - totals.debits >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatCurrency(totals.credits - totals.debits)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+          <CardDescription>Filter ledger entries</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Transaction Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="CREDIT">Credit</SelectItem>
+                <SelectItem value="DEBIT">Debit</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+                <SelectItem value="REJECTED">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={partyFilter} onValueChange={setPartyFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Party" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Parties</SelectItem>
+                {partiesData?.data.map((party) => (
+                  <SelectItem key={party.id} value={party.id}>
+                    {party.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={headFilter} onValueChange={setHeadFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Head" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Heads</SelectItem>
+                {headsData?.data.map((head) => (
+                  <SelectItem key={head.id} value={head.id}>
+                    {head.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Payment Mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
+                {modesData?.data.map((mode) => (
+                  <SelectItem key={mode.id} value={mode.id}>
+                    {mode.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Ledger Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Ledger Entries</CardTitle>
+          <CardDescription>Total: {ledgerData?.pagination.total || 0} entries</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Serial No</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Party</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Head</TableHead>
+                  <TableHead>Payment Mode</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ledgerData?.data.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="font-mono font-medium">{entry.serialNumber}</TableCell>
+                    <TableCell>{format(new Date(entry.transactionDate), 'dd MMM yyyy')}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getTransactionIcon(entry.transactionType)}
+                        <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
+                          {entry.transactionType}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{entry.party.name}</div>
+                        <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
+                    <TableCell>{entry.head.name}</TableCell>
+                    <TableCell>{entry.paymentMode.name}</TableCell>
+                    <TableCell className="text-right font-mono font-semibold">
+                      <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
+                        {entry.transactionType === 'CREDIT'
+                          ? `+${formatCurrency(entry.receivedAmount || 0)}`
+                          : `-${formatCurrency(entry.paymentAmount || 0)}`}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(entry.status)}
+                      {entry.rejectionReason && (
+                        <div className="text-xs text-red-500 mt-1">{entry.rejectionReason}</div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/finance/ledger/${entry.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {(!ledgerData?.data || ledgerData.data.length === 0) && (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                      No ledger entries found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
