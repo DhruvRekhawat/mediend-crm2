@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const toDate = searchParams.get('toDate')
     const departmentId = searchParams.get('departmentId')
     const employeeId = searchParams.get('employeeId')
+    const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
@@ -30,16 +31,35 @@ export async function GET(request: NextRequest) {
     if (fromDate || toDate) {
       where.logDate = {}
       if (fromDate) {
-        where.logDate.gte = new Date(fromDate)
+        // Treat date filters in UTC so they line up with how we store `logDate`
+        // (we store the IOTime clock-components as UTC with no conversions).
+        const [y, m, d] = fromDate.split('-').map(Number)
+        where.logDate.gte = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
       }
       if (toDate) {
-        const endDate = new Date(toDate)
-        endDate.setHours(23, 59, 59, 999)
-        where.logDate.lte = endDate
+        const [y, m, d] = toDate.split('-').map(Number)
+        where.logDate.lte = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
       }
     }
 
-    if (employeeId) {
+    // Handle search by employee name or code
+    if (search) {
+      const matchingEmployees = await prisma.employee.findMany({
+        where: {
+          OR: [
+            { employeeCode: { contains: search, mode: 'insensitive' } },
+            { user: { name: { contains: search, mode: 'insensitive' } } },
+          ],
+        },
+        select: { id: true },
+      })
+      if (matchingEmployees.length > 0) {
+        where.employeeId = { in: matchingEmployees.map((e) => e.id) }
+      } else {
+        // No matching employees, return empty result
+        where.employeeId = { in: [] }
+      }
+    } else if (employeeId) {
       where.employeeId = employeeId
     } else if (departmentId) {
       const employees = await prisma.employee.findMany({
@@ -104,8 +124,16 @@ export async function GET(request: NextRequest) {
 
     const grouped = Array.from(employeeMap.values()).map((item) => {
       const dayLogs = item.logs
-      const inLog = dayLogs.find((l) => l.punchDirection === 'IN')
-      const outLog = dayLogs.find((l) => l.punchDirection === 'OUT')
+      // Find the earliest IN log (first punch of the day)
+      const inLogs = dayLogs.filter((l) => l.punchDirection === 'IN')
+      const inLog = inLogs.length > 0 ? inLogs.reduce((earliest, current) => 
+        current.logDate < earliest.logDate ? current : earliest
+      ) : null
+      // Find the latest OUT log (last punch of the day)
+      const outLogs = dayLogs.filter((l) => l.punchDirection === 'OUT')
+      const outLog = outLogs.length > 0 ? outLogs.reduce((latest, current) => 
+        current.logDate > latest.logDate ? current : latest
+      ) : null
       
       let workHours = null
       if (inLog && outLog) {
@@ -113,7 +141,15 @@ export async function GET(request: NextRequest) {
         workHours = diffMs / (1000 * 60 * 60)
       }
 
-      const isLate = inLog ? (inLog.logDate.getHours() > 10 || (inLog.logDate.getHours() === 10 && inLog.logDate.getMinutes() > 0)) : false
+      // Check if late (no timezone conversions):
+      // `IOTime` is already the IST wall-clock time, and we store it as UTC with the same clock components.
+      // So comparing UTC hour/minute is equivalent to comparing the original IOTime hour/minute.
+      // Late threshold is 11:00 AM
+      const isLate = inLog ? (() => {
+        const utcHours = inLog.logDate.getUTCHours()
+        const utcMinutes = inLog.logDate.getUTCMinutes()
+        return utcHours > 11 || (utcHours === 11 && utcMinutes > 0)
+      })() : false
 
       return {
         ...item,

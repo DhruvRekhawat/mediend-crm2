@@ -9,7 +9,7 @@ export interface AttendanceWithHours {
   logs: AttendanceLog[]
 }
 
-const WORK_START_HOUR = 10 // 10 AM
+const WORK_START_HOUR = 11 // 11 AM
 
 export function calculateWorkHours(inTime: Date, outTime: Date | null): number | null {
   if (!outTime) return null
@@ -18,8 +18,11 @@ export function calculateWorkHours(inTime: Date, outTime: Date | null): number |
 }
 
 export function isLateArrival(punchTime: Date): boolean {
-  const punchHour = punchTime.getHours()
-  const punchMinute = punchTime.getMinutes()
+  // IMPORTANT: No timezone conversions.
+  // Attendance `logDate` is stored in UTC with the same clock-components as the device-provided IOTime.
+  // So we must read hour/minute using UTC getters to preserve the original IOTime HH:mm.
+  const punchHour = punchTime.getUTCHours()
+  const punchMinute = punchTime.getUTCMinutes()
   return punchHour > WORK_START_HOUR || (punchHour === WORK_START_HOUR && punchMinute > 0)
 }
 
@@ -30,8 +33,9 @@ export function groupAttendanceByDate(logs: AttendanceLog[]): AttendanceWithHour
     const dateKey = log.logDate.toISOString().split('T')[0]
     
     if (!grouped.has(dateKey)) {
+      const [y, m, d] = dateKey.split('-').map(Number)
       grouped.set(dateKey, {
-        date: new Date(dateKey),
+        date: new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)),
         inTime: null,
         outTime: null,
         workHours: null,

@@ -127,6 +127,12 @@ The external API returns logs with the following structure:
 }
 ```
 
+### Important Note about `IOTime` / Timezones
+
+- The biometric API’s `IOTime` value is already the **final IST wall-clock time** we want to show.
+- The system **does not** apply any timezone conversions to `IOTime`.
+- We store `IOTime` into `AttendanceLog.logDate` **as-is** and always format / compute using **UTC getters/formatting** so the displayed time matches `IOTime` exactly (no `+5:30` shifts).
+
 ## Data Flow
 
 1. **Authentication**: System authenticates with the external API using username/password

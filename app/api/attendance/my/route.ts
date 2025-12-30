@@ -32,12 +32,12 @@ export async function GET(request: NextRequest) {
     if (fromDate || toDate) {
       where.logDate = {}
       if (fromDate) {
-        where.logDate.gte = new Date(fromDate)
+        const [y, m, d] = fromDate.split('-').map(Number)
+        where.logDate.gte = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
       }
       if (toDate) {
-        const endDate = new Date(toDate)
-        endDate.setHours(23, 59, 59, 999)
-        where.logDate.lte = endDate
+        const [y, m, d] = toDate.split('-').map(Number)
+        where.logDate.lte = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
       }
     }
 

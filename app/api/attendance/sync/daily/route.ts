@@ -65,9 +65,25 @@ export async function POST(request: NextRequest) {
           continue
         }
 
-        // Parse log date from IOTime
-        const logDate = new Date(log.IOTime)
+        // Parse IOTime string.
+        // IMPORTANT: `IOTime` already represents the correct IST wall-clock time coming from the device.
+        // DO NOT do any timezone conversions. We store the timestamp exactly as provided.
+        const iotimeMatch = log.IOTime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/)
+        if (!iotimeMatch) {
+          console.error(`Invalid IOTime format: ${log.IOTime}`)
+          errors++
+          continue
+        }
+        
+        const [, year, month, day, hour, minute, second] = iotimeMatch.map(Number)
+
+        // Store as-is (no conversion).
+        // We intentionally create a UTC timestamp with the same clock components so rendering
+        // can also use UTC and show the same HH:mm the API provided.
+        const logDate = new Date(Date.UTC(year, month - 1, day, hour, minute, second))
+        
         if (isNaN(logDate.getTime())) {
+          console.error(`Invalid date created from IOTime: ${log.IOTime}`)
           errors++
           continue
         }
