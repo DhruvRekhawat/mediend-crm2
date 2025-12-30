@@ -34,9 +34,20 @@ export default function EmployeeAttendancePage() {
     queryFn: () => apiGet<AttendanceDay[]>(`/api/attendance/my?fromDate=${fromDate}&toDate=${toDate}`),
   })
 
-  const formatTime = (date: Date | null) => {
+  const formatTime = (date: Date | string | null) => {
     if (!date) return 'N/A'
-    return format(new Date(date), 'HH:mm')
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(dateObj.getTime())) return 'N/A'
+
+    // IMPORTANT: No conversions.
+    // We store IOTime clock-components as UTC, so formatting with UTC shows the exact HH:mm
+    // that came from the biometric API (which is already in IST wall-clock time).
+    return new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'UTC',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(dateObj)
   }
 
   const formatDate = (date: Date) => {
