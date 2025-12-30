@@ -55,8 +55,14 @@ export async function apiPatch<T>(endpoint: string, data: unknown): Promise<T> {
   return response.data as T
 }
 
-export async function apiDelete<T>(endpoint: string): Promise<T> {
-  const response = await apiRequest<T>(endpoint, { method: 'DELETE' })
+export async function apiDelete<T>(endpoint: string, data?: unknown): Promise<T> {
+  const options: RequestInit = {
+    method: 'DELETE',
+  }
+  if (data) {
+    options.body = JSON.stringify(data)
+  }
+  const response = await apiRequest<T>(endpoint, options)
   if (!response.success) {
     throw new Error(response.error || 'Request failed')
   }

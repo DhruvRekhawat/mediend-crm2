@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
+import { Calendar } from '@/components/ui/calendar'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
-import { Plus, Pencil, Search, Wallet, TrendingUp, TrendingDown } from 'lucide-react'
+import { Plus, Pencil, Search, Wallet, TrendingUp, TrendingDown, CalendarIcon, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { format } from 'date-fns'
 
 interface PaymentMode {
   id: string
@@ -21,6 +23,7 @@ interface PaymentMode {
   openingBalance: number
   currentBalance: number
   isActive: boolean
+  createdAt: string
 }
 
 interface PaymentModesResponse {
@@ -43,6 +46,8 @@ function formatCurrency(amount: number) {
 
 export default function PaymentModesPage() {
   const [search, setSearch] = useState('')
+  const [asOfDate, setAsOfDate] = useState<Date | undefined>(undefined)
+  const [showCalendar, setShowCalendar] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingMode, setEditingMode] = useState<PaymentMode | null>(null)
   const [formData, setFormData] = useState({
@@ -54,10 +59,17 @@ export default function PaymentModesPage() {
   const queryClient = useQueryClient()
 
   const { data: modesData, isLoading } = useQuery<PaymentModesResponse>({
-    queryKey: ['payment-modes', search],
+    queryKey: ['payment-modes', search, asOfDate],
     queryFn: () => {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
+      if (asOfDate) {
+        // Format date in local timezone (YYYY-MM-DD) to avoid UTC conversion issues
+        const year = asOfDate.getFullYear()
+        const month = String(asOfDate.getMonth() + 1).padStart(2, '0')
+        const day = String(asOfDate.getDate()).padStart(2, '0')
+        params.set('asOfDate', `${year}-${month}-${day}`)
+      }
       return apiGet<PaymentModesResponse>(`/api/finance/payment-modes?${params.toString()}`)
     },
   })
@@ -242,7 +254,9 @@ export default function PaymentModesPage() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-emerald-100 text-sm">Total Balance (All Active Modes)</p>
+              <p className="text-emerald-100 text-sm">
+                {asOfDate ? `Total Balance as of ${format(asOfDate, 'dd MMM yyyy')}` : 'Total Balance (All Active Modes)'}
+              </p>
               <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
             </div>
             <Wallet className="h-12 w-12 text-emerald-200" />
@@ -252,17 +266,58 @@ export default function PaymentModesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Search</CardTitle>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-wrap gap-4">
+            <div className="relative max-w-sm flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="relative">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  className="min-w-[200px] justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {asOfDate ? format(asOfDate, 'dd MMM yyyy') : 'Select date for opening balance'}
+                </Button>
+                {asOfDate && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setAsOfDate(undefined)
+                      setShowCalendar(false)
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              {showCalendar && (
+                <div className="absolute top-full left-0 mt-2 z-50 bg-background border rounded-md shadow-lg">
+                  <Calendar
+                    mode="single"
+                    selected={asOfDate}
+                    onSelect={(date) => {
+                      setAsOfDate(date)
+                      setShowCalendar(false)
+                    }}
+                    initialFocus
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -281,8 +336,13 @@ export default function PaymentModesPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Opening Balance</TableHead>
-                  <TableHead className="text-right">Current Balance</TableHead>
+                  <TableHead>Created On</TableHead>
+                  <TableHead className="text-right">
+                    {asOfDate ? `Opening Balance (as of ${format(asOfDate, 'dd MMM yyyy')})` : 'Opening Balance'}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {asOfDate ? `Balance (as of ${format(asOfDate, 'dd MMM yyyy')})` : 'Current Balance'}
+                  </TableHead>
                   <TableHead className="text-right">Change</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -298,6 +358,9 @@ export default function PaymentModesPage() {
                       <TableCell className="max-w-xs truncate">
                         {mode.description || '-'}
                       </TableCell>
+                      <TableCell>
+                        {format(new Date(mode.createdAt), 'dd MMM yyyy')}
+                      </TableCell>
                       <TableCell className="text-right font-mono">
                         {formatCurrency(mode.openingBalance)}
                       </TableCell>
@@ -305,18 +368,21 @@ export default function PaymentModesPage() {
                         {formatCurrency(mode.currentBalance)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div
-                          className={`flex items-center justify-end gap-1 ${
-                            isPositive ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {isPositive ? (
-                            <TrendingUp className="h-4 w-4" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4" />
-                          )}
-                          <span className="font-mono">{formatCurrency(Math.abs(change))}</span>
-                        </div>
+                        {!asOfDate && (
+                          <div
+                            className={`flex items-center justify-end gap-1 ${
+                              isPositive ? 'text-green-600' : 'text-red-600'
+                            }`}
+                          >
+                            {isPositive ? (
+                              <TrendingUp className="h-4 w-4" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4" />
+                            )}
+                            <span className="font-mono">{formatCurrency(Math.abs(change))}</span>
+                          </div>
+                        )}
+                        {asOfDate && <span className="text-muted-foreground">-</span>}
                       </TableCell>
                       <TableCell>
                         <Badge variant={mode.isActive ? 'default' : 'secondary'}>
@@ -342,7 +408,7 @@ export default function PaymentModesPage() {
                 })}
                 {(!modesData?.data || modesData.data.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       No payment modes found
                     </TableCell>
                   </TableRow>

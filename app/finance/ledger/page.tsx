@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye } from 'lucide-react'
+import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
+import { Calendar } from '@/components/ui/calendar'
 
 interface LedgerEntry {
   id: string
@@ -89,6 +90,12 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
+interface PaymentType {
+  id: string
+  name: string
+  paymentType: string
+}
+
 export default function LedgerPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -96,10 +103,15 @@ export default function LedgerPage() {
   const [partyFilter, setPartyFilter] = useState<string>('all')
   const [headFilter, setHeadFilter] = useState<string>('all')
   const [paymentModeFilter, setPaymentModeFilter] = useState<string>('all')
+  const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all')
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [showStartCalendar, setShowStartCalendar] = useState(false)
+  const [showEndCalendar, setShowEndCalendar] = useState(false)
 
   // Fetch ledger entries
   const { data: ledgerData, isLoading } = useQuery<LedgerResponse>({
-    queryKey: ['ledger', search, typeFilter, statusFilter, partyFilter, headFilter, paymentModeFilter],
+    queryKey: ['ledger', search, typeFilter, statusFilter, partyFilter, headFilter, paymentModeFilter, paymentTypeFilter, startDate, endDate],
     queryFn: () => {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
@@ -108,6 +120,21 @@ export default function LedgerPage() {
       if (partyFilter !== 'all') params.set('partyId', partyFilter)
       if (headFilter !== 'all') params.set('headId', headFilter)
       if (paymentModeFilter !== 'all') params.set('paymentModeId', paymentModeFilter)
+      if (paymentTypeFilter !== 'all') params.set('paymentTypeId', paymentTypeFilter)
+      if (startDate) {
+        // Format date in local timezone (YYYY-MM-DD) to avoid UTC conversion issues
+        const year = startDate.getFullYear()
+        const month = String(startDate.getMonth() + 1).padStart(2, '0')
+        const day = String(startDate.getDate()).padStart(2, '0')
+        params.set('startDate', `${year}-${month}-${day}`)
+      }
+      if (endDate) {
+        // Format date in local timezone (YYYY-MM-DD) to avoid UTC conversion issues
+        const year = endDate.getFullYear()
+        const month = String(endDate.getMonth() + 1).padStart(2, '0')
+        const day = String(endDate.getDate()).padStart(2, '0')
+        params.set('endDate', `${year}-${month}-${day}`)
+      }
       return apiGet<LedgerResponse>(`/api/finance/ledger?${params.toString()}`)
     },
   })
@@ -126,6 +153,11 @@ export default function LedgerPage() {
   const { data: modesData } = useQuery({
     queryKey: ['modes-list'],
     queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=100'),
+  })
+
+  const { data: paymentTypesData } = useQuery({
+    queryKey: ['payment-types-list'],
+    queryFn: () => apiGet<{ data: PaymentType[] }>('/api/finance/payment-types?isActive=true&limit=100'),
   })
 
   const getStatusBadge = (status: string) => {
@@ -221,76 +253,171 @@ export default function LedgerPage() {
           <CardDescription>Filter ledger entries</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Transaction Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="CREDIT">Credit</SelectItem>
+                  <SelectItem value="DEBIT">Debit</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="APPROVED">Approved</SelectItem>
+                  <SelectItem value="REJECTED">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Payment Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Payment Types</SelectItem>
+                  {paymentTypesData?.data.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name} ({type.paymentType})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={partyFilter} onValueChange={setPartyFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Party" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Parties</SelectItem>
+                  {partiesData?.data.map((party) => (
+                    <SelectItem key={party.id} value={party.id}>
+                      {party.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={headFilter} onValueChange={setHeadFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Head" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Heads</SelectItem>
+                  {headsData?.data.map((head) => (
+                    <SelectItem key={head.id} value={head.id}>
+                      {head.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Transaction Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="CREDIT">Credit</SelectItem>
-                <SelectItem value="DEBIT">Debit</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={partyFilter} onValueChange={setPartyFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Party" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Parties</SelectItem>
-                {partiesData?.data.map((party) => (
-                  <SelectItem key={party.id} value={party.id}>
-                    {party.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={headFilter} onValueChange={setHeadFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Head" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Heads</SelectItem>
-                {headsData?.data.map((head) => (
-                  <SelectItem key={head.id} value={head.id}>
-                    {head.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Payment Mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Modes</SelectItem>
-                {modesData?.data.map((mode) => (
-                  <SelectItem key={mode.id} value={mode.id}>
-                    {mode.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Payment Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Modes</SelectItem>
+                  {modesData?.data.map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id}>
+                      {mode.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowStartCalendar(!showStartCalendar)}
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, 'dd MMM yyyy') : 'Start Date'}
+                  </Button>
+                  {startDate && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setStartDate(undefined)
+                        setShowStartCalendar(false)
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {showStartCalendar && (
+                  <div className="absolute top-full left-0 mt-2 z-50 bg-background border rounded-md shadow-lg">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date)
+                        setShowStartCalendar(false)
+                      }}
+                      initialFocus
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowEndCalendar(!showEndCalendar)}
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, 'dd MMM yyyy') : 'End Date'}
+                  </Button>
+                  {endDate && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEndDate(undefined)
+                        setShowEndCalendar(false)
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {showEndCalendar && (
+                  <div className="absolute top-full left-0 mt-2 z-50 bg-background border rounded-md shadow-lg">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={(date) => {
+                        setEndDate(date)
+                        setShowEndCalendar(false)
+                      }}
+                      initialFocus
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -314,6 +441,7 @@ export default function LedgerPage() {
                   <TableHead>Party</TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Head</TableHead>
+                  <TableHead>Payment Type</TableHead>
                   <TableHead>Payment Mode</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Status</TableHead>
@@ -341,6 +469,12 @@ export default function LedgerPage() {
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
                     <TableCell>{entry.head.name}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{entry.paymentType.name}</div>
+                        <div className="text-xs text-muted-foreground">{entry.paymentType.paymentType}</div>
+                      </div>
+                    </TableCell>
                     <TableCell>{entry.paymentMode.name}</TableCell>
                     <TableCell className="text-right font-mono font-semibold">
                       <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
@@ -366,7 +500,7 @@ export default function LedgerPage() {
                 ))}
                 {(!ledgerData?.data || ledgerData.data.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       No ledger entries found
                     </TableCell>
                   </TableRow>

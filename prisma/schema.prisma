@@ -155,6 +155,9 @@ model User {
   // Finance Ledger Relations
   createdLedgerEntries  LedgerEntry[]       @relation("LedgerCreator")
   approvedLedgerEntries LedgerEntry[]       @relation("LedgerApprover")
+  deletedLedgerEntries  LedgerEntry[]       @relation("LedgerDeleter")
+  editRequestedLedgerEntries LedgerEntry[] @relation("LedgerEditRequester")
+  editApprovedLedgerEntries LedgerEntry[]  @relation("LedgerEditApprover")
   ledgerAuditLogs       LedgerAuditLog[]    @relation("LedgerAuditPerformer")
 
   @@index([email])
@@ -704,6 +707,10 @@ enum LedgerAuditAction {
   UPDATED
   APPROVED
   REJECTED
+  DELETED
+  EDIT_REQUESTED
+  EDIT_APPROVED
+  EDIT_REJECTED
 }
 
 // Party Master - Centralized list of all parties
@@ -798,6 +805,23 @@ model LedgerEntry {
   currentBalance    Float           // Balance after transaction (calculated)
   status            LedgerStatus    @default(PENDING)
   rejectionReason   String?
+  // Soft delete fields
+  isDeleted         Boolean         @default(false)
+  deletedAt         DateTime?
+  deletedById       String?
+  deletedBy         User?           @relation("LedgerDeleter", fields: [deletedById], references: [id])
+  deletedReason     String?
+  // Edit request fields
+  editRequestStatus LedgerStatus?   // PENDING, APPROVED, or REJECTED for edit requests
+  editRequestReason String?         // Why edit is needed (required when requesting)
+  editRequestData   Json?           // Requested changes
+  editRequestedById String?
+  editRequestedBy   User?           @relation("LedgerEditRequester", fields: [editRequestedById], references: [id])
+  editRequestedAt   DateTime?
+  editApprovalReason String?        // Why approval was given/rejected (required when approving/rejecting)
+  editApprovedById  String?
+  editApprovedBy    User?           @relation("LedgerEditApprover", fields: [editApprovedById], references: [id])
+  editApprovedAt    DateTime?
   createdById       String
   createdBy         User            @relation("LedgerCreator", fields: [createdById], references: [id])
   approvedById      String?
@@ -816,6 +840,8 @@ model LedgerEntry {
   @@index([paymentModeId])
   @@index([status])
   @@index([createdById])
+  @@index([isDeleted])
+  @@index([editRequestStatus])
 }
 
 // Ledger Audit Log - Tracks all changes and approvals

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerStatus, LedgerAuditAction } from '@prisma/client'
+import { LedgerStatus, LedgerAuditAction, Prisma } from '@prisma/client'
 
 export async function GET(
   request: NextRequest,
@@ -78,9 +78,9 @@ export async function PATCH(
       return unauthorizedResponse()
     }
 
-    // Editing requires MD approval (finance:approve permission)
-    if (!hasPermission(user, 'finance:approve')) {
-      return errorResponse('Only MD can edit ledger entries', 403)
+    // Only finance team can apply approved edits
+    if (!hasPermission(user, 'finance:write')) {
+      return errorResponse('Only finance team can apply edits', 403)
     }
 
     const { id } = await params
@@ -91,6 +91,7 @@ export async function PATCH(
       include: {
         party: true,
         head: true,
+        paymentType: true,
         paymentMode: true,
       },
     })
@@ -99,13 +100,20 @@ export async function PATCH(
       return errorResponse('Ledger entry not found', 404)
     }
 
-    // Cannot edit approved transactions - they are immutable
-    if (existing.status === LedgerStatus.APPROVED) {
-      return errorResponse('Cannot edit approved transactions', 400)
+    if (existing.isDeleted) {
+      return errorResponse('Cannot edit deleted entry', 400)
     }
 
-    // Only allow editing certain fields for pending entries
-    const { description, transactionDate, partyId, headId, paymentTypeId } = body
+    // Can only apply edits if edit request was approved
+    if (existing.editRequestStatus !== LedgerStatus.APPROVED) {
+      return errorResponse('Edit request must be approved before applying changes', 400)
+    }
+
+    if (!existing.editRequestData || typeof existing.editRequestData !== 'object') {
+      return errorResponse('No approved edit data found', 400)
+    }
+
+    const changes = existing.editRequestData as Record<string, unknown>
 
     // Store previous data for audit
     const previousData = {
@@ -116,44 +124,61 @@ export async function PATCH(
       paymentTypeId: existing.paymentTypeId,
     }
 
-    // Validate new party if provided
-    if (partyId && partyId !== existing.partyId) {
+    // Validate and apply changes
+    const updateData: Record<string, unknown> = {}
+
+    if (changes.description !== undefined) {
+      updateData.description = changes.description
+    }
+
+    if (changes.transactionDate !== undefined) {
+      updateData.transactionDate = new Date(changes.transactionDate as string)
+    }
+
+    if (changes.partyId !== undefined && changes.partyId !== existing.partyId) {
       const party = await prisma.partyMaster.findUnique({
-        where: { id: partyId },
+        where: { id: changes.partyId as string },
       })
       if (!party || !party.isActive) {
         return errorResponse('Invalid or inactive party', 400)
       }
+      updateData.partyId = changes.partyId
     }
 
-    // Validate new head if provided
-    if (headId && headId !== existing.headId) {
+    if (changes.headId !== undefined && changes.headId !== existing.headId) {
       const head = await prisma.headMaster.findUnique({
-        where: { id: headId },
+        where: { id: changes.headId as string },
       })
       if (!head || !head.isActive) {
         return errorResponse('Invalid or inactive head', 400)
       }
+      updateData.headId = changes.headId
     }
 
-    // Validate new payment type if provided
-    if (paymentTypeId && paymentTypeId !== existing.paymentTypeId) {
+    if (changes.paymentTypeId !== undefined && changes.paymentTypeId !== existing.paymentTypeId) {
       const paymentType = await prisma.paymentTypeMaster.findUnique({
-        where: { id: paymentTypeId },
+        where: { id: changes.paymentTypeId as string },
       })
       if (!paymentType || !paymentType.isActive) {
         return errorResponse('Invalid or inactive payment type', 400)
       }
+      updateData.paymentTypeId = changes.paymentTypeId
     }
 
+    // Apply the changes and clear edit request fields
     const entry = await prisma.ledgerEntry.update({
       where: { id },
       data: {
-        ...(description !== undefined && { description }),
-        ...(transactionDate !== undefined && { transactionDate: new Date(transactionDate) }),
-        ...(partyId !== undefined && { partyId }),
-        ...(headId !== undefined && { headId }),
-        ...(paymentTypeId !== undefined && { paymentTypeId }),
+        ...updateData,
+        // Clear edit request fields after applying
+        editRequestStatus: null,
+        editRequestReason: null,
+        editRequestData: Prisma.JsonNull,
+        editRequestedById: null,
+        editRequestedAt: null,
+        editApprovalReason: null,
+        editApprovedById: null,
+        editApprovedAt: null,
       },
       include: {
         party: true,
@@ -175,14 +200,9 @@ export async function PATCH(
       data: {
         ledgerEntryId: entry.id,
         action: LedgerAuditAction.UPDATED,
-        previousData,
-        newData: {
-          description: entry.description,
-          transactionDate: entry.transactionDate,
-          partyId: entry.partyId,
-          headId: entry.headId,
-          paymentTypeId: entry.paymentTypeId,
-        },
+        previousData: previousData as Prisma.InputJsonValue,
+        newData: updateData as Prisma.InputJsonValue,
+        reason: 'Applied approved edit request',
         performedById: user.id,
       },
     })

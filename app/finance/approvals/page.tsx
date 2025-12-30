@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { Check, X, ArrowDownCircle, AlertTriangle, Clock } from 'lucide-react'
+import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface LedgerEntry {
   id: string
@@ -25,6 +27,15 @@ interface LedgerEntry {
   openingBalance: number
   currentBalance: number
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  editRequestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null
+  editRequestReason: string | null
+  editRequestData: Record<string, unknown> | null
+  editRequestedAt: string | null
+  editRequestedBy: {
+    id: string
+    name: string
+    email: string
+  } | null
   party: {
     id: string
     name: string
@@ -72,7 +83,9 @@ export default function ApprovalsPage() {
   const [selectedEntry, setSelectedEntry] = useState<LedgerEntry | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
+  const [approvalReason, setApprovalReason] = useState('')
   const [dialogAction, setDialogAction] = useState<'approve' | 'reject'>('approve')
+  const [dialogType, setDialogType] = useState<'debit' | 'edit'>('debit')
 
   const queryClient = useQueryClient()
 
@@ -80,6 +93,12 @@ export default function ApprovalsPage() {
   const { data: pendingData, isLoading } = useQuery<LedgerResponse>({
     queryKey: ['pending-debits'],
     queryFn: () => apiGet<LedgerResponse>('/api/finance/ledger?status=PENDING&transactionType=DEBIT'),
+  })
+
+  // Fetch pending edit requests
+  const { data: editRequestsData, isLoading: isLoadingEdits } = useQuery<LedgerResponse>({
+    queryKey: ['pending-edit-requests'],
+    queryFn: () => apiGet<LedgerResponse>('/api/finance/ledger?editRequestStatus=PENDING&status=APPROVED'),
   })
 
   const approveMutation = useMutation({
@@ -105,87 +124,170 @@ export default function ApprovalsPage() {
     },
   })
 
-  const handleApprove = (entry: LedgerEntry) => {
+  const approveEditMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      return apiPost(`/api/finance/ledger/${id}/approve-edit`, { reason })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['ledger'] })
+      setIsDialogOpen(false)
+      setSelectedEntry(null)
+      setApprovalReason('')
+      toast.success('Edit request approved')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to approve edit request')
+    },
+  })
+
+  const rejectEditMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      return apiPost(`/api/finance/ledger/${id}/reject-edit`, { reason })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['ledger'] })
+      setIsDialogOpen(false)
+      setSelectedEntry(null)
+      setRejectionReason('')
+      toast.success('Edit request rejected')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to reject edit request')
+    },
+  })
+
+  const handleApprove = (entry: LedgerEntry, type: 'debit' | 'edit' = 'debit') => {
     setSelectedEntry(entry)
     setDialogAction('approve')
+    setDialogType(type)
     setIsDialogOpen(true)
   }
 
-  const handleReject = (entry: LedgerEntry) => {
+  const handleReject = (entry: LedgerEntry, type: 'debit' | 'edit' = 'debit') => {
     setSelectedEntry(entry)
     setDialogAction('reject')
+    setDialogType(type)
     setRejectionReason('')
+    setApprovalReason('')
     setIsDialogOpen(true)
   }
 
   const handleConfirm = () => {
     if (!selectedEntry) return
 
-    if (dialogAction === 'reject' && !rejectionReason.trim()) {
-      toast.error('Rejection reason is required')
-      return
-    }
+    if (dialogType === 'debit') {
+      if (dialogAction === 'reject' && !rejectionReason.trim()) {
+        toast.error('Rejection reason is required')
+        return
+      }
 
-    approveMutation.mutate({
-      id: selectedEntry.id,
-      action: dialogAction,
-      rejectionReason: dialogAction === 'reject' ? rejectionReason.trim() : undefined,
-    })
+      approveMutation.mutate({
+        id: selectedEntry.id,
+        action: dialogAction,
+        rejectionReason: dialogAction === 'reject' ? rejectionReason.trim() : undefined,
+      })
+    } else {
+      // Edit request
+      if (dialogAction === 'approve') {
+        if (!approvalReason.trim()) {
+          toast.error('Approval reason is required')
+          return
+        }
+        approveEditMutation.mutate({
+          id: selectedEntry.id,
+          reason: approvalReason.trim(),
+        })
+      } else {
+        if (!rejectionReason.trim()) {
+          toast.error('Rejection reason is required')
+          return
+        }
+        rejectEditMutation.mutate({
+          id: selectedEntry.id,
+          reason: rejectionReason.trim(),
+        })
+      }
+    }
   }
 
   const pendingCount = pendingData?.pagination.total || 0
   const totalPendingAmount = pendingData?.data.reduce((sum, e) => sum + (e.paymentAmount || 0), 0) || 0
+  const editRequestsCount = editRequestsData?.pagination.total || 0
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Debit Approvals</h1>
-        <p className="text-muted-foreground mt-1">Review and approve pending debit transactions</p>
+        <h1 className="text-3xl font-bold">Finance Approvals</h1>
+        <p className="text-muted-foreground mt-1">Review and approve pending transactions and edit requests</p>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-amber-600 dark:text-amber-400">Pending Approvals</p>
-                <p className="text-3xl font-bold">{pendingCount}</p>
-              </div>
-              <Clock className="h-10 w-10 text-amber-400" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-red-600 dark:text-red-400">Total Pending Amount</p>
-                <p className="text-3xl font-bold">{formatCurrency(totalPendingAmount)}</p>
-              </div>
-              <ArrowDownCircle className="h-10 w-10 text-red-400" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs defaultValue="debits" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="debits">
+            Debit Approvals
+            {pendingCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {pendingCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="edits">
+            Edit Requests
+            {editRequestsCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {editRequestsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Alert for MD */}
-      <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
-            <div>
-              <p className="font-medium text-blue-900 dark:text-blue-100">Important</p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                Only debit (outgoing) transactions require your approval. Credit transactions are auto-approved.
-                When you approve a debit, the amount will be deducted from the payment mode balance immediately.
-              </p>
-            </div>
+        <TabsContent value="debits" className="space-y-6">
+
+          {/* Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-amber-600 dark:text-amber-400">Pending Approvals</p>
+                    <p className="text-3xl font-bold">{pendingCount}</p>
+                  </div>
+                  <Clock className="h-10 w-10 text-amber-400" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-red-600 dark:text-red-400">Total Pending Amount</p>
+                    <p className="text-3xl font-bold">{formatCurrency(totalPendingAmount)}</p>
+                  </div>
+                  <ArrowDownCircle className="h-10 w-10 text-red-400" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Pending Entries Table */}
+          {/* Alert for MD */}
+          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-blue-900 dark:text-blue-100">Important</p>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Only debit (outgoing) transactions require your approval. Credit transactions are auto-approved.
+                    When you approve a debit, the amount will be deducted from the payment mode balance immediately.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending Entries Table */}
       <Card>
         <CardHeader>
           <CardTitle>Pending Debit Entries</CardTitle>
@@ -242,7 +344,7 @@ export default function ApprovalsPage() {
                         <Button
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
-                          onClick={() => handleApprove(entry)}
+                          onClick={() => handleApprove(entry, 'debit')}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Approve
@@ -250,7 +352,7 @@ export default function ApprovalsPage() {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleReject(entry)}
+                          onClick={() => handleReject(entry, 'debit')}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Reject
@@ -265,23 +367,140 @@ export default function ApprovalsPage() {
         </CardContent>
       </Card>
 
+        </TabsContent>
+
+        <TabsContent value="edits" className="space-y-6">
+          {/* Edit Requests Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10 dark:border-yellow-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-yellow-600 dark:text-yellow-400">Pending Edit Requests</p>
+                    <p className="text-3xl font-bold">{editRequestsCount}</p>
+                  </div>
+                  <Edit className="h-10 w-10 text-yellow-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Edit Requests Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Edit Requests</CardTitle>
+              <CardDescription>Review and approve/reject edit requests from finance team</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingEdits ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : editRequestsCount === 0 ? (
+                <div className="text-center py-12">
+                  <Check className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                  <p className="text-lg font-medium">All caught up!</p>
+                  <p className="text-muted-foreground">No pending edit requests to review.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Serial No</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Party</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Requested By</TableHead>
+                      <TableHead>Request Reason</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {editRequestsData?.data.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell className="font-mono font-medium">
+                          <Link href={`/finance/ledger/${entry.id}`} className="hover:underline">
+                            {entry.serialNumber}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{format(new Date(entry.transactionDate), 'dd MMM yyyy')}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{entry.party.name}</div>
+                            <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {entry.editRequestedBy?.name || 'Unknown'}
+                            {entry.editRequestedAt && (
+                              <div className="text-xs text-muted-foreground">
+                                {format(new Date(entry.editRequestedAt), 'dd MMM yyyy')}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm truncate">{entry.editRequestReason || '-'}</p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => handleApprove(entry, 'edit')}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleReject(entry, 'edit')}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                            <Link href={`/finance/ledger/${entry.id}`}>
+                              <Button size="sm" variant="outline">
+                                View
+                              </Button>
+                            </Link>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
       {/* Approval/Rejection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => {
         setIsDialogOpen(open)
         if (!open) {
           setSelectedEntry(null)
           setRejectionReason('')
+          setApprovalReason('')
         }
       }}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {dialogAction === 'approve' ? 'Confirm Approval' : 'Reject Entry'}
+              {dialogType === 'edit' 
+                ? (dialogAction === 'approve' ? 'Approve Edit Request' : 'Reject Edit Request')
+                : (dialogAction === 'approve' ? 'Confirm Approval' : 'Reject Entry')}
             </DialogTitle>
             <DialogDescription>
-              {dialogAction === 'approve'
-                ? 'Are you sure you want to approve this debit entry?'
-                : 'Please provide a reason for rejection.'}
+              {dialogType === 'edit'
+                ? (dialogAction === 'approve'
+                    ? 'Review the requested changes and provide an approval reason.'
+                    : 'Please provide a reason for rejecting this edit request.')
+                : (dialogAction === 'approve'
+                    ? 'Are you sure you want to approve this debit entry?'
+                    : 'Please provide a reason for rejection.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -290,7 +509,9 @@ export default function ApprovalsPage() {
               <div className="p-4 bg-muted rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Serial Number</span>
-                  <span className="font-mono font-medium">{selectedEntry.serialNumber}</span>
+                  <Link href={`/finance/ledger/${selectedEntry.id}`} className="font-mono font-medium hover:underline">
+                    {selectedEntry.serialNumber}
+                  </Link>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Party</span>
@@ -300,22 +521,56 @@ export default function ApprovalsPage() {
                   <span className="text-muted-foreground">Description</span>
                   <span className="text-right max-w-[200px] truncate">{selectedEntry.description}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Payment Mode</span>
-                  <span>{selectedEntry.paymentMode.name}</span>
-                </div>
-                <div className="flex justify-between text-sm font-semibold">
-                  <span>Amount</span>
-                  <span className="text-red-600">-{formatCurrency(selectedEntry.paymentAmount || 0)}</span>
-                </div>
+                {dialogType === 'debit' && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Payment Mode</span>
+                      <span>{selectedEntry.paymentMode.name}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>Amount</span>
+                      <span className="text-red-600">-{formatCurrency(selectedEntry.paymentAmount || 0)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
-              {dialogAction === 'approve' && (
+              {dialogType === 'edit' && selectedEntry.editRequestData && (
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                  <p className="text-sm font-medium mb-2">Requested Changes:</p>
+                  <pre className="text-xs bg-background p-2 rounded overflow-auto max-h-40">
+                    {JSON.stringify(selectedEntry.editRequestData, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {dialogType === 'edit' && selectedEntry.editRequestReason && (
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
+                  <p className="text-sm font-medium mb-1">Request Reason:</p>
+                  <p className="text-sm">{selectedEntry.editRequestReason}</p>
+                </div>
+              )}
+
+              {dialogAction === 'approve' && dialogType === 'debit' && (
                 <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
                   <p className="text-sm text-green-700 dark:text-green-300">
                     <strong>Balance Impact:</strong> This amount will be deducted from{' '}
                     <strong>{selectedEntry.paymentMode.name}</strong> immediately upon approval.
                   </p>
+                </div>
+              )}
+
+              {dialogAction === 'approve' && dialogType === 'edit' && (
+                <div className="space-y-2">
+                  <Label htmlFor="approvalReason">Approval Reason *</Label>
+                  <Textarea
+                    id="approvalReason"
+                    value={approvalReason}
+                    onChange={(e) => setApprovalReason(e.target.value)}
+                    placeholder="Explain why you are approving this edit request..."
+                    rows={3}
+                    required
+                  />
                 </div>
               )}
 
@@ -326,7 +581,7 @@ export default function ApprovalsPage() {
                     id="rejectionReason"
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Please provide a reason for rejection..."
+                    placeholder={dialogType === 'edit' ? 'Explain why you are rejecting this edit request...' : 'Please provide a reason for rejection...'}
                     rows={3}
                     required
                   />
@@ -340,17 +595,18 @@ export default function ApprovalsPage() {
                     setIsDialogOpen(false)
                     setSelectedEntry(null)
                     setRejectionReason('')
+                    setApprovalReason('')
                   }}
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleConfirm}
-                  disabled={approveMutation.isPending}
+                  disabled={approveMutation.isPending || approveEditMutation.isPending || rejectEditMutation.isPending}
                   className={dialogAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : ''}
                   variant={dialogAction === 'reject' ? 'destructive' : 'default'}
                 >
-                  {approveMutation.isPending
+                  {(approveMutation.isPending || approveEditMutation.isPending || rejectEditMutation.isPending)
                     ? 'Processing...'
                     : dialogAction === 'approve'
                     ? 'Confirm Approval'

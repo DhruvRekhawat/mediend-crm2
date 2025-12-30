@@ -20,16 +20,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const transactionType = searchParams.get('transactionType') as TransactionType | null
     const status = searchParams.get('status') as LedgerStatus | null
+    const editRequestStatus = searchParams.get('editRequestStatus') as LedgerStatus | null
     const partyId = searchParams.get('partyId')
     const headId = searchParams.get('headId')
     const paymentModeId = searchParams.get('paymentModeId')
+    const paymentTypeId = searchParams.get('paymentTypeId')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const where: Prisma.LedgerEntryWhereInput = {}
+    const where: Prisma.LedgerEntryWhereInput = {
+      isDeleted: false, // Exclude deleted entries by default
+    }
 
     if (transactionType) {
       where.transactionType = transactionType
@@ -37,6 +41,10 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       where.status = status
+    }
+
+    if (editRequestStatus) {
+      where.editRequestStatus = editRequestStatus
     }
 
     if (partyId) {
@@ -51,13 +59,23 @@ export async function GET(request: NextRequest) {
       where.paymentModeId = paymentModeId
     }
 
+    if (paymentTypeId) {
+      where.paymentTypeId = paymentTypeId
+    }
+
     if (startDate || endDate) {
       where.transactionDate = {}
       if (startDate) {
-        where.transactionDate.gte = new Date(startDate)
+        // Parse date string as UTC to match database storage
+        // Date string format: YYYY-MM-DD - treat as UTC date
+        const start = new Date(`${startDate}T00:00:00.000Z`)
+        where.transactionDate.gte = start
       }
       if (endDate) {
-        where.transactionDate.lte = new Date(endDate)
+        // Parse date string as UTC and set to end of day
+        // Date string format: YYYY-MM-DD - treat as UTC date
+        const end = new Date(`${endDate}T23:59:59.999Z`)
+        where.transactionDate.lte = end
       }
     }
 
@@ -98,6 +116,13 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
+            },
+          },
+          editRequestedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
             },
           },
           createdBy: {
