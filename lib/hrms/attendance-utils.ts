@@ -47,22 +47,35 @@ export function groupAttendanceByDate(logs: AttendanceLog[]): AttendanceWithHour
     const day = grouped.get(dateKey)!
     day.logs.push(log)
 
-    if (log.punchDirection === PunchDirection.IN) {
-      if (!day.inTime || log.logDate < day.inTime) {
-        day.inTime = log.logDate
-        day.isLate = isLateArrival(log.logDate)
-      }
-    } else if (log.punchDirection === PunchDirection.OUT) {
-      if (!day.outTime || log.logDate > day.outTime) {
-        day.outTime = log.logDate
-      }
+    // IMPORTANT:
+    // The biometric device/API can mislabel exit punches as IN.
+    // So for each day we treat:
+    // - inTime as the earliest punch of the day
+    // - outTime as the latest punch of the day (only if there are at least 2 punches)
+    if (!day.inTime || log.logDate < day.inTime) {
+      day.inTime = log.logDate
+      day.isLate = isLateArrival(log.logDate)
+    }
+
+    if (!day.outTime || log.logDate > day.outTime) {
+      day.outTime = log.logDate
     }
   }
 
   // Calculate work hours for each day
   for (const day of grouped.values()) {
+    // If only one punch exists, treat it as IN and keep OUT/workHours as null.
+    // If multiple punches exist, OUT is the last punch and hours are positive.
+    if (day.logs.length < 2) {
+      day.outTime = null
+      day.workHours = null
+      continue
+    }
+
     if (day.inTime && day.outTime) {
       day.workHours = calculateWorkHours(day.inTime, day.outTime)
+    } else {
+      day.workHours = null
     }
   }
 

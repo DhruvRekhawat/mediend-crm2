@@ -14,7 +14,7 @@ import { useState, useMemo } from 'react'
 import { Calendar, Clock, AlertCircle, RefreshCw, Search, ChevronLeft, ChevronRight, Users, UserCheck, UserX, TrendingUp } from 'lucide-react'
 import { format, eachDayOfInterval } from 'date-fns'
 import { toast } from 'sonner'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts'
 
 interface Department {
   id: string
@@ -132,7 +132,7 @@ export default function HRAttendancePage() {
         fromDate,
         toDate,
         page: page.toString(),
-        limit: '20',
+        limit: '30',
       })
       if (departmentId && departmentId !== 'all') {
         params.set('departmentId', departmentId)
@@ -207,6 +207,39 @@ export default function HRAttendancePage() {
       { name: 'On Time', value: onTime, color: COLORS.onTime },
       { name: 'Late', value: late, color: COLORS.late },
     ]
+  }, [allAttendanceData])
+
+  // Work hours trend data - Average work hours per day
+  const workHoursTrendData = useMemo(() => {
+    if (!allAttendanceData?.data) return []
+
+    const dateMap = new Map<string, { totalHours: number; count: number }>()
+    
+    allAttendanceData.data.forEach(record => {
+      if (record.workHours !== null && record.workHours > 0) {
+        const dateKey = record.date
+        if (!dateMap.has(dateKey)) {
+          dateMap.set(dateKey, { totalHours: 0, count: 0 })
+        }
+        const stats = dateMap.get(dateKey)!
+        stats.totalHours += record.workHours
+        stats.count++
+      }
+    })
+
+    return Array.from(dateMap.entries())
+      .map(([date, stats]) => {
+        const [y, m, d] = date.split('-').map(Number)
+        const dateObj = new Date(y, m - 1, d)
+        const avgHours = stats.count > 0 ? stats.totalHours / stats.count : 0
+        return {
+          date: format(dateObj, 'dd'),
+          fullDate: format(dateObj, 'MMM dd'),
+          avgHours: Number(avgHours.toFixed(2)),
+          totalEmployees: stats.count,
+        }
+      })
+      .sort((a, b) => a.date.localeCompare(b.date))
   }, [allAttendanceData])
 
   // Attendance heatmap data - all days in selected range, filterable by employee
@@ -492,7 +525,72 @@ export default function HRAttendancePage() {
         </Card>
       </div>
 
-      {/* Second Row: Heatmap */}
+      {/* Second Row: Work Hours Chart */}
+      <div className="grid gap-4 md:grid-cols-1">
+        <Card>
+          <CardHeader>
+            <CardTitle>Average Work Hours Trend</CardTitle>
+            <CardDescription>Average work hours per day across all employees</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[280px]">
+              {workHoursTrendData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={workHoursTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 12 }} 
+                      tickLine={false}
+                      axisLine={{ stroke: '#e5e7eb' }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12 }} 
+                      tickLine={false}
+                      axisLine={{ stroke: '#e5e7eb' }}
+                      label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip 
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const hours = typeof payload[0]?.value === 'number' ? payload[0].value : Number(payload[0]?.value) || 0
+                          return (
+                            <div className="bg-white border rounded-lg shadow-lg p-3">
+                              <p className="font-medium mb-1">{payload[0]?.payload?.fullDate}</p>
+                              <p className="text-sm text-blue-600">
+                                Avg Hours: {isFinite(hours) ? hours.toFixed(2) : 'N/A'}h
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                Employees: {payload[0]?.payload?.totalEmployees}
+                              </p>
+                            </div>
+                          )
+                        }
+                        return null
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="avgHours" 
+                      stroke="#3b82f6" 
+                      strokeWidth={2}
+                      dot={{ fill: '#3b82f6', r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="Avg Hours"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground">
+                  No work hours data available for this period
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Third Row: Heatmap */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Attendance Heatmap */}
         <Card className="md:col-span-2">

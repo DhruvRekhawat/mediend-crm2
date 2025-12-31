@@ -124,16 +124,23 @@ export async function GET(request: NextRequest) {
 
     const grouped = Array.from(employeeMap.values()).map((item) => {
       const dayLogs = item.logs
-      // Find the earliest IN log (first punch of the day)
-      const inLogs = dayLogs.filter((l) => l.punchDirection === 'IN')
-      const inLog = inLogs.length > 0 ? inLogs.reduce((earliest, current) => 
-        current.logDate < earliest.logDate ? current : earliest
-      ) : null
-      // Find the latest OUT log (last punch of the day)
-      const outLogs = dayLogs.filter((l) => l.punchDirection === 'OUT')
-      const outLog = outLogs.length > 0 ? outLogs.reduce((latest, current) => 
-        current.logDate > latest.logDate ? current : latest
-      ) : null
+      // IMPORTANT:
+      // The biometric API can mislabel exit punches as IN.
+      // For reporting, we treat:
+      // - inTime as the earliest punch of the day
+      // - outTime as the latest punch of the day (only if there are at least 2 punches)
+      const minLog = dayLogs.length > 0
+        ? dayLogs.reduce((earliest, current) =>
+            current.logDate < earliest.logDate ? current : earliest
+          )
+        : null
+      const maxLog = dayLogs.length > 0
+        ? dayLogs.reduce((latest, current) =>
+            current.logDate > latest.logDate ? current : latest
+          )
+        : null
+      const inLog = minLog
+      const outLog = dayLogs.length >= 2 ? maxLog : null
       
       let workHours = null
       if (inLog && outLog) {

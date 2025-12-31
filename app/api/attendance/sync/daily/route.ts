@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { errorResponse, successResponse } from '@/lib/api-utils'
 import { fetchAttendanceLogs } from '@/lib/hrms/biometric-api-client'
 import { normalizePunchDirection } from '@/lib/hrms/attendance-utils'
+import { PunchDirection } from '@prisma/client'
 import { format, subDays } from 'date-fns'
 
 /**
@@ -89,9 +90,32 @@ export async function POST(request: NextRequest) {
         }
 
         // Normalize punch direction from IOMode
-        const punchDirection = normalizePunchDirection(log.IOMode)
+        let punchDirection = normalizePunchDirection(log.IOMode)
 
-        // Check for duplicate
+        // Fix: If this is an IN entry, check if there's already an IN log for this employee on this day
+        // If yes, treat this second IN entry as OUT (biometric device sometimes marks exits as "in")
+        if (punchDirection === PunchDirection.IN) {
+          const dayStart = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+          const dayEnd = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+          
+          const existingInLog = await prisma.attendanceLog.findFirst({
+            where: {
+              employeeId,
+              logDate: {
+                gte: dayStart,
+                lte: dayEnd,
+              },
+              punchDirection: PunchDirection.IN,
+            },
+          })
+          
+          if (existingInLog) {
+            // This is a second IN entry, treat it as OUT
+            punchDirection = PunchDirection.OUT
+          }
+        }
+
+        // Check for duplicate (using the corrected punch direction)
         const existing = await prisma.attendanceLog.findUnique({
           where: {
             employeeId_logDate_punchDirection: {

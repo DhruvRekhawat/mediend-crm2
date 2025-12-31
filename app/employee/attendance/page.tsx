@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Calendar, Clock, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 interface AttendanceDay {
   date: Date
@@ -54,6 +55,25 @@ export default function EmployeeAttendancePage() {
     return format(new Date(date), 'PPP')
   }
 
+  // Work hours trend data for the chart
+  const workHoursTrendData = useMemo(() => {
+    if (!attendance) return []
+
+    return attendance
+      .filter(day => day.workHours !== null && day.workHours > 0)
+      .map(day => {
+        const dateStr = format(day.date, 'yyyy-MM-dd')
+        const [y, m, d] = dateStr.split('-').map(Number)
+        const dateObj = new Date(y, m - 1, d)
+        return {
+          date: format(dateObj, 'dd'),
+          fullDate: format(dateObj, 'MMM dd'),
+          workHours: Number(day.workHours!.toFixed(2)),
+        }
+      })
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }, [attendance])
+
   return (
     <div className="space-y-6">
       <div>
@@ -84,6 +104,67 @@ export default function EmployeeAttendancePage() {
                 onChange={(e) => setToDate(e.target.value)}
               />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Work Hours Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Work Hours Trend</CardTitle>
+          <CardDescription>Your work hours over the selected period</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[280px]">
+            {workHoursTrendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={workHoursTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }} 
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12 }} 
+                    tickLine={false}
+                    axisLine={{ stroke: '#e5e7eb' }}
+                    label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const raw = payload[0]?.value
+                        const hours = typeof raw === 'number' ? raw : Number(raw)
+                        return (
+                          <div className="bg-white border rounded-lg shadow-lg p-3">
+                            <p className="font-medium mb-1">{payload[0]?.payload?.fullDate}</p>
+                            <p className="text-sm text-blue-600">
+                              Work Hours: {Number.isFinite(hours) ? hours.toFixed(2) : 'N/A'}h
+                            </p>
+                          </div>
+                        )
+                      }
+                      return null
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="workHours" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6', r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Work Hours"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                No work hours data available for this period
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
