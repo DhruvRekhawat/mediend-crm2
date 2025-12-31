@@ -675,6 +675,8 @@ export default function HRAttendancePage() {
                     <TableHead>Department</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Entry Time</TableHead>
+                    <TableHead>Exit Time</TableHead>
+                    <TableHead>Work Hours</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -702,6 +704,17 @@ export default function HRAttendancePage() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          {formatTime(record.outTime)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {record.workHours !== null
+                          ? `${record.workHours.toFixed(2)} hours`
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell>
                         {record.isLate ? (
                           <Badge variant="destructive" className="flex items-center gap-1 w-fit">
                             <AlertCircle className="h-3 w-3" />
@@ -715,7 +728,7 @@ export default function HRAttendancePage() {
                   ))}
                   {(!attendanceData?.data || attendanceData.data.length === 0) && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                         No attendance records found
                       </TableCell>
                     </TableRow>
