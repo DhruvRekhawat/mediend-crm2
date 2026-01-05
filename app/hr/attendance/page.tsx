@@ -305,6 +305,22 @@ export default function HRAttendancePage() {
     }).format(dateObj)
   }
 
+  // Helper to normalize exit time - if it equals entry time, treat as null (employee hasn't exited yet)
+  const getNormalizedOutTime = (record: AttendanceRecord): Date | null => {
+    if (!record.outTime || !record.inTime) return record.outTime
+    
+    const inTime = typeof record.inTime === 'string' ? new Date(record.inTime) : record.inTime
+    const outTime = typeof record.outTime === 'string' ? new Date(record.outTime) : record.outTime
+    
+    // If times are the same (or very close - within 1 minute), treat as null
+    const diffMs = Math.abs(outTime.getTime() - inTime.getTime())
+    if (diffMs < 60000) { // Less than 1 minute difference
+      return null
+    }
+    
+    return record.outTime
+  }
+
   const formatDate = (date: string) => {
     const [y, m, d] = date.split('-').map(Number)
     return format(new Date(y, m - 1, d), 'PPP')
@@ -804,13 +820,22 @@ export default function HRAttendancePage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          {formatTime(record.outTime)}
+                          {formatTime(getNormalizedOutTime(record))}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {record.workHours !== null
-                          ? `${record.workHours.toFixed(2)} hours`
-                          : 'N/A'}
+                        {(() => {
+                          const normalizedOutTime = getNormalizedOutTime(record)
+                          // Recalculate work hours if outTime was normalized to null
+                          if (!normalizedOutTime || !record.inTime) {
+                            return 'N/A'
+                          }
+                          // Use the original workHours if available, otherwise calculate
+                          if (record.workHours !== null && record.workHours > 0) {
+                            return `${record.workHours.toFixed(2)} hours`
+                          }
+                          return 'N/A'
+                        })()}
                       </TableCell>
                       <TableCell>
                         {record.isLate ? (
