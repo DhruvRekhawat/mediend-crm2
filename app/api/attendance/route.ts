@@ -71,46 +71,44 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const [logs, total] = await Promise.all([
-      prisma.attendanceLog.findMany({
-        where,
-        include: {
-          employee: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
+    // IMPORTANT: Fetch ALL logs first (without pagination) to ensure we have
+    // all punches for each employee on each day. Then group, calculate inTime/outTime,
+    // and finally paginate the grouped results.
+    const allLogs = await prisma.attendanceLog.findMany({
+      where,
+      include: {
+        employee: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
               },
-              department: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+            },
+            department: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
         },
-        orderBy: {
-          logDate: 'desc',
-        },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      prisma.attendanceLog.count({ where }),
-    ])
+      },
+      orderBy: {
+        logDate: 'desc',
+      },
+    })
 
     // Group by employee and date for better presentation
     interface GroupedRecord {
-      employee: typeof logs[0]['employee']
+      employee: typeof allLogs[0]['employee']
       date: string
-      logs: typeof logs
+      logs: typeof allLogs
     }
     const employeeMap = new Map<string, GroupedRecord>()
     
-    for (const log of logs) {
+    for (const log of allLogs) {
       const key = `${log.employeeId}_${log.logDate.toISOString().split('T')[0]}`
       if (!employeeMap.has(key)) {
         employeeMap.set(key, {
@@ -122,7 +120,7 @@ export async function GET(request: NextRequest) {
       employeeMap.get(key)!.logs.push(log)
     }
 
-    const grouped = Array.from(employeeMap.values()).map((item) => {
+    const allGrouped = Array.from(employeeMap.values()).map((item) => {
       const dayLogs = item.logs
       // IMPORTANT:
       // The biometric API can mislabel exit punches as IN.
@@ -166,6 +164,19 @@ export async function GET(request: NextRequest) {
         isLate,
       }
     })
+
+    // Sort grouped results by date (descending) and then by employee name
+    allGrouped.sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date)
+      if (dateCompare !== 0) return dateCompare
+      return a.employee.user.name.localeCompare(b.employee.user.name)
+    })
+
+    // Apply pagination to grouped results
+    const total = allGrouped.length
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    const grouped = allGrouped.slice(startIndex, endIndex)
 
     return successResponse({
       data: grouped,
