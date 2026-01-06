@@ -21,6 +21,8 @@ interface LedgerEntry {
   transactionDate: string
   description: string
   paymentAmount: number | null
+  componentA: number | null
+  componentB: number | null
   receivedAmount: number | null
   openingBalance: number
   currentBalance: number
@@ -185,13 +187,19 @@ export default function LedgerPage() {
         if (entry.transactionType === 'CREDIT') {
           acc.credits += entry.receivedAmount || 0
         } else {
-          acc.debits += entry.paymentAmount || 0
+          // For DEBIT transactions, track total, component A, and component B
+          const totalDebit = entry.paymentAmount || 0
+          const componentA = entry.componentA || 0
+          const componentB = entry.componentB || 0
+          acc.debits += totalDebit
+          acc.debitComponentA += componentA
+          acc.debitComponentB += componentB
         }
       }
       return acc
     },
-    { credits: 0, debits: 0 }
-  ) || { credits: 0, debits: 0 }
+    { credits: 0, debits: 0, debitComponentA: 0, debitComponentB: 0 }
+  ) || { credits: 0, debits: 0, debitComponentA: 0, debitComponentB: 0 }
 
   return (
     <div className="space-y-6">
@@ -245,6 +253,44 @@ export default function LedgerPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Debit Components Breakdown - Only show if there are approved debits */}
+      {totals.debits > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Debit (A + B)</p>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(totals.debits)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Component A</p>
+                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(totals.debitComponentA)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Main expense</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Component B</p>
+                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(totals.debitComponentB)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Claimable amount</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Filters */}
       <Card>
@@ -477,11 +523,21 @@ export default function LedgerPage() {
                     </TableCell>
                     <TableCell>{entry.paymentMode.name}</TableCell>
                     <TableCell className="text-right font-mono font-semibold">
-                      <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
-                        {entry.transactionType === 'CREDIT'
-                          ? `+${formatCurrency(entry.receivedAmount || 0)}`
-                          : `-${formatCurrency(entry.paymentAmount || 0)}`}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
+                          {entry.transactionType === 'CREDIT'
+                            ? `+${formatCurrency(entry.receivedAmount || 0)}`
+                            : `-${formatCurrency(entry.paymentAmount || 0)}`}
+                        </span>
+                        {entry.transactionType === 'DEBIT' && (entry.componentA || entry.componentB) && (
+                          <div className="text-xs text-muted-foreground font-normal">
+                            <div>A: {formatCurrency(entry.componentA || 0)}</div>
+                            {entry.componentB && entry.componentB > 0 && (
+                              <div>B: {formatCurrency(entry.componentB)}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {getStatusBadge(entry.status)}

@@ -65,6 +65,8 @@ export default function NewLedgerEntryPage() {
     paymentTypeId: '',
     paymentModeId: '',
     amount: '',
+    componentA: '',
+    componentB: '',
   })
 
   // Fetch masters
@@ -100,6 +102,8 @@ export default function NewLedgerEntryPage() {
       paymentTypeId: string
       paymentModeId: string
       paymentAmount?: number
+      componentA?: number
+      componentB?: number
       receivedAmount?: number
     }) => apiPost('/api/finance/ledger', data),
     onSuccess: () => {
@@ -118,28 +122,60 @@ export default function NewLedgerEntryPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const amount = parseFloat(formData.amount)
-    if (isNaN(amount) || amount <= 0) {
-      toast.error('Please enter a valid amount')
-      return
-    }
+    if (transactionType === 'CREDIT') {
+      const amount = parseFloat(formData.amount)
+      if (isNaN(amount) || amount <= 0) {
+        toast.error('Please enter a valid amount')
+        return
+      }
 
-    const data = {
-      transactionType,
-      transactionDate: transactionDate.toISOString(),
-      partyId: formData.partyId,
-      description: formData.description,
-      headId: formData.headId,
-      paymentTypeId: formData.paymentTypeId,
-      paymentModeId: formData.paymentModeId,
-      ...(transactionType === 'CREDIT' ? { receivedAmount: amount } : { paymentAmount: amount }),
-    }
+      const data = {
+        transactionType,
+        transactionDate: transactionDate.toISOString(),
+        partyId: formData.partyId,
+        description: formData.description,
+        headId: formData.headId,
+        paymentTypeId: formData.paymentTypeId,
+        paymentModeId: formData.paymentModeId,
+        receivedAmount: amount,
+      }
 
-    createMutation.mutate(data)
+      createMutation.mutate(data)
+    } else {
+      // For DEBIT transactions, validate component A and B
+      const componentA = parseFloat(formData.componentA)
+      const componentB = parseFloat(formData.componentB) || 0
+
+      if (isNaN(componentA) || componentA <= 0) {
+        toast.error('Please enter a valid Component A (main expense)')
+        return
+      }
+
+      if (isNaN(componentB) || componentB < 0) {
+        toast.error('Component B (claimable amount) must be a valid non-negative number')
+        return
+      }
+
+      const data = {
+        transactionType,
+        transactionDate: transactionDate.toISOString(),
+        partyId: formData.partyId,
+        description: formData.description,
+        headId: formData.headId,
+        paymentTypeId: formData.paymentTypeId,
+        paymentModeId: formData.paymentModeId,
+        componentA,
+        componentB: componentB > 0 ? componentB : undefined,
+      }
+
+      createMutation.mutate(data)
+    }
   }
 
   // Calculate balance impact preview
-  const amount = parseFloat(formData.amount) || 0
+  const amount = transactionType === 'CREDIT' 
+    ? (parseFloat(formData.amount) || 0)
+    : ((parseFloat(formData.componentA) || 0) + (parseFloat(formData.componentB) || 0))
   const currentBalance = selectedPaymentMode?.currentBalance || 0
   const projectedBalance = transactionType === 'CREDIT'
     ? currentBalance + amount
@@ -312,26 +348,76 @@ export default function NewLedgerEntryPage() {
               </Select>
             </div>
 
-            {/* Amount */}
-            <div className="space-y-2">
-              <Label htmlFor="amount">
-                {transactionType === 'CREDIT' ? 'Received Amount' : 'Payment Amount'} *
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="pl-8"
-                  placeholder="0.00"
-                  required
-                />
+            {/* Amount - Different fields for CREDIT vs DEBIT */}
+            {transactionType === 'CREDIT' ? (
+              <div className="space-y-2">
+                <Label htmlFor="amount">Received Amount *</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                  <Input
+                    id="amount"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                    className="pl-8"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="componentA">Component A (Main Expense) *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      id="componentA"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={formData.componentA}
+                      onChange={(e) => setFormData({ ...formData, componentA: e.target.value })}
+                      className="pl-8"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">The main expense amount (more relevant)</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="componentB">Component B (Claimable Amount)</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      id="componentB"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.componentB}
+                      onChange={(e) => setFormData({ ...formData, componentB: e.target.value })}
+                      className="pl-8"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Amount that can be claimed back (e.g., 18%, 5%, 0% of Component A)</p>
+                </div>
+                <div className="p-3 bg-muted rounded-md">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Total Payment Amount:</span>
+                    <span className="font-semibold text-lg">
+                      ₹{((parseFloat(formData.componentA) || 0) + (parseFloat(formData.componentB) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs mt-1 text-muted-foreground">
+                    <span>Component A: ₹{(parseFloat(formData.componentA) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span>Component B: ₹{(parseFloat(formData.componentB) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Payment Mode */}
             <div className="space-y-2">

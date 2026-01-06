@@ -182,6 +182,8 @@ export async function POST(request: NextRequest) {
       headId,
       paymentTypeId,
       paymentAmount,
+      componentA,
+      componentB,
       receivedAmount,
       paymentModeId,
     } = body
@@ -201,8 +203,20 @@ export async function POST(request: NextRequest) {
         return errorResponse('Received amount is required for credit transactions', 400)
       }
     } else {
-      if (!paymentAmount || paymentAmount <= 0) {
-        return errorResponse('Payment amount is required for debit transactions', 400)
+      // For DEBIT transactions, componentA is required
+      if (!componentA || componentA <= 0) {
+        return errorResponse('Component A (main expense) is required for debit transactions', 400)
+      }
+      // componentB is optional, defaults to 0 if not provided
+      const componentBValue = componentB || 0
+      if (componentBValue < 0) {
+        return errorResponse('Component B (claimable amount) cannot be negative', 400)
+      }
+      // Calculate total payment amount as A + B
+      const calculatedPaymentAmount = componentA + componentBValue
+      // If paymentAmount is provided, validate it matches; otherwise use calculated value
+      if (paymentAmount && Math.abs(paymentAmount - calculatedPaymentAmount) > 0.01) {
+        return errorResponse('Payment amount must equal Component A + Component B', 400)
       }
     }
 
@@ -248,7 +262,24 @@ export async function POST(request: NextRequest) {
     // CREDIT: Auto-approve, update balance immediately
     // DEBIT: Pending, balance unchanged until approved
     const isCredit = transactionType === TransactionType.CREDIT
-    const amount = isCredit ? receivedAmount : paymentAmount
+    let finalPaymentAmount: number | null = null
+    let finalComponentA: number | null = null
+    let finalComponentB: number | null = null
+    
+    if (isCredit) {
+      // For credits, no components
+      finalPaymentAmount = null
+      finalComponentA = null
+      finalComponentB = null
+    } else {
+      // For debits, calculate payment amount from components
+      const componentBValue = componentB || 0
+      finalComponentA = componentA
+      finalComponentB = componentBValue
+      finalPaymentAmount = componentA + componentBValue
+    }
+    
+    const amount = isCredit ? receivedAmount : finalPaymentAmount
     const status = isCredit ? LedgerStatus.APPROVED : LedgerStatus.PENDING
 
     let currentBalance = openingBalance
@@ -267,7 +298,9 @@ export async function POST(request: NextRequest) {
         description,
         headId,
         paymentTypeId,
-        paymentAmount: transactionType === TransactionType.DEBIT ? paymentAmount : null,
+        paymentAmount: finalPaymentAmount,
+        componentA: finalComponentA,
+        componentB: finalComponentB,
         receivedAmount: transactionType === TransactionType.CREDIT ? receivedAmount : null,
         paymentModeId,
         openingBalance,

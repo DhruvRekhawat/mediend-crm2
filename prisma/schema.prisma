@@ -798,7 +798,9 @@ model LedgerEntry {
   head              HeadMaster      @relation(fields: [headId], references: [id])
   paymentTypeId     String
   paymentType       PaymentTypeMaster @relation(fields: [paymentTypeId], references: [id])
-  paymentAmount     Float?          // For DEBIT entries
+  paymentAmount     Float?          // For DEBIT entries (Total = componentA + componentB)
+  componentA        Float?           // For DEBIT entries - Main expense (more relevant)
+  componentB        Float?           // For DEBIT entries - Claimable amount (18%, 5%, 0%, etc.)
   receivedAmount    Float?          // For CREDIT entries
   paymentModeId     String
   paymentMode       PaymentModeMaster @relation(fields: [paymentModeId], references: [id])
