@@ -19,8 +19,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export async function authenticateUser(email: string, password: string): Promise<SessionUser | null> {
+  // Normalize email to lowercase
+  const normalizedEmail = email.toLowerCase().trim()
+  
   const user = await prisma.user.findUnique({
-    where: { email },
+    where: { email: normalizedEmail },
   })
 
   if (!user) {

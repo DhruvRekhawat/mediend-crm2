@@ -11,8 +11,8 @@ const createUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(1),
-  role: z.enum(['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN']),
-  teamId: z.string().optional().nullable(),
+  role: z.enum(['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN', 'USER']),
+  departmentId: z.string().optional().nullable(),
 })
 
 export async function GET(request: NextRequest) {
@@ -84,15 +84,32 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createUserSchema.parse(body)
 
+    // Normalize email to lowercase
+    const normalizedEmail = data.email.toLowerCase().trim()
+
     const passwordHash = await hashPassword(data.password)
+
+    // Auto-assign team for BD and TEAM_LEAD roles
+    let teamId: string | null = null
+    if (data.role === 'BD' || data.role === 'TEAM_LEAD') {
+      // Find first available team
+      const firstTeam = await prisma.team.findFirst({
+        orderBy: {
+          createdAt: 'asc',
+        },
+      })
+      if (firstTeam) {
+        teamId = firstTeam.id
+      }
+    }
 
     const newUser = await prisma.user.create({
       data: {
-        email: data.email,
+        email: normalizedEmail,
         passwordHash,
         name: data.name,
         role: data.role,
-        teamId: data.teamId || null,
+        teamId,
       },
       include: {
         team: {
@@ -104,6 +121,46 @@ export async function POST(request: NextRequest) {
         },
       },
     })
+
+    // Create employee record if departmentId is provided
+    if (data.departmentId) {
+      try {
+        // Generate unique employee code
+        let employeeCode: string
+        let isUnique = false
+        let attempt = 0
+        
+        while (!isUnique && attempt < 100) {
+          const employeeCount = await prisma.employee.count()
+          employeeCode = `EMP${String(employeeCount + attempt + 1).padStart(4, '0')}`
+          
+          const existing = await prisma.employee.findUnique({
+            where: { employeeCode },
+          })
+          
+          if (!existing) {
+            isUnique = true
+          } else {
+            attempt++
+          }
+        }
+
+        if (!isUnique) {
+          throw new Error('Could not generate unique employee code')
+        }
+
+        await prisma.employee.create({
+          data: {
+            userId: newUser.id,
+            employeeCode: employeeCode!,
+            departmentId: data.departmentId,
+          },
+        })
+      } catch (error) {
+        // Log error but don't fail user creation if employee creation fails
+        console.error('Error creating employee record:', error)
+      }
+    }
 
     const { passwordHash: _passwordHash, ...safeUser } = newUser
 

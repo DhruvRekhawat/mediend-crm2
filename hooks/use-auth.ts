@@ -38,7 +38,7 @@ export function useAuth() {
   return {
     user,
     isLoading,
-    login: loginMutation.mutate,
+    login: loginMutation.mutateAsync,
     logout: logoutMutation.mutate,
     isLoggingIn: loginMutation.isPending,
   }
@@ -60,6 +60,8 @@ function getDashboardRoute(role: string): string {
       return '/pl/dashboard'
     case 'HR_HEAD':
       return '/hr/users'
+    case 'USER':
+      return '/employee/profile'
     case 'ADMIN':
       return '/admin/dashboard'
     default:

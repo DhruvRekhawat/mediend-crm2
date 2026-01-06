@@ -17,12 +17,12 @@ export default function LoginPage() {
     
     try {
       await login({ email, password })
-      toast.success('Login successful')
+      // Success is handled by the hook (redirects to dashboard)
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message || 'Login failed')
       } else {
-        toast.error('Login failed')
+        toast.error('Login failed. Please check your credentials and try again.')
       }
     }
   }

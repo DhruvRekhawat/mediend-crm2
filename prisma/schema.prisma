@@ -19,6 +19,7 @@ enum UserRole {
   HR_HEAD
   FINANCE_HEAD
   ADMIN
+  USER
 }
 
 enum Circle {

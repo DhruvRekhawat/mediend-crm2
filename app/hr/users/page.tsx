@@ -11,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useState } from 'react'
-import { Plus, Users, UserPlus, Edit, Hash, Calendar, DollarSign, Building, CreditCard, FileText, Cake, Upload } from 'lucide-react'
+import { Plus, Users, UserPlus, Edit, Hash, DollarSign, Building, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
-type UserRole = 'MD' | 'SALES_HEAD' | 'TEAM_LEAD' | 'BD' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'HR_HEAD' | 'ADMIN'
+type UserRole = 'MD' | 'SALES_HEAD' | 'TEAM_LEAD' | 'BD' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'HR_HEAD' | 'ADMIN' | 'USER'
 
 interface Team {
   id: string
@@ -71,7 +71,7 @@ interface CreateUserData {
   email: string
   password: string
   role: UserRole
-  teamId: string | null
+  departmentId: string | null
 }
 
 export default function HRUsersPage() {
@@ -126,7 +126,7 @@ export default function HRUsersPage() {
                   <DialogDescription>Add a new user to the system</DialogDescription>
                 </DialogHeader>
                 <CreateUserForm
-                  teams={teams || []}
+                  departments={departments || []}
                   onSubmit={(data) => createUserMutation.mutate(data)}
                   isLoading={createUserMutation.isPending}
                 />
@@ -249,13 +249,21 @@ export default function HRUsersPage() {
                           <Badge variant="default">Active</Badge>
                         </TableCell>
                         <TableCell>
-                          <EditEmployeeDialog
-                            user={user}
-                            departments={departments || []}
-                            onSuccess={() => {
-                              queryClient.invalidateQueries({ queryKey: ['users'] })
-                            }}
-                          />
+                          <div className="flex items-center gap-2">
+                            <EditUserDialog
+                              user={user}
+                              onSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ['users'] })
+                              }}
+                            />
+                            <EditEmployeeDialog
+                              user={user}
+                              departments={departments || []}
+                              onSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ['users'] })
+                              }}
+                            />
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -277,11 +285,11 @@ export default function HRUsersPage() {
 }
 
 function CreateUserForm({
-  teams,
+  departments,
   onSubmit,
   isLoading,
 }: {
-  teams: Team[]
+  departments: Array<{ id: string; name: string }>
   onSubmit: (data: CreateUserData) => void
   isLoading: boolean
 }) {
@@ -290,14 +298,14 @@ function CreateUserForm({
     email: '',
     password: '',
     role: 'BD' as UserRole,
-    teamId: '',
+    departmentId: '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit({
       ...formData,
-      teamId: formData.teamId || null,
+      departmentId: formData.departmentId || null,
     })
     // Reset form
     setFormData({
@@ -305,7 +313,7 @@ function CreateUserForm({
       email: '',
       password: '',
       role: 'BD',
-      teamId: '',
+      departmentId: '',
     })
   }
 
@@ -325,7 +333,7 @@ function CreateUserForm({
           <Input
             type="email"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase().trim() })}
             required
           />
         </div>
@@ -361,30 +369,30 @@ function CreateUserForm({
               <SelectItem value="HR_HEAD">HR Head</SelectItem>
               <SelectItem value="MD">MD</SelectItem>
               <SelectItem value="ADMIN">Admin</SelectItem>
+              <SelectItem value="USER">User (HRMS Only)</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {(formData.role === 'BD' || formData.role === 'TEAM_LEAD') && (
-          <div>
-            <Label>Team</Label>
-            <Select
-              value={formData.teamId}
-              onValueChange={(value) => setFormData({ ...formData, teamId: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select team" />
-              </SelectTrigger>
-              <SelectContent>
-                {teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div>
+          <Label>Department</Label>
+          <Select
+            value={formData.departmentId || 'none'}
+            onValueChange={(value) => setFormData({ ...formData, departmentId: value === 'none' ? '' : value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Department</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id}>
+                  {dept.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2">
@@ -393,6 +401,104 @@ function CreateUserForm({
         </Button>
       </div>
     </form>
+  )
+}
+
+function EditUserDialog({
+  user,
+  onSuccess,
+}: {
+  user: User
+  onSuccess: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  
+  // Initialize form data based on user prop
+  const getInitialFormData = () => ({
+    name: user.name,
+    email: user.email,
+  })
+  const [formData, setFormData] = useState(getInitialFormData)
+
+  // Reset form when dialog opens
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    if (open) {
+      setFormData(getInitialFormData())
+    }
+  }
+
+  const updateUserMutation = useMutation({
+    mutationFn: (data: { name: string; email: string }) =>
+      apiPatch<User>(`/api/users/${user.id}`, data),
+    onSuccess: () => {
+      toast.success('User updated successfully')
+      setIsOpen(false)
+      onSuccess()
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update user')
+    },
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    updateUserMutation.mutate(formData)
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Edit className="h-4 w-4 mr-1" />
+          Edit User
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+          <DialogDescription>
+            Update user name and email for {user.name}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Name</Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="User name"
+            />
+          </div>
+          <div>
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase().trim() })}
+              required
+              placeholder="user@example.com"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={updateUserMutation.isPending}
+            >
+              {updateUserMutation.isPending ? 'Updating...' : 'Update User'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

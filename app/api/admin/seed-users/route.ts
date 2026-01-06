@@ -22,9 +22,12 @@ export async function POST(request: NextRequest) {
         return errorResponse(`Invalid role. Valid roles: ${VALID_ROLES.join(', ')}`, 400)
       }
 
+      // Normalize email to lowercase
+      const normalizedEmail = email.toLowerCase().trim()
+
       // Check if user already exists
       const existingUser = await prisma.user.findUnique({
-        where: { email },
+        where: { email: normalizedEmail },
       })
 
       if (existingUser) {
@@ -34,7 +37,7 @@ export async function POST(request: NextRequest) {
       const passwordHash = await hashPassword(password)
       const user = await prisma.user.create({
         data: {
-          email,
+          email: normalizedEmail,
           passwordHash,
           name,
           role,

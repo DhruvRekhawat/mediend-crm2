@@ -127,6 +127,13 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'finance:masters:write',
     'finance:approve',
   ],
+  USER: [
+    'hrms:read',
+    'hrms:attendance:read',
+    'hrms:leaves:read',
+    'hrms:payroll:read',
+    'hrms:employees:read',
+  ],
 }
 
 export function hasPermission(user: SessionUser | null, permission: Permission): boolean {
