@@ -5,13 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
+import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api-client'
 import { useState } from 'react'
-import { Plus, Users, UserPlus, Edit, Hash, DollarSign, Building, CreditCard } from 'lucide-react'
+import { Plus, Users, UserPlus, Edit, Hash, DollarSign, Building, CreditCard, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -259,6 +260,12 @@ export default function HRUsersPage() {
                             <EditEmployeeDialog
                               user={user}
                               departments={departments || []}
+                              onSuccess={() => {
+                                queryClient.invalidateQueries({ queryKey: ['users'] })
+                              }}
+                            />
+                            <DeleteUserDialog
+                              user={user}
                               onSuccess={() => {
                                 queryClient.invalidateQueries({ queryKey: ['users'] })
                               }}
@@ -775,3 +782,58 @@ function EditEmployeeDialog({
   )
 }
 
+function DeleteUserDialog({
+  user,
+  onSuccess,
+}: {
+  user: User
+  onSuccess: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  const deleteUserMutation = useMutation({
+    mutationFn: () => apiDelete(`/api/users/${user.id}`),
+    onSuccess: () => {
+      toast.success('User deleted successfully')
+      setIsOpen(false)
+      onSuccess()
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete user')
+    },
+  })
+
+  return (
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" size="sm">
+          <Trash2 className="h-4 w-4 mr-1" />
+          Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete User</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete <strong>{user.name}</strong>? This action cannot be undone.
+            {user.team && (
+              <span className="block mt-2 text-amber-600">
+                This user is part of team: {user.team.name}
+              </span>
+            )}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => deleteUserMutation.mutate()}
+            disabled={deleteUserMutation.isPending}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            {deleteUserMutation.isPending ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}

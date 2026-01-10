@@ -197,7 +197,7 @@ model Lead {
   circle            Circle
   city              String
   category          String?
-  treatment         String
+  treatment         String?
   anesthesia        String?
   quantityGrade     String?
   surgeonName       String?
@@ -241,6 +241,52 @@ model Lead {
   netProfit         Float         @default(0)
   ticketSize        Float         @default(0)
 
+  // Additional MySQL fields
+  month             String?
+  leadEntryDate     DateTime?
+  patientEmail      String?
+  whatsapp          String?
+  address           String?
+  docUpload         String?
+  diseaseDetails    String?
+  followUpDate      DateTime?
+  subStatus         Int?
+  opdHospital       String?
+  opdDrName         String?
+  opdContactNo      String?
+  opdCharges        Int            @default(0)
+  opdScheduleDate   DateTime?
+  opdMeeting        Int?
+  ipdAdmissionDate  DateTime?
+  ipdHospital       String?
+  ipdDrName         String?
+  ipdContactNo      String?
+  ipdTotalPayment   Int            @default(0)
+  ipdDetails        String?
+  paymentDetails    Int?
+  attendantContactNo String?
+  waFormat          String?
+  leadSource        Int?
+  whatsappMessage   String?
+  notification      Boolean       @default(false)
+  cityOption        String?
+  emailSent         Boolean       @default(false)
+  smsSent           Boolean       @default(false)
+  whatsappSent      Boolean       @default(false)
+  website           String?
+  description       String?
+  refId             String?
+  duplCount         Int           @default(0)
+  aes               Boolean       @default(false)
+  profession        String?
+  qr                String?
+  removeRemarks     Boolean       @default(false)
+  adId              String?
+  campaignId        String?
+  formId            String?
+  teamLeadId        Int?
+  remarksId         String?
+
   // Relations
   stageEvents       LeadStageEvent[]
   insuranceCase     InsuranceCase?
@@ -257,6 +303,8 @@ model Lead {
   @@index([createdDate])
   @@index([conversionDate])
   @@index([surgeryDate])
+  @@index([leadEntryDate])
+  @@index([followUpDate])
 }
 
 model LeadStageEvent {
@@ -863,4 +911,30 @@ model LedgerAuditLog {
   @@index([ledgerEntryId])
   @@index([action])
   @@index([performedAt])
+}
+
+// Lead Remark - Stores remarks from MySQL lead_remarks table
+model LeadRemark {
+  id            String   @id @default(cuid())
+  leadRef       String   // MySQL lead.id as string reference
+  remarks       String   @db.Text
+  updateBy      Int?     // MySQL user ID reference
+  updateDate    DateTime
+  ip            String?
+  leadStatus    Int?     // MySQL status ID
+  createdAt     DateTime @default(now())
+  
+  @@index([leadRef])
+  @@index([updateDate])
+}
+
+// Sync State - Tracks MySQL sync progress
+model SyncState {
+  id            String   @id @default(cuid())
+  sourceType    String   @default("mysql_leads") @unique // For future extensibility
+  lastSyncedDate DateTime
+  lastSyncedId  Int?     // Last MySQL lead.id processed
+  recordsCount  Int      @default(0)
+  lastRunAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

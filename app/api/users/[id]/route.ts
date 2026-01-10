@@ -89,3 +89,49 @@ export async function PATCH(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return unauthorizedResponse()
+    }
+
+    if (!hasPermission(user, 'users:write')) {
+      return errorResponse('Forbidden', 403)
+    }
+
+    const { id } = await params
+
+    // Prevent deleting self
+    if (user.id === id) {
+      return errorResponse('Cannot delete your own account', 400)
+    }
+
+    // Check if user is a sales head of any teams
+    const teamCount = await prisma.team.count({
+      where: {
+        salesHeadId: id,
+      },
+    })
+
+    if (teamCount > 0) {
+      return errorResponse('Cannot delete user who is a sales head of teams. Please reassign teams first.', 400)
+    }
+
+    // Delete the user (this will cascade delete related employee record if exists)
+    await prisma.user.delete({
+      where: { id },
+    })
+
+    return successResponse(null, 'User deleted successfully')
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+      return errorResponse('Cannot delete user due to existing relationships. Please remove all associations first.', 400)
+    }
+    console.error('Error deleting user:', error)
+    return errorResponse('Failed to delete user', 500)
+  }
+}

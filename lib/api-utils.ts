@@ -27,8 +27,8 @@ export function errorResponse(error: string, status: number = 400): NextResponse
   )
 }
 
-export function unauthorizedResponse(): NextResponse<ApiResponse> {
-  return errorResponse('Unauthorized', 401)
+export function unauthorizedResponse(message?: string): NextResponse<ApiResponse> {
+  return errorResponse(message || 'Unauthorized', 401)
 }
 
 export function forbiddenResponse(): NextResponse<ApiResponse> {

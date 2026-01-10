@@ -46,6 +46,17 @@ Create a `.env` file in the root directory:
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/mediend_crm?schema=public"
 
+# MySQL Source Database (for lead sync)
+MYSQL_SOURCE_URL="mysql://lead_reader:password@kundkundtc.in:3306/kundkun_mediendcrm"
+
+# API Secret for sync endpoint (used by cron-job.org)
+LEADS_API_SECRET=your_secure_random_string_here_min_32_chars
+# OR use separate secret for sync:
+# SYNC_API_SECRET=your_sync_specific_secret_here
+
+# Historic Sync Date (optional, defaults to 2024-12-31)
+HISTORIC_SYNC_FROM_DATE=2024-12-31
+
 # Auth
 JWT_SECRET=your_jwt_secret_key_here_change_in_production
 
@@ -228,6 +239,58 @@ npx tsx scripts/create-user.ts
 - **IndexedDB**: Caches lead lists and analytics snapshots (5-10 min TTL)
 - **localStorage**: Stores user preferences and filter presets
 - **React Query**: Client-side caching with automatic refetching
+
+### MySQL Lead Sync
+The system can sync leads from a legacy MySQL/MariaDB database:
+
+**One-time Historic Sync:**
+```bash
+npm run sync:historic:leads
+# Or with custom date:
+HISTORIC_SYNC_FROM_DATE=2024-12-31 npm run sync:historic:leads
+```
+
+**Automated Sync via API (Recommended - cron-job.org):**
+1. Set `LEADS_API_SECRET` or `SYNC_API_SECRET` in environment variables
+2. Create cron job at https://cron-job.org:
+   - URL: `https://workspace.mediend.com/api/sync/mysql-leads`
+   - Method: `POST`
+   - Schedule: Every 10 minutes (`*/10 * * * *`)
+   - Header: `Authorization: Bearer YOUR_API_SECRET`
+3. Enable notifications for failures
+
+See [CRON_SETUP.md](CRON_SETUP.md) for detailed setup instructions.
+
+**Manual API Test:**
+```bash
+curl -X POST https://workspace.mediend.com/api/sync/mysql-leads \
+  -H "Authorization: Bearer YOUR_API_SECRET"
+```
+
+**Legacy: Direct Script Sync (for local/dev):**
+```bash
+npm run sync:leads
+```
+
+**Verify Connection:**
+Before running syncs, verify your MySQL connection:
+```bash
+npm run verify:mysql
+```
+
+This script will:
+- Test MySQL connection
+- Verify required tables exist (`lead`, `lead_remarks`)
+- Check SELECT permissions
+- Show sample data and table structure
+- Validate date-based queries used in sync
+
+The sync system:
+- Reads from MySQL `lead` and `lead_remarks` tables
+- Maps all 68 fields from MySQL to PostgreSQL Lead model
+- Tracks sync state by `Lead_Date` for incremental updates
+- Handles duplicates and errors gracefully
+- Creates LeadRemark records for each remark
 
 ## API Routes
 
