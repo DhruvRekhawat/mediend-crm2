@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,7 +67,14 @@ export async function GET(request: NextRequest) {
       take: limit,
     })
 
-    return successResponse(unassignedLeads)
+    // Map status and source codes to text values for display
+    const mappedLeads = unassignedLeads.map((lead) => ({
+      ...lead,
+      status: mapStatusCode(lead.status),
+      source: lead.source ? mapSourceCode(lead.source) : lead.source,
+    }))
+
+    return successResponse(mappedLeads)
   } catch (error) {
     console.error('Error fetching unassigned leads:', error)
     return errorResponse('Failed to fetch unassigned leads', 500)

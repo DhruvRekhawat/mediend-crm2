@@ -13,7 +13,7 @@ export default function Home() {
       if (user) {
         // Redirect based on role
         const routes: Record<string, string> = {
-          MD: '/md/dashboard',
+          MD: '/md/sales',
           SALES_HEAD: '/sales/dashboard',
           TEAM_LEAD: '/team-lead/dashboard',
           BD: '/bd/pipeline',

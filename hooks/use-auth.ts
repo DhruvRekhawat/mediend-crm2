@@ -47,7 +47,7 @@ export function useAuth() {
 function getDashboardRoute(role: string): string {
   switch (role) {
     case 'MD':
-      return '/md/dashboard'
+      return '/md/sales'
     case 'SALES_HEAD':
       return '/sales/dashboard'
     case 'TEAM_LEAD':

@@ -2,9 +2,14 @@
 export const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   // New & Hot
   'New': {
-    bg: 'bg-blue-50 dark:bg-blue-950/20',
-    border: 'border-blue-200 dark:border-blue-800',
-    text: 'text-blue-700 dark:text-blue-300',
+    bg: 'bg-green-50 dark:bg-green-950/20',
+    border: 'border-green-200 dark:border-green-800',
+    text: 'text-green-700 dark:text-green-300',
+  },
+  'New Lead': {
+    bg: 'bg-green-50 dark:bg-green-950/20',
+    border: 'border-green-200 dark:border-green-800',
+    text: 'text-green-700 dark:text-green-300',
   },
   'Hot Lead': {
     bg: 'bg-red-50 dark:bg-red-950/20',
@@ -75,10 +80,20 @@ export const STATUS_COLORS: Record<string, { bg: string; border: string; text: s
     border: 'border-gray-200 dark:border-gray-800',
     text: 'text-gray-700 dark:text-gray-300',
   },
+  'DNP': {
+    bg: 'bg-slate-50 dark:bg-slate-950/20',
+    border: 'border-slate-200 dark:border-slate-800',
+    text: 'text-slate-700 dark:text-slate-300',
+  },
   'DNP (1-5, Exhausted)': {
     bg: 'bg-slate-50 dark:bg-slate-950/20',
     border: 'border-slate-200 dark:border-slate-800',
     text: 'text-slate-700 dark:text-slate-300',
+  },
+  'Junk': {
+    bg: 'bg-gray-50 dark:bg-gray-950/20',
+    border: 'border-gray-200 dark:border-gray-800',
+    text: 'text-gray-700 dark:text-gray-300',
   },
   'Invalid Number': {
     bg: 'bg-gray-50 dark:bg-gray-950/20',

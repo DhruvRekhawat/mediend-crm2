@@ -1,6 +1,7 @@
 import { Circle, PipelineStage, UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
 
 /**
  * MySQL Lead row structure (based on DESCRIBE lead output)
@@ -294,6 +295,54 @@ function mapCircle(circleStr: string | null | undefined): Circle {
 }
 
 /**
+ * Normalize MySQL status to match expected status values
+ * First checks if it's a numeric code and maps it, otherwise uses text-based normalization
+ */
+function normalizeStatus(status: string | null | undefined): string {
+  if (!status) return 'New'
+  
+  const normalized = status.trim()
+  
+  // First, check if it's a numeric code and try to map it
+  if (/^\d+$/.test(normalized)) {
+    const mapped = mapStatusCode(normalized)
+    // If mapping found a different value, return it
+    if (mapped !== normalized) {
+      return mapped
+    }
+  }
+  
+  // Otherwise, use text-based normalization for existing text values
+  const statusMap: Record<string, string> = {
+    'new lead': 'New',
+    'new': 'New',
+    'hot lead': 'Hot Lead',
+    'hot': 'Hot Lead',
+    'interested': 'Interested',
+    'follow-up (1-3)': 'Follow-up (1-3)',
+    'follow up (1-3)': 'Follow-up (1-3)',
+    'call back (sd)': 'Call Back (SD)',
+    'call back (t)': 'Call Back (T)',
+    'call back next week': 'Call Back Next Week',
+    'call back next month': 'Call Back Next Month',
+    'ipd schedule': 'IPD Schedule',
+    'ipd done': 'IPD Done',
+    'closed': 'Closed',
+    'call done': 'Call Done',
+    'c/w done': 'C/W Done',
+    'lost': 'Lost',
+    'dnp': 'DNP',
+    'dnp (1-5, exhausted)': 'DNP (1-5, Exhausted)',
+    'junk': 'Junk',
+    'invalid number': 'Invalid Number',
+    'fund issues': 'Fund Issues',
+  }
+  
+  const lowerStatus = normalized.toLowerCase()
+  return statusMap[lowerStatus] || normalized // Return mapped status or original if no mapping
+}
+
+/**
  * Convert value to string, handling null/undefined
  */
 function toString(value: any): string | null {
@@ -405,7 +454,7 @@ export async function mapMySQLLeadToPrisma(
     alternateNumber: toString(mysqlRow.AlternativePhone),
     attendantName: toString(mysqlRow.AttendantName),
     bdId: bdInfo.id,
-    status: mysqlRow.Status || 'New Lead',
+    status: normalizeStatus(mysqlRow.Status),
     pipelineStage: PipelineStage.SALES,
     circle: mysqlRow.Circle ? mapCircle(mysqlRow.Circle) : (bdInfo.circle || Circle.North),
     city: mysqlRow.city_option || 'Not Specified',
@@ -463,7 +512,7 @@ export async function mapMySQLLeadToPrisma(
     teamLeadId: toInt(mysqlRow.TL),
     remarksId: toString(mysqlRow.remarks_id),
     remarks: toString(mysqlRow.LastRemarks || mysqlRow.Remarks),
-    source: mysqlRow.Source ? String(mysqlRow.Source) : 'mysql_sync',
+    source: mysqlRow.Source ? mapSourceCode(String(mysqlRow.Source)) || 'mysql_sync' : 'mysql_sync',
     modeOfPayment: toString(mysqlRow.MOP),
     surgeryDate: parseDate(mysqlRow.Surgery_Date),
     // Note: Other fields like arrivalDate, conversionDate, etc. are set in Lead model defaults

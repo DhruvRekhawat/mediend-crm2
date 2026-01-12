@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
 import { Prisma } from '@prisma/client'
 export async function GET(request: NextRequest) {
   try {
@@ -88,7 +89,14 @@ export async function GET(request: NextRequest) {
       canAccessLead(user, lead.bdId, lead.bd.team?.id)
     )
 
-    return successResponse(accessibleLeads)
+    // Map status and source codes to text values for display
+    const mappedLeads = accessibleLeads.map((lead) => ({
+      ...lead,
+      status: mapStatusCode(lead.status),
+      source: lead.source ? mapSourceCode(lead.source) : lead.source,
+    }))
+
+    return successResponse(mappedLeads)
   } catch (error) {
     console.error('Error fetching leads:', error)
     return errorResponse('Failed to fetch leads', 500)

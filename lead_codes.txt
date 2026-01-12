@@ -1,0 +1,81 @@
+MariaDB [kundkun_mediendcrm]> SELECT * FROM status;
++----+--------------------------+---------+----------+-------------+
+| id | status                   | color   | Reassign | WidgetColor |
++----+--------------------------+---------+----------+-------------+
+|  1 | Follow-up 1              | #d4edbc |        0 | NULL        |
+|  2 | Follow-up 2              | #d4edbc |        0 | NULL        |
+|  3 | Follow-up 3              | #d4edbc |        0 | NULL        |
+|  4 | DNP-1                    | #b10202 |        1 | NULL        |
+|  5 | DNP-2                    | #b10202 |        1 | NULL        |
+|  6 | DNP-3                    | #b10202 |        1 | NULL        |
+|  7 | DNP-4                    | #b10202 |        1 | NULL        |
+|  8 | DNP-5                    | #b10202 |        1 | NULL        |
+|  9 | DNP Exhausted            | #b10202 |        0 | NULL        |
+| 10 | Fund Issues              | #e6e6e6 |        0 | NULL        |
+| 11 | OPD Done                 | #bfe1f6 |        0 | NULL        |
+| 12 | OPD Schedule             | #ffe5a0 |        0 | NULL        |
+| 13 | IPD Done                 | #11734b |        0 | NULL        |
+| 14 | IPD Schedule             | #11734b |        0 | NULL        |
+| 15 | IPD Lost                 | #b10202 |        0 | NULL        |
+| 16 | Out of Station           | #ffe5a0 |        0 | NULL        |
+| 17 | Supply Gap               | #ffe5a0 |        0 | NULL        |
+| 18 | Language Barrier         | #e6e6e6 |        0 | NULL        |
+| 19 | Call Back (SD)           | #ffcfc9 |        0 | NULL        |
+| 20 | Call Back (T)            | #ffcfc9 |        0 | NULL        |
+| 21 | Call Back Next WeeK      | #ffcfc9 |        0 | NULL        |
+| 22 | Call Back Next Month     | #ffcfc9 |        0 | NULL        |
+| 23 | SX Not Suggested         | #e6e6e6 |        0 | NULL        |
+| 24 | Order Booked             |         |        0 | NULL        |
+| 25 | Closed                   |         |        0 | NULL        |
+| 26 | Junk                     | #e6e6e6 |        0 | NULL        |
+| 27 | New Lead                 | #67ffbd |        0 | NULL        |
+| 28 | Hot Lead                 | #d4edbc |        0 | NULL        |
+| 29 | Scan Done                |         |        0 | NULL        |
+| 30 | Call Done                |         |        0 | NULL        |
+| 31 | WA Done                  |         |        0 | NULL        |
+| 32 | C/W Done                 |         |        0 | NULL        |
+| 33 | Not Interested           | #b10202 |        0 | NULL        |
+| 34 | Duplicate lead           | #e6e6e6 |        0 | NULL        |
+| 35 | Follow-up                | #d4edbc |        0 | NULL        |
+| 36 | Invalid Number           | #808080 |        0 | NULL        |
+| 37 | Nurture                  | #A663CC |        0 | NULL        |
+| 38 | Policy Booked            | #11734b |        0 | NULL        |
+| 39 | Interested               | #d4edbc |        0 | NULL        |
+| 40 | Policy Issued            | #d4edbc |        0 | NULL        |
+| 41 | Already Insured          | #b10202 |        0 | NULL        |
+| 42 | Out of station follow-up | #F28C28 |        0 | NULL        |
++----+--------------------------+---------+----------+-------------+
+42 rows in set (0.000 sec)
+
+
+
+
+MariaDB [kundkun_mediendcrm]> SELECT * FROM source;
++----+----------------+------------------+
+| id | TreatmentRefid | source           |
++----+----------------+------------------+
+|  1 |              4 | Facebook         |
+|  2 |           NULL | Google           |
+|  3 |              3 | Mixone           |
+|  4 |              3 | Meta Marketplace |
+|  5 |              3 | LinkedIn         |
+|  6 |              3 | Referral         |
+|  7 |             87 | Competitor-C1    |
+|  8 |             87 | Competitor-C     |
+|  9 |              3 | ProData          |
+| 10 |              3 | In bound call    |
+| 11 |              3 | Instagram        |
+| 12 |              3 | Organic-Lead     |
+| 13 |              3 | Competitor-Ads-1 |
+| 14 |              3 | Competitor-Ads-2 |
+| 15 |              3 | Pro-Data-2       |
+| 16 |              3 | Insurance        |
+| 17 |              3 | Google Ads       |
+| 18 |              3 | GP-AK-321        |
+| 19 |              3 | SP182            |
+| 20 |              3 | KVS290           |
+| 21 |             42 | Offline          |
+| 22 |              3 | Test             |
+| 23 |              3 | Pt. Referral     |
++----+----------------+------------------+
+23 rows in set (0.000 sec)

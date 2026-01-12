@@ -15,6 +15,45 @@ import { useLeads, LeadFilters, Lead } from '@/hooks/use-leads'
 import { KanbanColumn } from './kanban-column'
 import { LeadCard } from './lead-card'
 
+/**
+ * Normalize status to match expected status values
+ * This handles variations like "New Lead" -> "New"
+ */
+function normalizeStatus(status: string | null | undefined): string {
+  if (!status) return 'New'
+  
+  const normalized = status.trim()
+  
+  // Map common variations to expected status names
+  const statusMap: Record<string, string> = {
+    'new lead': 'New',
+    'new': 'New',
+    'hot lead': 'Hot Lead',
+    'hot': 'Hot Lead',
+    'interested': 'Interested',
+    'follow-up (1-3)': 'Follow-up (1-3)',
+    'follow up (1-3)': 'Follow-up (1-3)',
+    'call back (sd)': 'Call Back (SD)',
+    'call back (t)': 'Call Back (T)',
+    'call back next week': 'Call Back Next Week',
+    'call back next month': 'Call Back Next Month',
+    'ipd schedule': 'IPD Schedule',
+    'ipd done': 'IPD Done',
+    'closed': 'Closed',
+    'call done': 'Call Done',
+    'c/w done': 'C/W Done',
+    'lost': 'Lost',
+    'dnp': 'DNP',
+    'dnp (1-5, exhausted)': 'DNP (1-5, Exhausted)',
+    'junk': 'Junk',
+    'invalid number': 'Invalid Number',
+    'fund issues': 'Fund Issues',
+  }
+  
+  const lowerStatus = normalized.toLowerCase()
+  return statusMap[lowerStatus] || normalized // Return mapped status or original if no mapping
+}
+
 // All available statuses
 export const ALL_LEAD_STATUSES = [
   'New',
@@ -29,7 +68,9 @@ export const ALL_LEAD_STATUSES = [
   'IPD Done',
   'Closed',
   'Lost',
+  'DNP',
   'DNP (1-5, Exhausted)',
+  'Junk',
   'Invalid Number',
   'Fund Issues',
   'Call Done',
@@ -65,7 +106,7 @@ export const STATUS_BUCKETS = [
   {
     id: 'lost-inactive',
     name: 'Lost/Inactive',
-    statuses: ['Lost', 'DNP (1-5, Exhausted)', 'Invalid Number', 'Fund Issues'],
+    statuses: ['Lost', 'DNP', 'DNP (1-5, Exhausted)', 'Junk', 'Invalid Number', 'Fund Issues'],
     color: 'bg-gray-50 border-gray-200',
   },
 ] as const
@@ -100,13 +141,13 @@ export function KanbanBoard({ filters = {}, showBDColumn = false, onLeadClick }:
     grouped['other'] = []
 
     leads.forEach((lead) => {
-      // Default to 'New' if status is empty or null
-      const status = lead.status || 'New'
+      // Normalize status to handle variations like "New Lead" -> "New"
+      const normalizedStatus = normalizeStatus(lead.status)
       let found = false
       
       // Find which bucket this status belongs to
       for (const bucket of STATUS_BUCKETS) {
-        if ((bucket.statuses as readonly string[]).includes(status)) {
+        if ((bucket.statuses as readonly string[]).includes(normalizedStatus)) {
           grouped[bucket.id].push(lead)
           found = true
           break

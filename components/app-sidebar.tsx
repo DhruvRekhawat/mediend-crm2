@@ -62,7 +62,25 @@ const navItems: NavItem[] = [
     title: 'Dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'ADMIN'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'ADMIN'],
+  },
+  {
+    title: 'Sales Dashboard',
+    url: '/md/sales',
+    icon: TrendingUp,
+    roles: ['MD', 'ADMIN'],
+  },
+  {
+    title: 'Finance Dashboard',
+    url: '/md/finance',
+    icon: DollarSign,
+    roles: ['MD', 'ADMIN'],
+  },
+  {
+    title: 'HR Dashboard',
+    url: '/md/hr',
+    icon: Users,
+    roles: ['MD', 'ADMIN'],
   },
   {
     title: 'Pipeline',
@@ -106,79 +124,79 @@ const navItems: NavItem[] = [
     icon: FileText,
     permission: 'reports:export',
   },
-  // HRMS - Available to all users
+  // HRMS - Available to all users (except MD)
   {
     title: 'My Attendance',
     url: '/employee/attendance',
     icon: Clock,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Leaves',
     url: '/employee/leaves',
     icon: Calendar,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Profile',
     url: '/employee/profile',
     icon: UserCircle,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Payroll',
     url: '/employee/payroll',
     icon: Wallet,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Documents',
     url: '/employee/documents',
     icon: FileText,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Feedback',
     url: '/employee/feedback',
     icon: MessageSquare,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Tickets',
     url: '/employee/tickets',
     icon: Ticket,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Increment',
     url: '/employee/increment',
     icon: TrendingUp,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
-  // Employee Services
+  // Employee Services (except MD)
   {
     title: 'Svc Anonymous Msg',
     url: '/employee/anonymous-message',
     icon: ShieldCheck,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'Svc MD Appointment',
     url: '/employee/md-appointment',
     icon: CalendarCheck,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'Svc Mental Health',
     url: '/employee/mental-health',
     icon: Heart,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'Svc Job Postings',
     url: '/employee/ijp',
     icon: Briefcase,
-    roles: ['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   // HR Management - Only for HR_HEAD and ADMIN
   {
@@ -253,7 +271,7 @@ const navItems: NavItem[] = [
     icon: Briefcase,
     permission: 'hrms:employees:read',
   },
-  // MD Only
+  // MD Portal - Available to MD and ADMIN
   {
     title: 'MD Messages',
     url: '/md/anonymous-messages',
@@ -307,7 +325,7 @@ const navItems: NavItem[] = [
 
 function getDashboardUrl(role: string): string {
   const routes: Record<string, string> = {
-    MD: '/md/dashboard',
+    MD: '/md/sales',
     SALES_HEAD: '/sales/dashboard',
     TEAM_LEAD: '/team-lead/dashboard',
     BD: '/bd/pipeline',
@@ -344,7 +362,11 @@ export function AppSidebar() {
   }
 
   const filteredItems = navItems.filter((item) => {
-    // HRMS items (starting with "My " or "Svc ") are available to all authenticated users
+    // MD role only sees the 3 dashboards
+    if (user.role === 'MD') {
+      return item.title === 'Sales Dashboard' || item.title === 'Finance Dashboard' || item.title === 'HR Dashboard'
+    }
+    // HRMS items (starting with "My " or "Svc ") are available to all authenticated users except MD
     if (item.title.startsWith('My ') || item.title.startsWith('Svc ')) {
       return true
     }
@@ -392,7 +414,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border bg-[#062D4C]">
         <div className="flex items-center gap-1 p-2">
-          <div className="relative h-8 w-32 flex-shrink-0">
+          <div className="relative h-8 w-32 shrink-0">
             <Image
               src={logo}
               alt="Mediend"
@@ -428,124 +450,153 @@ export function AppSidebar() {
             {openSections.navigation && (
               <SidebarGroupContent>
                 <SidebarMenu>
-                {itemsWithUrls
-                  .filter((item) => 
-                    !item.title.startsWith('My ') && 
-                    !item.title.startsWith('Svc ') && 
-                    !item.title.startsWith('HR ') && 
-                    !item.title.startsWith('MD ') &&
-                    !item.title.startsWith('Fin ') &&
-                    item.title !== 'Departments' &&
-                    item.title !== 'Leave Types'
-                  )
-                  .map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                          <Link href={item.url}>
-                            <Icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
+                  {user.role === 'ADMIN' ? (
+                    // For MD, show only the 3 dashboards
+                    itemsWithUrls
+                      .filter((item) => 
+                        item.title === 'Sales Dashboard' || 
+                        item.title === 'Finance Dashboard' || 
+                        item.title === 'HR Dashboard'
+                      )
+                      .map((item) => {
+                        const Icon = item.icon
+                        const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                        return (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                              <Link href={item.url}>
+                                <Icon />
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        )
+                      })
+                  ) : (
+                    // For other roles (including ADMIN), show all navigation items except HRMS, Services, etc.
+                    itemsWithUrls
+                      .filter((item) => 
+                        !item.title.startsWith('My ') && 
+                        !item.title.startsWith('Svc ') && 
+                        !item.title.startsWith('HR ') && 
+                        !item.title.startsWith('MD ') &&
+                        !item.title.startsWith('Fin ') &&
+                        item.title !== 'Departments' &&
+                        item.title !== 'Leave Types'
+                      )
+                      .map((item) => {
+                        const Icon = item.icon
+                        const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                        return (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                              <Link href={item.url}>
+                                <Icon />
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        )
+                      })
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             )}
           </div>
         </SidebarGroup>
-        <SidebarGroup className="pb-1">
-          <button
-            onClick={() => toggleSection('myHrms')}
-            className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <UserCircle className="h-4 w-4" />
-              <span>My HRMS</span>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${
-                openSections.myHrms ? 'rotate-180' : ''
+        {user.role !== 'ADMIN' && (
+          <SidebarGroup className="pb-1">
+            <button
+              onClick={() => toggleSection('myHrms')}
+              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-4 w-4" />
+                <span>My HRMS</span>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${
+                  openSections.myHrms ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                openSections.myHrms ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
               }`}
-            />
-          </button>
-          <div
-            className={`overflow-hidden transition-all duration-200 ease-in-out ${
-              openSections.myHrms ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            {openSections.myHrms && (
-              <SidebarGroupContent>
-                <SidebarMenu>
-                {itemsWithUrls
-                  .filter((item) => item.title.startsWith('My '))
-                  .map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                          <Link href={item.url}>
-                            <Icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            )}
-          </div>
-        </SidebarGroup>
-        <SidebarGroup className="pb-1">
-          <button
-            onClick={() => toggleSection('services')}
-            className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" />
-              <span>Services</span>
-            </div>
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-200 ${
-                openSections.services ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-          <div
-            className={`overflow-hidden transition-all duration-200 ease-in-out ${
-              openSections.services ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            {openSections.services && (
-              <SidebarGroupContent>
-                <SidebarMenu>
-                {itemsWithUrls
-                  .filter((item) => item.title.startsWith('Svc '))
-                  .map((item) => {
-                    const Icon = item.icon
-                    const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Svc ', '')}>
-                          <Link href={item.url}>
-                            <Icon />
-                            <span>{item.title.replace('Svc ', '')}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
+            >
+              {openSections.myHrms && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                  {itemsWithUrls
+                    .filter((item) => item.title.startsWith('My '))
+                    .map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                            <Link href={item.url}>
+                              <Icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
                   </SidebarMenu>
                 </SidebarGroupContent>
               )}
             </div>
           </SidebarGroup>
-        {itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
+        )}
+        {user.role !== 'ADMIN' && (
+          <SidebarGroup className="pb-1">
+            <button
+              onClick={() => toggleSection('services')}
+              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4" />
+                <span>Services</span>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${
+                  openSections.services ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                openSections.services ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              {openSections.services && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                  {itemsWithUrls
+                    .filter((item) => item.title.startsWith('Svc '))
+                    .map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Svc ', '')}>
+                            <Link href={item.url}>
+                              <Icon />
+                              <span>{item.title.replace('Svc ', '')}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                )}
+              </div>
+            </SidebarGroup>
+          )}
+        {user.role !== 'ADMIN' && itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
           <SidebarGroup className="pb-1">
             <button
               onClick={() => toggleSection('hrManagement')}
