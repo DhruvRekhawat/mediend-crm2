@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
-import { Prisma } from '@prisma/client'
+import { Prisma, PipelineStage } from '@prisma/client'
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (pipelineStage) where.pipelineStage = pipelineStage as Prisma.PipelineStage
+    if (pipelineStage) where.pipelineStage = pipelineStage as PipelineStage
     if (status) where.status = status
     if (bdId) where.bdId = bdId
     if (city) where.city = city
