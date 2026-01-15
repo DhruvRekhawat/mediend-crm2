@@ -3,15 +3,13 @@
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { useAuth } from '@/hooks/use-auth'
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { useLeads, useLead, Lead } from '@/hooks/use-leads'
+import { useLeads, Lead } from '@/hooks/use-leads'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,6 +31,11 @@ import { ALL_LEAD_STATUSES } from '@/components/kanban-board'
 import { getStatusColor } from '@/lib/lead-status-colors'
 import { mapStatusCode } from '@/lib/mysql-code-mappings'
 import { Progress } from '@/components/ui/progress'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { KYPForm } from '@/components/kyp/kyp-form'
+import { FollowUpForm } from '@/components/kyp/follow-up-form'
+import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
+import { UserPlus, Eye, Plus } from 'lucide-react'
 
 interface Target {
   id: string
@@ -47,10 +50,12 @@ interface Target {
 
 export default function BDPipelinePage() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const { lead, updateLead, isUpdating } = useLead(selectedLeadId || '')
+  const [showKYPForm, setShowKYPForm] = useState(false)
+  const [selectedFollowUpKYP, setSelectedFollowUpKYP] = useState<string | null>(null)
 
   const filters = useMemo(() => {
     const baseFilters: any = { bdId: user?.id }
@@ -61,6 +66,22 @@ export default function BDPipelinePage() {
   }, [user?.id, statusFilter])
 
   const { leads, isLoading, updateLead: updateLeadInList } = useLeads(filters)
+
+  // Fetch KYP submissions for all leads
+  const { data: kypSubmissions } = useQuery<any[]>({
+    queryKey: ['kyp-submissions', 'pipeline', user?.id],
+    queryFn: () => apiGet<any[]>('/api/kyp'),
+    enabled: !!user?.id,
+  })
+
+  // Create a map of leadId -> KYP submission for quick lookup
+  const kypStatusMap = useMemo(() => {
+    const map = new Map<string, any>()
+    kypSubmissions?.forEach((kyp) => {
+      map.set(kyp.leadId, kyp)
+    })
+    return map
+  }, [kypSubmissions])
 
   // Filter leads by search query and sort by latest date first
   const filteredLeads = useMemo(() => {
@@ -280,15 +301,7 @@ export default function BDPipelinePage() {
     }
   }, [targets, leads])
 
-  const handleLeadClick = (lead: Lead) => {
-    setSelectedLeadId(lead.id)
-  }
 
-  const handleUpdateLead = (data: Partial<Lead>) => {
-    if (selectedLeadId) {
-      updateLead(data)
-    }
-  }
 
   return (
     <AuthenticatedLayout>
@@ -457,13 +470,13 @@ export default function BDPipelinePage() {
           <div className="text-center py-8 text-muted-foreground">Loading leads...</div>
         ) : (
           <Card>
-            <CardHeader>
-              <CardTitle>Leads Table</CardTitle>
-              <CardDescription>All your leads in a table view</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
+                <CardHeader>
+                  <CardTitle>Leads Table</CardTitle>
+                  <CardDescription>All your leads in a table view</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Lead Ref</TableHead>
@@ -473,6 +486,7 @@ export default function BDPipelinePage() {
                       <TableHead>Treatment</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Stage</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -483,7 +497,7 @@ export default function BDPipelinePage() {
                         return (
                           <TableRow
                             key={lead.id}
-                            className={`cursor-pointer hover:opacity-80 transition-opacity ${statusColor.bg} ${statusColor.border} border-l-4`}
+                            className={`hover:opacity-80 transition-opacity ${statusColor.bg} ${statusColor.border} border-l-4`}
                           >
                           <TableCell className="font-medium">{lead.leadRef}</TableCell>
                           <TableCell>{lead.patientName}</TableCell>
@@ -511,12 +525,108 @@ export default function BDPipelinePage() {
                               {lead.pipelineStage}
                             </Badge>
                           </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {(() => {
+                                const kypSubmission = kypStatusMap.get(lead.id)
+                                
+                                // No KYP submission - show +KYP button
+                                if (!kypSubmission) {
+                                  return (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setSelectedLeadId(lead.id)
+                                        setShowKYPForm(true)
+                                      }}
+                                    >
+                                      <Plus className="h-3 w-3 mr-1" />
+                                      KYP
+                                    </Button>
+                                  )
+                                }
+
+                                const hasPreAuth = !!((kypSubmission as any).preAuthData)
+                                const hasFollowUp = !!((kypSubmission as any).followUpData)
+
+                                // Follow-up done - show tag and "Follow-Up Done" badge
+                                if (hasFollowUp) {
+                                  return (
+                                    <>
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-300"
+                                      >
+                                        Follow-Up Done
+                                      </Badge>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setSelectedFollowUpKYP((kypSubmission as any).id)
+                                        }}
+                                      >
+                                        <Eye className="h-3 w-3 mr-1" />
+                                        View
+                                      </Button>
+                                    </>
+                                  )
+                                }
+
+                                // Pre-auth done but no follow-up - show tag and Follow-Up button
+                                if (hasPreAuth) {
+                                  return (
+                                    <>
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-300"
+                                      >
+                                        Pre-Auth Done
+                                      </Badge>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setSelectedFollowUpKYP((kypSubmission as any).id)
+                                        }}
+                                      >
+                                        <Plus className="h-3 w-3 mr-1" />
+                                        Follow-Up
+                                      </Button>
+                                    </>
+                                  )
+                                }
+
+                                // KYP done but no pre-auth - show tag and "Pre-Auth Pending" badge
+                                return (
+                                  <>
+                                    <Badge
+                                      variant="outline"
+                                      className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-300"
+                                    >
+                                      KYP Done
+                                    </Badge>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      Pre-Auth Pending
+                                    </Badge>
+                                  </>
+                                )
+                              })()}
+                            </div>
+                          </TableCell>
                         </TableRow>
                         )
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           {searchQuery ? 'No leads found matching your search' : 'No leads found'}
                         </TableCell>
                       </TableRow>
@@ -528,305 +638,87 @@ export default function BDPipelinePage() {
           </Card>
         )}
 
-        {/* Lead Details Sheet */}
-        <Sheet open={!!selectedLeadId} onOpenChange={(open) => !open && setSelectedLeadId(null)}>
-          <SheetContent className="w-full sm:max-w-3xl overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Lead Details</SheetTitle>
-              <SheetDescription>View and update complete lead information</SheetDescription>
-            </SheetHeader>
-
-            {lead ? (
-              <div className="mt-6 space-y-6">
-                {/* Basic Information */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Lead Reference</Label>
-                      <Input value={lead.leadRef || ''} readOnly />
-                    </div>
-                    <div>
-                      <Label>Patient Name</Label>
-                      <Input
-                        value={lead.patientName || ''}
-                        onChange={(e) => handleUpdateLead({ patientName: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Age</Label>
-                      <Input
-                        type="number"
-                        value={lead.age || ''}
-                        onChange={(e) => handleUpdateLead({ age: parseInt(e.target.value) || 0 })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Sex</Label>
-                      <Input
-                        value={(lead.sex as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ sex: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Phone Number</Label>
-                      <Input
-                        value={lead.phoneNumber || ''}
-                        onChange={(e) => handleUpdateLead({ phoneNumber: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Alternate Number</Label>
-                      <Input
-                        value={(lead.alternateNumber as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ alternateNumber: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Attendant Name</Label>
-                      <Input
-                        value={(lead.attendantName as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ attendantName: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Status</Label>
-                      <Select
-                        value={mapStatusCode(lead.status) || 'New'}
-                        onValueChange={(newStatus) => handleUpdateLead({ status: newStatus })}
-                        disabled={isUpdating}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="New" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ALL_LEAD_STATUSES.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {status}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Location & Hospital */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Location & Hospital</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Circle</Label>
-                      <Input value={(lead.circle as string | undefined) || ''} readOnly />
-                    </div>
-                    <div>
-                      <Label>City</Label>
-                      <Input
-                        value={lead.city || ''}
-                        onChange={(e) => handleUpdateLead({ city: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <Label>Hospital Name</Label>
-                      <Input
-                        value={lead.hospitalName || ''}
-                        onChange={(e) => handleUpdateLead({ hospitalName: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Treatment Information */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Treatment Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Category</Label>
-                      <Input
-                        value={(lead.category as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ category: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Treatment</Label>
-                      <Input
-                        value={lead.treatment || ''}
-                        onChange={(e) => handleUpdateLead({ treatment: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Anesthesia</Label>
-                      <Input
-                        value={(lead.anesthesia as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ anesthesia: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Surgeon Name</Label>
-                      <Input
-                        value={(lead.surgeonName as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ surgeonName: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Surgeon Type</Label>
-                      <Input
-                        value={(lead.surgeonType as string | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ surgeonType: e.target.value })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Financial Information */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Financial Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Bill Amount</Label>
-                      <Input
-                        type="number"
-                        value={(lead.billAmount as number | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ billAmount: parseFloat(e.target.value) || 0 })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Discount</Label>
-                      <Input
-                        type="number"
-                        value={(lead.discount as number | undefined) || ''}
-                        onChange={(e) => handleUpdateLead({ discount: parseFloat(e.target.value) || 0 })}
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Net Profit</Label>
-                      <Input
-                        type="number"
-                        value={(lead.netProfit as number | undefined) || ''}
-                        readOnly
-                        className="bg-muted"
-                      />
-                    </div>
-                    <div>
-                      <Label>Ticket Size</Label>
-                      <Input
-                        type="number"
-                        value={(lead.ticketSize as number | undefined) || ''}
-                        readOnly
-                        className="bg-muted"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dates */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Important Dates</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Created Date</Label>
-                      <Input
-                        value={
-                          lead.createdDate && typeof lead.createdDate === 'string'
-                            ? format(new Date(lead.createdDate), 'PPpp')
-                            : ''
-                        }
-                        readOnly
-                      />
-                    </div>
-                    <div>
-                      <Label>Last Updated</Label>
-                      <Input
-                        value={
-                          lead.updatedDate && typeof lead.updatedDate === 'string'
-                            ? format(new Date(lead.updatedDate), 'PPpp')
-                            : ''
-                        }
-                        readOnly
-                      />
-                    </div>
-                    <div>
-                      <Label>Arrival Date</Label>
-                      <Input
-                        type="datetime-local"
-                        value={
-                          lead.arrivalDate && typeof lead.arrivalDate === 'string'
-                            ? format(new Date(lead.arrivalDate), "yyyy-MM-dd'T'HH:mm")
-                            : ''
-                        }
-                        onChange={(e) =>
-                          handleUpdateLead({ arrivalDate: e.target.value ? new Date(e.target.value).toISOString() : null })
-                        }
-                        disabled={isUpdating}
-                      />
-                    </div>
-                    <div>
-                      <Label>Surgery Date</Label>
-                      <Input
-                        type="datetime-local"
-                        value={
-                          lead.surgeryDate && typeof lead.surgeryDate === 'string'
-                            ? format(new Date(lead.surgeryDate), "yyyy-MM-dd'T'HH:mm")
-                            : ''
-                        }
-                        onChange={(e) =>
-                          handleUpdateLead({ surgeryDate: e.target.value ? new Date(e.target.value).toISOString() : null })
-                        }
-                        disabled={isUpdating}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Remarks */}
-                <div>
-                  <Label>Remarks</Label>
-                  <Textarea
-                    value={lead.remarks || ''}
-                    onChange={(e) => handleUpdateLead({ remarks: e.target.value })}
-                    rows={4}
-                    disabled={isUpdating}
-                    placeholder="Add notes or remarks about this lead..."
-                  />
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t">
-                  <Button
-                    onClick={() => {
-                      handleUpdateLead({ status: 'IPD Done', pipelineStage: 'INSURANCE' })
-                      setSelectedLeadId(null)
-                    }}
-                    disabled={isUpdating}
-                  >
-                    Mark as IPD Done
-                  </Button>
-                  <Button variant="outline" onClick={() => setSelectedLeadId(null)}>
-                    Close
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">Loading lead details...</div>
+        {/* KYP Form Dialog */}
+        <Dialog open={showKYPForm} onOpenChange={setShowKYPForm}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Know Your Patient (KYP)</DialogTitle>
+              <DialogDescription>
+                Submit patient information for insurance pre-authorization
+              </DialogDescription>
+            </DialogHeader>
+            {selectedLeadId && (
+              <KYPForm
+                leadId={selectedLeadId}
+                onSuccess={() => {
+                  setShowKYPForm(false)
+                  setSelectedLeadId(null)
+                  queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
+                }}
+                onCancel={() => setShowKYPForm(false)}
+              />
             )}
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
+
+        {/* Follow-Up Dialog */}
+        {selectedFollowUpKYP && (
+          <FollowUpDialog
+            kypSubmissionId={selectedFollowUpKYP}
+            onClose={() => setSelectedFollowUpKYP(null)}
+          />
+        )}
       </div>
     </AuthenticatedLayout>
+  )
+}
+
+// Follow-Up Dialog Component
+function FollowUpDialog({
+  kypSubmissionId,
+  onClose,
+}: {
+  kypSubmissionId: string
+  onClose: () => void
+}) {
+  const queryClient = useQueryClient()
+  const { data: kypSubmissions } = useQuery<any[]>({
+    queryKey: ['kyp-submissions', 'pipeline'],
+    queryFn: () => apiGet<any[]>('/api/kyp'),
+  })
+
+  const kypSubmission = kypSubmissions?.find((kyp) => kyp.id === kypSubmissionId)
+  const hasFollowUp = !!kypSubmission?.followUpData
+
+  return (
+    <Dialog open={!!kypSubmissionId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {hasFollowUp ? 'View Follow-Up Details' : 'Add Follow-Up Details'}
+          </DialogTitle>
+          <DialogDescription>
+            {kypSubmission?.lead.leadRef} - {kypSubmission?.lead.patientName}
+          </DialogDescription>
+        </DialogHeader>
+        {kypSubmission && (
+          <>
+            {hasFollowUp ? (
+              <FollowUpDetailsView followUpData={kypSubmission.followUpData as any} />
+            ) : (
+              <FollowUpForm
+                kypSubmissionId={kypSubmission.id}
+                initialData={undefined}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
+                  onClose()
+                }}
+                onCancel={onClose}
+              />
+            )}
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

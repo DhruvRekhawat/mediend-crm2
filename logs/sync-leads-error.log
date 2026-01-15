@@ -1,0 +1,15 @@
+Error syncing remark 267919: Error: Connection terminated unexpectedly
+    at C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\pg-pool\index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async PrismaPgAdapter.performIO (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\adapter-pg\dist\index.js:658:22)
+    at async PrismaPgAdapter.queryRaw (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\adapter-pg\dist\index.js:608:30)
+    at async <anonymous> (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client-engine-runtime\src\tracing.ts:68:22)
+    at async fr (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client-engine-runtime\src\tracing.ts:56:10)
+    at async e.interpretNode (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:190:26)
+    at async e.interpretNode (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:217:41)
+    at async e.interpretNode (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:276:41)
+    at async e.run (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client-engine-runtime\src\interpreter\query-interpreter.ts:96:23) {
+  clientVersion: '7.1.0'
+}
+[2026-01-16 03:20:52] ERROR: Lead sync failed with exit code: 130
+[] ERROR: Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log

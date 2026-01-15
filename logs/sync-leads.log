@@ -1,0 +1,24 @@
+[2026-01-16 02:39:22] [INFO] Loaded environment variables from .env
+[2026-01-16 02:39:22] [INFO] Starting scheduled lead sync (PID: 936)
+[2026-01-16 02:39:22] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+[2026-01-15T21:09:25.600Z] Starting MySQL lead sync...
+MySQL connection established
+Last synced date: 2026-01-09T14:25:04.000Z
+Found 1449 leads to sync
+Created new BD user: BD-542 (cmkfy5lld00dnfou8ulrbvet6) for lead 223385
+Created new BD user: BD-596 (cmkfyf4ji0139fou89twisl45) for lead 172057
+prisma:error Connection terminated unexpectedly
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+[2026-01-15T21:48:54.278Z] Starting MySQL lead sync...
+MySQL connection established
+Last synced date: 2026-01-09T14:25:04.000Z
+Found 1449 leads to sync
+[2026-01-16 03:20:52] [ERROR] Lead sync failed with exit code: 130
+[2026-01-16 03:20:53] [ERROR] Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log

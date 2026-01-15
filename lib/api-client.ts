@@ -8,12 +8,19 @@ export async function apiRequest<T>(
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
   
+  // Don't set Content-Type for FormData - browser will set it with boundary
+  const isFormData = options.body instanceof FormData
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>),
+  }
+  
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json'
+  }
+  
   const response = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
     credentials: 'include',
   })
 
@@ -33,10 +40,24 @@ export async function apiGet<T>(endpoint: string): Promise<T> {
   return response.data as T
 }
 
-export async function apiPost<T>(endpoint: string, data: unknown): Promise<T> {
+export async function apiPost<T>(
+  endpoint: string,
+  data: unknown,
+  options?: { headers?: Record<string, string> }
+): Promise<T> {
+  const isFormData = data instanceof FormData
+  const headers: Record<string, string> = {
+    ...options?.headers,
+  }
+  
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json'
+  }
+
   const response = await apiRequest<T>(endpoint, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: isFormData ? data : JSON.stringify(data),
+    headers,
   })
   if (!response.success) {
     throw new Error(response.error || 'Request failed')

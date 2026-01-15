@@ -512,7 +512,12 @@ export async function mapMySQLLeadToPrisma(
     teamLeadId: toInt(mysqlRow.TL),
     remarksId: toString(mysqlRow.remarks_id),
     remarks: toString(mysqlRow.LastRemarks || mysqlRow.Remarks),
-    source: mysqlRow.Source ? mapSourceCode(String(mysqlRow.Source)) || 'mysql_sync' : 'mysql_sync',
+    // Prefer Lead_Source over Source, as Lead_Source is more specific to leads
+    source: mysqlRow.Lead_Source 
+      ? mapSourceCode(String(mysqlRow.Lead_Source)) || (mysqlRow.Source ? mapSourceCode(String(mysqlRow.Source)) : null) || 'mysql_sync'
+      : mysqlRow.Source 
+        ? mapSourceCode(String(mysqlRow.Source)) || 'mysql_sync'
+        : 'mysql_sync',
     modeOfPayment: toString(mysqlRow.MOP),
     surgeryDate: parseDate(mysqlRow.Surgery_Date),
     // Note: Other fields like arrivalDate, conversionDate, etc. are set in Lead model defaults

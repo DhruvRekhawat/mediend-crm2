@@ -872,31 +872,33 @@ export default function TeamsManagementPage() {
                       Remove BDs
                     </Button>
                   </div>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Leads</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teamDetails.members?.map((member: any) => (
-                        <TableRow key={member.id}>
-                          <TableCell className="font-medium">{member.name}</TableCell>
-                          <TableCell>{member.email}</TableCell>
-                          <TableCell>{member._count?.assignedLeads || 0}</TableCell>
-                        </TableRow>
-                      ))}
-                      {(!teamDetails.members || teamDetails.members.length === 0) && (
+                  <ScrollArea className="h-[400px]">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
-                            No members in this team
-                          </TableCell>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Leads</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {teamDetails.members?.map((member: any) => (
+                          <TableRow key={member.id}>
+                            <TableCell className="font-medium">{member.name}</TableCell>
+                            <TableCell>{member.email}</TableCell>
+                            <TableCell>{member._count?.assignedLeads || 0}</TableCell>
+                          </TableRow>
+                        ))}
+                        {(!teamDetails.members || teamDetails.members.length === 0) && (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center text-muted-foreground py-4">
+                              No members in this team
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </ScrollArea>
                 </TabsContent>
                 <TabsContent value="leads" className="space-y-4">
                   <div className="flex justify-end">

@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // if (pipelineStage) where.pipelineStage = pipelineStage
+    if (pipelineStage) where.pipelineStage = pipelineStage as Prisma.PipelineStage
     if (status) where.status = status
     if (bdId) where.bdId = bdId
     if (city) where.city = city

@@ -130,6 +130,20 @@ enum ApplicationStatus {
   HIRED
 }
 
+enum KYPStatus {
+  PENDING
+  PRE_AUTH_COMPLETE
+  FOLLOW_UP_COMPLETE
+  COMPLETED
+}
+
+enum NotificationType {
+  KYP_SUBMITTED
+  PRE_AUTH_COMPLETE
+  FOLLOW_UP_COMPLETE
+  KYP_COMPLETED
+}
+
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -160,6 +174,12 @@ model User {
   editRequestedLedgerEntries LedgerEntry[] @relation("LedgerEditRequester")
   editApprovedLedgerEntries LedgerEntry[]  @relation("LedgerEditApprover")
   ledgerAuditLogs       LedgerAuditLog[]    @relation("LedgerAuditPerformer")
+  
+  // KYP Relations
+  kypSubmissions        KYPSubmission[]     @relation("KYPSubmitter")
+  preAuthHandled        PreAuthorization[]   @relation("PreAuthHandler")
+  followUpUpdated       PatientFollowUp[]    @relation("FollowUpUpdater")
+  notifications         Notification[]
 
   @@index([email])
   @@index([role])
@@ -291,6 +311,7 @@ model Lead {
   stageEvents       LeadStageEvent[]
   insuranceCase     InsuranceCase?
   plRecord          PLRecord?
+  kypSubmission     KYPSubmission?
 
   @@index([bdId])
   @@index([status])
@@ -937,4 +958,117 @@ model SyncState {
   recordsCount  Int      @default(0)
   lastRunAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ==========================================
+// KYP (Know Your Patient) Module
+// ==========================================
+
+model KYPSubmission {
+  id                String   @id @default(cuid())
+  leadId            String   @unique
+  lead              Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  // Form fields (all optional)
+  aadhar            String?
+  pan               String?
+  insuranceCard     String?
+  disease           String?
+  location          String?  // City name
+  remark            String?
+  
+  // File URLs (stored in S3)
+  aadharFileUrl     String?
+  panFileUrl        String?
+  insuranceCardFileUrl String?
+  otherFiles        Json?    // Array of {name, url} objects
+  
+  // Status tracking
+  status            KYPStatus @default(PENDING)
+  submittedById     String
+  submittedBy       User     @relation("KYPSubmitter", fields: [submittedById], references: [id])
+  submittedAt       DateTime @default(now())
+  
+  // Pre-authorization (filled by Insurance)
+  preAuthData       PreAuthorization?
+  
+  // Patient follow-up (filled by Sales)
+  followUpData      PatientFollowUp?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([leadId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model PreAuthorization {
+  id                String   @id @default(cuid())
+  kypSubmissionId   String   @unique
+  kypSubmission     KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
+  
+  // All fields as strings (per requirement)
+  sumInsured        String?
+  roomRent          String?
+  capping           String?
+  copay             String?
+  icu               String?
+  hospitalNameSuggestion String?
+  insurance         String?
+  tpa               String?
+  
+  handledById       String
+  handledBy         User     @relation("PreAuthHandler", fields: [handledById], references: [id])
+  handledAt         DateTime @default(now())
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([kypSubmissionId])
+}
+
+model PatientFollowUp {
+  id                String   @id @default(cuid())
+  kypSubmissionId   String   @unique
+  kypSubmission     KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
+  
+  admissionDate     DateTime?
+  surgeryDate       DateTime?
+  prescription      String?
+  report            String?
+  hospitalName      String?
+  doctorName        String?
+  
+  // File URLs
+  prescriptionFileUrl String?
+  reportFileUrl       String?
+  
+  updatedById       String
+  updatedBy         User     @relation("FollowUpUpdater", fields: [updatedById], references: [id])
+  updatedAt         DateTime @default(now())
+  
+  createdAt         DateTime @default(now())
+  
+  @@index([kypSubmissionId])
+}
+
+model Notification {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type              NotificationType
+  title             String
+  message           String
+  link              String?  // URL to relevant page
+  relatedId         String?  // ID of related entity (leadId, kypSubmissionId, etc)
+  
+  isRead            Boolean  @default(false)
+  readAt            DateTime?
+  createdAt         DateTime @default(now())
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }

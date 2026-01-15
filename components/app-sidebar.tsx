@@ -89,6 +89,12 @@ const navItems: NavItem[] = [
     roles: ['BD', 'TEAM_LEAD'],
   },
   {
+    title: 'KYP',
+    url: '/bd/kyp',
+    icon: FileText,
+    roles: ['BD', 'TEAM_LEAD', 'SALES_HEAD'],
+  },
+  {
     title: 'Targets',
     url: '/sales/targets',
     icon: Target,

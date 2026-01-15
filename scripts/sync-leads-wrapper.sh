@@ -77,9 +77,15 @@ log "Starting scheduled lead sync (PID: $$)"
 SYNC_COMMAND="npm run sync:leads"
 log "Executing: $SYNC_COMMAND"
 
-if $SYNC_COMMAND >> "$LOG_FILE" 2>> "$ERROR_LOG_FILE"; then
-    EXIT_CODE=$?
+# Run command and redirect both stdout and stderr to log files
+# Also output to console in real-time for interactive sessions
+if [ -t 0 ]; then
+    # Interactive mode: show output in real-time and log to file
+    $SYNC_COMMAND 2>&1 | tee -a "$LOG_FILE"
+    EXIT_CODE=${PIPESTATUS[0]}
 else
+    # Non-interactive mode: just log to file
+    $SYNC_COMMAND >> "$LOG_FILE" 2>> "$ERROR_LOG_FILE"
     EXIT_CODE=$?
 fi
 
