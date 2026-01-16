@@ -15,8 +15,9 @@ import { useState } from 'react'
 import { Plus, Users, UserPlus, Edit, Hash, DollarSign, Building, CreditCard, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { useAuth } from '@/hooks/use-auth'
 
-type UserRole = 'MD' | 'SALES_HEAD' | 'TEAM_LEAD' | 'BD' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'HR_HEAD' | 'ADMIN' | 'USER'
+type UserRole = 'MD' | 'SALES_HEAD' | 'TEAM_LEAD' | 'BD' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'HR_HEAD' | 'FINANCE_HEAD' | 'ADMIN' | 'USER'
 
 interface Team {
   id: string
@@ -50,6 +51,7 @@ interface Employee {
   department?: {
     id: string
     name: string
+    headId: string | null
   } | null
 }
 
@@ -226,7 +228,11 @@ export default function HRUsersPage() {
                           {user.employee?.department ? (
                             <div className="flex items-center gap-2">
                               <Building className="h-4 w-4 text-muted-foreground" />
-                              {user.employee.department.name}
+                              <span>{user.employee.department.name}</span>
+                              {/* Check if user is department head */}
+                              {user.employee.department.headId === user.id && (
+                                <Badge variant="default" className="text-xs">Head</Badge>
+                              )}
                             </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">Not set</span>
@@ -300,11 +306,34 @@ function CreateUserForm({
   onSubmit: (data: CreateUserData) => void
   isLoading: boolean
 }) {
+  const { user: currentUser } = useAuth()
+  
+  // Get available roles based on current user's permissions
+  const getAvailableRoles = (): UserRole[] => {
+    if (!currentUser) return []
+    
+    // MD and ADMIN can create all roles except MD
+    if (currentUser.role === 'MD' || currentUser.role === 'ADMIN') {
+      return ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER']
+    }
+    
+    // Department heads can create TL and USER/BD
+    const deptHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']
+    if (deptHeadRoles.includes(currentUser.role)) {
+      return ['TEAM_LEAD', 'USER', 'BD']
+    }
+    
+    return []
+  }
+
+  const availableRoles = getAvailableRoles()
+  const defaultRole = availableRoles[0] || 'USER'
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
-    role: 'BD' as UserRole,
+    role: defaultRole as UserRole,
     departmentId: '',
   })
 
@@ -362,36 +391,59 @@ function CreateUserForm({
           <Label>Role</Label>
           <Select
             value={formData.role}
-            onValueChange={(value) => setFormData({ ...formData, role: value as UserRole })}
+            onValueChange={(value) => {
+              const newRole = value as UserRole
+              setFormData({ 
+                ...formData, 
+                role: newRole,
+                // Clear department if role changes to non-USER
+                departmentId: newRole === 'USER' ? formData.departmentId : ''
+              })
+            }}
           >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="BD">BD</SelectItem>
-              <SelectItem value="TEAM_LEAD">Team Lead</SelectItem>
-              <SelectItem value="SALES_HEAD">Sales Head</SelectItem>
-              <SelectItem value="INSURANCE_HEAD">Insurance Head</SelectItem>
-              <SelectItem value="PL_HEAD">P/L Head</SelectItem>
-              <SelectItem value="HR_HEAD">HR Head</SelectItem>
-              <SelectItem value="MD">MD</SelectItem>
-              <SelectItem value="ADMIN">Admin</SelectItem>
-              <SelectItem value="USER">User (HRMS Only)</SelectItem>
+              {availableRoles.length === 0 ? (
+                <SelectItem value="" disabled>No roles available</SelectItem>
+              ) : (
+                availableRoles.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {role === 'TEAM_LEAD' ? 'Team Lead' : 
+                     role === 'SALES_HEAD' ? 'Sales Head' :
+                     role === 'INSURANCE_HEAD' ? 'Insurance Head' :
+                     role === 'PL_HEAD' ? 'P/L Head' :
+                     role === 'HR_HEAD' ? 'HR Head' :
+                     role === 'FINANCE_HEAD' ? 'Finance Head' :
+                     role === 'USER' ? 'User (HRMS Only)' :
+                     role}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
+          {availableRoles.length === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              You do not have permission to create users
+            </p>
+          )}
         </div>
 
         <div>
-          <Label>Department</Label>
+          <Label>Department {formData.role === 'USER' && '*'}</Label>
           <Select
             value={formData.departmentId || 'none'}
             onValueChange={(value) => setFormData({ ...formData, departmentId: value === 'none' ? '' : value })}
+            required={formData.role === 'USER'}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No Department</SelectItem>
+              {formData.role !== 'USER' && (
+                <SelectItem value="none">No Department</SelectItem>
+              )}
               {departments.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id}>
                   {dept.name}
@@ -399,6 +451,11 @@ function CreateUserForm({
               ))}
             </SelectContent>
           </Select>
+          {formData.role === 'USER' && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Department is required for USER role (HRMS only)
+            </p>
+          )}
         </div>
       </div>
 

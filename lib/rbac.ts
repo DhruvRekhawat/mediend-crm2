@@ -29,6 +29,10 @@ export type Permission =
   | 'finance:write'
   | 'finance:masters:write'
   | 'finance:approve'
+  | 'departments:create'
+  | 'departments:assign_head'
+  | 'users:create_tl'
+  | 'users:create_user'
 
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
@@ -40,6 +44,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'pl:read',
     'finance:read',
     'finance:approve',
+    'departments:create',
+    'departments:assign_head',
+    'users:create_tl',
+    'users:create_user',
   ],
   SALES_HEAD: [
     'leads:read',
@@ -51,6 +59,9 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'reports:export',
     'users:read',
     'users:write',
+    'departments:create',
+    'users:create_tl',
+    'users:create_user',
   ],
   TEAM_LEAD: [
     'leads:read',
@@ -70,12 +81,18 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'insurance:read',
     'insurance:write',
     'analytics:read',
+    'departments:create',
+    'users:create_tl',
+    'users:create_user',
   ],
   PL_HEAD: [
     'leads:read',
     'pl:read',
     'pl:write',
     'analytics:read',
+    'departments:create',
+    'users:create_tl',
+    'users:create_user',
   ],
   HR_HEAD: [
     'users:read',
@@ -91,12 +108,18 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:payroll:write',
     'hrms:employees:read',
     'hrms:employees:write',
+    'departments:create',
+    'users:create_tl',
+    'users:create_user',
   ],
   FINANCE_HEAD: [
     'analytics:read',
     'finance:read',
     'finance:write',
     'finance:masters:write',
+    'departments:create',
+    'users:create_tl',
+    'users:create_user',
   ],
   ADMIN: [
     'leads:read',
@@ -126,6 +149,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'finance:write',
     'finance:masters:write',
     'finance:approve',
+    'departments:create',
+    'departments:assign_head',
+    'users:create_tl',
+    'users:create_user',
   ],
   USER: [
     'hrms:read',
@@ -175,5 +202,71 @@ export function canManageTeam(user: SessionUser | null, teamSalesHeadId?: string
   }
 
   return false
+}
+
+// Hierarchy validation functions
+
+const DEPT_HEAD_ROLES: UserRole[] = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']
+
+export function isDepartmentHead(role: UserRole): boolean {
+  return DEPT_HEAD_ROLES.includes(role)
+}
+
+export function canCreateDepartment(user: SessionUser | null): boolean {
+  if (!user) return false
+  return user.role === 'MD' || isDepartmentHead(user.role) || user.role === 'ADMIN'
+}
+
+export function canAssignDepartmentHead(user: SessionUser | null): boolean {
+  if (!user) return false
+  return user.role === 'MD' || user.role === 'ADMIN' || user.role === 'HR_HEAD'
+}
+
+export function canCreateRole(user: SessionUser | null, targetRole: UserRole): boolean {
+  if (!user) return false
+
+  // MD cannot be created by anyone
+  if (targetRole === 'MD') {
+    return false
+  }
+
+  // MD and ADMIN can create any role except MD
+  if (user.role === 'MD' || user.role === 'ADMIN') {
+    return true
+  }
+
+  // HR_HEAD can create department head roles when creating departments
+  if (user.role === 'HR_HEAD') {
+    return isDepartmentHead(targetRole) || targetRole === 'TEAM_LEAD' || targetRole === 'USER' || targetRole === 'BD'
+  }
+
+  // Department heads can create TL and USER/BD
+  if (isDepartmentHead(user.role)) {
+    return targetRole === 'TEAM_LEAD' || targetRole === 'USER' || targetRole === 'BD'
+  }
+
+  return false
+}
+
+export function getAvailableRolesForCreator(user: SessionUser | null): UserRole[] {
+  if (!user) return []
+
+  // MD cannot be created
+  const allRolesExceptMD: UserRole[] = ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER']
+
+  if (user.role === 'MD' || user.role === 'ADMIN') {
+    return allRolesExceptMD
+  }
+
+  // HR_HEAD can create department head roles
+  if (user.role === 'HR_HEAD') {
+    return ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'TEAM_LEAD', 'USER', 'BD']
+  }
+
+  if (isDepartmentHead(user.role)) {
+    return ['TEAM_LEAD', 'USER', 'BD']
+  }
+
+  return []
 }
 

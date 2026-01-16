@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
-import { hasPermission } from '@/lib/rbac'
+import { hasPermission, canCreateRole } from '@/lib/rbac'
 import { hashPassword } from '@/lib/auth'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
               select: {
                 id: true,
                 name: true,
+                headId: true,
               },
             },
           },
@@ -83,6 +84,16 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const data = createUserSchema.parse(body)
+
+    // Prevent MD role creation
+    if (data.role === 'MD') {
+      return errorResponse('MD role cannot be created', 400)
+    }
+
+    // Validate creator has permission to create this role
+    if (!canCreateRole(user, data.role)) {
+      return errorResponse(`You do not have permission to create users with role: ${data.role}`, 403)
+    }
 
     // Normalize email to lowercase
     const normalizedEmail = data.email.toLowerCase().trim()
