@@ -65,6 +65,7 @@ export async function GET(
               select: {
                 id: true,
                 requestedHospitalName: true,
+                requestedRoomType: true,
                 diseaseDescription: true,
                 diseaseImages: true,
                 preAuthRaisedAt: true,
@@ -74,9 +75,23 @@ export async function GET(
                 copay: true,
                 icu: true,
                 hospitalNameSuggestion: true,
+                hospitalSuggestions: true,
+                roomTypes: true,
                 insurance: true,
                 tpa: true,
                 handledAt: true,
+                handledBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                preAuthRaisedBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
               },
             },
             followUpData: {

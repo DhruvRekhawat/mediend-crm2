@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { PreAuthForm } from '@/components/kyp/pre-auth-form'
+import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { QueryList } from '@/components/kyp/query-list'
 import { QueryForm } from '@/components/kyp/query-form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CaseStage } from '@prisma/client'
-import { canRaisePreAuth, canCompletePreAuth, canAddKYPDetails } from '@/lib/case-permissions'
+import { canRaisePreAuth, canCompletePreAuth, canAddKYPDetails, canGeneratePDF } from '@/lib/case-permissions'
+import { useState } from 'react'
 
 interface KYPSubmission {
   id: string
@@ -37,11 +39,20 @@ interface KYPSubmission {
     roomTypes?: Array<{ name: string; rent: string }> | null
     insurance: string | null
     tpa: string | null
-    handledAt: string
+    handledAt?: string | null
     requestedHospitalName?: string | null
     requestedRoomType?: string | null
     diseaseDescription?: string | null
     diseaseImages?: Array<{ name: string; url: string }> | null
+    preAuthRaisedAt?: string | null
+    handledBy?: {
+      id: string
+      name: string
+    } | null
+    preAuthRaisedBy?: {
+      id: string
+      name: string
+    } | null
   } | null
 }
 
@@ -104,7 +115,15 @@ export default function PreAuthPage() {
   const canRaise = lead && user && canRaisePreAuth(user, lead)
   const canComplete = lead && user && canCompletePreAuth(user, lead)
   const canAddDetails = lead && user && canAddKYPDetails(user, lead)
+  const canPDF = lead && user && canGeneratePDF(user, lead)
   const preAuthRaised = lead?.caseStage === CaseStage.PREAUTH_RAISED || lead?.caseStage === CaseStage.PREAUTH_COMPLETE
+  const preAuthComplete = lead?.caseStage === CaseStage.PREAUTH_COMPLETE
+
+  const [showEditForm, setShowEditForm] = useState(false)
+  
+  // Determine if we should show details view or form
+  const hasPreAuthData = !!kypSubmission?.preAuthData
+  const shouldShowDetails = hasPreAuthData && !showEditForm && !canRaise && !canAddDetails && !canComplete
 
   return (
     <AuthenticatedLayout>
@@ -137,6 +156,7 @@ export default function PreAuthPage() {
           </TabsList>
 
           <TabsContent value="pre-auth" className="space-y-4">
+            {/* BD: Show form to raise pre-auth */}
             {isBD && canRaise && !preAuthRaised && (
               <PreAuthRaiseForm
                 leadId={leadId}
@@ -155,33 +175,21 @@ export default function PreAuthPage() {
                 onCancel={() => router.push(`/patient/${leadId}`)}
               />
             )}
-            {isBD && preAuthRaised && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pre-Auth Request</CardTitle>
-                  <CardDescription>Your pre-auth request has been submitted</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {kypSubmission?.preAuthData && (
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium">Hospital:</p>
-                        <p className="text-sm text-muted-foreground">{kypSubmission.preAuthData.requestedHospitalName || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Room Type:</p>
-                        <p className="text-sm text-muted-foreground">{kypSubmission.preAuthData.requestedRoomType || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Disease Description:</p>
-                        <p className="text-sm text-muted-foreground">{kypSubmission.preAuthData.diseaseDescription || '-'}</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+
+            {/* BD: Show details after raising */}
+            {isBD && preAuthRaised && kypSubmission?.preAuthData && (
+              <>
+                <PreAuthDetailsView
+                  preAuthData={kypSubmission.preAuthData}
+                  caseStage={lead?.caseStage || CaseStage.PREAUTH_RAISED}
+                  leadRef={kypSubmission.lead.leadRef}
+                  patientName={kypSubmission.lead.patientName}
+                />
+              </>
             )}
-            {isInsurance && (canAddDetails || canComplete) && (
+
+            {/* Insurance: Show form to add details (first time) */}
+            {isInsurance && canAddDetails && !showEditForm && (
               <PreAuthForm
                 kypSubmissionId={kypSubmission!.id}
                 initialData={{
@@ -197,21 +205,76 @@ export default function PreAuthPage() {
                 onCancel={() => router.push(`/patient/${leadId}`)}
               />
             )}
-            {isInsurance && !canAddDetails && !canComplete && preAuthRaised && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Pre-auth has already been completed
-                </CardContent>
-              </Card>
+
+            {/* Insurance: Show form to complete pre-auth */}
+            {isInsurance && canComplete && !showEditForm && (
+              <PreAuthForm
+                kypSubmissionId={kypSubmission!.id}
+                initialData={{
+                  ...kypSubmission?.preAuthData,
+                  hospitalSuggestions: kypSubmission?.preAuthData?.hospitalSuggestions ?? undefined,
+                  roomTypes: kypSubmission?.preAuthData?.roomTypes ?? undefined,
+                }}
+                isReadOnly={false}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                }}
+                onCancel={() => router.push(`/patient/${leadId}`)}
+              />
             )}
-            {isInsurance && !canAddDetails && !canComplete && !preAuthRaised && lead?.caseStage === CaseStage.KYP_COMPLETE && (
+
+            {/* Show details view when data exists and no form should be shown */}
+            {shouldShowDetails && kypSubmission?.preAuthData && (
+              <>
+                <PreAuthDetailsView
+                  preAuthData={kypSubmission.preAuthData}
+                  caseStage={lead?.caseStage || CaseStage.NEW_LEAD}
+                  leadRef={kypSubmission.lead.leadRef}
+                  patientName={kypSubmission.lead.patientName}
+                />
+                {canPDF && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>PDF Generation</CardTitle>
+                      <CardDescription>Generate pre-authorization PDF</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`/api/leads/${leadId}/preauth-pdf`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ recipients: [] }),
+                            })
+                            if (response.ok) {
+                              alert('PDF generation initiated')
+                            } else {
+                              alert('Failed to generate PDF')
+                            }
+                          } catch (error) {
+                            alert('Error generating PDF')
+                          }
+                        }}
+                      >
+                        Generate PDF
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+
+            {/* Insurance: Waiting states */}
+            {isInsurance && !canAddDetails && !canComplete && !hasPreAuthData && lead?.caseStage === CaseStage.KYP_COMPLETE && (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
                   KYP details added. Waiting for BD to raise pre-auth with hospital and room selection.
                 </CardContent>
               </Card>
             )}
-            {isInsurance && !canAddDetails && !canComplete && !preAuthRaised && lead?.caseStage !== CaseStage.KYP_COMPLETE && (
+            {isInsurance && !canAddDetails && !canComplete && !hasPreAuthData && lead?.caseStage !== CaseStage.KYP_COMPLETE && lead?.caseStage !== CaseStage.KYP_PENDING && (
               <Card>
                 <CardContent className="py-12 text-center space-y-2">
                   <p className="text-muted-foreground">
