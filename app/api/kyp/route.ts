@@ -27,13 +27,12 @@ export async function GET(request: NextRequest) {
         where.status = status as any
       }
     } else if (user.role === 'INSURANCE_HEAD') {
-      // Insurance sees pending pre-auth submissions and completed ones with follow-up
-      // If status is provided, use it; otherwise show PENDING and FOLLOW_UP_COMPLETE
+      // Insurance sees: PENDING (add details), KYP_DETAILS_ADDED, PRE_AUTH_COMPLETE, follow-up states
       if (status) {
         where.status = status as any
       } else {
         where.status = {
-          in: ['PENDING', 'FOLLOW_UP_COMPLETE', 'COMPLETED'],
+          in: ['PENDING', 'KYP_DETAILS_ADDED', 'PRE_AUTH_COMPLETE', 'FOLLOW_UP_COMPLETE', 'COMPLETED'],
         }
       }
     } else if (user.role !== 'ADMIN') {
@@ -60,6 +59,7 @@ export async function GET(request: NextRequest) {
             phoneNumber: true,
             city: true,
             hospitalName: true,
+            caseStage: true,
             bd: {
               select: {
                 id: true,
@@ -77,6 +77,12 @@ export async function GET(request: NextRequest) {
         preAuthData: {
           include: {
             handledBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            preAuthRaisedBy: {
               select: {
                 id: true,
                 name: true,

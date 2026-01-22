@@ -21,21 +21,21 @@ import {
   Phone,
   MapPin,
   Building2,
-  Calendar,
+  Calendar as CalendarIcon,
   DollarSign,
   Target,
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Calendar } from '@/components/ui/calendar'
 import { ALL_LEAD_STATUSES } from '@/components/kanban-board'
 import { getStatusColor } from '@/lib/lead-status-colors'
 import { mapStatusCode } from '@/lib/mysql-code-mappings'
 import { Progress } from '@/components/ui/progress'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { KYPForm } from '@/components/kyp/kyp-form'
-import { FollowUpForm } from '@/components/kyp/follow-up-form'
-import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
 import { UserPlus, Eye, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Target {
   id: string
@@ -51,11 +51,15 @@ interface Target {
 export default function BDPipelinePage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const router = useRouter()
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showKYPForm, setShowKYPForm] = useState(false)
-  const [selectedFollowUpKYP, setSelectedFollowUpKYP] = useState<string | null>(null)
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false)
+  const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false)
 
   const filters = useMemo(() => {
     const baseFilters: any = { bdId: user?.id }
@@ -83,14 +87,14 @@ export default function BDPipelinePage() {
     return map
   }, [kypSubmissions])
 
-  // Filter leads by search query and sort by latest date first
+  // Filter leads by search query, date range, and sort by latest date first
   const filteredLeads = useMemo(() => {
     let result = leads
     
     // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
-      result = leads.filter(
+      result = result.filter(
         (lead) =>
           lead.patientName?.toLowerCase().includes(query) ||
           lead.leadRef?.toLowerCase().includes(query) ||
@@ -99,6 +103,36 @@ export default function BDPipelinePage() {
           lead.hospitalName?.toLowerCase().includes(query) ||
           lead.treatment?.toLowerCase().includes(query)
       )
+    }
+    
+    // Filter by date range
+    if (startDate || endDate) {
+      result = result.filter((lead) => {
+        if (!lead.createdDate) return false
+        
+        const leadDate = lead.createdDate && typeof lead.createdDate === 'string'
+          ? new Date(lead.createdDate)
+          : lead.createdDate && lead.createdDate instanceof Date
+          ? lead.createdDate
+          : null
+        
+        if (!leadDate) return false
+        
+        // Set time to start of day for comparison
+        const leadDateOnly = new Date(leadDate.getFullYear(), leadDate.getMonth(), leadDate.getDate())
+        const startDateOnly = startDate ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate()) : null
+        const endDateOnly = endDate ? new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate()) : null
+        
+        if (startDateOnly && endDateOnly) {
+          return leadDateOnly >= startDateOnly && leadDateOnly <= endDateOnly
+        } else if (startDateOnly) {
+          return leadDateOnly >= startDateOnly
+        } else if (endDateOnly) {
+          return leadDateOnly <= endDateOnly
+        }
+        
+        return true
+      })
     }
     
     // Sort by createdDate (latest first)
@@ -115,7 +149,7 @@ export default function BDPipelinePage() {
         : 0
       return dateB - dateA // Descending order (latest first)
     })
-  }, [leads, searchQuery])
+  }, [leads, searchQuery, startDate, endDate])
 
   // Calculate status-based statistics
   const statusStats = useMemo(() => {
@@ -337,7 +371,7 @@ export default function BDPipelinePage() {
                   <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{statusStats.followUps}</p>
                 </div>
                 <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                  <CalendarIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
                 </div>
               </div>
             </CardContent>
@@ -436,30 +470,91 @@ export default function BDPipelinePage() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search leads by name, ref, phone, city, hospital, or treatment..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search leads by name, ref, phone, city, hospital, or treatment..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="w-full md:w-48">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      {uniqueStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="w-full md:w-48">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    {uniqueStatuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">From:</span>
+                  <Dialog open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {startDate ? format(startDate, 'PP') : 'Pick date'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(date) => {
+                          setStartDate(date)
+                          setIsStartCalendarOpen(false)
+                        }}
+                        initialFocus
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">To:</span>
+                  <Dialog open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {endDate ? format(endDate, 'PP') : 'Pick date'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(date) => {
+                          setEndDate(date)
+                          setIsEndCalendarOpen(false)
+                        }}
+                        initialFocus
+                      />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                {(startDate || endDate) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setStartDate(undefined)
+                      setEndDate(undefined)
+                    }}
+                    className="text-muted-foreground"
+                  >
+                    Clear dates
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -566,7 +661,7 @@ export default function BDPipelinePage() {
                                         size="sm"
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          setSelectedFollowUpKYP((kypSubmission as any).id)
+                                          router.push(`/patient/${lead.id}/follow-up`)
                                         }}
                                       >
                                         <Eye className="h-3 w-3 mr-1" />
@@ -591,7 +686,7 @@ export default function BDPipelinePage() {
                                         size="sm"
                                         onClick={(e) => {
                                           e.stopPropagation()
-                                          setSelectedFollowUpKYP((kypSubmission as any).id)
+                                          router.push(`/patient/${lead.id}/follow-up`)
                                         }}
                                       >
                                         <Plus className="h-3 w-3 mr-1" />
@@ -654,71 +749,17 @@ export default function BDPipelinePage() {
                   setShowKYPForm(false)
                   setSelectedLeadId(null)
                   queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
+                  if (selectedLeadId) {
+                    router.push(`/patient/${selectedLeadId}`)
+                  }
                 }}
                 onCancel={() => setShowKYPForm(false)}
               />
             )}
           </DialogContent>
         </Dialog>
-
-        {/* Follow-Up Dialog */}
-        {selectedFollowUpKYP && (
-          <FollowUpDialog
-            kypSubmissionId={selectedFollowUpKYP}
-            onClose={() => setSelectedFollowUpKYP(null)}
-          />
-        )}
       </div>
     </AuthenticatedLayout>
   )
 }
 
-// Follow-Up Dialog Component
-function FollowUpDialog({
-  kypSubmissionId,
-  onClose,
-}: {
-  kypSubmissionId: string
-  onClose: () => void
-}) {
-  const queryClient = useQueryClient()
-  const { data: kypSubmissions } = useQuery<any[]>({
-    queryKey: ['kyp-submissions', 'pipeline'],
-    queryFn: () => apiGet<any[]>('/api/kyp'),
-  })
-
-  const kypSubmission = kypSubmissions?.find((kyp) => kyp.id === kypSubmissionId)
-  const hasFollowUp = !!kypSubmission?.followUpData
-
-  return (
-    <Dialog open={!!kypSubmissionId} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {hasFollowUp ? 'View Follow-Up Details' : 'Add Follow-Up Details'}
-          </DialogTitle>
-          <DialogDescription>
-            {kypSubmission?.lead.leadRef} - {kypSubmission?.lead.patientName}
-          </DialogDescription>
-        </DialogHeader>
-        {kypSubmission && (
-          <>
-            {hasFollowUp ? (
-              <FollowUpDetailsView followUpData={kypSubmission.followUpData as any} />
-            ) : (
-              <FollowUpForm
-                kypSubmissionId={kypSubmission.id}
-                initialData={undefined}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
-                  onClose()
-                }}
-                onCancel={onClose}
-              />
-            )}
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
-  )
-}

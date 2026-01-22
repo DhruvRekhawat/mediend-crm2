@@ -5,7 +5,7 @@ import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { uploadFileToS3 } from '@/lib/s3-client'
 import { z } from 'zod'
-import { UserRole } from '@prisma/client'
+import { UserRole, CaseStage } from '@prisma/client'
 
 const submitKYPSchema = z.object({
   leadId: z.string(),
@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
             id: true,
             leadRef: true,
             patientName: true,
+            caseStage: true,
           },
         },
         submittedBy: {
@@ -107,6 +108,26 @@ export async function POST(request: NextRequest) {
             name: true,
           },
         },
+      },
+    })
+
+    // Update lead case stage
+    const previousStage = lead.caseStage
+    await prisma.lead.update({
+      where: { id: data.leadId },
+      data: {
+        caseStage: CaseStage.KYP_PENDING,
+      },
+    })
+
+    // Create stage history entry
+    await prisma.caseStageHistory.create({
+      data: {
+        leadId: data.leadId,
+        fromStage: previousStage,
+        toStage: CaseStage.KYP_PENDING,
+        changedById: user.id,
+        note: 'KYP submitted',
       },
     })
 

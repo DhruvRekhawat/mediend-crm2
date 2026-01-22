@@ -19,6 +19,8 @@ export interface LeadFilters {
   endDate?: string
 }
 
+import { CaseStage } from '@prisma/client'
+
 export interface Lead {
   id: string
   patientName?: string
@@ -30,6 +32,7 @@ export interface Lead {
   remarks?: string
   status?: string
   pipelineStage?: string
+  caseStage?: CaseStage
   leadRef?: string
   insuranceName?: string
   tpa?: string
@@ -37,6 +40,7 @@ export interface Lead {
   netProfit?: number
   source?: string
   bdId?: string
+  createdDate?: string | Date
   bd?: {
     id: string
     name: string

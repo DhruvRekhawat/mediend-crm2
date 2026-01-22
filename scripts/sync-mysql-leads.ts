@@ -3,6 +3,7 @@ import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-sou
 import { prisma } from '@/lib/prisma'
 import { mapMySQLLeadToPrisma, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
 import { UserRole } from '@prisma/client'
+import pLimit from 'p-limit'
 
 interface MySQLRemarkRow {
   id: number
@@ -16,6 +17,7 @@ interface MySQLRemarkRow {
 
 const BATCH_SIZE = 2500 // Increased batch size for better performance
 const SYNC_SOURCE_TYPE = 'mysql_leads'
+const CONCURRENCY_LIMIT = 15 // Process 15 leads concurrently
 
 /**
  * Get or create sync state
@@ -73,65 +75,178 @@ async function updateSyncState(
 }
 
 /**
- * Sync lead remarks for a batch of lead IDs
+ * Batch fetch existing leads by leadRef with key fields for comparison
+ */
+async function fetchExistingLeads(
+  leadRefs: string[]
+): Promise<Map<string, { updatedDate: Date | null; patientName: string; status: string; bdId: string }>> {
+  if (leadRefs.length === 0) return new Map()
+
+  // Prisma has a limit on the 'in' clause, so we need to chunk
+  const CHUNK_SIZE = 1000
+  const existingLeadsMap = new Map<string, { updatedDate: Date | null; patientName: string; status: string; bdId: string }>()
+
+  for (let i = 0; i < leadRefs.length; i += CHUNK_SIZE) {
+    const chunk = leadRefs.slice(i, i + CHUNK_SIZE)
+    const leads = await prisma.lead.findMany({
+      where: { leadRef: { in: chunk } },
+      select: {
+        leadRef: true,
+        updatedDate: true,
+        patientName: true,
+        status: true,
+        bdId: true,
+      },
+    })
+    leads.forEach((lead) => {
+      existingLeadsMap.set(lead.leadRef, {
+        updatedDate: lead.updatedDate,
+        patientName: lead.patientName,
+        status: lead.status,
+        bdId: lead.bdId,
+      })
+    })
+  }
+
+  return existingLeadsMap
+}
+
+/**
+ * Batch fetch all BD users and create a lookup map
+ */
+async function fetchBDUsersMap(): Promise<Map<string, { id: string; circle: string | null }>> {
+  const bdUsers = await prisma.user.findMany({
+    where: { role: UserRole.BD },
+    select: {
+      id: true,
+      name: true,
+      team: {
+        select: {
+          circle: true,
+        },
+      },
+    },
+  })
+
+  const bdMap = new Map<string, { id: string; circle: string | null }>()
+
+  // Create multiple lookup keys for each BD user
+  for (const user of bdUsers) {
+    const name = user.name.trim()
+    const circle = user.team?.circle || null
+
+    // Add exact match (case-insensitive key)
+    bdMap.set(name.toLowerCase(), { id: user.id, circle })
+
+    // Add first name match
+    const firstName = name.split(' ')[0]
+    if (firstName && firstName.length > 2) {
+      if (!bdMap.has(firstName.toLowerCase())) {
+        bdMap.set(firstName.toLowerCase(), { id: user.id, circle })
+      }
+    }
+
+    // Add "BD-{number}" format if name is numeric
+    if (/^\d+$/.test(name)) {
+      bdMap.set(`bd-${name}`, { id: user.id, circle })
+    }
+  }
+
+  return bdMap
+}
+
+/**
+ * Optimized sync lead remarks using batch operations
  */
 async function syncLeadRemarks(leadIds: number[]) {
   if (leadIds.length === 0) return
 
   try {
+    // Fetch all remarks in one query
     const remarks = await queryMySQL<MySQLRemarkRow>(
       `SELECT * FROM lead_remarks WHERE RefId IN (${leadIds.map(() => '?').join(',')}) ORDER BY UpdateDate`,
       leadIds
     )
 
-    let syncedCount = 0
-
-    for (const remark of remarks) {
-      try {
-        const leadRef = String(remark.RefId)
-
-        // Check if lead exists
-        const lead = await prisma.lead.findUnique({
-          where: { leadRef },
-        })
-
-        if (!lead) {
-          console.warn(`Lead ${leadRef} not found for remark ${remark.id}, skipping`)
-          continue
-        }
-
-        // Check if remark already exists (by checking updateDate and remarks content)
-        const existingRemark = await prisma.leadRemark.findFirst({
-          where: {
-            leadRef,
-            updateDate: new Date(remark.UpdateDate),
-            remarks: remark.Remarks,
-          },
-        })
-
-        if (existingRemark) {
-          continue // Skip duplicate
-        }
-
-        await prisma.leadRemark.create({
-          data: {
-            leadRef,
-            remarks: remark.Remarks,
-            updateBy: remark.UpdateBy ?? null,
-            updateDate: new Date(remark.UpdateDate),
-            ip: remark.IP ?? null,
-            leadStatus: remark.LeadStatus ?? null,
-          },
-        })
-
-        syncedCount++
-      } catch (error) {
-        console.error(`Error syncing remark ${remark.id}:`, error)
-      }
+    if (remarks.length === 0) {
+      return
     }
 
-    if (syncedCount > 0) {
-      console.log(`Synced ${syncedCount} lead remarks`)
+    // Get all leadRefs that exist
+    const leadRefs = leadIds.map((id) => String(id))
+    const existingLeads = await fetchExistingLeads(leadRefs)
+    const existingLeadRefsSet = existingLeads
+
+    // Filter remarks to only those for existing leads
+    const validRemarks = remarks.filter((remark) =>
+      existingLeadRefsSet.has(String(remark.RefId))
+    )
+
+    if (validRemarks.length === 0) {
+      return
+    }
+
+    // Batch fetch existing remarks to avoid duplicates
+    // Create a set of existing remark keys (leadRef + updateDate + remarks)
+    const existingRemarkKeys = new Set<string>()
+
+    // Chunk the remarks check to avoid query size limits
+    const CHUNK_SIZE = 500
+    for (let i = 0; i < validRemarks.length; i += CHUNK_SIZE) {
+      const chunk = validRemarks.slice(i, i + CHUNK_SIZE)
+      const leadRefsChunk = [...new Set(chunk.map((r) => String(r.RefId)))]
+
+      const existingRemarks = await prisma.leadRemark.findMany({
+        where: {
+          leadRef: { in: leadRefsChunk },
+        },
+        select: {
+          leadRef: true,
+          updateDate: true,
+          remarks: true,
+        },
+      })
+
+      existingRemarks.forEach((r) => {
+        const key = `${r.leadRef}|${r.updateDate.toISOString()}|${r.remarks}`
+        existingRemarkKeys.add(key)
+      })
+    }
+
+    // Prepare new remarks for batch insert
+    const newRemarks = validRemarks
+      .map((remark) => {
+        const leadRef = String(remark.RefId)
+        const updateDate = new Date(remark.UpdateDate)
+        const key = `${leadRef}|${updateDate.toISOString()}|${remark.Remarks}`
+
+        if (existingRemarkKeys.has(key)) {
+          return null // Skip duplicate
+        }
+
+        return {
+          leadRef,
+          remarks: remark.Remarks,
+          updateBy: remark.UpdateBy ?? null,
+          updateDate,
+          ip: remark.IP ?? null,
+          leadStatus: remark.LeadStatus ?? null,
+        }
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+
+    // Batch create new remarks
+    if (newRemarks.length > 0) {
+      // Prisma createMany has limitations, so we'll chunk it
+      const REMARK_CHUNK_SIZE = 1000
+      for (let i = 0; i < newRemarks.length; i += REMARK_CHUNK_SIZE) {
+        const chunk = newRemarks.slice(i, i + REMARK_CHUNK_SIZE)
+        await prisma.leadRemark.createMany({
+          data: chunk,
+          skipDuplicates: true,
+        })
+      }
+      console.log(`Synced ${newRemarks.length} lead remarks`)
     }
   } catch (error) {
     console.error('Error syncing lead remarks:', error)
@@ -184,85 +299,156 @@ async function syncLeads() {
       return
     }
 
+    // Pre-fetch existing leads with key fields for comparison
+    console.log('Pre-fetching existing leads...')
+    const leadRefs = leads.map((l) => String(l.id))
+    const existingLeadsMap = await fetchExistingLeads(leadRefs)
+    console.log(`Found ${existingLeadsMap.size} existing leads out of ${leads.length}`)
+
+    // Pre-fetch BD users map for faster lookups
+    console.log('Pre-fetching BD users...')
+    const bdUsersMap = await fetchBDUsersMap()
+    console.log(`Loaded ${bdUsersMap.size} BD user lookup entries`)
+
+    // Process leads in parallel with concurrency limit
+    const limit = pLimit(CONCURRENCY_LIMIT)
     let syncedCount = 0
     let updatedCount = 0
     let errorCount = 0
-    let maxDate = lastSyncedDate
-    let maxId: number | null = null
     const syncedLeadIds: number[] = []
+    const leadsToCreate: any[] = []
+    const leadsToUpdate: Array<{ leadRef: string; data: any }> = []
+    const leadDates: Date[] = []
+    const leadIds: number[] = []
 
-    // Process each lead
-    for (const mysqlLead of leads) {
+    console.log(`Processing ${leads.length} leads with concurrency limit of ${CONCURRENCY_LIMIT}...`)
+
+    // Process each lead in parallel
+    const processLead = async (mysqlLead: MySQLLeadRow) => {
       try {
         const leadRef = String(mysqlLead.id)
-        const leadDate = mysqlLead.Lead_Date
-          ? new Date(mysqlLead.Lead_Date)
-          : new Date()
+        const leadDate = mysqlLead.Lead_Date ? new Date(mysqlLead.Lead_Date) : new Date()
 
-        // Track max date and ID
-        if (leadDate > maxDate) {
-          maxDate = leadDate
-        }
-        if (maxId === null || mysqlLead.id > maxId) {
-          maxId = mysqlLead.id
-        }
+        // Track dates and IDs for max calculation after processing
+        leadDates.push(leadDate)
+        leadIds.push(mysqlLead.id)
 
         // Map MySQL lead to Prisma format
+        // Note: mapMySQLLeadToPrisma already handles BD user lookup and creation
         const leadData = await mapMySQLLeadToPrisma(mysqlLead, systemUser.id)
 
-        // Verify BD user exists before creating lead
-        if (leadData.bdId) {
-          const bdUserExists = await prisma.user.findUnique({
-            where: { id: leadData.bdId },
-            select: { id: true },
-          })
-
-          if (!bdUserExists) {
-            console.warn(`BD user ${leadData.bdId} does not exist for lead ${leadRef}, skipping`)
-            errorCount++
-            continue
-          }
-        } else {
+        // Verify BD user exists (mapMySQLLeadToPrisma should have handled this, but double-check)
+        if (!leadData.bdId) {
           console.warn(`Lead ${leadRef} has no bdId, skipping`)
           errorCount++
-          continue
+          return
         }
-
-        // Check if lead exists
-        const existingLead = await prisma.lead.findUnique({
-          where: { leadRef },
-        })
 
         // Extract updatedDate and prepare data for Prisma
-        // Note: Use direct fields (bdId, createdById, updatedById) instead of relation syntax
-        // to avoid mixing relation syntax with direct fields
         const { updatedDate, ...leadDataForPrisma } = leadData
-        
+
+        const existingLead = existingLeadsMap.get(leadRef)
+
         if (existingLead) {
-          // Update existing lead - bdId is verified to exist above
-          // Note: updatedDate is @updatedAt in schema, so Prisma manages it automatically
-          await prisma.lead.update({
-            where: { leadRef },
-            data: leadDataForPrisma,
-          })
-          updatedCount++
+          // Check if lead has actually changed by comparing key fields
+          const hasChanged =
+            existingLead.patientName !== leadDataForPrisma.patientName ||
+            existingLead.status !== leadDataForPrisma.status ||
+            existingLead.bdId !== leadDataForPrisma.bdId ||
+            (updatedDate && existingLead.updatedDate && updatedDate.getTime() !== existingLead.updatedDate.getTime()) ||
+            (!existingLead.updatedDate && updatedDate)
+
+          if (hasChanged) {
+            // Only queue for update if data has changed
+            leadsToUpdate.push({
+              leadRef,
+              data: leadDataForPrisma,
+            })
+            updatedCount++
+            syncedLeadIds.push(mysqlLead.id)
+          }
+          // If unchanged, skip this lead entirely
         } else {
-          // Create new lead - use direct fields for all relations
-          await prisma.lead.create({
-            data: leadDataForPrisma,
-          })
+          // Queue for batch create (new lead)
+          leadsToCreate.push(leadDataForPrisma)
           syncedCount++
+          syncedLeadIds.push(mysqlLead.id)
         }
 
-        syncedLeadIds.push(mysqlLead.id)
       } catch (error) {
         errorCount++
         console.error(`Error processing lead ${mysqlLead.id}:`, error)
       }
     }
 
+    // Process all leads in parallel with concurrency limit
+    await Promise.allSettled(leads.map((lead) => limit(() => processLead(lead))))
+
+    // Calculate max date and ID after processing
+    const maxDate = leadDates.length > 0 ? new Date(Math.max(...leadDates.map(d => d.getTime()))) : lastSyncedDate
+    const maxId = leadIds.length > 0 ? Math.max(...leadIds) : null
+
+    console.log(`\nProcessed leads: ${syncedCount} new, ${updatedCount} updates, ${errorCount} errors`)
+
+    // Batch create new leads
+    if (leadsToCreate.length > 0) {
+      console.log(`Batch creating ${leadsToCreate.length} new leads...`)
+      // Prisma createMany has a limit, so chunk it
+      const CREATE_CHUNK_SIZE = 1000
+      for (let i = 0; i < leadsToCreate.length; i += CREATE_CHUNK_SIZE) {
+        const chunk = leadsToCreate.slice(i, i + CREATE_CHUNK_SIZE)
+        await prisma.lead.createMany({
+          data: chunk,
+          skipDuplicates: true,
+        })
+      }
+      console.log(`Created ${leadsToCreate.length} new leads`)
+    }
+
+    // Batch update existing leads - process sequentially in smaller batches
+    if (leadsToUpdate.length > 0) {
+      console.log(`Batch updating ${leadsToUpdate.length} existing leads...`)
+      // Process in smaller chunks sequentially to avoid transaction timeouts
+      // Process updates one by one or in very small batches
+      const UPDATE_CHUNK_SIZE = 25 // Very small chunks to avoid timeouts
+      for (let i = 0; i < leadsToUpdate.length; i += UPDATE_CHUNK_SIZE) {
+        const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+        // Process updates in a transaction, but with smaller chunks
+        // Note: Prisma array transaction doesn't support timeout options
+        // The timeout is controlled by the database connection pool
+        try {
+          await prisma.$transaction(
+            chunk.map((item) =>
+              prisma.lead.update({
+                where: { leadRef: item.leadRef },
+                data: item.data,
+              })
+            )
+          )
+        } catch (error) {
+          // If transaction fails, process individually
+          console.warn(`Transaction failed for chunk starting at ${i}, processing individually...`)
+          for (const item of chunk) {
+            try {
+              await prisma.lead.update({
+                where: { leadRef: item.leadRef },
+                data: item.data,
+              })
+            } catch (individualError) {
+              console.error(`Failed to update lead ${item.leadRef}:`, individualError)
+            }
+          }
+        }
+        if ((i + UPDATE_CHUNK_SIZE) % 250 === 0 || i + UPDATE_CHUNK_SIZE >= leadsToUpdate.length) {
+          console.log(`  Updated ${Math.min(i + UPDATE_CHUNK_SIZE, leadsToUpdate.length)} of ${leadsToUpdate.length} leads...`)
+        }
+      }
+      console.log(`Updated ${leadsToUpdate.length} existing leads`)
+    }
+
     // Sync lead remarks for synced leads
     if (syncedLeadIds.length > 0) {
+      console.log('Syncing lead remarks...')
       await syncLeadRemarks(syncedLeadIds)
     }
 

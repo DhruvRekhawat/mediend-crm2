@@ -13,3 +13,9 @@ Error syncing remark 267919: Error: Connection terminated unexpectedly
 }
 [2026-01-16 03:20:52] ERROR: Lead sync failed with exit code: 130
 [] ERROR: Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 11:41:42] ERROR: Lead sync failed with exit code: 130
+[2026-01-22 11:41:42] ERROR: Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 11:45:47] ERROR: Lead sync failed with exit code: 1
+[2026-01-22 11:45:47] ERROR: Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 11:52:23] ERROR: Lead sync failed with exit code: 1
+[2026-01-22 11:52:23] ERROR: Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log

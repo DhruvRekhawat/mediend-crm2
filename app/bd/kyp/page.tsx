@@ -11,12 +11,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { KYPForm } from '@/components/kyp/kyp-form'
-import { FollowUpForm } from '@/components/kyp/follow-up-form'
-import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
-import { Label } from '@/components/ui/label'
 import { format } from 'date-fns'
 import { Eye, Plus } from 'lucide-react'
 import { useLeads } from '@/hooks/use-leads'
+import { useRouter } from 'next/navigation'
+import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 
 interface KYPSubmission {
   id: string
@@ -27,7 +26,7 @@ interface KYPSubmission {
   disease: string | null
   location: string | null
   remark: string | null
-  status: 'PENDING' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
+  status: 'PENDING' | 'KYP_DETAILS_ADDED' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
   submittedAt: string
   lead: {
     id: string
@@ -70,10 +69,9 @@ interface KYPSubmission {
 export default function KYPPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const [selectedKYP, setSelectedKYP] = useState<KYPSubmission | null>(null)
+  const router = useRouter()
   const [showKYPForm, setShowKYPForm] = useState(false)
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'preauth' | 'followup' | null>(null)
 
   const { data: kypSubmissions, isLoading } = useQuery<KYPSubmission[]>({
     queryKey: ['kyp-submissions', user?.id],
@@ -85,13 +83,14 @@ export default function KYPPage() {
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       PENDING: 'secondary',
+      KYP_DETAILS_ADDED: 'default',
       PRE_AUTH_COMPLETE: 'default',
       FOLLOW_UP_COMPLETE: 'default',
       COMPLETED: 'default',
     }
     return (
       <Badge variant={variants[status] || 'secondary'}>
-        {status.replace(/_/g, ' ')}
+        {getKYPStatusLabel(status)}
       </Badge>
     )
   }
@@ -149,45 +148,11 @@ export default function KYPPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => {
-                                  setSelectedKYP(kyp)
-                                  // BD can view pre-auth details (read-only) or follow-up
-                                  if (kyp.status === 'PENDING' || (kyp.preAuthData && !kyp.followUpData)) {
-                                    setViewMode('preauth')
-                                  } else if (kyp.status === 'PRE_AUTH_COMPLETE' || kyp.status === 'FOLLOW_UP_COMPLETE' || kyp.followUpData) {
-                                    setViewMode('followup')
-                                  } else {
-                                    setViewMode(null)
-                                  }
-                                }}
+                                onClick={() => router.push(`/patient/${kyp.leadId}`)}
                               >
                                 <Eye className="h-4 w-4 mr-1" />
-                                View
+                                View Details
                               </Button>
-                              {kyp.status === 'PRE_AUTH_COMPLETE' && !kyp.followUpData && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedKYP(kyp)
-                                    setViewMode('followup')
-                                  }}
-                                >
-                                  Add Follow-Up
-                                </Button>
-                              )}
-                              {kyp.followUpData && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedKYP(kyp)
-                                    setViewMode('followup')
-                                  }}
-                                >
-                                  View Follow-Up
-                                </Button>
-                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -241,133 +206,6 @@ export default function KYPPage() {
             </DialogContent>
           </Dialog>
 
-          {/* View/Edit Dialog */}
-          {selectedKYP && (
-            <Dialog
-              open={!!selectedKYP}
-              onOpenChange={(open) => {
-                if (!open) {
-                  setSelectedKYP(null)
-                  setViewMode(null)
-                }
-              }}
-            >
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>
-                    {viewMode === 'preauth'
-                      ? 'Pre-Authorization'
-                      : viewMode === 'followup'
-                        ? 'Patient Follow-Up'
-                        : 'KYP Details'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {selectedKYP.lead.leadRef} - {selectedKYP.lead.patientName}
-                  </DialogDescription>
-                </DialogHeader>
-                {viewMode === 'preauth' && (
-                  <div className="space-y-4">
-                    {selectedKYP.preAuthData ? (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Sum Insured</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.sumInsured || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>Room Rent</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.roomRent || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>Capping</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.capping || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>Copay</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.copay || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>ICU</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.icu || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>Hospital Name Suggestion</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.hospitalNameSuggestion || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>Insurance</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.insurance || '-'}
-                          </p>
-                        </div>
-                        <div>
-                          <Label>TPA</Label>
-                          <p className="text-sm font-medium mt-1">
-                            {selectedKYP.preAuthData.tpa || '-'}
-                          </p>
-                        </div>
-                        {selectedKYP.preAuthData.handledAt && (
-                          <div>
-                            <Label>Pre-Authorized At</Label>
-                            <p className="text-sm font-medium mt-1">
-                              {format(new Date(selectedKYP.preAuthData.handledAt), 'PPpp')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Pre-authorization details not yet filled by Insurance team
-                      </div>
-                    )}
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedKYP(null)
-                          setViewMode(null)
-                        }}
-                      >
-                        Close
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {viewMode === 'followup' && (
-                  <>
-                    {selectedKYP.status === 'PRE_AUTH_COMPLETE' && !selectedKYP.followUpData ? (
-                      <FollowUpForm
-                        kypSubmissionId={selectedKYP.id}
-                        initialData={selectedKYP.followUpData || undefined}
-                        onSuccess={() => {
-                          queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
-                          setSelectedKYP(null)
-                          setViewMode(null)
-                        }}
-                        onCancel={() => {
-                          setSelectedKYP(null)
-                          setViewMode(null)
-                        }}
-                      />
-                    ) : selectedKYP.followUpData ? (
-                      <FollowUpDetailsView followUpData={selectedKYP.followUpData as any} />
-                    ) : null}
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
       </div>
     </AuthenticatedLayout>

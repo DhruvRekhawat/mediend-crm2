@@ -50,6 +50,42 @@ export async function GET(
             changedAt: 'desc',
           },
         },
+        kypSubmission: {
+          select: {
+            id: true,
+            status: true,
+            submittedAt: true,
+            submittedBy: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            preAuthData: {
+              select: {
+                id: true,
+                requestedHospitalName: true,
+                diseaseDescription: true,
+                diseaseImages: true,
+                preAuthRaisedAt: true,
+                sumInsured: true,
+                roomRent: true,
+                capping: true,
+                copay: true,
+                icu: true,
+                hospitalNameSuggestion: true,
+                insurance: true,
+                tpa: true,
+                handledAt: true,
+              },
+            },
+            followUpData: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
         insuranceCase: true,
         plRecord: true,
       },

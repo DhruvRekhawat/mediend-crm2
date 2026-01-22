@@ -132,7 +132,8 @@ enum ApplicationStatus {
 
 enum KYPStatus {
   PENDING
-  PRE_AUTH_COMPLETE
+  KYP_DETAILS_ADDED   // Insurance added hospitals, room types, TPA — BD can raise pre-auth
+  PRE_AUTH_COMPLETE   // BD raised pre-auth, Insurance completed — actual pre-auth done
   FOLLOW_UP_COMPLETE
   COMPLETED
 }
@@ -142,47 +143,87 @@ enum NotificationType {
   PRE_AUTH_COMPLETE
   FOLLOW_UP_COMPLETE
   KYP_COMPLETED
+  QUERY_RAISED
+  QUERY_ANSWERED
+  DISCHARGE_SHEET_CREATED
+  PREAUTH_RAISED
+  INITIATED
+  DISCHARGED
+}
+
+enum QueryStatus {
+  PENDING
+  ANSWERED
+  RESOLVED
+}
+
+enum CaseStage {
+  NEW_LEAD
+  KYP_PENDING
+  KYP_COMPLETE
+  PREAUTH_RAISED
+  PREAUTH_COMPLETE
+  INITIATED
+  ADMITTED
+  DISCHARGED
+  IPD_DONE
+  PL_PENDING
+  OUTSTANDING
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  passwordHash  String
-  name          String
-  role          UserRole
-  teamId        String?
-  team          Team?    @relation("TeamMembers", fields: [teamId], references: [id])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         UserRole
+  teamId       String?
+  team         Team?    @relation("TeamMembers", fields: [teamId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  createdLeads          Lead[]              @relation("LeadCreator")
-  assignedLeads         Lead[]              @relation("LeadBD")
-  updatedLeads           Lead[]              @relation("LeadUpdater")
-  leadStageEvents       LeadStageEvent[]
-  createdTargets        Target[]            @relation("TargetCreator")
-  salesHeadTeams        Team[]              @relation("SalesHead")
-  insuranceCases        InsuranceCase[]
-  plRecords             PLRecord[]
-  employee              Employee?
-  approvedLeaves        LeaveRequest[] @relation("LeaveApprover")
-  
+  createdLeads    Lead[]           @relation("LeadCreator")
+  assignedLeads   Lead[]           @relation("LeadBD")
+  updatedLeads    Lead[]           @relation("LeadUpdater")
+  leadStageEvents LeadStageEvent[]
+  createdTargets  Target[]         @relation("TargetCreator")
+  salesHeadTeams  Team[]           @relation("SalesHead")
+  insuranceCases  InsuranceCase[]
+  plRecords       PLRecord[]
+  employee        Employee?
+  approvedLeaves  LeaveRequest[]   @relation("LeaveApprover")
+
   // Finance Ledger Relations
-  createdLedgerEntries  LedgerEntry[]       @relation("LedgerCreator")
-  approvedLedgerEntries LedgerEntry[]       @relation("LedgerApprover")
-  deletedLedgerEntries  LedgerEntry[]       @relation("LedgerDeleter")
-  editRequestedLedgerEntries LedgerEntry[] @relation("LedgerEditRequester")
-  editApprovedLedgerEntries LedgerEntry[]  @relation("LedgerEditApprover")
-  ledgerAuditLogs       LedgerAuditLog[]    @relation("LedgerAuditPerformer")
-  
+  createdLedgerEntries       LedgerEntry[]    @relation("LedgerCreator")
+  approvedLedgerEntries      LedgerEntry[]    @relation("LedgerApprover")
+  deletedLedgerEntries       LedgerEntry[]    @relation("LedgerDeleter")
+  editRequestedLedgerEntries LedgerEntry[]    @relation("LedgerEditRequester")
+  editApprovedLedgerEntries  LedgerEntry[]    @relation("LedgerEditApprover")
+  ledgerAuditLogs            LedgerAuditLog[] @relation("LedgerAuditPerformer")
+
   // KYP Relations
-  kypSubmissions        KYPSubmission[]     @relation("KYPSubmitter")
-  preAuthHandled        PreAuthorization[]   @relation("PreAuthHandler")
-  followUpUpdated       PatientFollowUp[]    @relation("FollowUpUpdater")
-  notifications         Notification[]
-  
+  kypSubmissions  KYPSubmission[]    @relation("KYPSubmitter")
+  preAuthHandled  PreAuthorization[] @relation("PreAuthHandler")
+  followUpUpdated PatientFollowUp[]  @relation("FollowUpUpdater")
+  queriesRaised   InsuranceQuery[]   @relation("QueryRaiser")
+  queriesAnswered InsuranceQuery[]   @relation("QueryAnswerer")
+  notifications   Notification[]
+
+  // Discharge Sheet Relations
+  dischargeSheetsCreated DischargeSheet[] @relation("DischargeSheetCreator")
+
+  // Outstanding Relations
+  outstandingCasesHandled OutstandingCase[] @relation("OutstandingHandler")
+
   // Department Head Relations
-  departmentHeadOf     Department[]        @relation("DepartmentHead")
+  departmentHeadOf Department[] @relation("DepartmentHead")
+
+  // Case Workflow Relations
+  preAuthsRaised     PreAuthorization[] @relation("PreAuthRaiser")
+  pdfsCreated        PreAuthPDF[]       @relation("PDFCreator")
+  admissionsInitiated AdmissionRecord[]  @relation("AdmissionInitiator")
+  caseStageChanges   CaseStageHistory[]  @relation("CaseStageChanger")
 
   @@index([email])
   @@index([role])
@@ -205,120 +246,126 @@ model Team {
 }
 
 model Lead {
-  id                String        @id @default(cuid())
-  leadRef           String        @unique
-  patientName       String
-  age               Int
-  sex               String
-  phoneNumber       String
-  alternateNumber   String?
-  attendantName     String?
-  bdId              String
-  bd                User          @relation("LeadBD", fields: [bdId], references: [id])
-  status            String
-  pipelineStage     PipelineStage @default(SALES)
-  circle            Circle
-  city              String
-  category          String?
-  treatment         String?
-  anesthesia        String?
-  quantityGrade     String?
-  surgeonName       String?
-  surgeonType       String?
-  hospitalName      String
-  modeOfPayment     String?
-  discount          Float         @default(0)
-  copay             Float         @default(0)
-  deduction         Float         @default(0)
-  settledTotal      Float         @default(0)
-  billAmount        Float         @default(0)
-  insuranceName     String?
-  tpa               String?
-  sumInsured        Float?
-  roomRent          Float?
-  icu               Float?
-  capping            Float?
-  arrivalDate       DateTime?
-  arrivalTime       String?
-  surgeryDate       DateTime?
-  operationTime     String?
-  implantType       String?
-  implantAmount     Float         @default(0)
-  instrument        String?
-  consumables       String?
-  createdById       String
-  createdBy         User          @relation("LeadCreator", fields: [createdById], references: [id])
-  createdDate       DateTime      @default(now())
-  updatedById       String
-  updatedBy         User          @relation("LeadUpdater", fields: [updatedById], references: [id])
-  updatedDate       DateTime      @updatedAt
-  remarks           String?
-  source            String?
-  campaignName      String?
-  bdeName           String?
-  conversionDate    DateTime?
-  mediendProfit     Float         @default(0)
-  hospitalShare     Float         @default(0)
-  doctorShare       Float         @default(0)
-  othersShare       Float         @default(0)
-  netProfit         Float         @default(0)
-  ticketSize        Float         @default(0)
+  id              String        @id @default(cuid())
+  leadRef         String        @unique
+  patientName     String
+  age             Int
+  sex             String
+  phoneNumber     String
+  alternateNumber String?
+  attendantName   String?
+  bdId            String
+  bd              User          @relation("LeadBD", fields: [bdId], references: [id])
+  status          String
+  pipelineStage   PipelineStage @default(SALES)
+  caseStage       CaseStage     @default(NEW_LEAD)
+  circle          Circle
+  city            String
+  category        String?
+  treatment       String?
+  anesthesia      String?
+  quantityGrade   String?
+  surgeonName     String?
+  surgeonType     String?
+  hospitalName    String
+  modeOfPayment   String?
+  discount        Float         @default(0)
+  copay           Float         @default(0)
+  deduction       Float         @default(0)
+  settledTotal    Float         @default(0)
+  billAmount      Float         @default(0)
+  insuranceName   String?
+  tpa             String?
+  sumInsured      Float?
+  roomRent        Float?
+  icu             Float?
+  capping         Float?
+  arrivalDate     DateTime?
+  arrivalTime     String?
+  surgeryDate     DateTime?
+  operationTime   String?
+  implantType     String?
+  implantAmount   Float         @default(0)
+  instrument      String?
+  consumables     String?
+  createdById     String
+  createdBy       User          @relation("LeadCreator", fields: [createdById], references: [id])
+  createdDate     DateTime      @default(now())
+  updatedById     String
+  updatedBy       User          @relation("LeadUpdater", fields: [updatedById], references: [id])
+  updatedDate     DateTime      @updatedAt
+  remarks         String?
+  source          String?
+  campaignName    String?
+  bdeName         String?
+  conversionDate  DateTime?
+  mediendProfit   Float         @default(0)
+  hospitalShare   Float         @default(0)
+  doctorShare     Float         @default(0)
+  othersShare     Float         @default(0)
+  netProfit       Float         @default(0)
+  ticketSize      Float         @default(0)
 
   // Additional MySQL fields
-  month             String?
-  leadEntryDate     DateTime?
-  patientEmail      String?
-  whatsapp          String?
-  address           String?
-  docUpload         String?
-  diseaseDetails    String?
-  followUpDate      DateTime?
-  subStatus         Int?
-  opdHospital       String?
-  opdDrName         String?
-  opdContactNo      String?
-  opdCharges        Int            @default(0)
-  opdScheduleDate   DateTime?
-  opdMeeting        Int?
-  ipdAdmissionDate  DateTime?
-  ipdHospital       String?
-  ipdDrName         String?
-  ipdContactNo      String?
-  ipdTotalPayment   Int            @default(0)
-  ipdDetails        String?
-  paymentDetails    Int?
+  month              String?
+  leadEntryDate      DateTime?
+  patientEmail       String?
+  whatsapp           String?
+  address            String?
+  docUpload          String?
+  diseaseDetails     String?
+  followUpDate       DateTime?
+  subStatus          Int?
+  opdHospital        String?
+  opdDrName          String?
+  opdContactNo       String?
+  opdCharges         Int       @default(0)
+  opdScheduleDate    DateTime?
+  opdMeeting         Int?
+  ipdAdmissionDate   DateTime?
+  ipdHospital        String?
+  ipdDrName          String?
+  ipdContactNo       String?
+  ipdTotalPayment    Int       @default(0)
+  ipdDetails         String?
+  paymentDetails     Int?
   attendantContactNo String?
-  waFormat          String?
-  leadSource        Int?
-  whatsappMessage   String?
-  notification      Boolean       @default(false)
-  cityOption        String?
-  emailSent         Boolean       @default(false)
-  smsSent           Boolean       @default(false)
-  whatsappSent      Boolean       @default(false)
-  website           String?
-  description       String?
-  refId             String?
-  duplCount         Int           @default(0)
-  aes               Boolean       @default(false)
-  profession        String?
-  qr                String?
-  removeRemarks     Boolean       @default(false)
-  adId              String?
-  campaignId        String?
-  formId            String?
-  teamLeadId        Int?
-  remarksId         String?
+  waFormat           String?
+  leadSource         Int?
+  whatsappMessage    String?
+  notification       Boolean   @default(false)
+  cityOption         String?
+  emailSent          Boolean   @default(false)
+  smsSent            Boolean   @default(false)
+  whatsappSent       Boolean   @default(false)
+  website            String?
+  description        String?
+  refId              String?
+  duplCount          Int       @default(0)
+  aes                Boolean   @default(false)
+  profession         String?
+  qr                 String?
+  removeRemarks      Boolean   @default(false)
+  adId               String?
+  campaignId         String?
+  formId             String?
+  teamLeadId         Int?
+  remarksId          String?
 
   // Relations
-  stageEvents       LeadStageEvent[]
-  insuranceCase     InsuranceCase?
-  plRecord          PLRecord?
-  kypSubmission     KYPSubmission?
+  stageEvents     LeadStageEvent[]
+  insuranceCase   InsuranceCase?
+  plRecord        PLRecord?
+  kypSubmission   KYPSubmission?
+  dischargeSheet  DischargeSheet?
+  outstandingCase OutstandingCase?
+  admissionRecord AdmissionRecord?
+  caseStageHistory CaseStageHistory[]
 
   @@index([bdId])
   @@index([status])
   @@index([pipelineStage])
+  @@index([caseStage])
   @@index([circle])
   @@index([city])
   @@index([hospitalName])
@@ -347,21 +394,21 @@ model LeadStageEvent {
 }
 
 model Target {
-  id            String        @id @default(cuid())
-  targetType    TargetType
-  targetForId   String // Can be User.id or Team.id depending on targetType
-  teamId        String?
-  team          Team?         @relation(fields: [teamId], references: [id])
-  periodType    PeriodType
+  id              String       @id @default(cuid())
+  targetType      TargetType
+  targetForId     String // Can be User.id or Team.id depending on targetType
+  teamId          String?
+  team            Team?        @relation(fields: [teamId], references: [id])
+  periodType      PeriodType
   periodStartDate DateTime
   periodEndDate   DateTime
-  metric        TargetMetric
-  targetValue   Float
-  createdById   String
-  createdBy     User          @relation("TargetCreator", fields: [createdById], references: [id])
-  bonusRules    BonusRule[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  metric          TargetMetric
+  targetValue     Float
+  createdById     String
+  createdBy       User         @relation("TargetCreator", fields: [createdById], references: [id])
+  bonusRules      BonusRule[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([targetType, targetForId])
   @@index([periodStartDate, periodEndDate])
@@ -369,33 +416,33 @@ model Target {
 }
 
 model BonusRule {
-  id              String          @id @default(cuid())
+  id              String        @id @default(cuid())
   targetId        String
-  target          Target          @relation(fields: [targetId], references: [id], onDelete: Cascade)
+  target          Target        @relation(fields: [targetId], references: [id], onDelete: Cascade)
   ruleType        BonusRuleType
   thresholdValue  Float
   bonusAmount     Float?
   bonusPercentage Float?
   capAmount       Float?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([targetId])
 }
 
 model InsuranceCase {
-  id            String              @id @default(cuid())
-  leadId        String              @unique
-  lead          Lead                @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  caseStatus    InsuranceCaseStatus @default(IN_PROGRESS)
+  id             String              @id @default(cuid())
+  leadId         String              @unique
+  lead           Lead                @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  caseStatus     InsuranceCaseStatus @default(IN_PROGRESS)
   approvalAmount Float?
-  tpaRemarks    String?
-  submittedAt   DateTime            @default(now())
-  approvedAt    DateTime?
-  handledById   String?
-  handledBy     User?               @relation(fields: [handledById], references: [id])
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  tpaRemarks     String?
+  submittedAt    DateTime            @default(now())
+  approvedAt     DateTime?
+  handledById    String?
+  handledBy      User?               @relation(fields: [handledById], references: [id])
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
   @@index([leadId])
   @@index([caseStatus])
@@ -403,30 +450,82 @@ model InsuranceCase {
 }
 
 model PLRecord {
-  id                  String    @id @default(cuid())
-  leadId              String    @unique
-  lead                Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  finalProfit         Float     @default(0)
-  hospitalPayoutStatus String?  // e.g., "PENDING", "PAID", "PARTIAL"
-  doctorPayoutStatus   String?   // e.g., "PENDING", "PAID", "PARTIAL"
-  mediendInvoiceStatus String?  // e.g., "PENDING", "SENT", "PAID"
-  closedAt            DateTime?
-  handledById         String?
-  handledBy           User?     @relation(fields: [handledById], references: [id])
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id     String @id @default(cuid())
+  leadId String @unique
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  // Core Identification
+  month              DateTime? // Reporting month
+  surgeryDate        DateTime? // Date of surgery
+  status             String? // Case status
+  paymentType        String? // Payment mode
+  approvedOrCash     String? // Approved / Cash
+  paymentCollectedAt String? // Collection source
+
+  // People & Ownership
+  managerRole  String? // ATL / TL / ACM / CM / SCM
+  managerName  String? // Person name
+  bdmName      String? // Business Development Manager
+  patientName  String? // Patient full name
+  patientPhone String? // Phone number
+  doctorName   String? // Treating doctor
+  hospitalName String? // Hospital
+
+  // Case Details
+  category   String? // Cosmetic / Medical
+  treatment  String? // Procedure
+  circle     String? // City / region
+  leadSource String? // Source of lead
+
+  // Financials (Raw)
+  totalAmount       Float @default(0) // Total case value
+  billAmount        Float @default(0) // Hospital bill
+  cashPaidByPatient Float @default(0) // Direct patient cash
+  cashOrDedPaid     Float @default(0) // Cash / deduction
+  referralAmount    Float @default(0) // Referral payout
+  cabCharges        Float @default(0) // Logistics cost
+  implantCost       Float @default(0) // Implant
+  dcCharges         Float @default(0) // D&C
+  doctorCharges     Float @default(0) // Doctor fee
+
+  // Revenue Split
+  hospitalSharePct    Float? // % (DECIMAL(5,2))
+  hospitalShareAmount Float  @default(0) // Amount
+  mediendSharePct     Float? // % (DECIMAL(5,2))
+  mediendShareAmount  Float  @default(0) // Gross share
+  mediendNetProfit    Float  @default(0) // Final profit (renamed from finalProfit)
+
+  // Legacy fields (keeping for backward compatibility)
+  finalProfit          Float   @default(0) // Alias for mediendNetProfit
+  hospitalPayoutStatus String? // e.g., "PENDING", "PAID", "PARTIAL"
+  doctorPayoutStatus   String? // e.g., "PENDING", "PAID", "PARTIAL"
+  mediendInvoiceStatus String? // e.g., "PENDING", "SENT", "PAID"
+
+  // Meta
+  remarks     String?   @db.Text // Free text
+  closedAt    DateTime?
+  handledById String?
+  handledBy   User?     @relation(fields: [handledById], references: [id])
+
+  // Relations
+  dischargeSheet DischargeSheet? @relation("DischargeSheetPLRecord") // Optional link to discharge sheet
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([leadId])
   @@index([closedAt])
+  @@index([month])
+  @@index([surgeryDate])
+  @@index([status])
 }
 
-
 model IncomingLead {
-  id          String   @id @default(cuid())
-  source      String?
-  payload     Json
-  status      String   @default("PENDING") // PENDING, PROCESSED, FAILED
-  receivedAt  DateTime @default(now())
+  id         String   @id @default(cuid())
+  source     String?
+  payload    Json
+  status     String   @default("PENDING") // PENDING, PROCESSED, FAILED
+  receivedAt DateTime @default(now())
 
   @@index([status])
   @@index([receivedAt])
@@ -435,13 +534,13 @@ model IncomingLead {
 // HRMS Models
 
 model Department {
-  id          String     @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   description String?
   headId      String?
-  head        User?      @relation("DepartmentHead", fields: [headId], references: [id])
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  head        User?    @relation("DepartmentHead", fields: [headId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   employees      Employee[]
   supportTickets SupportTicket[]
@@ -451,21 +550,21 @@ model Department {
 }
 
 model Employee {
-  id            String    @id @default(cuid())
-  userId        String    @unique
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  employeeCode  String    @unique
-  joinDate      DateTime?
-  salary        Float?
-  departmentId  String?
-  department    Department? @relation(fields: [departmentId], references: [id])
-  dateOfBirth   DateTime?
-  aadharNumber  String?
-  panNumber     String?
-  aadharDocUrl  String?
-  panDocUrl     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String      @id @default(cuid())
+  userId       String      @unique
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeCode String      @unique
+  joinDate     DateTime?
+  salary       Float?
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  dateOfBirth  DateTime?
+  aadharNumber String?
+  panNumber    String?
+  aadharDocUrl String?
+  panDocUrl    String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   attendanceLogs       AttendanceLog[]
   leaveRequests        LeaveRequest[]
@@ -485,14 +584,14 @@ model Employee {
 }
 
 model AttendanceLog {
-  id              String         @id @default(cuid())
-  employeeId      String
-  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  logDate         DateTime
-  punchDirection  PunchDirection
-  temperature     Float          @default(0)
-  serialNumber    String?
-  createdAt       DateTime       @default(now())
+  id             String         @id @default(cuid())
+  employeeId     String
+  employee       Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  logDate        DateTime
+  punchDirection PunchDirection
+  temperature    Float          @default(0)
+  serialNumber   String?
+  createdAt      DateTime       @default(now())
 
   @@unique([employeeId, logDate, punchDirection])
   @@index([employeeId])
@@ -516,22 +615,22 @@ model LeaveTypeMaster {
 }
 
 model LeaveRequest {
-  id            String            @id @default(cuid())
-  employeeId    String
-  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  leaveTypeId   String
-  leaveType     LeaveTypeMaster   @relation(fields: [leaveTypeId], references: [id])
-  startDate     DateTime
-  endDate       DateTime
-  days          Int
-  reason        String?
-  status        LeaveRequestStatus @default(PENDING)
-  approvedById  String?
-  approvedBy    User?             @relation("LeaveApprover", fields: [approvedById], references: [id])
-  approvedAt    DateTime?
-  remarks       String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id           String             @id @default(cuid())
+  employeeId   String
+  employee     Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId  String
+  leaveType    LeaveTypeMaster    @relation(fields: [leaveTypeId], references: [id])
+  startDate    DateTime
+  endDate      DateTime
+  days         Int
+  reason       String?
+  status       LeaveRequestStatus @default(PENDING)
+  approvedById String?
+  approvedBy   User?              @relation("LeaveApprover", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+  remarks      String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
 
   @@index([employeeId])
   @@index([status])
@@ -540,16 +639,16 @@ model LeaveRequest {
 }
 
 model LeaveBalance {
-  id          String         @id @default(cuid())
+  id          String          @id @default(cuid())
   employeeId  String
-  employee    Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee    Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   leaveTypeId String
   leaveType   LeaveTypeMaster @relation(fields: [leaveTypeId], references: [id])
-  allocated   Int            @default(0)
-  used        Int            @default(0)
-  remaining   Int            @default(0)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  allocated   Int             @default(0)
+  used        Int             @default(0)
+  remaining   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@unique([employeeId, leaveTypeId])
   @@index([employeeId])
@@ -557,20 +656,20 @@ model LeaveBalance {
 }
 
 model PayrollRecord {
-  id            String            @id @default(cuid())
-  employeeId    String
-  employee      Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  month         Int
-  year          Int
-  disbursedAt   DateTime
-  basicSalary   Float
-  grossSalary   Float
-  netSalary     Float
-  status        String            @default("PENDING")
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id          String   @id @default(cuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month       Int
+  year        Int
+  disbursedAt DateTime
+  basicSalary Float
+  grossSalary Float
+  netSalary   Float
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  components    PayrollComponent[]
+  components PayrollComponent[]
 
   @@unique([employeeId, month, year])
   @@index([employeeId])
@@ -578,14 +677,14 @@ model PayrollRecord {
 }
 
 model PayrollComponent {
-  id              String              @id @default(cuid())
+  id              String               @id @default(cuid())
   payrollRecordId String
-  payrollRecord   PayrollRecord       @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+  payrollRecord   PayrollRecord        @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
   componentType   PayrollComponentType
   name            String
   amount          Float
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   @@index([payrollRecordId])
   @@index([componentType])
@@ -713,14 +812,14 @@ model IncrementRequest {
 
 // Internal Job Postings
 model InternalJobPosting {
-  id           String           @id @default(cuid())
+  id           String   @id @default(cuid())
   title        String
   description  String
   department   String?
   requirements String?
-  isActive     Boolean          @default(true)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   applications IJPApplication[]
 
@@ -730,20 +829,20 @@ model InternalJobPosting {
 
 // IJP Applications / Referrals
 model IJPApplication {
-  id            String             @id @default(cuid())
-  postingId     String
-  posting       InternalJobPosting @relation(fields: [postingId], references: [id], onDelete: Cascade)
-  referredById  String
-  referrer      Employee           @relation(fields: [referredById], references: [id], onDelete: Cascade)
-  candidateName String
+  id             String             @id @default(cuid())
+  postingId      String
+  posting        InternalJobPosting @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  referredById   String
+  referrer       Employee           @relation(fields: [referredById], references: [id], onDelete: Cascade)
+  candidateName  String
   candidateEmail String?
   candidatePhone String?
-  resumeUrl     String
-  description   String?
-  documents     Json?
-  status        ApplicationStatus  @default(PENDING)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  resumeUrl      String
+  description    String?
+  documents      Json?
+  status         ApplicationStatus  @default(PENDING)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   @@index([postingId])
   @@index([referredById])
@@ -791,7 +890,7 @@ enum LedgerAuditAction {
 
 // Party Master - Centralized list of all parties
 model PartyMaster {
-  id           String     @id @default(cuid())
+  id           String    @id @default(cuid())
   name         String
   partyType    PartyType
   contactName  String?
@@ -800,9 +899,9 @@ model PartyMaster {
   gstNumber    String?
   panNumber    String?
   address      String?
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   ledgerEntries LedgerEntry[]
 
@@ -862,51 +961,51 @@ model PaymentModeMaster {
 
 // Ledger Entry - Core transaction record
 model LedgerEntry {
-  id                String          @id @default(cuid())
-  serialNumber      String          @unique
-  transactionType   TransactionType
-  transactionDate   DateTime        @default(now())
-  partyId           String
-  party             PartyMaster     @relation(fields: [partyId], references: [id])
-  description       String
-  headId            String
-  head              HeadMaster      @relation(fields: [headId], references: [id])
-  paymentTypeId     String
-  paymentType       PaymentTypeMaster @relation(fields: [paymentTypeId], references: [id])
-  paymentAmount     Float?          // For DEBIT entries (Total = componentA + componentB)
-  componentA        Float?           // For DEBIT entries - Main expense (more relevant)
-  componentB        Float?           // For DEBIT entries - Claimable amount (18%, 5%, 0%, etc.)
-  receivedAmount    Float?          // For CREDIT entries
-  paymentModeId     String
-  paymentMode       PaymentModeMaster @relation(fields: [paymentModeId], references: [id])
-  openingBalance    Float           // Snapshot at time of transaction
-  currentBalance    Float           // Balance after transaction (calculated)
-  status            LedgerStatus    @default(PENDING)
-  rejectionReason   String?
+  id                 String            @id @default(cuid())
+  serialNumber       String            @unique
+  transactionType    TransactionType
+  transactionDate    DateTime          @default(now())
+  partyId            String
+  party              PartyMaster       @relation(fields: [partyId], references: [id])
+  description        String
+  headId             String
+  head               HeadMaster        @relation(fields: [headId], references: [id])
+  paymentTypeId      String
+  paymentType        PaymentTypeMaster @relation(fields: [paymentTypeId], references: [id])
+  paymentAmount      Float? // For DEBIT entries (Total = componentA + componentB)
+  componentA         Float? // For DEBIT entries - Main expense (more relevant)
+  componentB         Float? // For DEBIT entries - Claimable amount (18%, 5%, 0%, etc.)
+  receivedAmount     Float? // For CREDIT entries
+  paymentModeId      String
+  paymentMode        PaymentModeMaster @relation(fields: [paymentModeId], references: [id])
+  openingBalance     Float // Snapshot at time of transaction
+  currentBalance     Float // Balance after transaction (calculated)
+  status             LedgerStatus      @default(PENDING)
+  rejectionReason    String?
   // Soft delete fields
-  isDeleted         Boolean         @default(false)
-  deletedAt         DateTime?
-  deletedById       String?
-  deletedBy         User?           @relation("LedgerDeleter", fields: [deletedById], references: [id])
-  deletedReason     String?
+  isDeleted          Boolean           @default(false)
+  deletedAt          DateTime?
+  deletedById        String?
+  deletedBy          User?             @relation("LedgerDeleter", fields: [deletedById], references: [id])
+  deletedReason      String?
   // Edit request fields
-  editRequestStatus LedgerStatus?   // PENDING, APPROVED, or REJECTED for edit requests
-  editRequestReason String?         // Why edit is needed (required when requesting)
-  editRequestData   Json?           // Requested changes
-  editRequestedById String?
-  editRequestedBy   User?           @relation("LedgerEditRequester", fields: [editRequestedById], references: [id])
-  editRequestedAt   DateTime?
-  editApprovalReason String?        // Why approval was given/rejected (required when approving/rejecting)
-  editApprovedById  String?
-  editApprovedBy    User?           @relation("LedgerEditApprover", fields: [editApprovedById], references: [id])
-  editApprovedAt    DateTime?
-  createdById       String
-  createdBy         User            @relation("LedgerCreator", fields: [createdById], references: [id])
-  approvedById      String?
-  approvedBy        User?           @relation("LedgerApprover", fields: [approvedById], references: [id])
-  approvedAt        DateTime?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  editRequestStatus  LedgerStatus? // PENDING, APPROVED, or REJECTED for edit requests
+  editRequestReason  String? // Why edit is needed (required when requesting)
+  editRequestData    Json? // Requested changes
+  editRequestedById  String?
+  editRequestedBy    User?             @relation("LedgerEditRequester", fields: [editRequestedById], references: [id])
+  editRequestedAt    DateTime?
+  editApprovalReason String? // Why approval was given/rejected (required when approving/rejecting)
+  editApprovedById   String?
+  editApprovedBy     User?             @relation("LedgerEditApprover", fields: [editApprovedById], references: [id])
+  editApprovedAt     DateTime?
+  createdById        String
+  createdBy          User              @relation("LedgerCreator", fields: [createdById], references: [id])
+  approvedById       String?
+  approvedBy         User?             @relation("LedgerApprover", fields: [approvedById], references: [id])
+  approvedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   auditLogs LedgerAuditLog[]
 
@@ -942,28 +1041,28 @@ model LedgerAuditLog {
 
 // Lead Remark - Stores remarks from MySQL lead_remarks table
 model LeadRemark {
-  id            String   @id @default(cuid())
-  leadRef       String   // MySQL lead.id as string reference
-  remarks       String   @db.Text
-  updateBy      Int?     // MySQL user ID reference
-  updateDate    DateTime
-  ip            String?
-  leadStatus    Int?     // MySQL status ID
-  createdAt     DateTime @default(now())
-  
+  id         String   @id @default(cuid())
+  leadRef    String // MySQL lead.id as string reference
+  remarks    String   @db.Text
+  updateBy   Int? // MySQL user ID reference
+  updateDate DateTime
+  ip         String?
+  leadStatus Int? // MySQL status ID
+  createdAt  DateTime @default(now())
+
   @@index([leadRef])
   @@index([updateDate])
 }
 
 // Sync State - Tracks MySQL sync progress
 model SyncState {
-  id            String   @id @default(cuid())
-  sourceType    String   @default("mysql_leads") @unique // For future extensibility
+  id             String   @id @default(cuid())
+  sourceType     String   @unique @default("mysql_leads") // For future extensibility
   lastSyncedDate DateTime
-  lastSyncedId  Int?     // Last MySQL lead.id processed
-  recordsCount  Int      @default(0)
-  lastRunAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  lastSyncedId   Int? // Last MySQL lead.id processed
+  recordsCount   Int      @default(0)
+  lastRunAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 // ==========================================
@@ -971,110 +1070,353 @@ model SyncState {
 // ==========================================
 
 model KYPSubmission {
-  id                String   @id @default(cuid())
-  leadId            String   @unique
-  lead              Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
+  id     String @id @default(cuid())
+  leadId String @unique
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
   // Form fields (all optional)
-  aadhar            String?
-  pan               String?
-  insuranceCard     String?
-  disease           String?
-  location          String?  // City name
-  remark            String?
-  
+  aadhar        String?
+  pan           String?
+  insuranceCard String?
+  disease       String?
+  location      String? // City name
+  remark        String?
+
   // File URLs (stored in S3)
-  aadharFileUrl     String?
-  panFileUrl        String?
+  aadharFileUrl        String?
+  panFileUrl           String?
   insuranceCardFileUrl String?
-  otherFiles        Json?    // Array of {name, url} objects
-  
+  otherFiles           Json? // Array of {name, url} objects
+
   // Status tracking
-  status            KYPStatus @default(PENDING)
-  submittedById     String
-  submittedBy       User     @relation("KYPSubmitter", fields: [submittedById], references: [id])
-  submittedAt       DateTime @default(now())
-  
+  status        KYPStatus @default(PENDING)
+  submittedById String
+  submittedBy   User      @relation("KYPSubmitter", fields: [submittedById], references: [id])
+  submittedAt   DateTime  @default(now())
+
   // Pre-authorization (filled by Insurance)
-  preAuthData       PreAuthorization?
-  
+  preAuthData PreAuthorization?
+
   // Patient follow-up (filled by Sales)
-  followUpData      PatientFollowUp?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  followUpData PatientFollowUp?
+
+  // Discharge sheet (optional link)
+  dischargeSheet DischargeSheet? @relation("DischargeSheetKYP")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([leadId])
   @@index([status])
   @@index([submittedAt])
 }
 
 model PreAuthorization {
-  id                String   @id @default(cuid())
-  kypSubmissionId   String   @unique
-  kypSubmission     KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
-  
+  id              String        @id @default(cuid())
+  kypSubmissionId String        @unique
+  kypSubmission   KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
+
   // All fields as strings (per requirement)
-  sumInsured        String?
-  roomRent          String?
-  capping           String?
-  copay             String?
-  icu               String?
+  sumInsured             String?
+  roomRent               String?
+  capping                String?
+  copay                  String?
+  icu                    String?
   hospitalNameSuggestion String?
-  insurance         String?
-  tpa               String?
-  
-  handledById       String
-  handledBy         User     @relation("PreAuthHandler", fields: [handledById], references: [id])
-  handledAt         DateTime @default(now())
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+  insurance              String?
+  tpa                    String?
+
+  // Insurance: multiple hospitals and room types (JSON)
+  hospitalSuggestions Json?   // string[] — multiple suggested hospitals
+  roomTypes           Json?   // { name: string, rent: string }[] — multiple room types with rent limits
+
+  // BD Pre-Auth Request fields (selection from Insurance suggestions)
+  requestedHospitalName String?
+  requestedRoomType     String?
+  diseaseDescription    String? @db.Text
+  diseaseImages         Json?   // Array of {name, url}
+  preAuthRaisedAt       DateTime?
+  preAuthRaisedById     String?
+  preAuthRaisedBy       User?   @relation("PreAuthRaiser", fields: [preAuthRaisedById], references: [id])
+
+  handledById String?
+  handledBy   User?    @relation("PreAuthHandler", fields: [handledById], references: [id])
+  handledAt   DateTime?
+
+  // Q&A Queries
+  queries InsuranceQuery[]
+
+  // PDF generation
+  pdfVersions PreAuthPDF[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([kypSubmissionId])
+  @@index([preAuthRaisedById])
 }
 
 model PatientFollowUp {
-  id                String   @id @default(cuid())
-  kypSubmissionId   String   @unique
-  kypSubmission     KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
-  
-  admissionDate     DateTime?
-  surgeryDate       DateTime?
-  prescription      String?
-  report            String?
-  hospitalName      String?
-  doctorName        String?
-  
+  id              String        @id @default(cuid())
+  kypSubmissionId String        @unique
+  kypSubmission   KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
+
+  admissionDate DateTime?
+  surgeryDate   DateTime?
+  prescription  String?
+  report        String?
+  hospitalName  String?
+  doctorName    String?
+
   // File URLs
   prescriptionFileUrl String?
   reportFileUrl       String?
-  
-  updatedById       String
-  updatedBy         User     @relation("FollowUpUpdater", fields: [updatedById], references: [id])
-  updatedAt         DateTime @default(now())
-  
-  createdAt         DateTime @default(now())
-  
+
+  updatedById String
+  updatedBy   User     @relation("FollowUpUpdater", fields: [updatedById], references: [id])
+  updatedAt   DateTime @default(now())
+
+  createdAt DateTime @default(now())
+
   @@index([kypSubmissionId])
 }
 
 model Notification {
-  id                String   @id @default(cuid())
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  type              NotificationType
-  title             String
-  message           String
-  link              String?  // URL to relevant page
-  relatedId         String?  // ID of related entity (leadId, kypSubmissionId, etc)
-  
-  isRead            Boolean  @default(false)
-  readAt            DateTime?
-  createdAt         DateTime @default(now())
-  
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  title     String
+  message   String
+  link      String? // URL to relevant page
+  relatedId String? // ID of related entity (leadId, kypSubmissionId, etc)
+
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+// ==========================================
+// Insurance Query (Q&A Flow)
+// ==========================================
+
+model InsuranceQuery {
+  id                 String           @id @default(cuid())
+  preAuthorizationId String
+  preAuthorization   PreAuthorization @relation(fields: [preAuthorizationId], references: [id], onDelete: Cascade)
+
+  question String      @db.Text // Question from Insurance
+  answer   String?     @db.Text // Answer from BD
+  status   QueryStatus @default(PENDING)
+
+  raisedById   String // Insurance user who raised the query
+  raisedBy     User    @relation("QueryRaiser", fields: [raisedById], references: [id])
+  answeredById String? // BD user who answered
+  answeredBy   User?   @relation("QueryAnswerer", fields: [answeredById], references: [id])
+
+  raisedAt   DateTime  @default(now())
+  answeredAt DateTime?
+  resolvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([preAuthorizationId])
+  @@index([status])
+  @@index([raisedAt])
+}
+
+// ==========================================
+// Pre-Auth PDF
+// ==========================================
+
+model PreAuthPDF {
+  id                 String           @id @default(cuid())
+  preAuthorizationId String
+  preAuthorization   PreAuthorization @relation(fields: [preAuthorizationId], references: [id], onDelete: Cascade)
+  
+  version       Int
+  pdfUrl        String
+  recipients    Json?    // Array of recipients
+  sentAt        DateTime?
+  createdById   String
+  createdBy     User     @relation("PDFCreator", fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+  
+  @@index([preAuthorizationId])
+}
+
+// ==========================================
+// Admission Record
+// ==========================================
+
+model AdmissionRecord {
+  id       String @id @default(cuid())
+  leadId   String @unique
+  lead     Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  admissionDate     DateTime
+  admissionTime     String?
+  admittingHospital String
+  expectedSurgeryDate DateTime?
+  notes             String? @db.Text
+  
+  initiatedById String
+  initiatedBy   User   @relation("AdmissionInitiator", fields: [initiatedById], references: [id])
+  initiatedAt   DateTime @default(now())
+  
+  @@index([leadId])
+}
+
+// ==========================================
+// Case Stage History
+// ==========================================
+
+model CaseStageHistory {
+  id        String    @id @default(cuid())
+  leadId    String
+  lead      Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  fromStage CaseStage?
+  toStage   CaseStage
+  changedById String
+  changedBy User      @relation("CaseStageChanger", fields: [changedById], references: [id])
+  changedAt DateTime  @default(now())
+  note      String?   @db.Text
+  
+  @@index([leadId])
+  @@index([changedAt])
+}
+
+// ==========================================
+// Discharge Sheet
+// ==========================================
+
+model DischargeSheet {
+  id              String         @id @default(cuid())
+  leadId          String         @unique
+  lead            Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  kypSubmissionId String?        @unique // Optional link to KYP
+  kypSubmission   KYPSubmission? @relation("DischargeSheetKYP", fields: [kypSubmissionId], references: [id])
+
+  // Core Identification
+  month              DateTime? // Reporting month
+  dischargeDate      DateTime? // Date of discharge
+  surgeryDate        DateTime? // Date of surgery
+  status             String? // Case status
+  paymentType        String? // Payment mode
+  approvedOrCash     String? // Approved / Cash
+  paymentCollectedAt String? // Collection source
+
+  // People & Ownership
+  managerRole  String? // ATL / TL / ACM / CM / SCM
+  managerName  String? // Person name
+  bdmName      String? // Business Development Manager
+  patientName  String? // Patient full name
+  patientPhone String? // Phone number
+  doctorName   String? // Treating doctor
+  hospitalName String? // Hospital
+
+  // Case Details
+  category   String? // Cosmetic / Medical
+  treatment  String? // Procedure
+  circle     String? // City / region
+  leadSource String? // Source of lead
+
+  // Financials (Raw)
+  totalAmount       Float @default(0) // Total case value
+  billAmount        Float @default(0) // Hospital bill
+  cashPaidByPatient Float @default(0) // Direct patient cash
+  cashOrDedPaid     Float @default(0) // Cash / deduction
+  referralAmount    Float @default(0) // Referral payout
+  cabCharges        Float @default(0) // Logistics cost
+  implantCost       Float @default(0) // Implant
+  dcCharges         Float @default(0) // D&C
+  doctorCharges     Float @default(0) // Doctor fee
+
+  // Revenue Split
+  hospitalSharePct    Float? // % (DECIMAL(5,2))
+  hospitalShareAmount Float  @default(0) // Amount
+  mediendSharePct     Float? // % (DECIMAL(5,2))
+  mediendShareAmount  Float  @default(0) // Gross share
+  mediendNetProfit    Float  @default(0) // Final profit
+
+  // Meta
+  remarks String? @db.Text // Free text
+
+  // Relations
+  createdById String // Insurance user who created
+  createdBy   User      @relation("DischargeSheetCreator", fields: [createdById], references: [id])
+  plRecordId  String?   @unique // Optional link to PNL record
+  plRecord    PLRecord? @relation("DischargeSheetPLRecord", fields: [plRecordId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([kypSubmissionId])
+  @@index([month])
+  @@index([surgeryDate])
+  @@index([status])
+}
+
+// ==========================================
+// Outstanding Cases
+// ==========================================
+
+model OutstandingCase {
+  id     String @id @default(cuid())
+  leadId String @unique
+  lead   Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  // Core Identification
+  srNo            Int? // Excel serial
+  month           DateTime? // Reporting month
+  dos             DateTime? // Date of service
+  status          String? // Case status
+  paymentReceived Boolean   @default(false) // YES / NO
+
+  // People & Case
+  managerName  String? // Manager
+  bdmName      String? // BDM
+  patientName  String? // Patient
+  treatment    String? // Procedure
+  hospitalName String? // Hospital
+
+  // Financials
+  billAmount        Float @default(0) // Total bill
+  settlementAmount  Float @default(0) // Settled amount
+  cashPaidByPatient Float @default(0) // Patient cash
+  overallAmount     Float @default(0) // Total
+  implantCost       Float @default(0) // Implant
+  dciCost           Float @default(0) // DCI
+
+  // Revenue Split
+  hospitalSharePct    Float? // % (DECIMAL(5,2))
+  hospitalShareAmount Float  @default(0) // Amount
+  mediendSharePct     Float? // % (DECIMAL(5,2))
+  mediendShareAmount  Float  @default(0) // Amount
+
+  // Outstanding Tracking
+  outstandingDays Int? // Days pending (calculated)
+  remarks         String? @db.Text // Internal notes
+  remark2         String? @db.Text // Follow-ups
+
+  // Relations
+  handledById String?
+  handledBy   User?   @relation("OutstandingHandler", fields: [handledById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([month])
+  @@index([dos])
+  @@index([status])
+  @@index([paymentReceived])
 }

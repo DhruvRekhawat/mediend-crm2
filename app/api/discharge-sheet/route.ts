@@ -1,0 +1,250 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/session'
+import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { z } from 'zod'
+
+const createDischargeSheetSchema = z.object({
+  leadId: z.string(),
+  kypSubmissionId: z.string().optional(),
+  // Core Identification
+  month: z.string().optional(),
+  dischargeDate: z.string().optional(),
+  surgeryDate: z.string().optional(),
+  status: z.string().optional(),
+  paymentType: z.string().optional(),
+  approvedOrCash: z.string().optional(),
+  paymentCollectedAt: z.string().optional(),
+  // People & Ownership
+  managerRole: z.string().optional(),
+  managerName: z.string().optional(),
+  bdmName: z.string().optional(),
+  patientName: z.string().optional(),
+  patientPhone: z.string().optional(),
+  doctorName: z.string().optional(),
+  hospitalName: z.string().optional(),
+  // Case Details
+  category: z.string().optional(),
+  treatment: z.string().optional(),
+  circle: z.string().optional(),
+  leadSource: z.string().optional(),
+  // Financials
+  totalAmount: z.number().optional(),
+  billAmount: z.number().optional(),
+  cashPaidByPatient: z.number().optional(),
+  cashOrDedPaid: z.number().optional(),
+  referralAmount: z.number().optional(),
+  cabCharges: z.number().optional(),
+  implantCost: z.number().optional(),
+  dcCharges: z.number().optional(),
+  doctorCharges: z.number().optional(),
+  // Revenue Split
+  hospitalSharePct: z.number().optional(),
+  hospitalShareAmount: z.number().optional(),
+  mediendSharePct: z.number().optional(),
+  mediendShareAmount: z.number().optional(),
+  mediendNetProfit: z.number().optional(),
+  // Meta
+  remarks: z.string().optional(),
+})
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return unauthorizedResponse()
+    }
+
+    const { searchParams } = new URL(request.url)
+    const leadId = searchParams.get('leadId')
+    const month = searchParams.get('month')
+
+    const where: any = {}
+    if (leadId) {
+      where.leadId = leadId
+    }
+    if (month) {
+      where.month = new Date(month)
+    }
+
+    const dischargeSheets = await prisma.dischargeSheet.findMany({
+      where,
+      include: {
+        lead: {
+          select: {
+            id: true,
+            leadRef: true,
+            patientName: true,
+            phoneNumber: true,
+            hospitalName: true,
+          },
+        },
+        kypSubmission: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        plRecord: {
+          select: {
+            id: true,
+            finalProfit: true,
+            mediendNetProfit: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    })
+
+    return successResponse(dischargeSheets)
+  } catch (error) {
+    console.error('Error fetching discharge sheets:', error)
+    return errorResponse('Failed to fetch discharge sheets', 500)
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return unauthorizedResponse()
+    }
+
+    // Only Insurance team can create discharge sheets
+    if (user.role !== 'INSURANCE_HEAD' && user.role !== 'ADMIN') {
+      return errorResponse('Forbidden: Only Insurance team can create discharge sheets', 403)
+    }
+
+    const body = await request.json()
+    const data = createDischargeSheetSchema.parse(body)
+
+    // Check if lead exists
+    const lead = await prisma.lead.findUnique({
+      where: { id: data.leadId },
+      include: {
+        bd: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if (!lead) {
+      return errorResponse('Lead not found', 404)
+    }
+
+    // Check if discharge sheet already exists
+    const existing = await prisma.dischargeSheet.findUnique({
+      where: { leadId: data.leadId },
+    })
+
+    if (existing) {
+      return errorResponse('Discharge sheet already exists for this lead', 400)
+    }
+
+    // Prepare data for creation
+    const dischargeData: any = {
+      leadId: data.leadId,
+      createdById: user.id,
+      month: data.month ? new Date(data.month) : null,
+      dischargeDate: data.dischargeDate ? new Date(data.dischargeDate) : null,
+      surgeryDate: data.surgeryDate ? new Date(data.surgeryDate) : null,
+      status: data.status,
+      paymentType: data.paymentType,
+      approvedOrCash: data.approvedOrCash,
+      paymentCollectedAt: data.paymentCollectedAt,
+      managerRole: data.managerRole,
+      managerName: data.managerName,
+      bdmName: data.bdmName || lead.bd?.name,
+      patientName: data.patientName || lead.patientName,
+      patientPhone: data.patientPhone || lead.phoneNumber,
+      doctorName: data.doctorName || lead.surgeonName,
+      hospitalName: data.hospitalName || lead.hospitalName,
+      category: data.category || lead.category,
+      treatment: data.treatment || lead.treatment,
+      circle: data.circle || lead.circle,
+      leadSource: data.leadSource || lead.source,
+      totalAmount: data.totalAmount || 0,
+      billAmount: data.billAmount || lead.billAmount || 0,
+      cashPaidByPatient: data.cashPaidByPatient || 0,
+      cashOrDedPaid: data.cashOrDedPaid || 0,
+      referralAmount: data.referralAmount || 0,
+      cabCharges: data.cabCharges || 0,
+      implantCost: data.implantCost || lead.implantAmount || 0,
+      dcCharges: data.dcCharges || 0,
+      doctorCharges: data.doctorCharges || 0,
+      hospitalSharePct: data.hospitalSharePct,
+      hospitalShareAmount: data.hospitalShareAmount || 0,
+      mediendSharePct: data.mediendSharePct,
+      mediendShareAmount: data.mediendShareAmount || 0,
+      mediendNetProfit: data.mediendNetProfit || 0,
+      remarks: data.remarks,
+    }
+
+    if (data.kypSubmissionId) {
+      dischargeData.kypSubmissionId = data.kypSubmissionId
+    }
+
+    // Create discharge sheet
+    const dischargeSheet = await prisma.dischargeSheet.create({
+      data: dischargeData,
+      include: {
+        lead: {
+          select: {
+            id: true,
+            leadRef: true,
+            patientName: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    })
+
+    // Create notification for PL team
+    const plUsers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ['PL_HEAD', 'ADMIN'],
+        },
+      },
+    })
+
+    for (const plUser of plUsers) {
+      await prisma.notification.create({
+        data: {
+          userId: plUser.id,
+          type: 'DISCHARGE_SHEET_CREATED',
+          title: 'New Discharge Sheet Created',
+          message: `Discharge sheet created for ${lead.patientName} (${lead.leadRef})`,
+          link: `/patient/${lead.id}/discharge`,
+          relatedId: dischargeSheet.id,
+        },
+      })
+    }
+
+    return successResponse(dischargeSheet, 'Discharge sheet created successfully')
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse('Invalid request data', 400)
+    }
+    console.error('Error creating discharge sheet:', error)
+    return errorResponse('Failed to create discharge sheet', 500)
+  }
+}

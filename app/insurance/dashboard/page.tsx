@@ -5,214 +5,287 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { useState } from 'react'
 import { format } from 'date-fns'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PreAuthForm } from '@/components/kyp/pre-auth-form'
-import { KYPDetailsView } from '@/components/kyp/kyp-details-view'
-import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
+import { useRouter } from 'next/navigation'
+import { CaseStage } from '@prisma/client'
+import { useState } from 'react'
+import { FileText, AlertCircle, CheckCircle2, Clock, ArrowRight, Receipt } from 'lucide-react'
 
-interface KYPSubmission {
+interface LeadWithStage {
   id: string
-  leadId: string
-  aadhar: string | null
-  pan: string | null
-  insuranceCard: string | null
-  disease: string | null
-  location: string | null
-  remark: string | null
-  aadharFileUrl: string | null
-  panFileUrl: string | null
-  insuranceCardFileUrl: string | null
-  otherFiles: Array<{ name: string; url: string }> | null
-  status: 'PENDING' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
-  submittedAt: string
-  lead: {
+  leadRef: string
+  patientName: string
+  phoneNumber: string
+  city: string
+  hospitalName: string
+  treatment?: string
+  caseStage: CaseStage
+  createdDate: string
+  kypSubmission?: {
     id: string
-    leadRef: string
-    patientName: string
-    phoneNumber: string
-    city: string
-    hospitalName: string
-  }
-  submittedBy: {
-    id: string
-    name: string
-  }
-  preAuthData: {
-    id: string
-    sumInsured: string | null
-    roomRent: string | null
-    capping: string | null
-    copay: string | null
-    icu: string | null
-    hospitalNameSuggestion: string | null
-    insurance: string | null
-    tpa: string | null
-    handledAt: string
-  } | null
-  followUpData: {
-    id: string
-    admissionDate: string | null
-    surgeryDate: string | null
-    prescription: string | null
-    report: string | null
-    hospitalName: string | null
-    doctorName: string | null
-    prescriptionFileUrl: string | null
-    reportFileUrl: string | null
-    updatedAt: string
-    updatedBy: {
+    status: string
+    submittedAt: string
+    preAuthData?: {
       id: string
-      name: string
+      requestedHospitalName?: string | null
+      diseaseDescription?: string | null
+      preAuthRaisedAt?: string | null
+      sumInsured?: string | null
+      handledAt?: string | null
     } | null
+  } | null
+  admissionRecord?: {
+    id: string
+    admissionDate: string
+    admittingHospital: string
+  } | null
+  dischargeSheet?: {
+    id: string
   } | null
 }
 
 export default function InsuranceDashboardPage() {
-  const [selectedKYP, setSelectedKYP] = useState<KYPSubmission | null>(null)
-  const queryClient = useQueryClient()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState<'kyp-review' | 'preauth-raised' | 'preauth-complete' | 'admitted' | 'discharge-pending' | 'ipd-done'>('kyp-review')
 
-  const { data: kypSubmissions, isLoading: kypLoading } = useQuery<KYPSubmission[]>({
-    queryKey: ['kyp-submissions', 'insurance'],
-    queryFn: () => apiGet<KYPSubmission[]>('/api/kyp'),
+  const { data: leads, isLoading } = useQuery<LeadWithStage[]>({
+    queryKey: ['leads', 'insurance', activeTab],
+    queryFn: () => apiGet<LeadWithStage[]>('/api/leads'),
+    enabled: true,
   })
+
+  // Filter leads by stage
+  const filteredLeads = leads?.filter((lead) => {
+    switch (activeTab) {
+      case 'kyp-review':
+        return lead.caseStage === CaseStage.KYP_COMPLETE || lead.caseStage === CaseStage.KYP_PENDING
+      case 'preauth-raised':
+        return lead.caseStage === CaseStage.PREAUTH_RAISED
+      case 'preauth-complete':
+        return lead.caseStage === CaseStage.PREAUTH_COMPLETE
+      case 'admitted':
+        return lead.caseStage === CaseStage.INITIATED || lead.caseStage === CaseStage.ADMITTED
+      case 'discharge-pending':
+        return lead.caseStage === CaseStage.DISCHARGED && !lead.dischargeSheet
+      case 'ipd-done':
+        return lead.caseStage === CaseStage.IPD_DONE
+      default:
+        return false
+    }
+  }) || []
+
+  const getTabStats = () => {
+    const kypReview = leads?.filter(l => l.caseStage === CaseStage.KYP_COMPLETE || l.caseStage === CaseStage.KYP_PENDING).length || 0
+    const preAuthRaised = leads?.filter(l => l.caseStage === CaseStage.PREAUTH_RAISED).length || 0
+    const preAuthComplete = leads?.filter(l => l.caseStage === CaseStage.PREAUTH_COMPLETE).length || 0
+    const admitted = leads?.filter(l => l.caseStage === CaseStage.INITIATED || l.caseStage === CaseStage.ADMITTED).length || 0
+    const dischargePending = leads?.filter(l => l.caseStage === CaseStage.DISCHARGED && !l.dischargeSheet).length || 0
+    const ipdDone = leads?.filter(l => l.caseStage === CaseStage.IPD_DONE).length || 0
+
+    return { kypReview, preAuthRaised, preAuthComplete, admitted, dischargePending, ipdDone }
+  }
+
+  const stats = getTabStats()
+
+  const getStageBadge = (stage: CaseStage) => {
+    const variants: Record<CaseStage, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      [CaseStage.NEW_LEAD]: 'secondary',
+      [CaseStage.KYP_PENDING]: 'secondary',
+      [CaseStage.KYP_COMPLETE]: 'default',
+      [CaseStage.PREAUTH_RAISED]: 'default',
+      [CaseStage.PREAUTH_COMPLETE]: 'default',
+      [CaseStage.INITIATED]: 'default',
+      [CaseStage.ADMITTED]: 'default',
+      [CaseStage.DISCHARGED]: 'outline',
+      [CaseStage.IPD_DONE]: 'default',
+      [CaseStage.PL_PENDING]: 'secondary',
+      [CaseStage.OUTSTANDING]: 'secondary',
+    }
+    return (
+      <Badge variant={variants[stage] || 'secondary'}>
+        {stage.replace(/_/g, ' ')}
+      </Badge>
+    )
+  }
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
         <div className="mx-auto max-w-7xl space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Insurance Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage KYP submissions and pre-authorization</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold">Insurance Dashboard</h1>
+            <p className="text-muted-foreground mt-2">Manage cases by workflow stage</p>
           </div>
 
-          {/* KYP Submissions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>KYP Submissions</CardTitle>
-                  <CardDescription>Review KYP submissions, complete pre-authorization, and view follow-up details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {kypLoading ? (
-                    <div className="text-center py-8 text-muted-foreground">Loading...</div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Lead Ref</TableHead>
-                          <TableHead>Patient</TableHead>
-                          <TableHead>Location</TableHead>
-                          <TableHead>Disease</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Follow-Up</TableHead>
-                          <TableHead>Submitted</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {kypSubmissions && kypSubmissions.length > 0 ? (
-                          kypSubmissions.map((kyp) => (
-                            <TableRow key={kyp.id}>
-                              <TableCell className="font-medium">{kyp.lead.leadRef}</TableCell>
-                              <TableCell>{kyp.lead.patientName}</TableCell>
-                              <TableCell>{kyp.location || kyp.lead.city}</TableCell>
-                              <TableCell>{kyp.disease || '-'}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant={
-                                    kyp.status === 'FOLLOW_UP_COMPLETE' || kyp.status === 'COMPLETED'
-                                      ? 'default'
-                                      : kyp.status === 'PRE_AUTH_COMPLETE'
-                                      ? 'secondary'
-                                      : 'outline'
-                                  }
-                                >
-                                  {kyp.status.replace(/_/g, ' ')}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                {kyp.followUpData ? (
-                                  <Badge variant="default">Followed Up</Badge>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">-</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {format(new Date(kyp.submittedAt), 'MMM d, yyyy')}
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedKYP(kyp)}
-                                >
-                                  View Details
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                              No KYP submissions found
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('kyp-review')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">KYP Review</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.kypReview}</div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('preauth-raised')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pre-Auth Raised</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.preAuthRaised}</div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('preauth-complete')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pre-Auth Complete</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.preAuthComplete}</div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('admitted')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Admitted</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.admitted}</div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('discharge-pending')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Discharge Pending</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.dischargePending}</div>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('ipd-done')}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">IPD Done</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.ipdDone}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Work Queue */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>
+                    {activeTab === 'kyp-review' && 'KYP Review Queue'}
+                    {activeTab === 'preauth-raised' && 'Pre-Auth Raised'}
+                    {activeTab === 'preauth-complete' && 'Pre-Auth Complete'}
+                    {activeTab === 'admitted' && 'Admitted Patients'}
+                    {activeTab === 'discharge-pending' && 'Discharge Pending'}
+                    {activeTab === 'ipd-done' && 'IPD Done'}
+                  </CardTitle>
+                  <CardDescription>
+                    {filteredLeads.length} case{filteredLeads.length !== 1 ? 's' : ''}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={activeTab === 'kyp-review' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('kyp-review')}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    KYP Review
+                  </Button>
+                  <Button
+                    variant={activeTab === 'preauth-raised' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('preauth-raised')}
+                  >
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Pre-Auth Raised
+                  </Button>
+                  <Button
+                    variant={activeTab === 'preauth-complete' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('preauth-complete')}
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Complete
+                  </Button>
+                  <Button
+                    variant={activeTab === 'admitted' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('admitted')}
+                  >
+                    <Clock className="w-4 h-4 mr-2" />
+                    Admitted
+                  </Button>
+                  <Button
+                    variant={activeTab === 'discharge-pending' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setActiveTab('discharge-pending')}
+                  >
+                    <Receipt className="w-4 h-4 mr-2" />
+                    Discharge
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : filteredLeads.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No cases found in this queue
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Lead Ref</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Hospital</TableHead>
+                      <TableHead>Treatment</TableHead>
+                      <TableHead>Stage</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredLeads.map((lead) => (
+                      <TableRow key={lead.id}>
+                        <TableCell className="font-medium">{lead.leadRef}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{lead.patientName}</div>
+                            <div className="text-sm text-muted-foreground">{lead.phoneNumber}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{lead.hospitalName}</TableCell>
+                        <TableCell>{lead.treatment || '-'}</TableCell>
+                        <TableCell>{getStageBadge(lead.caseStage)}</TableCell>
+                        <TableCell>
+                          {lead.createdDate
+                            ? format(new Date(lead.createdDate), 'MMM dd, yyyy')
+                            : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/patient/${lead.id}`)}
+                          >
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
                 </Table>
               )}
             </CardContent>
           </Card>
-
-          {/* KYP Details Dialog with Tabs */}
-          {selectedKYP && (
-            <Dialog open={!!selectedKYP} onOpenChange={(open) => !open && setSelectedKYP(null)}>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>KYP Details & Pre-Authorization</DialogTitle>
-                  <DialogDescription>
-                    {selectedKYP.lead.leadRef} - {selectedKYP.lead.patientName}
-                  </DialogDescription>
-                </DialogHeader>
-                <Tabs defaultValue="kyp-info" className="mt-4">
-                  <TabsList>
-                    <TabsTrigger value="kyp-info">KYP Information</TabsTrigger>
-                    <TabsTrigger value="pre-auth">Pre-Authorization</TabsTrigger>
-                    {selectedKYP.followUpData && (
-                      <TabsTrigger value="follow-up">Follow-Up Details</TabsTrigger>
-                    )}
-                  </TabsList>
-                  <TabsContent value="kyp-info" className="mt-4">
-                    <KYPDetailsView kypSubmission={selectedKYP as any} />
-                  </TabsContent>
-                  <TabsContent value="pre-auth" className="mt-4">
-                    <PreAuthForm
-                      kypSubmissionId={selectedKYP.id}
-                      initialData={selectedKYP.preAuthData || undefined}
-                      isReadOnly={!!selectedKYP.followUpData}
-                      onSuccess={() => {
-                        setSelectedKYP(null)
-                        queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
-                      }}
-                      onCancel={() => setSelectedKYP(null)}
-                    />
-                  </TabsContent>
-                  {selectedKYP.followUpData && (
-                    <TabsContent value="follow-up" className="mt-4">
-                      <FollowUpDetailsView followUpData={selectedKYP.followUpData as any} />
-                    </TabsContent>
-                  )}
-                </Tabs>
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
       </div>
     </ProtectedRoute>

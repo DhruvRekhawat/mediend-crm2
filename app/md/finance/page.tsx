@@ -2,11 +2,9 @@
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useState, useMemo } from 'react'
-import { generateFinanceDemoData } from '@/lib/demo-data/finance-analytics'
 import {
   TrendingUp,
   AlertCircle,
@@ -120,7 +118,6 @@ const COLORS = {
 
 
 export default function MDFinanceDashboardPage() {
-  const [useDemoData, setUseDemoData] = useState(false)
   const [customDateRange, setCustomDateRange] = useState({
     startDate: '',
     endDate: '',
@@ -169,11 +166,8 @@ export default function MDFinanceDashboardPage() {
   }, [period, customDateRange])
 
   const { data: analytics, isLoading } = useQuery<FinanceAnalytics>({
-    queryKey: ['analytics', 'md', 'finance', dateRange, useDemoData],
+    queryKey: ['analytics', 'md', 'finance', dateRange],
     queryFn: async () => {
-      if (useDemoData) {
-        return generateFinanceDemoData()
-      }
       const params = new URLSearchParams()
       if (dateRange.startDate) {
         params.append('startDate', dateRange.startDate)
@@ -183,7 +177,7 @@ export default function MDFinanceDashboardPage() {
       }
       return apiGet<FinanceAnalytics>(`/api/analytics/md/finance?${params.toString()}`)
     },
-    enabled: useDemoData || period === 'all' || (!!dateRange.startDate && !!dateRange.endDate),
+    enabled: period === 'all' || (!!dateRange.startDate && !!dateRange.endDate),
   })
 
   const transactionTypeData = analytics
@@ -211,13 +205,6 @@ export default function MDFinanceDashboardPage() {
             <p className="text-muted-foreground mt-1">Financial health and transaction analytics</p>
           </div>
           <div className="flex gap-2 items-center">
-            <Button
-              variant={useDemoData ? 'default' : 'outline'}
-              onClick={() => setUseDemoData(!useDemoData)}
-              className={useDemoData ? 'bg-blue-600 hover:bg-blue-700' : ''}
-            >
-              {useDemoData ? 'Using Demo Data' : 'Use Demo Data'}
-            </Button>
             <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select period" />
@@ -269,7 +256,7 @@ export default function MDFinanceDashboardPage() {
           <>
             {/* KPI Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-green-500 bg-linear-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <ArrowUpRight className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -282,7 +269,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-red-500 bg-linear-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
                   <ArrowDownRight className="h-5 w-5 text-red-600 dark:text-red-400" />
@@ -295,7 +282,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-blue-500 bg-linear-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Cash Flow</CardTitle>
                   <TrendingUp className={`h-5 w-5 ${analytics.kpis.netCashFlow >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`} />
@@ -308,7 +295,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-amber-500 bg-linear-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
                   <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -321,7 +308,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-emerald-500 bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Approved Amount</CardTitle>
                   <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -334,7 +321,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-red-500 bg-linear-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Rejected Amount</CardTitle>
                   <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
+import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { File, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -20,7 +21,7 @@ interface KYPSubmission {
   panFileUrl: string | null
   insuranceCardFileUrl: string | null
   otherFiles: Array<{ name: string; url: string }> | null
-  status: 'PENDING' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
+  status: 'PENDING' | 'KYP_DETAILS_ADDED' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
   submittedAt: string
   lead: {
     id: string
@@ -83,7 +84,7 @@ export function KYPDetailsView({ kypSubmission }: KYPDetailsViewProps) {
             <div>
               <Label>Status</Label>
               <Badge variant="secondary" className="mt-1">
-                {kypSubmission.status.replace(/_/g, ' ')}
+                {getKYPStatusLabel(kypSubmission.status)}
               </Badge>
             </div>
           </div>

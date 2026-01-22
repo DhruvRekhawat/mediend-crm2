@@ -22,3 +22,1055 @@ Last synced date: 2026-01-09T14:25:04.000Z
 Found 1449 leads to sync
 [2026-01-16 03:20:52] [ERROR] Lead sync failed with exit code: 130
 [2026-01-16 03:20:53] [ERROR] Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 10:45:49] [INFO] Loaded environment variables from .env
+[2026-01-22 10:45:49] [INFO] Starting scheduled lead sync (PID: 1713)
+[2026-01-22 10:45:49] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+[2026-01-22T05:15:53.395Z] Starting MySQL lead sync...
+MySQL connection established
+Last synced date: 2026-01-09T14:25:04.000Z
+Found 2500 leads to sync
+Created new BD user: BD-593 (cmkp0r8kg004r7su8pey83ttb) for lead 217707
+Created new BD user: BD-595 (cmkp0z46t00hz7su8p47y1eo4) for lead 52906
+Created new BD user: BD-597 (cmkp16si800tk7su8sduj0t2x) for lead 754
+[2026-01-22 11:41:42] [ERROR] Lead sync failed with exit code: 130
+[2026-01-22 11:41:43] [ERROR] Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 11:45:43] [INFO] Loaded environment variables from .env
+[2026-01-22 11:45:43] [INFO] Starting scheduled lead sync (PID: 1758)
+[2026-01-22 11:45:43] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+node:internal/url:1609
+    throw new ERR_INVALID_URL_SCHEME('file');
+          ^
+
+TypeError [ERR_INVALID_URL_SCHEME]: The URL must be of scheme file
+    at fileURLToPath (node:internal/url:1609:11)
+    at finalizeEsmResolution (node:internal/modules/cjs/loader:1403:20)
+    at node:internal/modules/cjs/loader:1344:16
+    at nextResolveSimple (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\tsx\dist\register-D46fvsV_.cjs:4:1004)
+    at C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\tsx\dist\register-D46fvsV_.cjs:3:2630
+    at C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\tsx\dist\register-D46fvsV_.cjs:3:1542
+    at resolveTsPaths (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\tsx\dist\register-D46fvsV_.cjs:4:760)
+    at C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\tsx\dist\register-D46fvsV_.cjs:4:1102
+    at m._resolveFilename (file:///C:/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/node_modules/tsx/dist/register-B7jrtLTO.mjs:1:789)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19) {
+  code: 'ERR_INVALID_URL_SCHEME'
+}
+
+Node.js v22.20.0
+[2026-01-22 11:45:47] [ERROR] Lead sync failed with exit code: 1
+[2026-01-22 11:45:47] [ERROR] Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 11:51:02] [INFO] Loaded environment variables from .env
+[2026-01-22 11:51:02] [INFO] Starting scheduled lead sync (PID: 1791)
+[2026-01-22 11:51:02] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+[2026-01-22T06:21:06.186Z] Starting MySQL lead sync...
+MySQL connection established
+Last synced date: 2026-01-09T14:25:04.000Z
+Found 2500 leads to sync
+Pre-fetching existing leads...
+Found 2500 existing leads out of 2500
+Pre-fetching BD users...
+Loaded 137 BD user lookup entries
+Processing 2500 leads with concurrency limit of 15...
+
+Processed leads: 0 new, 2500 updates, 0 errors
+Batch updating 2500 existing leads...
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+prisma:error 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+Sync failed: PrismaClientKnownRequestError: 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+    at qr.handleRequestError (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at qr.handleAndLogRequestError (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at qr.request (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:805:24) {
+  code: 'P2028',
+  meta: {
+    modelName: 'Lead',
+    operation: 'rollback',
+    timeout: 5000,
+    timeTaken: 5178
+  },
+  clientVersion: '7.1.0'
+}
+Sync script failed: PrismaClientKnownRequestError: 
+Invalid `prisma.lead.update()` invocation in
+C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\scripts\sync-mysql-leads.ts:390:25
+
+  387 const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
+  388 await prisma.$transaction(
+  389   chunk.map((item) =>
+→ 390     prisma.lead.update(
+Transaction API error: A rollback cannot be executed on an expired transaction. The timeout for this transaction was 5000 ms, however 5178 ms passed since the start of the transaction. Consider increasing the interactive transaction timeout or doing less work in the transaction.
+    at qr.handleRequestError (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\RequestHandler.ts:228:13)
+    at qr.handleAndLogRequestError (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\RequestHandler.ts:174:12)
+    at qr.request (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\RequestHandler.ts:143:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\DHRUV\OneDrive\Desktop\mediend-crm-v2\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:805:24) {
+  code: 'P2028',
+  meta: {
+    modelName: 'Lead',
+    operation: 'rollback',
+    timeout: 5000,
+    timeTaken: 5178
+  },
+  clientVersion: '7.1.0'
+}
+[2026-01-22 11:52:23] [ERROR] Lead sync failed with exit code: 1
+[2026-01-22 11:52:23] [ERROR] Check the error log for details: /c/Users/DHRUV/OneDrive/Desktop/mediend-crm-v2/logs/sync-leads-error.log
+[2026-01-22 11:56:31] [INFO] Loaded environment variables from .env
+[2026-01-22 11:56:31] [INFO] Starting scheduled lead sync (PID: 1824)
+[2026-01-22 11:56:31] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+[2026-01-22T06:26:34.723Z] Starting MySQL lead sync...
+MySQL connection established
+Last synced date: 2026-01-09T14:25:04.000Z
+Found 2500 leads to sync
+Pre-fetching existing leads...
+Found 2500 existing leads out of 2500
+Pre-fetching BD users...
+Loaded 135 BD user lookup entries
+Processing 2500 leads with concurrency limit of 15...
+
+Processed leads: 0 new, 2499 updates, 0 errors
+Batch updating 2499 existing leads...
+  Updated 250 of 2499 leads...
+  Updated 500 of 2499 leads...
+  Updated 750 of 2499 leads...
+  Updated 1000 of 2499 leads...
+  Updated 1250 of 2499 leads...
+  Updated 1500 of 2499 leads...
+  Updated 1750 of 2499 leads...
+  Updated 2000 of 2499 leads...
+  Updated 2250 of 2499 leads...
+  Updated 2499 of 2499 leads...
+Updated 2499 existing leads
+Syncing lead remarks...
+Synced 8180 lead remarks
+
+Sync completed:
+  - New leads: 0
+  - Updated leads: 2499
+  - Errors: 0
+  - Last synced date: 2026-01-17T06:52:40.000Z
+  - Last synced ID: 224610
+Sync script completed successfully
+[2026-01-22 12:01:13] [INFO] Lead sync completed successfully

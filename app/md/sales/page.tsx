@@ -2,11 +2,9 @@
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useState, useMemo } from 'react'
-import { generateSalesDemoData } from '@/lib/demo-data/sales-analytics'
 import {
   TrendingUp,
   DollarSign,
@@ -129,7 +127,6 @@ const COLORS = {
 const PIE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#a855f7', '#f97316']
 
 export default function MDSalesDashboardPage() {
-  const [useDemoData, setUseDemoData] = useState(false)
   const [customDateRange, setCustomDateRange] = useState({
     startDate: '',
     endDate: '',
@@ -178,11 +175,8 @@ export default function MDSalesDashboardPage() {
   }, [period, customDateRange])
 
   const { data: analytics, isLoading } = useQuery<SalesAnalytics>({
-    queryKey: ['analytics', 'md', 'sales', dateRange, useDemoData],
+    queryKey: ['analytics', 'md', 'sales', dateRange],
     queryFn: async () => {
-      if (useDemoData) {
-        return generateSalesDemoData()
-      }
       const params = new URLSearchParams()
       if (dateRange.startDate) {
         params.append('startDate', dateRange.startDate)
@@ -191,13 +185,9 @@ export default function MDSalesDashboardPage() {
         params.append('endDate', dateRange.endDate)
       }
       const data = await apiGet<SalesAnalytics>(`/api/analytics/md/sales?${params.toString()}`)
-      console.log('Sales Analytics Data:', data)
-      console.log('City Performance:', data?.cityPerformance)
-      console.log('Revenue Trends:', data?.revenueProfitTrends)
-      console.log('Payment Mode:', data?.paymentModeAnalysis)
       return data
     },
-    enabled: useDemoData || period === 'all' || (!!dateRange.startDate && !!dateRange.endDate),
+    enabled: period === 'all' || (!!dateRange.startDate && !!dateRange.endDate),
   })
 
 
@@ -227,13 +217,6 @@ export default function MDSalesDashboardPage() {
             <p className="text-muted-foreground mt-1">Comprehensive sales analytics and insights</p>
           </div>
           <div className="flex gap-2 items-center">
-            <Button
-              variant={useDemoData ? 'default' : 'outline'}
-              onClick={() => setUseDemoData(!useDemoData)}
-              className={useDemoData ? 'bg-blue-600 hover:bg-blue-700' : ''}
-            >
-              {useDemoData ? 'Using Demo Data' : 'Use Demo Data'}
-            </Button>
             <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select period" />
@@ -285,7 +268,7 @@ export default function MDSalesDashboardPage() {
           <>
             {/* KPI Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-green-500 bg-linear-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -298,7 +281,7 @@ export default function MDSalesDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-blue-500 bg-linear-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
                   <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -311,7 +294,7 @@ export default function MDSalesDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-purple-500 bg-linear-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
                   <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -324,7 +307,7 @@ export default function MDSalesDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-emerald-500 bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Completed Surgeries</CardTitle>
                   <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -337,7 +320,7 @@ export default function MDSalesDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-amber-500 bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-amber-500 bg-linear-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
                   <BarChart3 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -350,7 +333,7 @@ export default function MDSalesDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-cyan-500 bg-gradient-to-br from-cyan-50 to-white dark:from-cyan-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-cyan-500 bg-linear-to-br from-cyan-50 to-white dark:from-cyan-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Ticket Size</CardTitle>
                   <DollarSign className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
@@ -363,7 +346,7 @@ export default function MDSalesDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-indigo-500 bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-indigo-500 bg-linear-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-background">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Net Profit</CardTitle>
                   <TrendingUp className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
