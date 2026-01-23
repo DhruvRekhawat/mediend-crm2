@@ -106,6 +106,11 @@ export async function POST(
     // Approve the entry
     const amount = entry.paymentAmount || 0
 
+    // Validate payment mode exists
+    if (!entry.paymentModeId) {
+      return errorResponse('Payment mode is required for debit transactions', 400)
+    }
+
     // Get current balance and update it
     const balanceBefore = await getPaymentModeBalance(entry.paymentModeId)
     const newBalance = await updatePaymentModeBalance(

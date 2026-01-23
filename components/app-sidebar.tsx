@@ -33,6 +33,7 @@ import {
   LogOut,
   Mail,
   MessageSquare,
+  Package,
   Shield,
   ShieldCheck,
   Target,
@@ -313,6 +314,12 @@ const navItems: NavItem[] = [
     title: 'Fin Payment Modes',
     url: '/finance/payment-modes',
     icon: CreditCard,
+    permission: 'finance:read',
+  },
+  {
+    title: 'Fin Inventory',
+    url: '/finance/inventory',
+    icon: Package,
     permission: 'finance:read',
   },
   {

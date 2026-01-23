@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
         },
       },
       orderBy: {
-        updatedDate: 'desc',
+        createdDate: 'desc',
       },
       take: 1000, // Add pagination later
     })

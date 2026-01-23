@@ -83,11 +83,14 @@ export async function GET(request: NextRequest) {
       }
 
       case 'party-wise': {
-        // Party-wise summary
+        // Party-wise summary - Exclude SELF_TRANSFER
         const entries = await prisma.ledgerEntry.groupBy({
           by: ['partyId', 'transactionType'],
           where: {
             status: LedgerStatus.APPROVED,
+            transactionType: {
+              in: [TransactionType.CREDIT, TransactionType.DEBIT],
+            },
             ...(Object.keys(dateFilter).length > 0 && {
               transactionDate: dateFilter,
             }),
@@ -100,7 +103,7 @@ export async function GET(request: NextRequest) {
         })
 
         // Get party names
-        const partyIds = [...new Set(entries.map((e) => e.partyId))]
+        const partyIds = [...new Set(entries.map((e) => e.partyId).filter((id): id is string => id !== null))]
         const parties = await prisma.partyMaster.findMany({
           where: { id: { in: partyIds } },
           select: { id: true, name: true, partyType: true },
@@ -121,6 +124,8 @@ export async function GET(request: NextRequest) {
         >()
 
         entries.forEach((entry) => {
+          // Ensure entry.partyId is a string before using as Map key
+          if (!entry.partyId) return;
           const party = partyMap.get(entry.partyId)
           if (!party) return
 
@@ -135,7 +140,7 @@ export async function GET(request: NextRequest) {
 
           if (entry.transactionType === TransactionType.CREDIT) {
             existing.totalCredits += entry._sum.receivedAmount || 0
-          } else {
+          } else if (entry.transactionType === TransactionType.DEBIT) {
             existing.totalDebits += entry._sum.paymentAmount || 0
           }
           existing.entriesCount += entry._count
@@ -160,11 +165,14 @@ export async function GET(request: NextRequest) {
       }
 
       case 'head-wise': {
-        // Head-wise summary
+        // Head-wise summary - Exclude SELF_TRANSFER
         const entries = await prisma.ledgerEntry.groupBy({
           by: ['headId', 'transactionType'],
           where: {
             status: LedgerStatus.APPROVED,
+            transactionType: {
+              in: [TransactionType.CREDIT, TransactionType.DEBIT],
+            },
             ...(Object.keys(dateFilter).length > 0 && {
               transactionDate: dateFilter,
             }),
@@ -177,7 +185,7 @@ export async function GET(request: NextRequest) {
         })
 
         // Get head names
-        const headIds = [...new Set(entries.map((e) => e.headId))]
+        const headIds = [...new Set(entries.map((e) => e.headId).filter((id): id is string => id !== null))]
         const heads = await prisma.headMaster.findMany({
           where: { id: { in: headIds } },
           select: { id: true, name: true, department: true },
@@ -198,6 +206,8 @@ export async function GET(request: NextRequest) {
         >()
 
         entries.forEach((entry) => {
+          // Ensure entry.headId is a string before using as Map key
+          if (!entry.headId) return;
           const head = headMap.get(entry.headId)
           if (!head) return
 
@@ -212,7 +222,7 @@ export async function GET(request: NextRequest) {
 
           if (entry.transactionType === TransactionType.CREDIT) {
             existing.totalCredits += entry._sum.receivedAmount || 0
-          } else {
+          } else if (entry.transactionType === TransactionType.DEBIT) {
             existing.totalDebits += entry._sum.paymentAmount || 0
           }
           existing.entriesCount += entry._count
@@ -237,10 +247,13 @@ export async function GET(request: NextRequest) {
       }
 
       case 'day-wise': {
-        // Day-wise summary
+        // Day-wise summary - Exclude SELF_TRANSFER
         const entries = await prisma.ledgerEntry.findMany({
           where: {
             status: LedgerStatus.APPROVED,
+            transactionType: {
+              in: [TransactionType.CREDIT, TransactionType.DEBIT],
+            },
             ...(Object.keys(dateFilter).length > 0 && {
               transactionDate: dateFilter,
             }),
@@ -277,7 +290,7 @@ export async function GET(request: NextRequest) {
 
           if (entry.transactionType === TransactionType.CREDIT) {
             existing.totalCredits += entry.receivedAmount || 0
-          } else {
+          } else if (entry.transactionType === TransactionType.DEBIT) {
             existing.totalDebits += entry.paymentAmount || 0
           }
           existing.entriesCount += 1

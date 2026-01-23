@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft, ArrowUpCircle, ArrowDownCircle, Calendar, User, Clock, Edit, Trash2, Check, X, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Calendar, User, Clock, Edit, Trash2, Check, X } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -35,11 +35,14 @@ interface AuditLog {
 interface LedgerEntry {
   id: string
   serialNumber: string
-  transactionType: 'CREDIT' | 'DEBIT'
+  transactionType: 'CREDIT' | 'DEBIT' | 'SELF_TRANSFER'
   transactionDate: string
   description: string
   paymentAmount: number | null
   receivedAmount: number | null
+  transferAmount: number | null
+  componentA: number | null
+  componentB: number | null
   openingBalance: number
   currentBalance: number
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
@@ -77,21 +80,29 @@ interface LedgerEntry {
     contactName: string | null
     contactPhone: string | null
     contactEmail: string | null
-  }
+  } | null
   head: {
     id: string
     name: string
     department: string | null
-  }
+  } | null
   paymentType: {
     id: string
     name: string
     paymentType: string
-  }
+  } | null
   paymentMode: {
     id: string
     name: string
-  }
+  } | null
+  fromPaymentMode: {
+    id: string
+    name: string
+  } | null
+  toPaymentMode: {
+    id: string
+    name: string
+  } | null
   createdBy: {
     id: string
     name: string
@@ -290,13 +301,13 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
     if (editFormData.transactionDate && editFormData.transactionDate !== entry?.transactionDate) {
       changes.transactionDate = editFormData.transactionDate
     }
-    if (editFormData.partyId && editFormData.partyId !== entry?.party.id) {
+    if (editFormData.partyId && editFormData.partyId !== entry?.party?.id) {
       changes.partyId = editFormData.partyId
     }
-    if (editFormData.headId && editFormData.headId !== entry?.head.id) {
+    if (editFormData.headId && editFormData.headId !== entry?.head?.id) {
       changes.headId = editFormData.headId
     }
-    if (editFormData.paymentTypeId && editFormData.paymentTypeId !== entry?.paymentType.id) {
+    if (editFormData.paymentTypeId && editFormData.paymentTypeId !== entry?.paymentType?.id) {
       changes.paymentTypeId = editFormData.paymentTypeId
     }
 
@@ -381,7 +392,8 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
   }
 
   const isCredit = entry.transactionType === 'CREDIT'
-  const amount = isCredit ? entry.receivedAmount || 0 : entry.paymentAmount || 0
+  const isSelfTransfer = entry.transactionType === 'SELF_TRANSFER'
+  const amount = isCredit ? entry.receivedAmount || 0 : isSelfTransfer ? entry.transferAmount || 0 : entry.paymentAmount || 0
   const canRequestEdit = isFinance && entry.status === 'APPROVED' && !entry.editRequestStatus
   const canApproveEdit = isAdmin && entry.editRequestStatus === 'PENDING'
   const canApplyEdit = isFinance && entry.editRequestStatus === 'APPROVED'
@@ -414,9 +426,9 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                   setEditFormData({
                     description: entry.description,
                     transactionDate: entry.transactionDate.split('T')[0],
-                    partyId: entry.party.id,
-                    headId: entry.head.id,
-                    paymentTypeId: entry.paymentType.id,
+                    partyId: entry.party?.id || '',
+                    headId: entry.head?.id || '',
+                    paymentTypeId: entry.paymentType?.id || '',
                     reason: '',
                   })
                 }}>
@@ -651,9 +663,15 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
             </AlertDialog>
           )}
         </div>
-        <div className={`p-4 rounded-lg ${isCredit ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'}`}>
+        <div className={`p-4 rounded-lg ${
+          isCredit ? 'bg-green-100 dark:bg-green-900/20' :
+          isSelfTransfer ? 'bg-blue-100 dark:bg-blue-900/20' :
+          'bg-red-100 dark:bg-red-900/20'
+        }`}>
           {isCredit ? (
             <ArrowUpCircle className="h-8 w-8 text-green-600" />
+          ) : isSelfTransfer ? (
+            <ArrowLeftRight className="h-8 w-8 text-blue-600" />
           ) : (
             <ArrowDownCircle className="h-8 w-8 text-red-600" />
           )}
@@ -711,8 +729,16 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground">Transaction Type</label>
-                <p className={`font-semibold ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
-                  {entry.transactionType} ({isCredit ? 'Money In' : 'Money Out'})
+                <p className={`font-semibold ${
+                  isCredit ? 'text-green-600' :
+                  isSelfTransfer ? 'text-blue-600' :
+                  'text-red-600'
+                }`}>
+                  {isSelfTransfer ? 'Self Transfer' : entry.transactionType} ({
+                    isCredit ? 'Money In' :
+                    isSelfTransfer ? 'Between Payment Modes' :
+                    'Money Out'
+                  })
                 </p>
               </div>
               <div>
@@ -728,31 +754,70 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
               </div>
               <div>
                 <label className="text-sm text-muted-foreground">Amount</label>
-                <p className={`text-2xl font-bold font-mono ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
-                  {isCredit ? '+' : '-'}{formatCurrency(amount)}
+                <p className={`text-2xl font-bold font-mono ${
+                  isCredit ? 'text-green-600' :
+                  isSelfTransfer ? 'text-blue-600' :
+                  'text-red-600'
+                }`}>
+                  {isCredit ? '+' : isSelfTransfer ? '' : '-'}{formatCurrency(amount)}
                 </p>
               </div>
             </div>
             <div className="space-y-4">
-              <div>
-                <label className="text-sm text-muted-foreground">Party</label>
-                <p className="font-semibold">{entry.party.name}</p>
-                <p className="text-sm text-muted-foreground">{entry.party.partyType}</p>
-                {entry.party.contactPhone && <p className="text-sm">{entry.party.contactPhone}</p>}
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground">Head</label>
-                <p className="font-medium">{entry.head.name}</p>
-                {entry.head.department && <p className="text-sm text-muted-foreground">{entry.head.department}</p>}
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground">Payment Type</label>
-                <p>{entry.paymentType.name} ({entry.paymentType.paymentType})</p>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground">Payment Mode</label>
-                <p className="font-medium">{entry.paymentMode.name}</p>
-              </div>
+              {isSelfTransfer ? (
+                <>
+                  <div>
+                    <label className="text-sm text-muted-foreground">From Payment Mode</label>
+                    <p className="font-semibold text-blue-600">{entry.fromPaymentMode?.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">To Payment Mode</label>
+                    <p className="font-semibold text-blue-600">{entry.toPaymentMode?.name || 'N/A'}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Party</label>
+                    {entry.party ? (
+                      <>
+                        <p className="font-semibold">{entry.party.name}</p>
+                        <p className="text-sm text-muted-foreground">{entry.party.partyType}</p>
+                        {entry.party.contactPhone && <p className="text-sm">{entry.party.contactPhone}</p>}
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">N/A</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Head</label>
+                    {entry.head ? (
+                      <>
+                        <p className="font-medium">{entry.head.name}</p>
+                        {entry.head.department && <p className="text-sm text-muted-foreground">{entry.head.department}</p>}
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">N/A</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Payment Type</label>
+                    {entry.paymentType ? (
+                      <p>{entry.paymentType.name} ({entry.paymentType.paymentType})</p>
+                    ) : (
+                      <p className="text-muted-foreground">N/A</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground">Payment Mode</label>
+                    {entry.paymentMode ? (
+                      <p className="font-medium">{entry.paymentMode.name}</p>
+                    ) : (
+                      <p className="text-muted-foreground">N/A</p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
@@ -770,10 +835,18 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
               <label className="text-sm text-muted-foreground">Opening Balance</label>
               <p className="text-xl font-mono font-semibold">{formatCurrency(entry.openingBalance)}</p>
             </div>
-            <div className={`p-4 rounded-lg ${isCredit ? 'bg-green-50 dark:bg-green-900/10' : 'bg-red-50 dark:bg-red-900/10'}`}>
+            <div className={`p-4 rounded-lg ${
+              isCredit ? 'bg-green-50 dark:bg-green-900/10' :
+              isSelfTransfer ? 'bg-blue-50 dark:bg-blue-900/10' :
+              'bg-red-50 dark:bg-red-900/10'
+            }`}>
               <label className="text-sm text-muted-foreground">Transaction</label>
-              <p className={`text-xl font-mono font-semibold ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
-                {isCredit ? '+' : '-'}{formatCurrency(amount)}
+              <p className={`text-xl font-mono font-semibold ${
+                isCredit ? 'text-green-600' :
+                isSelfTransfer ? 'text-blue-600' :
+                'text-red-600'
+              }`}>
+                {isCredit ? '+' : isSelfTransfer ? '' : '-'}{formatCurrency(amount)}
               </p>
             </div>
             <div className="p-4 bg-muted rounded-lg">

@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, ArrowLeftRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -55,7 +55,7 @@ function formatCurrency(amount: number) {
 
 export default function NewLedgerEntryPage() {
   const router = useRouter()
-  const [transactionType, setTransactionType] = useState<'CREDIT' | 'DEBIT'>('CREDIT')
+  const [transactionType, setTransactionType] = useState<'CREDIT' | 'DEBIT' | 'SELF_TRANSFER'>('CREDIT')
   const [transactionDate, setTransactionDate] = useState<Date>(new Date())
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [formData, setFormData] = useState({
@@ -67,6 +67,9 @@ export default function NewLedgerEntryPage() {
     amount: '',
     componentA: '',
     componentB: '',
+    fromPaymentModeId: '',
+    toPaymentModeId: '',
+    transferAmount: '',
   })
 
   // Fetch masters
@@ -91,24 +94,31 @@ export default function NewLedgerEntryPage() {
   })
 
   const selectedPaymentMode = paymentModesData?.data.find((m) => m.id === formData.paymentModeId)
+  const selectedFromMode = paymentModesData?.data.find((m) => m.id === formData.fromPaymentModeId)
+  const selectedToMode = paymentModesData?.data.find((m) => m.id === formData.toPaymentModeId)
 
   const createMutation = useMutation({
     mutationFn: (data: {
       transactionType: string
       transactionDate: string
-      partyId: string
+      partyId?: string
       description: string
-      headId: string
-      paymentTypeId: string
-      paymentModeId: string
+      headId?: string
+      paymentTypeId?: string
+      paymentModeId?: string
       paymentAmount?: number
       componentA?: number
       componentB?: number
       receivedAmount?: number
+      fromPaymentModeId?: string
+      toPaymentModeId?: string
+      transferAmount?: number
     }) => apiPost('/api/finance/ledger', data),
     onSuccess: () => {
       if (transactionType === 'CREDIT') {
         toast.success('Credit entry created and auto-approved!')
+      } else if (transactionType === 'SELF_TRANSFER') {
+        toast.success('Self transfer entry created and auto-approved!')
       } else {
         toast.success('Debit entry created! Awaiting MD approval.')
       }
@@ -138,6 +148,34 @@ export default function NewLedgerEntryPage() {
         paymentTypeId: formData.paymentTypeId,
         paymentModeId: formData.paymentModeId,
         receivedAmount: amount,
+      }
+
+      createMutation.mutate(data)
+    } else if (transactionType === 'SELF_TRANSFER') {
+      // For SELF_TRANSFER transactions
+      const transferAmount = parseFloat(formData.transferAmount)
+      if (isNaN(transferAmount) || transferAmount <= 0) {
+        toast.error('Please enter a valid transfer amount')
+        return
+      }
+
+      if (!formData.fromPaymentModeId || !formData.toPaymentModeId) {
+        toast.error('Please select both from and to payment modes')
+        return
+      }
+
+      if (formData.fromPaymentModeId === formData.toPaymentModeId) {
+        toast.error('From and to payment modes must be different')
+        return
+      }
+
+      const data = {
+        transactionType,
+        transactionDate: transactionDate.toISOString(),
+        description: formData.description,
+        fromPaymentModeId: formData.fromPaymentModeId,
+        toPaymentModeId: formData.toPaymentModeId,
+        transferAmount,
       }
 
       createMutation.mutate(data)
@@ -175,10 +213,16 @@ export default function NewLedgerEntryPage() {
   // Calculate balance impact preview
   const amount = transactionType === 'CREDIT' 
     ? (parseFloat(formData.amount) || 0)
+    : transactionType === 'SELF_TRANSFER'
+    ? (parseFloat(formData.transferAmount) || 0)
     : ((parseFloat(formData.componentA) || 0) + (parseFloat(formData.componentB) || 0))
   const currentBalance = selectedPaymentMode?.currentBalance || 0
+  const fromCurrentBalance = selectedFromMode?.currentBalance || 0
+  const toCurrentBalance = selectedToMode?.currentBalance || 0
   const projectedBalance = transactionType === 'CREDIT'
     ? currentBalance + amount
+    : transactionType === 'SELF_TRANSFER'
+    ? { from: fromCurrentBalance - amount, to: toCurrentBalance + amount }
     : currentBalance - amount
 
   return (
@@ -202,7 +246,7 @@ export default function NewLedgerEntryPage() {
           <CardDescription>Select whether this is incoming (credit) or outgoing (debit)</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <button
               type="button"
               onClick={() => setTransactionType('CREDIT')}
@@ -234,6 +278,22 @@ export default function NewLedgerEntryPage() {
               <div className="font-semibold">Debit (Out)</div>
               <div className="text-sm text-muted-foreground">Money paid</div>
               <div className="text-xs text-amber-600 mt-2">Requires MD approval</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTransactionType('SELF_TRANSFER')}
+              className={`p-6 rounded-lg border-2 transition-all ${
+                transactionType === 'SELF_TRANSFER'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  : 'border-muted hover:border-blue-300'
+              }`}
+            >
+              <ArrowLeftRight className={`h-10 w-10 mx-auto mb-2 ${
+                transactionType === 'SELF_TRANSFER' ? 'text-blue-600' : 'text-muted-foreground'
+              }`} />
+              <div className="font-semibold">Self Transfer</div>
+              <div className="text-sm text-muted-foreground">Between payment modes</div>
+              <div className="text-xs text-green-600 mt-2">Auto-approved</div>
             </button>
           </div>
         </CardContent>
@@ -272,84 +332,159 @@ export default function NewLedgerEntryPage() {
               </Dialog>
             </div>
 
-            {/* Party */}
-            <div className="space-y-2">
-              <Label htmlFor="party">Party *</Label>
-              <Select
-                value={formData.partyId}
-                onValueChange={(value) => setFormData({ ...formData, partyId: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select party" />
-                </SelectTrigger>
-                <SelectContent>
-                  {partiesData?.data.map((party) => (
-                    <SelectItem key={party.id} value={party.id}>
-                      {party.name} ({party.partyType})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Payment Purpose / Description *</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="e.g., Website development, Sales commission, Office rent"
+                placeholder={transactionType === 'SELF_TRANSFER' 
+                  ? "e.g., Transfer from Bank A to Bank B"
+                  : "e.g., Website development, Sales commission, Office rent"}
                 rows={2}
                 required
               />
             </div>
 
-            {/* Head */}
-            <div className="space-y-2">
-              <Label htmlFor="head">Head *</Label>
-              <Select
-                value={formData.headId}
-                onValueChange={(value) => setFormData({ ...formData, headId: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select head" />
-                </SelectTrigger>
-                <SelectContent>
-                  {headsData?.data.map((head) => (
-                    <SelectItem key={head.id} value={head.id}>
-                      {head.name} {head.department && `(${head.department})`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Fields for CREDIT/DEBIT only */}
+            {transactionType !== 'SELF_TRANSFER' && (
+              <>
+                {/* Party */}
+                <div className="space-y-2">
+                  <Label htmlFor="party">Party *</Label>
+                  <Select
+                    value={formData.partyId}
+                    onValueChange={(value) => setFormData({ ...formData, partyId: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select party" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {partiesData?.data.map((party) => (
+                        <SelectItem key={party.id} value={party.id}>
+                          {party.name} ({party.partyType})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Payment Type */}
-            <div className="space-y-2">
-              <Label htmlFor="paymentType">Type of Payment *</Label>
-              <Select
-                value={formData.paymentTypeId}
-                onValueChange={(value) => setFormData({ ...formData, paymentTypeId: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {paymentTypesData?.data.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name} ({type.paymentType})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Head */}
+                <div className="space-y-2">
+                  <Label htmlFor="head">Head *</Label>
+                  <Select
+                    value={formData.headId}
+                    onValueChange={(value) => setFormData({ ...formData, headId: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select head" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {headsData?.data.map((head) => (
+                        <SelectItem key={head.id} value={head.id}>
+                          {head.name} {head.department && `(${head.department})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Payment Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="paymentType">Type of Payment *</Label>
+                  <Select
+                    value={formData.paymentTypeId}
+                    onValueChange={(value) => setFormData({ ...formData, paymentTypeId: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentTypesData?.data.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name} ({type.paymentType})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            {/* Fields for SELF_TRANSFER */}
+            {transactionType === 'SELF_TRANSFER' && (
+              <>
+                {/* From Payment Mode */}
+                <div className="space-y-2">
+                  <Label htmlFor="fromPaymentMode">From Payment Mode *</Label>
+                  <Select
+                    value={formData.fromPaymentModeId}
+                    onValueChange={(value) => setFormData({ ...formData, fromPaymentModeId: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select source payment mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentModesData?.data.map((mode) => (
+                        <SelectItem key={mode.id} value={mode.id}>
+                          {mode.name} (Balance: {formatCurrency(mode.currentBalance)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* To Payment Mode */}
+                <div className="space-y-2">
+                  <Label htmlFor="toPaymentMode">To Payment Mode *</Label>
+                  <Select
+                    value={formData.toPaymentModeId}
+                    onValueChange={(value) => setFormData({ ...formData, toPaymentModeId: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select destination payment mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentModesData?.data
+                        .filter((mode) => mode.id !== formData.fromPaymentModeId)
+                        .map((mode) => (
+                          <SelectItem key={mode.id} value={mode.id}>
+                            {mode.name} (Balance: {formatCurrency(mode.currentBalance)})
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Transfer Amount */}
+                <div className="space-y-2">
+                  <Label htmlFor="transferAmount">Transfer Amount *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      id="transferAmount"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={formData.transferAmount}
+                      onChange={(e) => setFormData({ ...formData, transferAmount: e.target.value })}
+                      className="pl-8"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Amount - Different fields for CREDIT vs DEBIT */}
-            {transactionType === 'CREDIT' ? (
+            {transactionType === 'CREDIT' && (
               <div className="space-y-2">
                 <Label htmlFor="amount">Received Amount *</Label>
                 <div className="relative">
@@ -367,7 +502,9 @@ export default function NewLedgerEntryPage() {
                   />
                 </div>
               </div>
-            ) : (
+            )}
+
+            {transactionType === 'DEBIT' && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="componentA">Component A (Main Expense) *</Label>
@@ -419,29 +556,78 @@ export default function NewLedgerEntryPage() {
               </>
             )}
 
-            {/* Payment Mode */}
-            <div className="space-y-2">
-              <Label htmlFor="paymentMode">Payment Mode *</Label>
-              <Select
-                value={formData.paymentModeId}
-                onValueChange={(value) => setFormData({ ...formData, paymentModeId: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  {paymentModesData?.data.map((mode) => (
-                    <SelectItem key={mode.id} value={mode.id}>
-                      {mode.name} (Balance: {formatCurrency(mode.currentBalance)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Payment Mode - Only for CREDIT/DEBIT */}
+            {transactionType !== 'SELF_TRANSFER' && (
+              <div className="space-y-2">
+                <Label htmlFor="paymentMode">Payment Mode *</Label>
+                <Select
+                  value={formData.paymentModeId}
+                  onValueChange={(value) => setFormData({ ...formData, paymentModeId: value })}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentModesData?.data.map((mode) => (
+                      <SelectItem key={mode.id} value={mode.id}>
+                        {mode.name} (Balance: {formatCurrency(mode.currentBalance)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Balance Impact Preview */}
-            {formData.paymentModeId && formData.amount && (
+            {transactionType === 'SELF_TRANSFER' && formData.fromPaymentModeId && formData.toPaymentModeId && formData.transferAmount && (
+              <Card className="bg-blue-50 dark:bg-blue-900/10">
+                <CardContent className="pt-4">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    Balance Impact Preview
+                  </h4>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">From: {selectedFromMode?.name}</div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="text-muted-foreground">Current Balance</div>
+                          <div className="font-mono font-semibold">{formatCurrency(fromCurrentBalance)}</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Projected Balance</div>
+                          <div className="font-mono font-semibold text-red-600">
+                            {formatCurrency(typeof projectedBalance === 'object' ? projectedBalance.from : 0)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">To: {selectedToMode?.name}</div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="text-muted-foreground">Current Balance</div>
+                          <div className="font-mono font-semibold">{formatCurrency(toCurrentBalance)}</div>
+                        </div>
+                        <div>
+                          <div className="text-muted-foreground">Projected Balance</div>
+                          <div className="font-mono font-semibold text-green-600">
+                            {formatCurrency(typeof projectedBalance === 'object' ? projectedBalance.to : 0)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center pt-2 border-t">
+                      <div className="text-muted-foreground text-sm">Transfer Amount</div>
+                      <div className="font-mono font-semibold text-lg">{formatCurrency(amount)}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {transactionType !== 'SELF_TRANSFER' && formData.paymentModeId && (formData.amount || formData.componentA) && (
               <Card className={transactionType === 'CREDIT' ? 'bg-green-50 dark:bg-green-900/10' : 'bg-amber-50 dark:bg-amber-900/10'}>
                 <CardContent className="pt-4">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -465,7 +651,9 @@ export default function NewLedgerEntryPage() {
                     </div>
                     <div>
                       <div className="text-muted-foreground">Projected Balance</div>
-                      <div className="font-mono font-semibold">{formatCurrency(projectedBalance)}</div>
+                      <div className="font-mono font-semibold">
+                        {formatCurrency(typeof projectedBalance === 'number' ? projectedBalance : 0)}
+                      </div>
                     </div>
                   </div>
                   {transactionType === 'DEBIT' && (
@@ -487,10 +675,16 @@ export default function NewLedgerEntryPage() {
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
-                className={transactionType === 'CREDIT' ? 'bg-green-600 hover:bg-green-700' : ''}
+                className={
+                  transactionType === 'CREDIT' ? 'bg-green-600 hover:bg-green-700' :
+                  transactionType === 'SELF_TRANSFER' ? 'bg-blue-600 hover:bg-blue-700' :
+                  ''
+                }
               >
                 {createMutation.isPending ? 'Creating...' : 
-                  transactionType === 'CREDIT' ? 'Create & Auto-Approve' : 'Create (Pending Approval)'
+                  transactionType === 'CREDIT' ? 'Create & Auto-Approve' :
+                  transactionType === 'SELF_TRANSFER' ? 'Create & Auto-Approve' :
+                  'Create (Pending Approval)'
                 }
               </Button>
             </div>

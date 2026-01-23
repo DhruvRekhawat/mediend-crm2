@@ -246,7 +246,7 @@ async function syncLeadRemarks(leadIds: number[]) {
           skipDuplicates: true,
         })
       }
-      console.log(`Synced ${newRemarks.length} lead remarks`)
+      console.log(`✅ Synced ${newRemarks.length} lead remarks`)
     }
   } catch (error) {
     console.error('Error syncing lead remarks:', error)
@@ -257,20 +257,26 @@ async function syncLeadRemarks(leadIds: number[]) {
  * Main sync function
  */
 async function syncLeads() {
-  console.log(`[${new Date().toISOString()}] Starting MySQL lead sync...`)
+  const startTime = Date.now()
+  const timestamp = new Date().toISOString()
+  console.log(`\n${'='.repeat(60)}`)
+  console.log(`[${timestamp}] 🔄 Starting MySQL lead sync...`)
+  console.log(`${'='.repeat(60)}`)
 
   try {
     // Test MySQL connection
+    console.log('📡 Testing MySQL connection...')
     const isConnected = await testMySQLConnection()
     if (!isConnected) {
       throw new Error('Failed to connect to MySQL database')
     }
-    console.log('MySQL connection established')
+    console.log('✅ MySQL connection established')
 
     // Get sync state
     const syncState = await getSyncState()
     const lastSyncedDate = syncState.lastSyncedDate
-    console.log(`Last synced date: ${lastSyncedDate.toISOString()}`)
+    console.log(`📅 Last synced date: ${lastSyncedDate.toISOString()}`)
+    console.log(`📊 Total records synced so far: ${syncState.recordsCount}`)
 
     // Get system user for created/updated by fields
     let systemUser = await prisma.user.findFirst({
@@ -284,6 +290,7 @@ async function syncLeads() {
     }
 
     // Fetch leads from MySQL
+    console.log(`\n📥 Fetching leads from MySQL (batch size: ${BATCH_SIZE})...`)
     const leads = await queryMySQL<MySQLLeadRow>(
       `SELECT * FROM lead 
        WHERE Lead_Date >= ? 
@@ -292,23 +299,31 @@ async function syncLeads() {
       [lastSyncedDate, BATCH_SIZE]
     )
 
-    console.log(`Found ${leads.length} leads to sync`)
+    console.log(`✅ Found ${leads.length} leads to sync`)
+    if (leads.length > 0) {
+      const dateRange = {
+        earliest: leads[0].Lead_Date ? new Date(leads[0].Lead_Date).toISOString() : 'N/A',
+        latest: leads[leads.length - 1].Lead_Date ? new Date(leads[leads.length - 1].Lead_Date).toISOString() : 'N/A',
+      }
+      console.log(`   Date range: ${dateRange.earliest} to ${dateRange.latest}`)
+      console.log(`   Lead IDs: ${leads[0].id} to ${leads[leads.length - 1].id}`)
+    }
 
     if (leads.length === 0) {
-      console.log('No new leads to sync')
+      console.log('ℹ️  No new leads to sync')
       return
     }
 
     // Pre-fetch existing leads with key fields for comparison
-    console.log('Pre-fetching existing leads...')
+    console.log(`\n🔍 Pre-fetching existing leads (${leads.length} lead refs)...`)
     const leadRefs = leads.map((l) => String(l.id))
     const existingLeadsMap = await fetchExistingLeads(leadRefs)
-    console.log(`Found ${existingLeadsMap.size} existing leads out of ${leads.length}`)
+    console.log(`✅ Found ${existingLeadsMap.size} existing leads out of ${leads.length} (${leads.length - existingLeadsMap.size} new)`)
 
     // Pre-fetch BD users map for faster lookups
-    console.log('Pre-fetching BD users...')
+    console.log('👥 Pre-fetching BD users...')
     const bdUsersMap = await fetchBDUsersMap()
-    console.log(`Loaded ${bdUsersMap.size} BD user lookup entries`)
+    console.log(`✅ Loaded ${bdUsersMap.size} BD user lookup entries`)
 
     // Process leads in parallel with concurrency limit
     const limit = pLimit(CONCURRENCY_LIMIT)
@@ -321,7 +336,7 @@ async function syncLeads() {
     const leadDates: Date[] = []
     const leadIds: number[] = []
 
-    console.log(`Processing ${leads.length} leads with concurrency limit of ${CONCURRENCY_LIMIT}...`)
+    console.log(`\n⚙️  Processing ${leads.length} leads with concurrency limit of ${CONCURRENCY_LIMIT}...`)
 
     // Process each lead in parallel
     const processLead = async (mysqlLead: MySQLLeadRow) => {
@@ -339,7 +354,7 @@ async function syncLeads() {
 
         // Verify BD user exists (mapMySQLLeadToPrisma should have handled this, but double-check)
         if (!leadData.bdId) {
-          console.warn(`Lead ${leadRef} has no bdId, skipping`)
+          console.warn(`⚠️  Lead ${leadRef} has no bdId, skipping`)
           errorCount++
           return
         }
@@ -388,29 +403,38 @@ async function syncLeads() {
     const maxDate = leadDates.length > 0 ? new Date(Math.max(...leadDates.map(d => d.getTime()))) : lastSyncedDate
     const maxId = leadIds.length > 0 ? Math.max(...leadIds) : null
 
-    console.log(`\nProcessed leads: ${syncedCount} new, ${updatedCount} updates, ${errorCount} errors`)
+    console.log(`\n📊 Processing summary:`)
+    console.log(`   ✅ New leads to create: ${syncedCount}`)
+    console.log(`   🔄 Leads to update: ${updatedCount}`)
+    console.log(`   ❌ Errors: ${errorCount}`)
 
     // Batch create new leads
     if (leadsToCreate.length > 0) {
-      console.log(`Batch creating ${leadsToCreate.length} new leads...`)
+      console.log(`\n➕ Batch creating ${leadsToCreate.length} new leads...`)
       // Prisma createMany has a limit, so chunk it
       const CREATE_CHUNK_SIZE = 1000
+      let created = 0
       for (let i = 0; i < leadsToCreate.length; i += CREATE_CHUNK_SIZE) {
         const chunk = leadsToCreate.slice(i, i + CREATE_CHUNK_SIZE)
         await prisma.lead.createMany({
           data: chunk,
           skipDuplicates: true,
         })
+        created += chunk.length
+        if (i + CREATE_CHUNK_SIZE < leadsToCreate.length) {
+          console.log(`   Progress: ${created}/${leadsToCreate.length} leads created...`)
+        }
       }
-      console.log(`Created ${leadsToCreate.length} new leads`)
+      console.log(`✅ Created ${leadsToCreate.length} new leads`)
     }
 
     // Batch update existing leads - process sequentially in smaller batches
     if (leadsToUpdate.length > 0) {
-      console.log(`Batch updating ${leadsToUpdate.length} existing leads...`)
+      console.log(`\n🔄 Batch updating ${leadsToUpdate.length} existing leads...`)
       // Process in smaller chunks sequentially to avoid transaction timeouts
       // Process updates one by one or in very small batches
       const UPDATE_CHUNK_SIZE = 25 // Very small chunks to avoid timeouts
+      let updated = 0
       for (let i = 0; i < leadsToUpdate.length; i += UPDATE_CHUNK_SIZE) {
         const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
         // Process updates in a transaction, but with smaller chunks
@@ -425,42 +449,55 @@ async function syncLeads() {
               })
             )
           )
+          updated += chunk.length
         } catch (error) {
           // If transaction fails, process individually
-          console.warn(`Transaction failed for chunk starting at ${i}, processing individually...`)
+          console.warn(`⚠️  Transaction failed for chunk starting at ${i}, processing individually...`)
           for (const item of chunk) {
             try {
               await prisma.lead.update({
                 where: { leadRef: item.leadRef },
                 data: item.data,
               })
+              updated++
             } catch (individualError) {
-              console.error(`Failed to update lead ${item.leadRef}:`, individualError)
+              console.error(`❌ Failed to update lead ${item.leadRef}:`, individualError)
             }
           }
         }
         if ((i + UPDATE_CHUNK_SIZE) % 250 === 0 || i + UPDATE_CHUNK_SIZE >= leadsToUpdate.length) {
-          console.log(`  Updated ${Math.min(i + UPDATE_CHUNK_SIZE, leadsToUpdate.length)} of ${leadsToUpdate.length} leads...`)
+          console.log(`   Progress: ${updated}/${leadsToUpdate.length} leads updated...`)
         }
       }
-      console.log(`Updated ${leadsToUpdate.length} existing leads`)
+      console.log(`✅ Updated ${leadsToUpdate.length} existing leads`)
     }
 
     // Sync lead remarks for synced leads
     if (syncedLeadIds.length > 0) {
-      console.log('Syncing lead remarks...')
+      console.log(`\n💬 Syncing lead remarks for ${syncedLeadIds.length} leads...`)
       await syncLeadRemarks(syncedLeadIds)
     }
 
     // Update sync state
     await updateSyncState(maxDate, maxId, syncedCount + updatedCount)
 
-    console.log(`\nSync completed:`)
-    console.log(`  - New leads: ${syncedCount}`)
-    console.log(`  - Updated leads: ${updatedCount}`)
-    console.log(`  - Errors: ${errorCount}`)
-    console.log(`  - Last synced date: ${maxDate.toISOString()}`)
-    console.log(`  - Last synced ID: ${maxId}`)
+    const executionTime = Date.now() - startTime
+    const executionTimeSeconds = (executionTime / 1000).toFixed(2)
+
+    console.log(`\n${'='.repeat(60)}`)
+    console.log(`✅ Sync completed successfully`)
+    console.log(`${'='.repeat(60)}`)
+    console.log(`📈 Statistics:`)
+    console.log(`   • New leads: ${syncedCount}`)
+    console.log(`   • Updated leads: ${updatedCount}`)
+    console.log(`   • Errors: ${errorCount}`)
+    console.log(`   • Total processed: ${syncedCount + updatedCount}`)
+    console.log(`\n📅 Sync state:`)
+    console.log(`   • Last synced date: ${maxDate.toISOString()}`)
+    console.log(`   • Last synced ID: ${maxId}`)
+    console.log(`   • Total records synced: ${syncState.recordsCount + syncedCount + updatedCount}`)
+    console.log(`\n⏱️  Execution time: ${executionTimeSeconds}s`)
+    console.log(`${'='.repeat(60)}\n`)
   } catch (error) {
     console.error('Sync failed:', error)
     throw error
@@ -473,10 +510,14 @@ async function syncLeads() {
 // Run sync
 syncLeads()
   .then(() => {
-    console.log('Sync script completed successfully')
+    console.log('✅ Sync script completed successfully')
     process.exit(0)
   })
   .catch((error) => {
-    console.error('Sync script failed:', error)
+    console.error('\n❌ Sync script failed:', error)
+    if (error instanceof Error) {
+      console.error('Error details:', error.message)
+      console.error('Stack trace:', error.stack)
+    }
     process.exit(1)
   })

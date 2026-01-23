@@ -7,7 +7,7 @@ import { apiGet } from '@/lib/api-client'
 import { useState, useEffect } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, Users, DollarSign, Target } from 'lucide-react'
+import { TrendingUp, Users, DollarSign, Target, Calendar } from 'lucide-react'
 
 interface DashboardStats {
   totalSurgeries: number
@@ -24,6 +24,27 @@ interface LeaderboardEntry {
   teamName?: string
   closedLeads: number
   netProfit: number
+}
+
+interface TodayLeadAssignment {
+  bdId: string
+  bdName: string
+  bdEmail: string
+  teamName: string | null
+  teamCircle: string | null
+  leadCount: number
+  leads: Array<{
+    id: string
+    leadRef: string
+    patientName: string
+    createdDate: Date
+  }>
+}
+
+interface TodayLeadAssignmentsResponse {
+  date: string
+  totalLeads: number
+  assignments: TodayLeadAssignment[]
 }
 
 export default function SalesDashboardPage() {
@@ -73,6 +94,12 @@ export default function SalesDashboardPage() {
       })
       return apiGet<LeaderboardEntry[]>(`/api/analytics/leaderboard?${params.toString()}`)
     },
+  })
+
+  const { data: todayAssignments, isLoading: todayLoading } = useQuery<TodayLeadAssignmentsResponse>({
+    queryKey: ['analytics', 'today-leads-assignments'],
+    queryFn: () => apiGet<TodayLeadAssignmentsResponse>('/api/analytics/today-leads-assignments'),
+    refetchInterval: 60000, // Refetch every minute to keep data fresh
   })
 
   return (
@@ -147,6 +174,76 @@ export default function SalesDashboardPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Today's Lead Assignments */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Today&apos;s Lead Assignments</CardTitle>
+                  <CardDescription>
+                    New leads assigned to BDs today ({todayAssignments?.date || new Date().toISOString().split('T')[0]})
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="outline">
+                    {todayAssignments?.totalLeads || 0} Total Leads
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {todayLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>BD Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Team</TableHead>
+                      <TableHead className="text-right">Leads Assigned</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {todayAssignments?.assignments.map((assignment) => (
+                      <TableRow key={assignment.bdId}>
+                        <TableCell className="font-medium">{assignment.bdName}</TableCell>
+                        <TableCell className="text-muted-foreground">{assignment.bdEmail}</TableCell>
+                        <TableCell>
+                          {assignment.teamName ? (
+                            <div className="flex items-center gap-2">
+                              <span>{assignment.teamName}</span>
+                              {assignment.teamCircle && (
+                                <Badge variant="outline" className="text-xs">
+                                  {assignment.teamCircle}
+                                </Badge>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">No Team</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="default" className="text-sm">
+                            {assignment.leadCount}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {(!todayAssignments || todayAssignments.assignments.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          No leads assigned today
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Team Leaderboard */}
           <Card>

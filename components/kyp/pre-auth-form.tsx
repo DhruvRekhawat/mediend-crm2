@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -81,32 +81,8 @@ export function PreAuthForm({
     notes: '',
   })
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData({
-        sumInsured: initialData.sumInsured || '',
-        roomRent: initialData.roomRent || '',
-        capping: initialData.capping || '',
-        copay: initialData.copay || '',
-        icu: initialData.icu || '',
-        hospitalNameSuggestion: initialData.hospitalNameSuggestion || '',
-        hospitalSuggestions: Array.isArray(initialData.hospitalSuggestions)
-          ? initialData.hospitalSuggestions.length
-            ? initialData.hospitalSuggestions
-            : ['']
-          : initialData.hospitalNameSuggestion
-            ? [initialData.hospitalNameSuggestion]
-            : [''],
-        roomTypes:
-          Array.isArray(initialData.roomTypes) && initialData.roomTypes.length > 0
-            ? initialData.roomTypes.map((r) => ({ name: r.name || '', rent: r.rent || '' }))
-            : defaultRoomTypes,
-        insurance: initialData.insurance || '',
-        tpa: initialData.tpa || '',
-        notes: '',
-      })
-    }
-  }, [initialData])
+  // Note: Form state is initialized from initialData in useState above.
+  // If initialData changes and form needs to reset, parent should use a key prop to remount component.
 
   const updateBoth = (
     updater: (prev: typeof formData) => Partial<typeof formData>,

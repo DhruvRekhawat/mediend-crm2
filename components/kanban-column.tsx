@@ -68,9 +68,6 @@ export function KanbanColumn({
                 lead={lead}
                 onClick={() => onLeadClick?.(lead)}
                 showBD={showBD}
-                onStatusChange={(newStatus) => {
-                  // This will be handled by parent component
-                }}
               />
             ))}
           </SortableContext>

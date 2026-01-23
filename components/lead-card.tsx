@@ -12,10 +12,9 @@ interface LeadCardProps {
   lead: Lead
   onClick?: () => void
   showBD?: boolean
-  onStatusChange?: (newStatus: string) => void
 }
 
-export function LeadCard({ lead, onClick, showBD = false, onStatusChange }: LeadCardProps) {
+export function LeadCard({ lead, onClick, showBD = false }: LeadCardProps) {
   const {
     attributes,
     listeners,

@@ -78,6 +78,9 @@ export default function PreAuthPage() {
     enabled: !!leadId,
   })
 
+  // Hooks must be called before any conditional returns
+  const [showEditForm, setShowEditForm] = useState(false)
+
   if (isLoading) {
     return (
       <AuthenticatedLayout>
@@ -118,8 +121,6 @@ export default function PreAuthPage() {
   const canPDF = lead && user && canGeneratePDF(user, lead)
   const preAuthRaised = lead?.caseStage === CaseStage.PREAUTH_RAISED || lead?.caseStage === CaseStage.PREAUTH_COMPLETE
   const preAuthComplete = lead?.caseStage === CaseStage.PREAUTH_COMPLETE
-
-  const [showEditForm, setShowEditForm] = useState(false)
   
   // Determine if we should show details view or form
   const hasPreAuthData = !!kypSubmission?.preAuthData

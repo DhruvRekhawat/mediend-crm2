@@ -100,12 +100,15 @@ export async function GET(request: NextRequest) {
     const approvedAmountTotal = (approvedAmount._sum.receivedAmount || 0) + (approvedAmount._sum.paymentAmount || 0)
     const rejectedAmountTotal = (rejectedAmount._sum.receivedAmount || 0) + (rejectedAmount._sum.paymentAmount || 0)
 
-    // Transaction Trends (Daily)
+    // Transaction Trends (Daily) - Exclude SELF_TRANSFER
     const dailyTrends = await prisma.ledgerEntry.groupBy({
       by: ['transactionDate', 'transactionType'],
       where: {
         ...where,
         status: LedgerStatus.APPROVED,
+        transactionType: {
+          in: [TransactionType.CREDIT, TransactionType.DEBIT],
+        },
       },
       _sum: {
         receivedAmount: true,
@@ -120,7 +123,7 @@ export async function GET(request: NextRequest) {
       const existing = trendsMap.get(dateKey) || { date: dateKey, credit: 0, debit: 0 }
       if (trend.transactionType === 'CREDIT') {
         existing.credit += trend._sum.receivedAmount || 0
-      } else {
+      } else if (trend.transactionType === 'DEBIT') {
         existing.debit += trend._sum.paymentAmount || 0
       }
       trendsMap.set(dateKey, existing)
@@ -139,6 +142,9 @@ export async function GET(request: NextRequest) {
       where: {
         ...where,
         status: LedgerStatus.APPROVED,
+        transactionType: {
+          in: [TransactionType.CREDIT, TransactionType.DEBIT],
+        },
       },
       _sum: {
         receivedAmount: true,
@@ -160,8 +166,10 @@ export async function GET(request: NextRequest) {
     >()
 
     partyStats.forEach((stat) => {
-      const existing = partyMap.get(stat.partyId) || {
-        partyId: stat.partyId,
+      // Ensure stat.partyId is a string before using as Map key
+      if (!stat.partyId) return;
+      const existing = partyMap.get(stat.partyId as string) || {
+        partyId: stat.partyId as string,
         partyName: '',
         partyType: '',
         totalCredits: 0,
@@ -170,7 +178,7 @@ export async function GET(request: NextRequest) {
       }
       if (stat.transactionType === 'CREDIT') {
         existing.totalCredits += stat._sum.receivedAmount || 0
-      } else {
+      } else if (stat.transactionType === 'DEBIT') {
         existing.totalDebits += stat._sum.paymentAmount || 0
       }
       existing.transactionCount += stat._count
@@ -206,6 +214,9 @@ export async function GET(request: NextRequest) {
       where: {
         ...where,
         status: LedgerStatus.APPROVED,
+        transactionType: {
+          in: [TransactionType.CREDIT, TransactionType.DEBIT],
+        },
       },
       _sum: {
         receivedAmount: true,
@@ -227,6 +238,8 @@ export async function GET(request: NextRequest) {
     >()
 
     headStats.forEach((stat) => {
+      // Ensure stat.headId is a string before using as Map key
+      if (!stat.headId) return;
       const existing = headMap.get(stat.headId) || {
         headId: stat.headId,
         headName: '',
@@ -237,7 +250,7 @@ export async function GET(request: NextRequest) {
       }
       if (stat.transactionType === 'CREDIT') {
         existing.totalCredits += stat._sum.receivedAmount || 0
-      } else {
+      } else if (stat.transactionType === 'DEBIT') {
         existing.totalDebits += stat._sum.paymentAmount || 0
       }
       existing.transactionCount += stat._count
@@ -267,12 +280,15 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => Math.abs(b.totalDebits) - Math.abs(a.totalDebits))
       .slice(0, 20)
 
-    // Payment Mode Analysis
+    // Payment Mode Analysis - Exclude SELF_TRANSFER
     const paymentModeStats = await prisma.ledgerEntry.groupBy({
       by: ['paymentModeId', 'transactionType'],
       where: {
         ...where,
         status: LedgerStatus.APPROVED,
+        transactionType: {
+          in: [TransactionType.CREDIT, TransactionType.DEBIT],
+        },
       },
       _sum: {
         receivedAmount: true,
@@ -294,6 +310,8 @@ export async function GET(request: NextRequest) {
     >()
 
     paymentModeStats.forEach((stat) => {
+      // Ensure stat.paymentModeId is a string before using as Map key
+      if (!stat.paymentModeId) return;
       const existing = paymentModeMap.get(stat.paymentModeId) || {
         paymentModeId: stat.paymentModeId,
         paymentModeName: '',
@@ -304,7 +322,7 @@ export async function GET(request: NextRequest) {
       }
       if (stat.transactionType === 'CREDIT') {
         existing.totalCredits += stat._sum.receivedAmount || 0
-      } else {
+      } else if (stat.transactionType === 'DEBIT') {
         existing.totalDebits += stat._sum.paymentAmount || 0
       }
       existing.transactionCount += stat._count
@@ -350,11 +368,14 @@ export async function GET(request: NextRequest) {
       amount: (stat._sum.receivedAmount || 0) + (stat._sum.paymentAmount || 0),
     }))
 
-    // Top Transactions
+    // Top Transactions - Exclude SELF_TRANSFER
     const topTransactions = await prisma.ledgerEntry.findMany({
       where: {
         ...where,
         status: LedgerStatus.APPROVED,
+        transactionType: {
+          in: [TransactionType.CREDIT, TransactionType.DEBIT],
+        },
       },
       orderBy: [
         { receivedAmount: 'desc' },
@@ -368,24 +389,29 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const topTransactionsData = topTransactions.map((t) => ({
-      id: t.id,
-      serialNumber: t.serialNumber,
-      transactionDate: t.transactionDate,
-      transactionType: t.transactionType,
-      partyName: t.party.name,
-      partyType: t.party.partyType,
-      headName: t.head.name,
-      paymentModeName: t.paymentMode.name,
-      amount: t.transactionType === 'CREDIT' ? t.receivedAmount || 0 : t.paymentAmount || 0,
-      description: t.description,
-    }))
+    const topTransactionsData = topTransactions
+      .filter((t) => t.transactionType !== TransactionType.SELF_TRANSFER)
+      .map((t) => ({
+        id: t.id,
+        serialNumber: t.serialNumber,
+        transactionDate: t.transactionDate,
+        transactionType: t.transactionType,
+        partyName: t.party?.name || '',
+        partyType: t.party?.partyType || '',
+        headName: t.head?.name || '',
+        paymentModeName: t.paymentMode?.name || '',
+        amount: t.transactionType === 'CREDIT' ? t.receivedAmount || 0 : t.paymentAmount || 0,
+        description: t.description,
+      }))
 
-    // Pending Approvals
+    // Pending Approvals - Exclude SELF_TRANSFER (they are auto-approved)
     const pendingApprovalsList = await prisma.ledgerEntry.findMany({
       where: {
         ...where,
         status: LedgerStatus.PENDING,
+        transactionType: {
+          in: [TransactionType.CREDIT, TransactionType.DEBIT],
+        },
       },
       orderBy: { transactionDate: 'desc' },
       take: 50,
@@ -402,10 +428,10 @@ export async function GET(request: NextRequest) {
       serialNumber: t.serialNumber,
       transactionDate: t.transactionDate,
       transactionType: t.transactionType,
-      partyName: t.party.name,
-      partyType: t.party.partyType,
-      headName: t.head.name,
-      paymentModeName: t.paymentMode.name,
+      partyName: t.party?.name || '',
+      partyType: t.party?.partyType || '',
+      headName: t.head?.name || '',
+      paymentModeName: t.paymentMode?.name || '',
       amount: t.transactionType === 'CREDIT' ? t.receivedAmount || 0 : t.paymentAmount || 0,
       description: t.description,
       createdByName: t.createdBy.name,

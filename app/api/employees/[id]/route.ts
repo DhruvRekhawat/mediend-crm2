@@ -11,6 +11,7 @@ const updateEmployeeSchema = z.object({
   joinDate: z.string().transform((str) => new Date(str)).optional().nullable(),
   salary: z.number().positive().optional().nullable(),
   departmentId: z.string().optional().nullable(),
+  teamLeadId: z.string().nullable().optional(),
   dateOfBirth: z.string().transform((str) => new Date(str)).optional().nullable(),
   aadharNumber: z.string().max(12).optional().nullable(),
   panNumber: z.string().max(10).optional().nullable(),
@@ -50,6 +51,103 @@ export async function PATCH(
       }
     }
 
+    // Get current employee for validation
+    const currentEmployee = await prisma.employee.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        teamId: true,
+        departmentId: true,
+        user: {
+          select: {
+            id: true,
+            role: true,
+          },
+        },
+        department: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    })
+
+    if (!currentEmployee) {
+      return errorResponse('Employee not found', 404)
+    }
+
+    // Validate teamLeadId if being updated
+    if (data.teamLeadId !== undefined) {
+      // Validation: Department Head cannot be assigned to a team lead
+      const departmentHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'MD']
+      if (departmentHeadRoles.includes(currentEmployee.user.role)) {
+        return errorResponse('Department heads cannot be assigned to team leads', 400)
+      }
+
+      // Validation: Team Leads cannot be assigned to other team leads
+      if (currentEmployee.user.role === 'TEAM_LEAD') {
+        return errorResponse('Team leads cannot be assigned to other team leads', 400)
+      }
+
+      // If teamLeadId is not null, validate the team lead
+      if (data.teamLeadId) {
+        const teamLead = await prisma.employee.findUnique({
+          where: { id: data.teamLeadId },
+          include: {
+            user: {
+              select: {
+                id: true,
+                role: true,
+              },
+            },
+            department: {
+              select: {
+                id: true,
+              },
+            },
+            teamLeadOf: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        })
+
+        if (!teamLead) {
+          return errorResponse('Team lead not found', 404)
+        }
+
+        // Validation: Team lead must have TEAM_LEAD role
+        if (teamLead.user.role !== 'TEAM_LEAD') {
+          return errorResponse('Assigned employee must have TEAM_LEAD role', 400)
+        }
+
+        // Validation: Team lead must be leading a team
+        if (!teamLead.teamLeadOf) {
+          return errorResponse('Team lead must be assigned to lead a team', 400)
+        }
+
+        // Validation: Employee and team lead must be in the same department
+        if (!currentEmployee.departmentId || !teamLead.departmentId) {
+          return errorResponse('Both employee and team lead must be assigned to a department', 400)
+        }
+
+        if (currentEmployee.departmentId !== teamLead.departmentId) {
+          return errorResponse('Employee and team lead must be in the same department', 400)
+        }
+
+        // Validation: Prevent circular references
+        if (currentEmployee.id === teamLead.id) {
+          return errorResponse('Employee cannot be assigned to themselves', 400)
+        }
+
+        // Validation: Prevent assigning to a team lead if employee is already in that team
+        if (currentEmployee.teamId === teamLead.teamLeadOf.id) {
+          return errorResponse('Employee is already assigned to this team lead', 400)
+        }
+      }
+    }
+
     const updateData: Prisma.EmployeeUpdateInput = {}
     if (data.employeeCode !== undefined) updateData.employeeCode = data.employeeCode
     if (data.joinDate !== undefined) updateData.joinDate = data.joinDate
@@ -58,6 +156,29 @@ export async function PATCH(
       updateData.department = data.departmentId 
         ? { connect: { id: data.departmentId } }
         : { disconnect: true }
+    }
+    if (data.teamLeadId !== undefined) {
+      if (data.teamLeadId) {
+        // Find the team that the team lead leads
+        const teamLead = await prisma.employee.findUnique({
+          where: { id: data.teamLeadId },
+          select: {
+            teamLeadOf: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        })
+        
+        if (!teamLead?.teamLeadOf) {
+          return errorResponse('Team lead must be assigned to lead a team', 400)
+        }
+        
+        updateData.team = { connect: { id: teamLead.teamLeadOf.id } }
+      } else {
+        updateData.team = { disconnect: true }
+      }
     }
     if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth
     if (data.aadharNumber !== undefined) updateData.aadharNumber = data.aadharNumber
@@ -81,6 +202,22 @@ export async function PATCH(
           select: {
             id: true,
             name: true,
+          },
+        },
+        team: {
+          include: {
+            teamLead: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                  },
+                },
+              },
+            },
           },
         },
       },

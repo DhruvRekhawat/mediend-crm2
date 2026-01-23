@@ -1,14 +1,15 @@
 import { TransactionType } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 
-const SERIAL_PREFIX = {
+const SERIAL_PREFIX: Record<TransactionType, string> = {
   CREDIT: 'CR',
   DEBIT: 'DR',
+  SELF_TRANSFER: 'ST',
 } as const
 
 /**
  * Generate the next serial number for a ledger entry
- * Format: CR-0001 for credits, DR-0001 for debits
+ * Format: CR-0001 for credits, DR-0001 for debits, ST-0001 for self transfers
  */
 export async function generateSerialNumber(transactionType: TransactionType): Promise<string> {
   const prefix = SERIAL_PREFIX[transactionType]

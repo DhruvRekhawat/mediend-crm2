@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
@@ -43,79 +43,110 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
   const { uploadFile, uploading: isUploading } = useFileUpload({ folder: 'discharge' })
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url: string }>>([])
 
-  const [formData, setFormData] = useState({
-    // Core Identification
-    month: '',
-    dischargeDate: '',
-    surgeryDate: '',
-    status: '',
-    paymentType: '',
-    approvedOrCash: '',
-    paymentCollectedAt: '',
-    // People & Ownership
-    managerRole: '',
-    managerName: '',
-    bdmName: '',
-    patientName: '',
-    patientPhone: '',
-    doctorName: '',
-    hospitalName: '',
-    // Case Details
-    category: '',
-    treatment: '',
-    circle: '',
-    leadSource: '',
-    // Financials
-    totalAmount: '',
-    billAmount: '',
-    cashPaidByPatient: '',
-    cashOrDedPaid: '',
-    referralAmount: '',
-    cabCharges: '',
-    implantCost: '',
-    dcCharges: '',
-    doctorCharges: '',
-    // Revenue Split
-    hospitalSharePct: '',
-    hospitalShareAmount: '',
-    mediendSharePct: '',
-    mediendShareAmount: '',
-    mediendNetProfit: '',
-    // Meta
-    remarks: '',
+  // Use lazy initializer to compute initial state from lead and initialData
+  const [formData, setFormData] = useState(() => {
+    const base = {
+      // Core Identification
+      month: '',
+      dischargeDate: '',
+      surgeryDate: '',
+      status: '',
+      paymentType: '',
+      approvedOrCash: '',
+      paymentCollectedAt: '',
+      // People & Ownership
+      managerRole: '',
+      managerName: '',
+      bdmName: '',
+      patientName: '',
+      patientPhone: '',
+      doctorName: '',
+      hospitalName: '',
+      // Case Details
+      category: '',
+      treatment: '',
+      circle: '',
+      leadSource: '',
+      // Financials
+      totalAmount: '',
+      billAmount: '',
+      cashPaidByPatient: '',
+      cashOrDedPaid: '',
+      referralAmount: '',
+      cabCharges: '',
+      implantCost: '',
+      dcCharges: '',
+      doctorCharges: '',
+      // Revenue Split
+      hospitalSharePct: '',
+      hospitalShareAmount: '',
+      mediendSharePct: '',
+      mediendShareAmount: '',
+      mediendNetProfit: '',
+      // Meta
+      remarks: '',
+    }
+
+    // Note: lead and initialData may not be available on first render (from queries)
+    // If they become available later, parent should use a key prop to remount component
+    return base
   })
 
   const [submitting, setSubmitting] = useState(false)
+  const initializedRef = useRef(false)
 
+  // Update form data when lead or initialData becomes available (only once)
   useEffect(() => {
-    if (lead) {
-      setFormData((prev) => ({
-        ...prev,
-        patientName: lead.patientName || '',
-        patientPhone: lead.phoneNumber || '',
-        doctorName: lead.surgeonName || '',
-        hospitalName: lead.hospitalName || '',
-        category: lead.category || '',
-        treatment: lead.treatment || '',
-        circle: lead.circle || '',
-        leadSource: lead.source || '',
-        billAmount: lead.billAmount?.toString() || '',
-        implantCost: lead.implantAmount?.toString() || '',
-        surgeryDate: lead.surgeryDate ? new Date(lead.surgeryDate).toISOString().split('T')[0] : '',
-      }))
-    }
-    if (initialData) {
-      setFormData((prev) => ({
-        ...prev,
-        ...initialData,
-        month: initialData.month ? new Date(initialData.month).toISOString().split('T')[0] : '',
-        dischargeDate: initialData.dischargeDate ? new Date(initialData.dischargeDate).toISOString().split('T')[0] : '',
-        surgeryDate: initialData.surgeryDate ? new Date(initialData.surgeryDate).toISOString().split('T')[0] : '',
-      }))
-    }
+    if (!lead && !initialData) return
+    if (initializedRef.current) return
+    
+    // Use setTimeout to defer state update and avoid synchronous setState in effect
+    const timeoutId = setTimeout(() => {
+      setFormData((prev) => {
+        // Check if already initialized (has data from lead or initialData)
+        if (prev.patientName || prev.month) {
+          initializedRef.current = true
+          return prev
+        }
+        
+        let updated = { ...prev }
+        
+        if (lead) {
+          updated = {
+            ...updated,
+            patientName: lead.patientName || '',
+            patientPhone: lead.phoneNumber || '',
+            doctorName: lead.surgeonName || '',
+            hospitalName: lead.hospitalName || '',
+            category: lead.category || '',
+            treatment: lead.treatment || '',
+            circle: lead.circle || '',
+            leadSource: lead.source || '',
+            billAmount: lead.billAmount?.toString() || '',
+            implantCost: lead.implantAmount?.toString() || '',
+            surgeryDate: lead.surgeryDate ? new Date(lead.surgeryDate).toISOString().split('T')[0] : '',
+          }
+        }
+        
+        if (initialData) {
+          updated = {
+            ...updated,
+            ...initialData,
+            month: initialData.month ? new Date(initialData.month).toISOString().split('T')[0] : '',
+            dischargeDate: initialData.dischargeDate ? new Date(initialData.dischargeDate).toISOString().split('T')[0] : '',
+            surgeryDate: initialData.surgeryDate ? new Date(initialData.surgeryDate).toISOString().split('T')[0] : '',
+          }
+        }
+        
+        initializedRef.current = true
+        return updated
+      })
+    }, 0)
+    
+    return () => clearTimeout(timeoutId)
   }, [lead, initialData])
 
-  const handleSubmit = async (_data: Record<string, unknown>) => {
+  const handleSubmit = async () => {
     try {
       // Use formData from component state (steps update this directly)
       const finalData = formData
@@ -173,7 +204,35 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
   }
 
   const updateField = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value }
+      
+      // Calculate derived values when relevant fields change
+      const billAmount = parseFloat(updated.billAmount as string) || 0
+      const hospitalSharePct = parseFloat(updated.hospitalSharePct as string) || 0
+      const mediendSharePct = parseFloat(updated.mediendSharePct as string) || 0
+      
+      // Calculate hospital share amount
+      if (billAmount > 0 && hospitalSharePct > 0) {
+        updated.hospitalShareAmount = ((billAmount * hospitalSharePct) / 100).toFixed(2)
+      }
+      
+      // Calculate mediend share amount
+      if (billAmount > 0 && mediendSharePct > 0) {
+        updated.mediendShareAmount = ((billAmount * mediendSharePct) / 100).toFixed(2)
+      }
+      
+      // Calculate net profit
+      const mediendShareAmount = parseFloat(updated.mediendShareAmount as string) || 0
+      const totalCosts = (parseFloat(updated.referralAmount as string) || 0) +
+                        (parseFloat(updated.cabCharges as string) || 0) +
+                        (parseFloat(updated.implantCost as string) || 0) +
+                        (parseFloat(updated.dcCharges as string) || 0) +
+                        (parseFloat(updated.doctorCharges as string) || 0)
+      updated.mediendNetProfit = (mediendShareAmount - totalCosts).toFixed(2)
+      
+      return updated
+    })
   }
 
   const handleFileUpload = async (file: File) => {
@@ -183,60 +242,12 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
       const url = result.url
       setUploadedFiles(prev => [...prev, { name: file.name, url }])
       toast.success('File uploaded successfully')
-    } catch (error) {
+    } catch {
       toast.error('Failed to upload file')
     }
   }
 
-  // Calculate revenue split automatically
-  useEffect(() => {
-    const billAmount = parseFloat(formData.billAmount) || 0
-    const hospitalSharePct = parseFloat(formData.hospitalSharePct) || 0
-    const mediendSharePct = parseFloat(formData.mediendSharePct) || 0
-
-    if (billAmount > 0 && hospitalSharePct > 0) {
-      const hospitalShare = (billAmount * hospitalSharePct) / 100
-      const currentHospitalShare = parseFloat(formData.hospitalShareAmount) || 0
-      if (Math.abs(hospitalShare - currentHospitalShare) > 0.01) {
-        setFormData(prev => ({
-          ...prev,
-          hospitalShareAmount: hospitalShare.toFixed(2),
-        }))
-      }
-    }
-
-    if (billAmount > 0 && mediendSharePct > 0) {
-      const mediendShare = (billAmount * mediendSharePct) / 100
-      const currentMediendShare = parseFloat(formData.mediendShareAmount) || 0
-      if (Math.abs(mediendShare - currentMediendShare) > 0.01) {
-        setFormData(prev => ({
-          ...prev,
-          mediendShareAmount: mediendShare.toFixed(2),
-        }))
-      }
-    }
-
-    const mediendShareAmount = parseFloat(formData.mediendShareAmount) || 0
-    const totalCosts = (parseFloat(formData.referralAmount) || 0) +
-                      (parseFloat(formData.cabCharges) || 0) +
-                      (parseFloat(formData.implantCost) || 0) +
-                      (parseFloat(formData.dcCharges) || 0) +
-                      (parseFloat(formData.doctorCharges) || 0)
-
-    const netProfit = mediendShareAmount - totalCosts
-    const currentNetProfit = parseFloat(formData.mediendNetProfit) || 0
-    if (Math.abs(netProfit - currentNetProfit) > 0.01) {
-      setFormData(prev => ({
-        ...prev,
-        mediendNetProfit: netProfit.toFixed(2),
-      }))
-    }
-  }, [formData.billAmount, formData.hospitalSharePct, formData.mediendSharePct, formData.referralAmount, formData.cabCharges, formData.implantCost, formData.dcCharges, formData.doctorCharges, formData.hospitalShareAmount, formData.mediendShareAmount, formData.mediendNetProfit])
-
-  // Initialize MultiStepForm with component's formData
-  useEffect(() => {
-    // This will be handled by MultiStepForm's initial formData
-  }, [])
+  // Revenue split calculations are now handled in updateField function
 
   const steps = [
     {

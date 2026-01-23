@@ -85,7 +85,7 @@ export function PreAuthRaiseForm({
     }))
   }
 
-  const handleSubmit = async (_data: Record<string, unknown>) => {
+  const handleSubmit = async () => {
     try {
       const response = await fetch(`/api/leads/${leadId}/raise-preauth`, {
         method: 'POST',

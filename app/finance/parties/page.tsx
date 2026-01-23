@@ -18,7 +18,7 @@ import { toast } from 'sonner'
 interface Party {
   id: string
   name: string
-  partyType: 'BUYER' | 'SELLER' | 'VENDOR' | 'CLIENT'
+  partyType: 'BUYER' | 'SELLER' | 'VENDOR' | 'CLIENT' | 'SUPPLIER'
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -38,7 +38,7 @@ interface PartiesResponse {
   }
 }
 
-const PARTY_TYPES = ['BUYER', 'SELLER', 'VENDOR', 'CLIENT'] as const
+const PARTY_TYPES = ['BUYER', 'SELLER', 'VENDOR', 'CLIENT', 'SUPPLIER'] as const
 
 export default function PartiesPage() {
   const [search, setSearch] = useState('')

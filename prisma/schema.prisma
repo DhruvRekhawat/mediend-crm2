@@ -202,6 +202,12 @@ model User {
   editApprovedLedgerEntries  LedgerEntry[]    @relation("LedgerEditApprover")
   ledgerAuditLogs            LedgerAuditLog[] @relation("LedgerAuditPerformer")
 
+  // Inventory Relations
+  stockMovementsCreated      StockMovement[]      @relation("StockMovementCreator")
+  purchasesCreated           PurchaseTransaction[] @relation("PurchaseCreator")
+  issuesCreated              IssueTransaction[]   @relation("IssueCreator")
+  issuesReceived             IssueTransaction[]   @relation("IssueRecipient")
+
   // KYP Relations
   kypSubmissions  KYPSubmission[]    @relation("KYPSubmitter")
   preAuthHandled  PreAuthorization[] @relation("PreAuthHandler")
@@ -543,10 +549,26 @@ model Department {
   updatedAt   DateTime @updatedAt
 
   employees      Employee[]
+  teams          DepartmentTeam[]
   supportTickets SupportTicket[]
 
   @@index([name])
   @@index([headId])
+}
+
+model DepartmentTeam {
+  id          String   @id @default(cuid())
+  name        String
+  departmentId String
+  department  Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  teamLeadId  String?  @unique // Employee ID who is the team lead (one employee can only lead one team)
+  teamLead    Employee? @relation("DepartmentTeamLead", fields: [teamLeadId], references: [id])
+  members     Employee[] @relation("DepartmentTeamMembers")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([departmentId])
+  @@index([teamLeadId])
 }
 
 model Employee {
@@ -558,6 +580,9 @@ model Employee {
   salary       Float?
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id])
+  teamId       String?     // DepartmentTeam ID
+  team         DepartmentTeam? @relation("DepartmentTeamMembers", fields: [teamId], references: [id])
+  teamLeadOf   DepartmentTeam? @relation("DepartmentTeamLead") // Employee is team lead of this team
   dateOfBirth  DateTime?
   aadharNumber String?
   panNumber    String?
@@ -581,6 +606,7 @@ model Employee {
   @@index([userId])
   @@index([employeeCode])
   @@index([departmentId])
+  @@index([teamId])
 }
 
 model AttendanceLog {
@@ -859,11 +885,13 @@ enum PartyType {
   SELLER
   VENDOR
   CLIENT
+  SUPPLIER
 }
 
 enum TransactionType {
   CREDIT
   DEBIT
+  SELF_TRANSFER
 }
 
 enum LedgerStatus {
@@ -904,6 +932,8 @@ model PartyMaster {
   updatedAt    DateTime  @updatedAt
 
   ledgerEntries LedgerEntry[]
+  itemsSupplied ItemMaster[]
+  purchases     PurchaseTransaction[]
 
   @@index([name])
   @@index([partyType])
@@ -954,6 +984,8 @@ model PaymentModeMaster {
   updatedAt      DateTime @updatedAt
 
   ledgerEntries LedgerEntry[]
+  fromTransfers LedgerEntry[] @relation("FromPaymentMode")
+  toTransfers   LedgerEntry[] @relation("ToPaymentMode")
 
   @@index([name])
   @@index([isActive])
@@ -965,19 +997,25 @@ model LedgerEntry {
   serialNumber       String            @unique
   transactionType    TransactionType
   transactionDate    DateTime          @default(now())
-  partyId            String
-  party              PartyMaster       @relation(fields: [partyId], references: [id])
+  partyId            String?
+  party              PartyMaster?      @relation(fields: [partyId], references: [id])
   description        String
-  headId             String
-  head               HeadMaster        @relation(fields: [headId], references: [id])
-  paymentTypeId      String
-  paymentType        PaymentTypeMaster @relation(fields: [paymentTypeId], references: [id])
+  headId             String?
+  head               HeadMaster?       @relation(fields: [headId], references: [id])
+  paymentTypeId      String?
+  paymentType        PaymentTypeMaster? @relation(fields: [paymentTypeId], references: [id])
   paymentAmount      Float? // For DEBIT entries (Total = componentA + componentB)
   componentA         Float? // For DEBIT entries - Main expense (more relevant)
   componentB         Float? // For DEBIT entries - Claimable amount (18%, 5%, 0%, etc.)
   receivedAmount     Float? // For CREDIT entries
-  paymentModeId      String
-  paymentMode        PaymentModeMaster @relation(fields: [paymentModeId], references: [id])
+  paymentModeId      String? // For CREDIT/DEBIT entries (or "from" for SELF_TRANSFER)
+  paymentMode        PaymentModeMaster? @relation(fields: [paymentModeId], references: [id])
+  // Self transfer fields
+  fromPaymentModeId  String? // Source payment mode for SELF_TRANSFER
+  fromPaymentMode    PaymentModeMaster? @relation("FromPaymentMode", fields: [fromPaymentModeId], references: [id])
+  toPaymentModeId    String? // Destination payment mode for SELF_TRANSFER
+  toPaymentMode      PaymentModeMaster? @relation("ToPaymentMode", fields: [toPaymentModeId], references: [id])
+  transferAmount     Float? // Transfer amount for SELF_TRANSFER
   openingBalance     Float // Snapshot at time of transaction
   currentBalance     Float // Balance after transaction (calculated)
   status             LedgerStatus      @default(PENDING)
@@ -1015,6 +1053,8 @@ model LedgerEntry {
   @@index([partyId])
   @@index([headId])
   @@index([paymentModeId])
+  @@index([fromPaymentModeId])
+  @@index([toPaymentModeId])
   @@index([status])
   @@index([createdById])
   @@index([isDeleted])
@@ -1037,6 +1077,160 @@ model LedgerAuditLog {
   @@index([ledgerEntryId])
   @@index([action])
   @@index([performedAt])
+}
+
+// ==========================================
+// Inventory Management Module
+// ==========================================
+
+enum LocationType {
+  WAREHOUSE
+  SUB_WAREHOUSE
+}
+
+enum StockMovementType {
+  PURCHASE
+  ISSUE
+  ADJUSTMENT
+}
+
+enum InventoryTransactionStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+// Location Master - Hierarchical warehouse structure
+model LocationMaster {
+  id          String        @id @default(cuid())
+  name        String
+  code        String        @unique
+  type        LocationType
+  parentId    String?
+  parent      LocationMaster? @relation("LocationHierarchy", fields: [parentId], references: [id])
+  children    LocationMaster[] @relation("LocationHierarchy")
+  description String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  items       ItemMaster[]
+  purchases   PurchaseTransaction[]
+  issues      IssueTransaction[]
+  stockMovements StockMovement[]
+
+  @@index([code])
+  @@index([type])
+  @@index([parentId])
+  @@index([isActive])
+}
+
+// Item Master - Inventory items
+model ItemMaster {
+  id                String   @id @default(cuid())
+  itemCode          String   @unique
+  name              String
+  price             Float
+  unit              String
+  supplierId        String
+  supplier          PartyMaster @relation(fields: [supplierId], references: [id])
+  locationId        String
+  location          LocationMaster @relation(fields: [locationId], references: [id])
+  minimumStockLevel Float
+  maximumStockLevel Float
+  description       String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  purchases         PurchaseTransaction[]
+  issues            IssueTransaction[]
+  stockMovements    StockMovement[]
+
+  @@index([itemCode])
+  @@index([name])
+  @@index([supplierId])
+  @@index([locationId])
+  @@index([isActive])
+}
+
+// Stock Movement - Track stock changes per item per location
+model StockMovement {
+  id            String            @id @default(cuid())
+  itemId        String
+  item          ItemMaster         @relation(fields: [itemId], references: [id])
+  locationId    String
+  location      LocationMaster     @relation(fields: [locationId], references: [id])
+  quantity      Float
+  movementType  StockMovementType
+  referenceId   String
+  referenceType StockMovementType
+  createdAt     DateTime          @default(now())
+  createdById   String
+  createdBy     User              @relation("StockMovementCreator", fields: [createdById], references: [id])
+
+  @@index([itemId])
+  @@index([locationId])
+  @@index([referenceId])
+  @@index([createdAt])
+}
+
+// Purchase Transaction - Item purchases
+model PurchaseTransaction {
+  id            String                    @id @default(cuid())
+  purchaseNumber String                    @unique
+  itemId        String
+  item          ItemMaster                 @relation(fields: [itemId], references: [id])
+  supplierId    String
+  supplier      PartyMaster                @relation(fields: [supplierId], references: [id])
+  locationId    String
+  location      LocationMaster             @relation(fields: [locationId], references: [id])
+  quantity      Float
+  unitPrice     Float
+  totalPrice    Float
+  purchaseDate  DateTime                   @default(now())
+  description   String?
+  status        InventoryTransactionStatus @default(PENDING)
+  createdAt     DateTime                  @default(now())
+  createdById   String
+  createdBy     User                       @relation("PurchaseCreator", fields: [createdById], references: [id])
+  updatedAt     DateTime                  @updatedAt
+
+  @@index([purchaseNumber])
+  @@index([itemId])
+  @@index([supplierId])
+  @@index([locationId])
+  @@index([purchaseDate])
+  @@index([status])
+}
+
+// Issue Transaction - Item issues to employees
+model IssueTransaction {
+  id            String                    @id @default(cuid())
+  issueNumber   String                    @unique
+  itemId        String
+  item          ItemMaster                 @relation(fields: [itemId], references: [id])
+  locationId    String
+  location      LocationMaster             @relation(fields: [locationId], references: [id])
+  quantity      Float
+  unitPrice     Float
+  totalPrice    Float
+  issuedToId    String
+  issuedTo      User                       @relation("IssueRecipient", fields: [issuedToId], references: [id])
+  issueDate     DateTime                   @default(now())
+  description   String?
+  status        InventoryTransactionStatus @default(PENDING)
+  createdAt     DateTime                  @default(now())
+  createdById   String
+  createdBy     User                       @relation("IssueCreator", fields: [createdById], references: [id])
+  updatedAt     DateTime                  @updatedAt
+
+  @@index([issueNumber])
+  @@index([itemId])
+  @@index([locationId])
+  @@index([issuedToId])
+  @@index([issueDate])
+  @@index([status])
 }
 
 // Lead Remark - Stores remarks from MySQL lead_remarks table

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X } from 'lucide-react'
+import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X, ArrowLeftRight } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { Calendar } from '@/components/ui/calendar'
@@ -17,13 +17,14 @@ import { Calendar } from '@/components/ui/calendar'
 interface LedgerEntry {
   id: string
   serialNumber: string
-  transactionType: 'CREDIT' | 'DEBIT'
+  transactionType: 'CREDIT' | 'DEBIT' | 'SELF_TRANSFER'
   transactionDate: string
   description: string
   paymentAmount: number | null
   componentA: number | null
   componentB: number | null
   receivedAmount: number | null
+  transferAmount: number | null
   openingBalance: number
   currentBalance: number
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
@@ -32,21 +33,29 @@ interface LedgerEntry {
     id: string
     name: string
     partyType: string
-  }
+  } | null
   head: {
     id: string
     name: string
     department: string | null
-  }
+  } | null
   paymentType: {
     id: string
     name: string
     paymentType: string
-  }
+  } | null
   paymentMode: {
     id: string
     name: string
-  }
+  } | null
+  fromPaymentMode: {
+    id: string
+    name: string
+  } | null
+  toPaymentMode: {
+    id: string
+    name: string
+  } | null
   createdBy: {
     id: string
     name: string
@@ -106,6 +115,7 @@ export default function LedgerPage() {
   const [headFilter, setHeadFilter] = useState<string>('all')
   const [paymentModeFilter, setPaymentModeFilter] = useState<string>('all')
   const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all')
+  const [componentFilter, setComponentFilter] = useState<string>('all')
   const [startDate, setStartDate] = useState<Date | undefined>(undefined)
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
   const [showStartCalendar, setShowStartCalendar] = useState(false)
@@ -113,7 +123,7 @@ export default function LedgerPage() {
 
   // Fetch ledger entries
   const { data: ledgerData, isLoading } = useQuery<LedgerResponse>({
-    queryKey: ['ledger', search, typeFilter, statusFilter, partyFilter, headFilter, paymentModeFilter, paymentTypeFilter, startDate, endDate],
+    queryKey: ['ledger', search, typeFilter, statusFilter, partyFilter, headFilter, paymentModeFilter, paymentTypeFilter, componentFilter, startDate, endDate],
     queryFn: () => {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
@@ -123,6 +133,7 @@ export default function LedgerPage() {
       if (headFilter !== 'all') params.set('headId', headFilter)
       if (paymentModeFilter !== 'all') params.set('paymentModeId', paymentModeFilter)
       if (paymentTypeFilter !== 'all') params.set('paymentTypeId', paymentTypeFilter)
+      if (componentFilter !== 'all') params.set('componentFilter', componentFilter)
       if (startDate) {
         // Format date in local timezone (YYYY-MM-DD) to avoid UTC conversion issues
         const year = startDate.getFullYear()
@@ -176,17 +187,19 @@ export default function LedgerPage() {
   const getTransactionIcon = (type: string) => {
     if (type === 'CREDIT') {
       return <ArrowUpCircle className="h-5 w-5 text-green-600" />
+    } else if (type === 'SELF_TRANSFER') {
+      return <ArrowLeftRight className="h-5 w-5 text-blue-600" />
     }
     return <ArrowDownCircle className="h-5 w-5 text-red-600" />
   }
 
-  // Calculate totals for filtered entries
+  // Calculate totals for filtered entries - Exclude SELF_TRANSFER
   const totals = ledgerData?.data.reduce(
     (acc, entry) => {
-      if (entry.status === 'APPROVED') {
+      if (entry.status === 'APPROVED' && entry.transactionType !== 'SELF_TRANSFER') {
         if (entry.transactionType === 'CREDIT') {
           acc.credits += entry.receivedAmount || 0
-        } else {
+        } else if (entry.transactionType === 'DEBIT') {
           // For DEBIT transactions, track total, component A, and component B
           const totalDebit = entry.paymentAmount || 0
           const componentA = entry.componentA || 0
@@ -318,6 +331,7 @@ export default function LedgerPage() {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="CREDIT">Credit</SelectItem>
                   <SelectItem value="DEBIT">Debit</SelectItem>
+                  <SelectItem value="SELF_TRANSFER">Self Transfer</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -371,7 +385,7 @@ export default function LedgerPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Payment Mode" />
@@ -383,6 +397,17 @@ export default function LedgerPage() {
                       {mode.name}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={componentFilter} onValueChange={setComponentFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Component Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="aOnly">A Only (0 B)</SelectItem>
+                  <SelectItem value="bOnly">B Only (0 A)</SelectItem>
+                  <SelectItem value="both">Both A and B</SelectItem>
                 </SelectContent>
               </Select>
               <div className="relative">
@@ -502,40 +527,84 @@ export default function LedgerPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getTransactionIcon(entry.transactionType)}
-                        <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
-                          {entry.transactionType}
+                        <span className={
+                          entry.transactionType === 'CREDIT' ? 'text-green-600' :
+                          entry.transactionType === 'SELF_TRANSFER' ? 'text-blue-600' :
+                          'text-red-600'
+                        }>
+                          {entry.transactionType === 'SELF_TRANSFER' ? 'Self Transfer' : entry.transactionType}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{entry.party.name}</div>
-                        <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
-                      </div>
+                      {entry.transactionType === 'SELF_TRANSFER' ? (
+                        <span className="text-muted-foreground text-sm">N/A</span>
+                      ) : entry.party ? (
+                        <div>
+                          <div className="font-medium">{entry.party.name}</div>
+                          <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
-                    <TableCell>{entry.head.name}</TableCell>
                     <TableCell>
-                      <div>
-                        <div className="font-medium">{entry.paymentType.name}</div>
-                        <div className="text-xs text-muted-foreground">{entry.paymentType.paymentType}</div>
-                      </div>
+                      {entry.transactionType === 'SELF_TRANSFER' ? (
+                        <span className="text-muted-foreground text-sm">N/A</span>
+                      ) : entry.head ? (
+                        entry.head.name
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
                     </TableCell>
-                    <TableCell>{entry.paymentMode.name}</TableCell>
+                    <TableCell>
+                      {entry.transactionType === 'SELF_TRANSFER' ? (
+                        <span className="text-muted-foreground text-sm">N/A</span>
+                      ) : entry.paymentType ? (
+                        <div>
+                          <div className="font-medium">{entry.paymentType.name}</div>
+                          <div className="text-xs text-muted-foreground">{entry.paymentType.paymentType}</div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {entry.transactionType === 'SELF_TRANSFER' ? (
+                        <div className="text-sm">
+                          <div className="font-medium text-blue-600">
+                            {entry.fromPaymentMode?.name || 'N/A'} → {entry.toPaymentMode?.name || 'N/A'}
+                          </div>
+                        </div>
+                      ) : entry.paymentMode ? (
+                        entry.paymentMode.name
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right font-mono font-semibold">
                       <div className="flex flex-col items-end gap-1">
-                        <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
-                          {entry.transactionType === 'CREDIT'
-                            ? `+${formatCurrency(entry.receivedAmount || 0)}`
-                            : `-${formatCurrency(entry.paymentAmount || 0)}`}
-                        </span>
-                        {entry.transactionType === 'DEBIT' && (entry.componentA || entry.componentB) && (
-                          <div className="text-xs text-muted-foreground font-normal">
-                            <div>A: {formatCurrency(entry.componentA || 0)}</div>
-                            {entry.componentB && entry.componentB > 0 && (
-                              <div>B: {formatCurrency(entry.componentB)}</div>
+                        {entry.transactionType === 'SELF_TRANSFER' ? (
+                          <span className="text-blue-600">
+                            {formatCurrency(entry.transferAmount || 0)}
+                          </span>
+                        ) : (
+                          <>
+                            <span className={entry.transactionType === 'CREDIT' ? 'text-green-600' : 'text-red-600'}>
+                              {entry.transactionType === 'CREDIT'
+                                ? `+${formatCurrency(entry.receivedAmount || 0)}`
+                                : `-${formatCurrency(entry.paymentAmount || 0)}`}
+                            </span>
+                            {entry.transactionType === 'DEBIT' && (entry.componentA || entry.componentB) && (
+                              <div className="text-xs text-muted-foreground font-normal">
+                                <div>A: {formatCurrency(entry.componentA || 0)}</div>
+                                {entry.componentB && entry.componentB > 0 && (
+                                  <div>B: {formatCurrency(entry.componentB)}</div>
+                                )}
+                              </div>
                             )}
-                          </div>
+                          </>
                         )}
                       </div>
                     </TableCell>

@@ -9,7 +9,7 @@ import { format, subDays } from 'date-fns'
 /**
  * Daily sync endpoint
  * 
- * This endpoint syncs attendance data for yesterday.
+ * This endpoint syncs attendance data from yesterday to today (in IST).
  * Can be called by cron jobs or scheduled tasks.
  * 
  * To secure this endpoint, you can:
@@ -27,12 +27,35 @@ export async function POST(request: NextRequest) {
       return errorResponse('Unauthorized', 401)
     }
 
-    // Sync yesterday's data
-    const yesterday = subDays(new Date(), 1)
-    const fromDate = format(yesterday, 'yyyy-MM-dd')
-    const toDate = format(yesterday, 'yyyy-MM-dd')
+    // Get current time in IST (UTC+5:30)
+    // IST is 5 hours and 30 minutes ahead of UTC
+    const now = new Date()
+    const istOffsetMs = 5.5 * 60 * 60 * 1000 // 5.5 hours in milliseconds
+    const istNow = new Date(now.getTime() + istOffsetMs)
+    
+    // Get IST date components (using UTC getters since we've already offset the time)
+    const istYear = istNow.getUTCFullYear()
+    const istMonth = istNow.getUTCMonth() // 0-11
+    const istDay = istNow.getUTCDate()
+    
+    // Get today's date in IST
+    const todayIST = new Date(Date.UTC(istYear, istMonth, istDay))
+    
+    // Get yesterday's date in IST (today - 1 day)
+    const yesterdayIST = new Date(Date.UTC(istYear, istMonth, istDay - 1))
+    
+    // Format as yyyy-MM-dd manually to avoid timezone issues
+    const yesterdayYear = yesterdayIST.getUTCFullYear()
+    const yesterdayMonth = String(yesterdayIST.getUTCMonth() + 1).padStart(2, '0')
+    const yesterdayDay = String(yesterdayIST.getUTCDate()).padStart(2, '0')
+    const fromDate = `${yesterdayYear}-${yesterdayMonth}-${yesterdayDay}`
+    
+    const todayYear = todayIST.getUTCFullYear()
+    const todayMonth = String(todayIST.getUTCMonth() + 1).padStart(2, '0')
+    const todayDay = String(todayIST.getUTCDate()).padStart(2, '0')
+    const toDate = `${todayYear}-${todayMonth}-${todayDay}`
 
-    console.log(`🔄 Daily sync: Fetching attendance for ${fromDate}`)
+    console.log(`🔄 Daily sync: Fetching attendance from ${fromDate} to ${toDate}`)
 
     // Get all employees with their codes
     const employees = await prisma.employee.findMany({
@@ -50,6 +73,12 @@ export async function POST(request: NextRequest) {
     let processed = 0
     let skipped = 0
     let errors = 0
+    const skipReasons: Record<string, number> = {
+      invalidEmpCode: 0,
+      employeeNotFound: 0,
+      duplicate: 0,
+    }
+    const missingEmployeeCodes = new Set<string>()
 
     // Process each log
     for (const log of logs) {
@@ -57,12 +86,15 @@ export async function POST(request: NextRequest) {
         // Skip invalid employee codes
         if (!log.EmpCode || log.EmpCode === '0' || log.EmpCode.trim() === '') {
           skipped++
+          skipReasons.invalidEmpCode++
           continue
         }
 
         const employeeId = employeeCodeMap.get(log.EmpCode)
         if (!employeeId) {
           skipped++
+          skipReasons.employeeNotFound++
+          missingEmployeeCodes.add(log.EmpCode)
           continue
         }
 
@@ -128,6 +160,7 @@ export async function POST(request: NextRequest) {
 
         if (existing) {
           skipped++
+          skipReasons.duplicate++
           continue
         }
 
@@ -150,11 +183,21 @@ export async function POST(request: NextRequest) {
     }
 
     return successResponse({
-      date: fromDate,
+      fromDate,
+      toDate,
       processed,
       skipped,
       errors,
       total: logs.length,
+      skipReasons,
+      missingEmployeeCodes: Array.from(missingEmployeeCodes),
+      apiResponse: {
+        logsReceived: logs.length,
+        sampleLogs: logs.length > 0 ? {
+          first: logs[0],
+          last: logs.length > 1 ? logs[logs.length - 1] : null,
+        } : null,
+      },
     })
   } catch (error) {
     console.error('Error in daily sync:', error)

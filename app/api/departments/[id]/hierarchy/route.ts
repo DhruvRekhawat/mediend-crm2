@@ -39,6 +39,40 @@ export async function GET(
       return errorResponse('Department not found', 404)
     }
 
+    // Get all teams in this department
+    const teams = await prisma.departmentTeam.findMany({
+      where: { departmentId: id },
+      include: {
+        teamLead: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    })
+
     // Get all employees in this department
     const employees = await prisma.employee.findMany({
       where: { departmentId: id },
@@ -51,14 +85,19 @@ export async function GET(
             role: true,
           },
         },
+        team: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     })
 
-    // Organize by hierarchy
-    const teamLeads = employees.filter((e) => e.user.role === 'TEAM_LEAD')
-    const users = employees.filter((e) => e.user.role === 'USER' || e.user.role === 'BD')
+    // Get employees not assigned to any team
+    const unassignedEmployees = employees.filter((e) => !e.teamId)
 
-    // For each TL, get their users (this is simplified - in real scenario you might have team assignments)
+    // Build hierarchy with teams
     const hierarchy = {
       department: {
         id: department.id,
@@ -66,28 +105,32 @@ export async function GET(
         description: department.description,
       },
       head: department.head,
-      teamLeads: teamLeads.map((tl) => ({
-        id: tl.id,
-        user: tl.user,
-        employeeCode: tl.employeeCode,
-        // In a real scenario, you'd link users to TLs via teams or assignments
-        // For now, we'll just show all users/BDs
-        members: users.map((u) => ({
-          id: u.id,
-          user: u.user,
-          employeeCode: u.employeeCode,
+      teams: teams.map((team) => ({
+        id: team.id,
+        name: team.name,
+        teamLead: team.teamLead
+          ? {
+              id: team.teamLead.id,
+              user: team.teamLead.user,
+              employeeCode: team.teamLead.employeeCode,
+            }
+          : null,
+        members: team.members.map((member) => ({
+          id: member.id,
+          user: member.user,
+          employeeCode: member.employeeCode,
         })),
       })),
-      // Users/BDs not assigned to any TL
-      unassignedUsers: users.map((u) => ({
-        id: u.id,
-        user: u.user,
-        employeeCode: u.employeeCode,
+      // Employees not assigned to any team
+      unassignedEmployees: unassignedEmployees.map((e) => ({
+        id: e.id,
+        user: e.user,
+        employeeCode: e.employeeCode,
       })),
       stats: {
         totalEmployees: employees.length,
-        teamLeads: teamLeads.length,
-        users: users.length,
+        teams: teams.length,
+        unassigned: unassignedEmployees.length,
       },
     }
 
