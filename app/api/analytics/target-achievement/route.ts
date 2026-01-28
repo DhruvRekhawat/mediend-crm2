@@ -139,9 +139,11 @@ export async function GET(request: NextRequest) {
           percentage: Math.round(percentage * 100) / 100,
           bonusRules: target.bonusRules.map((rule) => ({
             id: rule.id,
-            type: rule.type,
-            threshold: rule.threshold,
-            value: rule.value,
+            type: rule.ruleType,
+            threshold: rule.thresholdValue,
+            bonusAmount: rule.bonusAmount,
+            bonusPercentage: rule.bonusPercentage,
+            capAmount: rule.capAmount,
           })),
         }
       })

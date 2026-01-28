@@ -49,10 +49,11 @@ export async function GET(request: NextRequest) {
         conversionDate: true,
         pipelineStage: true,
         stageEvents: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: { changedAt: 'asc' },
           select: {
-            stage: true,
-            createdAt: true,
+            fromStage: true,
+            toStage: true,
+            changedAt: true,
           },
         },
       },
@@ -79,22 +80,42 @@ export async function GET(request: NextRequest) {
       }
 
       // Calculate stage transitions from stage events
-      const events = lead.stageEvents.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-      for (let i = 0; i < events.length - 1; i++) {
-        const current = events[i]
-        const next = events[i + 1]
-        const days = Math.floor(
-          (next.createdAt.getTime() - current.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-        )
-
-        if (current.stage === 'SALES' && next.stage === 'INSURANCE') {
-          stageTransitions.salesToInsurance.push(days)
-        } else if (current.stage === 'INSURANCE' && next.stage === 'PL') {
-          stageTransitions.insuranceToPL.push(days)
-        } else if (current.stage === 'PL' && next.stage === 'COMPLETED') {
-          stageTransitions.plToCompleted.push(days)
+      const events = lead.stageEvents.sort((a, b) => a.changedAt.getTime() - b.changedAt.getTime())
+      
+      // Find specific stage transitions
+      events.forEach((event) => {
+        if (event.fromStage === 'SALES' && event.toStage === 'INSURANCE') {
+          // Find the most recent event where lead entered SALES stage
+          const salesEntryEvents = events.filter((e) => e.toStage === 'SALES' && e.changedAt <= event.changedAt)
+          const salesEntryEvent = salesEntryEvents[salesEntryEvents.length - 1]
+          if (salesEntryEvent) {
+            const days = Math.floor(
+              (event.changedAt.getTime() - salesEntryEvent.changedAt.getTime()) / (1000 * 60 * 60 * 24)
+            )
+            stageTransitions.salesToInsurance.push(days)
+          }
+        } else if (event.fromStage === 'INSURANCE' && event.toStage === 'PL') {
+          // Find the most recent event where lead entered INSURANCE stage
+          const insuranceEntryEvents = events.filter((e) => e.toStage === 'INSURANCE' && e.changedAt <= event.changedAt)
+          const insuranceEntryEvent = insuranceEntryEvents[insuranceEntryEvents.length - 1]
+          if (insuranceEntryEvent) {
+            const days = Math.floor(
+              (event.changedAt.getTime() - insuranceEntryEvent.changedAt.getTime()) / (1000 * 60 * 60 * 24)
+            )
+            stageTransitions.insuranceToPL.push(days)
+          }
+        } else if (event.fromStage === 'PL' && event.toStage === 'COMPLETED') {
+          // Find the most recent event where lead entered PL stage
+          const plEntryEvents = events.filter((e) => e.toStage === 'PL' && e.changedAt <= event.changedAt)
+          const plEntryEvent = plEntryEvents[plEntryEvents.length - 1]
+          if (plEntryEvent) {
+            const days = Math.floor(
+              (event.changedAt.getTime() - plEntryEvent.changedAt.getTime()) / (1000 * 60 * 60 * 24)
+            )
+            stageTransitions.plToCompleted.push(days)
+          }
         }
-      }
+      })
     })
 
     const avgSalesToInsurance =

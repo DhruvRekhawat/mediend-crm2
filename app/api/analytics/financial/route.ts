@@ -135,7 +135,7 @@ export async function GET(request: NextRequest) {
             tpa: true,
           },
         },
-        status: true,
+        caseStatus: true,
       },
     })
 
@@ -181,9 +181,9 @@ export async function GET(request: NextRequest) {
       if (insuranceName) {
         const existing = insuranceMap.get(insuranceName)
         if (existing) {
-          if (insuranceCase.status === 'APPROVED') {
+          if (insuranceCase.caseStatus === 'APPROVED') {
             existing.approvedCases++
-          } else if (insuranceCase.status === 'REJECTED') {
+          } else if (insuranceCase.caseStatus === 'REJECTED') {
             existing.rejectedCases++
           }
         }

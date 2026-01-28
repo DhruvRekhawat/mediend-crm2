@@ -92,6 +92,219 @@ interface TodayLeadAssignmentsResponse {
   assignments: TodayLeadAssignment[]
 }
 
+interface GeographicData {
+  circlePerformance: Array<{
+    circle: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+  }>
+  cityPerformance: Array<{
+    city: string
+    circle: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    topHospital: string
+    topTreatment: string
+  }>
+}
+
+interface MedicalData {
+  treatmentPerformance: Array<{
+    treatment: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    avgProfitMargin: number
+  }>
+  hospitalPerformance: Array<{
+    hospitalName: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    topTreatment: string
+  }>
+  surgeonPerformance: Array<{
+    surgeonName: string
+    surgeonType: string
+    totalSurgeries: number
+    revenue: number
+    profit: number
+    doctorShare: number
+    avgTicketSize: number
+  }>
+}
+
+interface FinancialData {
+  financialBreakdown: {
+    totalBillAmount: number
+    totalDiscount: number
+    totalCopay: number
+    totalDeduction: number
+    totalSettledAmount: number
+    totalNetProfit: number
+    mediendProfit: number
+    hospitalShare: number
+    doctorShare: number
+    othersShare: number
+    profitMargin: number
+    discountRate: number
+  }
+  paymentModeAnalysis: Array<{
+    modeOfPayment: string
+    count: number
+    totalAmount: number
+    avgAmount: number
+    percentage: number
+  }>
+  insuranceAnalysis: Array<{
+    insuranceName: string
+    tpa: string | null
+    totalCases: number
+    approvedCases: number
+    rejectedCases: number
+    approvalRate: number
+    avgSumInsured: number
+    avgRoomRent: number
+    avgICU: number
+    avgCapping: number
+    avgSettlementAmount: number
+    avgCopay: number
+    revenue: number
+    profit: number
+  }>
+}
+
+interface TrendsData {
+  period: string
+  trendData: Array<{
+    period: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    avgTimeToClose: number
+  }>
+}
+
+interface SourceCampaignData {
+  sourcePerformance: Array<{
+    source: string
+    totalLeads: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    startDate: string
+    endDate: string
+    cities: string[]
+    topTreatments: string[]
+  }>
+  campaignAnalysis: Array<{
+    campaignId: string
+    campaignName: string
+    totalLeads: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    startDate: string
+    endDate: string
+    cities: string[]
+    topTreatments: string[]
+  }>
+}
+
+interface TargetData {
+  overallSummary: {
+    leadsClosed: { target: number; achieved: number; percentage: number }
+    netProfit: { target: number; achieved: number; percentage: number }
+    billAmount: { target: number; achieved: number; percentage: number }
+    surgeriesDone: { target: number; achieved: number; percentage: number }
+  }
+  targetAchievements: Array<{
+    targetId: string
+    targetType: string
+    entityName: string
+    metric: string
+    periodType: string
+    periodStartDate: string
+    periodEndDate: string
+    targetValue: number
+    achieved: number
+    percentage: number
+    bonusRules: Array<{
+      id: string
+      type: string
+      threshold: number
+      bonusAmount: number | null
+      bonusPercentage: number | null
+      capAmount: number | null
+    }>
+  }>
+}
+
+interface OperationalData {
+  leadVelocity: {
+    avgSalesToInsurance: number
+    avgInsuranceToPL: number
+    avgPLToCompleted: number
+    avgEndToEnd: number
+  }
+  followUpMetrics: {
+    totalLeadsRequiringFollowUp: number
+    leadsWithScheduledFollowUp: number
+    overdueFollowUps: number
+    complianceRate: number
+    bdCompliance: Array<{
+      bd: string
+      rate: number
+    }>
+  }
+  dataQuality: {
+    leadsWithPhone: number
+    leadsWithEmail: number
+    leadsWithAlternate: number
+    leadsWithInsurance: number
+    leadsWithTreatment: number
+    duplicateLeads: number
+    invalidNumbers: number
+    overallQualityScore: number
+  }
+}
+
+interface RiskAlertsData {
+  atRiskLeads: {
+    leadsStuckInSales: number
+    leadsStuckInInsurance: number
+    overdueFollowUps: number
+    dnpLeads: number
+    highValueAtRisk: number
+  }
+  criticalLeads: Array<{
+    id: string
+    leadRef: string
+    patientName: string
+    riskType: string
+    daysStuck: number
+    billAmount: number
+    bdName: string
+  }>
+}
+
 export default function SalesDashboardPage() {
   const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false)
   const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false)
@@ -164,43 +377,43 @@ export default function SalesDashboardPage() {
   })
 
   // Phase 2-4 Analytics Queries
-  const { data: geographicData } = useQuery({
+  const { data: geographicData } = useQuery<GeographicData>({
     queryKey: ['analytics', 'geographic', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       })
-      return apiGet(`/api/analytics/geographic?${params.toString()}`)
+      return apiGet<GeographicData>(`/api/analytics/geographic?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
-  const { data: medicalData } = useQuery({
+  const { data: medicalData } = useQuery<MedicalData>({
     queryKey: ['analytics', 'medical', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       })
-      return apiGet(`/api/analytics/medical?${params.toString()}`)
+      return apiGet<MedicalData>(`/api/analytics/medical?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
-  const { data: financialData } = useQuery({
+  const { data: financialData } = useQuery<FinancialData>({
     queryKey: ['analytics', 'financial', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       })
-      return apiGet(`/api/analytics/financial?${params.toString()}`)
+      return apiGet<FinancialData>(`/api/analytics/financial?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
-  const { data: trendsData } = useQuery({
+  const { data: trendsData } = useQuery<TrendsData>({
     queryKey: ['analytics', 'trends', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -208,19 +421,19 @@ export default function SalesDashboardPage() {
         endDate: dateRange.endDate,
         period: 'daily',
       })
-      return apiGet(`/api/analytics/trends?${params.toString()}`)
+      return apiGet<TrendsData>(`/api/analytics/trends?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
-  const { data: sourceCampaignData } = useQuery({
+  const { data: sourceCampaignData } = useQuery<SourceCampaignData>({
     queryKey: ['analytics', 'source-campaign', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       })
-      return apiGet(`/api/analytics/source-campaign?${params.toString()}`)
+      return apiGet<SourceCampaignData>(`/api/analytics/source-campaign?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
@@ -237,26 +450,26 @@ export default function SalesDashboardPage() {
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
-  const { data: operationalData } = useQuery({
+  const { data: operationalData } = useQuery<OperationalData>({
     queryKey: ['analytics', 'operational', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       })
-      return apiGet(`/api/analytics/operational?${params.toString()}`)
+      return apiGet<OperationalData>(`/api/analytics/operational?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
-  const { data: riskAlertsData } = useQuery({
+  const { data: riskAlertsData } = useQuery<RiskAlertsData>({
     queryKey: ['analytics', 'risk-alerts', dateRange],
     queryFn: async () => {
       const params = new URLSearchParams({
         startDate: dateRange.startDate,
         endDate: dateRange.endDate,
       })
-      return apiGet(`/api/analytics/risk-alerts?${params.toString()}`)
+      return apiGet<RiskAlertsData>(`/api/analytics/risk-alerts?${params.toString()}`)
     },
     enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
@@ -745,7 +958,7 @@ export default function SalesDashboardPage() {
 
           {/* Geographic Analytics */}
           <TabsContent value="geographic" className="space-y-4">
-            {geographicData && (
+            {geographicData ? (
               <>
                 <Card>
                   <CardHeader>
@@ -815,13 +1028,13 @@ export default function SalesDashboardPage() {
                   </CardContent>
                 </Card>
               </>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Medical Analytics */}
           <TabsContent value="medical" className="space-y-4">
-            {medicalData && (
-              <>
+            {medicalData ? (
+               <>
                 <Card className="border-l-4 border-l-rose-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-rose-50 to-transparent dark:from-rose-950/20">
                     <CardTitle className="text-rose-700 dark:text-rose-300">Top 20 Treatments by Revenue</CardTitle>
@@ -916,12 +1129,12 @@ export default function SalesDashboardPage() {
                   </CardContent>
                 </Card>
               </>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Financial Analytics */}
           <TabsContent value="financial" className="space-y-4">
-            {financialData && (
+            {financialData ? (
               <>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <Card className="border-l-4 border-l-green-500 shadow-md">
@@ -1028,12 +1241,12 @@ export default function SalesDashboardPage() {
                   </CardContent>
                 </Card>
               </>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Trends Analytics */}
           <TabsContent value="trends" className="space-y-4">
-            {trendsData && (
+            {trendsData ? (
               <Card className="border-l-4 border-l-orange-500 shadow-md">
                 <CardHeader className="bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
                   <CardTitle className="text-orange-700 dark:text-orange-300">Trend Analysis - {trendsData.period}</CardTitle>
@@ -1069,12 +1282,12 @@ export default function SalesDashboardPage() {
                   </Table>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Source & Campaign Analytics */}
           <TabsContent value="source" className="space-y-4">
-            {sourceCampaignData && (
+            {sourceCampaignData ? (
               <>
                 <Card className="border-l-4 border-l-yellow-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-950/20">
@@ -1144,89 +1357,93 @@ export default function SalesDashboardPage() {
                   </CardContent>
                 </Card>
               </>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Target Achievement */}
           <TabsContent value="target" className="space-y-4">
-            {targetData && (
+            {targetData ? (
               <>
-                <div className="grid gap-4 md:grid-cols-4">
-                  <Card className="border-l-4 border-l-green-500 shadow-md">
-                    <CardHeader className="bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
-                      <CardTitle className="text-sm text-green-700 dark:text-green-300">Leads Closed</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {targetData.overallSummary?.leadsClosed.achieved || 0} /{' '}
-                        {targetData.overallSummary?.leadsClosed.target || 0}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {targetData.overallSummary?.leadsClosed.percentage.toFixed(1) || 0}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-l-4 border-l-emerald-500 shadow-md">
-                    <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
-                      <CardTitle className="text-sm text-emerald-700 dark:text-emerald-300">Net Profit</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        ₹{targetData.overallSummary?.netProfit.achieved.toLocaleString('en-IN') || '0'} / ₹
-                        {targetData.overallSummary?.netProfit.target.toLocaleString('en-IN') || '0'}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {targetData.overallSummary?.netProfit.percentage.toFixed(1) || 0}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-l-4 border-l-teal-500 shadow-md">
-                    <CardHeader className="bg-gradient-to-r from-teal-50 to-transparent dark:from-teal-950/20">
-                      <CardTitle className="text-sm text-teal-700 dark:text-teal-300">Bill Amount</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        ₹{targetData.overallSummary?.billAmount.achieved.toLocaleString('en-IN') || '0'} / ₹
-                        {targetData.overallSummary?.billAmount.target.toLocaleString('en-IN') || '0'}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {targetData.overallSummary?.billAmount.percentage.toFixed(1) || 0}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-l-4 border-l-cyan-500 shadow-md">
-                    <CardHeader className="bg-gradient-to-r from-cyan-50 to-transparent dark:from-cyan-950/20">
-                      <CardTitle className="text-sm text-cyan-700 dark:text-cyan-300">Surgeries Done</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">
-                        {targetData.overallSummary?.surgeriesDone.achieved || 0} /{' '}
-                        {targetData.overallSummary?.surgeriesDone.target || 0}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {targetData.overallSummary?.surgeriesDone.percentage.toFixed(1) || 0}%
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
+                {(() => {
+                  const data = targetData as TargetData
+                  return (
+                    <>
+                    <div className="grid gap-4 md:grid-cols-4">
+                      <Card className="border-l-4 border-l-green-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
+                          <CardTitle className="text-sm text-green-700 dark:text-green-300">Leads Closed</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {data.overallSummary.leadsClosed.achieved || 0} /{' '}
+                            {data.overallSummary.leadsClosed.target || 0}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.leadsClosed.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-l-4 border-l-emerald-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
+                          <CardTitle className="text-sm text-emerald-700 dark:text-emerald-300">Net Profit</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            ₹{data.overallSummary.netProfit.achieved.toLocaleString('en-IN') || '0'} / ₹
+                            {data.overallSummary.netProfit.target.toLocaleString('en-IN') || '0'}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.netProfit.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-l-4 border-l-teal-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-teal-50 to-transparent dark:from-teal-950/20">
+                          <CardTitle className="text-sm text-teal-700 dark:text-teal-300">Bill Amount</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            ₹{data.overallSummary.billAmount.achieved.toLocaleString('en-IN') || '0'} / ₹
+                            {data.overallSummary.billAmount.target.toLocaleString('en-IN') || '0'}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.billAmount.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-l-4 border-l-cyan-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-cyan-50 to-transparent dark:from-cyan-950/20">
+                          <CardTitle className="text-sm text-cyan-700 dark:text-cyan-300">Surgeries Done</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {data.overallSummary.surgeriesDone.achieved || 0} /{' '}
+                            {data.overallSummary.surgeriesDone.target || 0}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.surgeriesDone.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
 
-                <Card className="border-l-4 border-l-indigo-500 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-950/20">
-                    <CardTitle className="text-indigo-700 dark:text-indigo-300">Target Achievement Details</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Entity</TableHead>
-                          <TableHead>Metric</TableHead>
-                          <TableHead>Target</TableHead>
-                          <TableHead>Achieved</TableHead>
-                          <TableHead>Percentage</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {targetData.targetAchievements?.map((target: any) => (
+                    <Card className="border-l-4 border-l-indigo-500 shadow-md">
+                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-950/20">
+                        <CardTitle className="text-indigo-700 dark:text-indigo-300">Target Achievement Details</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Entity</TableHead>
+                              <TableHead>Metric</TableHead>
+                              <TableHead>Target</TableHead>
+                              <TableHead>Achieved</TableHead>
+                              <TableHead>Percentage</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {data.targetAchievements.map((target: any) => (
                           <TableRow key={target.targetId}>
                             <TableCell className="font-medium">{target.entityName}</TableCell>
                             <TableCell>{target.metric}</TableCell>
@@ -1243,13 +1460,16 @@ export default function SalesDashboardPage() {
                     </Table>
                   </CardContent>
                 </Card>
+                    </>
+                  )
+                })()}
               </>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Operational Metrics */}
           <TabsContent value="operational" className="space-y-4">
-            {operationalData && (
+            {operationalData ? (
               <>
                 <div className="grid gap-4 md:grid-cols-4">
                   <Card className="border-l-4 border-l-blue-500 shadow-md">
@@ -1350,12 +1570,12 @@ export default function SalesDashboardPage() {
                   </CardContent>
                 </Card>
               </>
-            )}
+            ) : null}
           </TabsContent>
 
           {/* Risk Alerts */}
           <TabsContent value="risks" className="space-y-4">
-            {riskAlertsData && (
+            {riskAlertsData ? (
               <>
                 <div className="grid gap-4 md:grid-cols-5">
                   <Card className="border-l-4 border-l-red-500">
@@ -1444,7 +1664,7 @@ export default function SalesDashboardPage() {
                   </CardContent>
                 </Card>
               </>
-            )}
+            ) : null}
           </TabsContent>
         </Tabs>
       </div>
