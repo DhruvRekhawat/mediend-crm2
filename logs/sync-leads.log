@@ -1074,3 +1074,127 @@ Sync completed:
   - Last synced ID: 224610
 Sync script completed successfully
 [2026-01-22 12:01:13] [INFO] Lead sync completed successfully
+[2026-01-27 12:16:44] [INFO] Loaded environment variables from .env
+[2026-01-27 12:16:45] [INFO] Starting scheduled lead sync (PID: 266)
+[2026-01-27 12:16:45] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+
+============================================================
+[2026-01-27T06:46:48.835Z] 🔄 Starting MySQL lead sync...
+============================================================
+📡 Testing MySQL connection...
+✅ MySQL connection established
+📅 Last synced date: 2026-01-23T18:07:26.000Z
+📊 Total records synced so far: 5901
+
+📥 Fetching leads from MySQL (batch size: 2500)...
+✅ Found 2500 leads to sync
+   Date range: 2026-01-24T02:30:03.000Z to 2026-01-24T06:17:15.000Z
+   Lead IDs: 226044 to 174239
+
+🔍 Pre-fetching existing leads (2500 lead refs)...
+✅ Found 0 existing leads out of 2500 (2500 new)
+👥 Pre-fetching BD users...
+✅ Loaded 133 BD user lookup entries
+
+⚙️  Processing 2500 leads with concurrency limit of 15...
+
+📊 Processing summary:
+   ✅ New leads to create: 2500
+   🔄 Leads to update: 0
+   ❌ Errors: 0
+
+➕ Batch creating 2500 new leads...
+   Progress: 1000/2500 leads created...
+   Progress: 2000/2500 leads created...
+✅ Created 2500 new leads
+
+💬 Syncing lead remarks for 2500 leads...
+✅ Synced 10701 lead remarks
+
+============================================================
+✅ Sync completed successfully
+============================================================
+📈 Statistics:
+   • New leads: 2500
+   • Updated leads: 0
+   • Errors: 0
+   • Total processed: 2500
+
+📅 Sync state:
+   • Last synced date: 2026-01-24T06:17:15.000Z
+   • Last synced ID: 226160
+   • Total records synced: 8401
+
+⏱️  Execution time: 117.31s
+============================================================
+
+✅ Sync script completed successfully
+[2026-01-27 12:18:46] [INFO] Lead sync completed successfully
+[2026-01-28 08:04:07] [INFO] Loaded environment variables from .env
+[2026-01-28 08:04:07] [INFO] Starting scheduled lead sync (PID: 418)
+[2026-01-28 08:04:07] [INFO] Executing: npm run sync:leads
+
+> mediend-crm-v2@0.1.0 sync:leads
+> tsx scripts/sync-mysql-leads.ts
+
+
+============================================================
+[2026-01-28T02:34:11.058Z] 🔄 Starting MySQL lead sync...
+============================================================
+📡 Testing MySQL connection...
+✅ MySQL connection established
+📅 Last synced date: 2026-01-24T06:17:15.000Z
+📊 Total records synced so far: 8401
+
+📥 Fetching leads from MySQL (batch size: 2500)...
+✅ Found 2500 leads to sync
+   Date range: 2026-01-24T06:17:15.000Z to 2026-01-24T07:13:09.000Z
+   Lead IDs: 171482 to 178903
+
+🔍 Pre-fetching existing leads (2500 lead refs)...
+✅ Found 11 existing leads out of 2500 (2489 new)
+👥 Pre-fetching BD users...
+✅ Loaded 133 BD user lookup entries
+
+⚙️  Processing 2500 leads with concurrency limit of 15...
+
+📊 Processing summary:
+   ✅ New leads to create: 2489
+   🔄 Leads to update: 11
+   ❌ Errors: 0
+
+➕ Batch creating 2489 new leads...
+   Progress: 1000/2489 leads created...
+   Progress: 2000/2489 leads created...
+✅ Created 2489 new leads
+
+🔄 Batch updating 11 existing leads...
+   Progress: 11/11 leads updated...
+✅ Updated 11 existing leads
+
+💬 Syncing lead remarks for 2500 leads...
+✅ Synced 16192 lead remarks
+
+============================================================
+✅ Sync completed successfully
+============================================================
+📈 Statistics:
+   • New leads: 2489
+   • Updated leads: 11
+   • Errors: 0
+   • Total processed: 2500
+
+📅 Sync state:
+   • Last synced date: 2026-01-24T07:13:09.000Z
+   • Last synced ID: 226098
+   • Total records synced: 10901
+
+⏱️  Execution time: 158.21s
+============================================================
+
+✅ Sync script completed successfully
+[2026-01-28 08:06:49] [INFO] Lead sync completed successfully

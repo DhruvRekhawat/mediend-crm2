@@ -26,45 +26,77 @@ export async function GET(request: NextRequest) {
     if (endDate) dateFilter.lte = new Date(endDate)
 
     if (type === 'bd') {
+      // Get completed leads stats
+      const completedWhere: Prisma.LeadWhereInput = {
+        pipelineStage: 'COMPLETED',
+        conversionDate: dateFilter,
+      }
+
+      // Role-based filtering for completed leads
+      if (user.role === 'BD') {
+        completedWhere.bdId = user.id
+      } else if (user.role === 'TEAM_LEAD' && user.teamId) {
+        completedWhere.bd = {
+          teamId: user.teamId,
+        }
+      }
+
+      // Get all leads stats (for total leads calculation)
+      const allLeadsWhere: Prisma.LeadWhereInput = {
+        createdDate: dateFilter,
+      }
+
+      // Role-based filtering for all leads
+      if (user.role === 'BD') {
+        allLeadsWhere.bdId = user.id
+      } else if (user.role === 'TEAM_LEAD' && user.teamId) {
+        allLeadsWhere.bd = {
+          teamId: user.teamId,
+        }
+      }
+
       const bdStats = await prisma.lead.groupBy({
         by: ['bdId'],
-        where: {
-          pipelineStage: 'COMPLETED',
-          conversionDate: dateFilter,
-        },
-        _count: {
-          id: true,
-        },
+        where: completedWhere,
+        _count: { id: true },
         _sum: {
+          billAmount: true,
           netProfit: true,
+        },
+        _avg: {
+          billAmount: true,
         },
       })
 
+      const bdLeads = await prisma.lead.groupBy({
+        by: ['bdId'],
+        where: allLeadsWhere,
+        _count: { id: true },
+      })
+
+      const bdMap = new Map(bdLeads.map((b) => [b.bdId, b._count.id]))
+      const bdIds = [...new Set(bdStats.map((b) => b.bdId))]
       const bds = await prisma.user.findMany({
-        where: {
-          id: {
-            in: bdStats.map((s) => s.bdId).filter((id): id is string => id !== null),
-          },
-          role: 'BD',
-        },
-        include: {
-          team: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
+        where: { id: { in: bdIds }, role: 'BD' },
+        include: { team: { select: { id: true, name: true } } },
       })
 
       const leaderboard = bdStats.map((stat) => {
         const bd = bds.find((b) => b.id === stat.bdId)
+        const totalLeads = bdMap.get(stat.bdId) || 0
+        const closedLeads = stat._count.id
+        const conversionRate = totalLeads > 0 ? (closedLeads / totalLeads) * 100 : 0
+        const avgTicketSize = stat._avg.billAmount || 0
+
         return {
           bdId: stat.bdId,
           bdName: bd?.name || 'Unknown',
           teamName: bd?.team?.name || 'No Team',
-          closedLeads: stat._count.id,
+          totalLeads,
+          closedLeads,
+          conversionRate: Math.round(conversionRate * 100) / 100,
           netProfit: stat._sum.netProfit || 0,
+          avgTicketSize: Math.round(avgTicketSize * 100) / 100,
         }
       })
 
@@ -72,24 +104,57 @@ export async function GET(request: NextRequest) {
 
       return successResponse(leaderboard)
     } else if (type === 'team') {
+      // Get completed leads stats
+      const completedWhere: Prisma.LeadWhereInput = {
+        pipelineStage: 'COMPLETED',
+        conversionDate: dateFilter,
+      }
+
+      // Role-based filtering for completed leads
+      if (user.role === 'BD') {
+        completedWhere.bdId = user.id
+      } else if (user.role === 'TEAM_LEAD' && user.teamId) {
+        completedWhere.bd = {
+          teamId: user.teamId,
+        }
+      }
+
+      // Get all leads stats (for total leads calculation)
+      const allLeadsWhere: Prisma.LeadWhereInput = {
+        createdDate: dateFilter,
+      }
+
+      // Role-based filtering for all leads
+      if (user.role === 'BD') {
+        allLeadsWhere.bdId = user.id
+      } else if (user.role === 'TEAM_LEAD' && user.teamId) {
+        allLeadsWhere.bd = {
+          teamId: user.teamId,
+        }
+      }
+
       const teamStats = await prisma.lead.groupBy({
         by: ['bdId'],
-        where: {
-          pipelineStage: 'COMPLETED',
-          conversionDate: dateFilter,
-        },
-        _count: {
-          id: true,
-        },
+        where: completedWhere,
+        _count: { id: true },
         _sum: {
+          billAmount: true,
           netProfit: true,
         },
+      })
+
+      const teamLeads = await prisma.lead.groupBy({
+        by: ['bdId'],
+        where: allLeadsWhere,
+        _count: { id: true },
       })
 
       const bds = await prisma.user.findMany({
         where: {
           id: {
-            in: teamStats.map((s) => s.bdId).filter((id): id is string => id !== null),
+            in: [...new Set([...teamStats.map((s) => s.bdId), ...teamLeads.map((s) => s.bdId)])].filter(
+              (id): id is string => id !== null
+            ),
           },
           role: 'BD',
         },
@@ -103,24 +168,57 @@ export async function GET(request: NextRequest) {
         },
       })
 
-      const teamMap = new Map<string, { name: string; closedLeads: number; netProfit: number }>()
+      const teamMap = new Map<
+        string,
+        { name: string; closedLeads: number; netProfit: number; revenue: number; totalLeads: number }
+      >()
 
+      // Process completed leads
       teamStats.forEach((stat) => {
         const bd = bds.find((b) => b.id === stat.bdId)
         if (bd?.team) {
-          const existing = teamMap.get(bd.team.id) || { name: bd.team.name, closedLeads: 0, netProfit: 0 }
+          const existing = teamMap.get(bd.team.id) || {
+            name: bd.team.name,
+            closedLeads: 0,
+            netProfit: 0,
+            revenue: 0,
+            totalLeads: 0,
+          }
           existing.closedLeads += stat._count.id
           existing.netProfit += stat._sum.netProfit || 0
+          existing.revenue += stat._sum.billAmount || 0
           teamMap.set(bd.team.id, existing)
         }
       })
 
-      const leaderboard = Array.from(teamMap.entries()).map(([teamId, data]) => ({
-        teamId,
-        teamName: data.name,
-        closedLeads: data.closedLeads,
-        netProfit: data.netProfit,
-      }))
+      // Process all leads for total count
+      teamLeads.forEach((stat) => {
+        const bd = bds.find((b) => b.id === stat.bdId)
+        if (bd?.team) {
+          const existing = teamMap.get(bd.team.id) || {
+            name: bd.team.name,
+            closedLeads: 0,
+            netProfit: 0,
+            revenue: 0,
+            totalLeads: 0,
+          }
+          existing.totalLeads += stat._count.id
+          teamMap.set(bd.team.id, existing)
+        }
+      })
+
+      const leaderboard = Array.from(teamMap.entries()).map(([teamId, data]) => {
+        const conversionRate = data.totalLeads > 0 ? (data.closedLeads / data.totalLeads) * 100 : 0
+        return {
+          teamId,
+          teamName: data.name,
+          totalLeads: data.totalLeads,
+          closedLeads: data.closedLeads,
+          conversionRate: Math.round(conversionRate * 100) / 100,
+          revenue: data.revenue,
+          netProfit: data.netProfit,
+        }
+      })
 
       leaderboard.sort((a, b) => b.netProfit - a.netProfit)
 
