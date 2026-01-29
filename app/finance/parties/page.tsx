@@ -38,7 +38,7 @@ interface PartiesResponse {
   }
 }
 
-const PARTY_TYPES = ['BUYER', 'SELLER', 'VENDOR', 'CLIENT', 'SUPPLIER'] as const
+const PARTY_TYPES = ['BUYER', 'SELLER', 'VENDOR', 'CLIENT', 'SUPPLIER', 'OTHER'] as const
 
 export default function PartiesPage() {
   const [search, setSearch] = useState('')
@@ -144,6 +144,7 @@ export default function PartiesPage() {
       SELLER: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
       VENDOR: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
       CLIENT: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
+      OTHER: 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
     }
     return <Badge className={colors[type] || ''}>{type}</Badge>
   }

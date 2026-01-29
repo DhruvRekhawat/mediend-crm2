@@ -24,8 +24,27 @@ export async function POST(request: NextRequest) {
               paymentType: 'NON_EXPENSE',
               description: 'Non-operational transactions',
             },
+            {
+              name: 'Receipt',
+              paymentType: 'RECEIPT',
+              description: 'Receipt transactions (excluded from revenue)',
+            },
           ],
         })
+      } else {
+        // Check if RECEIPT payment type exists, if not add it
+        const receiptType = await prisma.paymentTypeMaster.findFirst({
+          where: { paymentType: 'RECEIPT' },
+        })
+        if (!receiptType) {
+          await prisma.paymentTypeMaster.create({
+            data: {
+              name: 'Receipt',
+              paymentType: 'RECEIPT',
+              description: 'Receipt transactions (excluded from revenue)',
+            },
+          })
+        }
       }
     }
 

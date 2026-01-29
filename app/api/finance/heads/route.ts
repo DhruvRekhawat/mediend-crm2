@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const isActive = searchParams.get('isActive')
     const search = searchParams.get('search')
     const department = searchParams.get('department')
+    const hasEntries = searchParams.get('hasEntries') === 'true'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
@@ -38,6 +39,29 @@ export async function GET(request: NextRequest) {
         { name: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
       ]
+    }
+
+    // Filter to only heads that have ledger entries
+    if (hasEntries) {
+      const headsWithEntries = await prisma.ledgerEntry.findMany({
+        where: {
+          headId: { not: null },
+          isDeleted: false,
+        },
+        select: {
+          headId: true,
+        },
+        distinct: ['headId'],
+      })
+      const headIds = headsWithEntries
+        .map((e) => e.headId)
+        .filter((id): id is string => id !== null)
+      if (headIds.length > 0) {
+        where.id = { in: headIds }
+      } else {
+        // No heads with entries, return empty result
+        where.id = { in: [] }
+      }
     }
 
     const [heads, total] = await Promise.all([

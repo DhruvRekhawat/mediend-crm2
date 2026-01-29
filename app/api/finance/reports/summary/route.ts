@@ -41,11 +41,32 @@ export async function GET(request: NextRequest) {
                 ...(Object.keys(dateFilter).length > 0 && {
                   transactionDate: dateFilter,
                 }),
+                OR: [
+                  {
+                    transactionType: TransactionType.DEBIT,
+                  },
+                  {
+                    transactionType: TransactionType.CREDIT,
+                    paymentType: {
+                      paymentType: {
+                        not: 'RECEIPT',
+                      },
+                    },
+                    paymentTypeId: { not: null },
+                  },
+                ],
               },
               select: {
                 transactionType: true,
                 paymentAmount: true,
                 receivedAmount: true,
+              },
+              include: {
+                paymentType: {
+                  select: {
+                    paymentType: true,
+                  },
+                },
               },
             },
           },
@@ -54,6 +75,7 @@ export async function GET(request: NextRequest) {
         const summary = paymentModes.map((mode) => {
           const totalCredits = mode.ledgerEntries
             .filter((e) => e.transactionType === TransactionType.CREDIT)
+            .filter((e) => e.paymentType?.paymentType !== 'RECEIPT')
             .reduce((sum, e) => sum + (e.receivedAmount || 0), 0)
 
           const totalDebits = mode.ledgerEntries
@@ -83,7 +105,7 @@ export async function GET(request: NextRequest) {
       }
 
       case 'party-wise': {
-        // Party-wise summary - Exclude SELF_TRANSFER
+        // Party-wise summary - Exclude SELF_TRANSFER and RECEIPT payment type
         const entries = await prisma.ledgerEntry.groupBy({
           by: ['partyId', 'transactionType'],
           where: {
@@ -94,6 +116,19 @@ export async function GET(request: NextRequest) {
             ...(Object.keys(dateFilter).length > 0 && {
               transactionDate: dateFilter,
             }),
+            OR: [
+              {
+                transactionType: TransactionType.DEBIT,
+              },
+              {
+                transactionType: TransactionType.CREDIT,
+                paymentType: {
+                  paymentType: {
+                    not: 'RECEIPT',
+                  },
+                },
+              },
+            ],
           },
           _sum: {
             paymentAmount: true,
@@ -165,7 +200,7 @@ export async function GET(request: NextRequest) {
       }
 
       case 'head-wise': {
-        // Head-wise summary - Exclude SELF_TRANSFER
+        // Head-wise summary - Exclude SELF_TRANSFER and RECEIPT payment type
         const entries = await prisma.ledgerEntry.groupBy({
           by: ['headId', 'transactionType'],
           where: {
@@ -176,6 +211,19 @@ export async function GET(request: NextRequest) {
             ...(Object.keys(dateFilter).length > 0 && {
               transactionDate: dateFilter,
             }),
+            OR: [
+              {
+                transactionType: TransactionType.DEBIT,
+              },
+              {
+                transactionType: TransactionType.CREDIT,
+                paymentType: {
+                  paymentType: {
+                    not: 'RECEIPT',
+                  },
+                },
+              },
+            ],
           },
           _sum: {
             paymentAmount: true,
@@ -247,7 +295,7 @@ export async function GET(request: NextRequest) {
       }
 
       case 'day-wise': {
-        // Day-wise summary - Exclude SELF_TRANSFER
+        // Day-wise summary - Exclude SELF_TRANSFER and RECEIPT payment type
         const entries = await prisma.ledgerEntry.findMany({
           where: {
             status: LedgerStatus.APPROVED,
@@ -257,6 +305,19 @@ export async function GET(request: NextRequest) {
             ...(Object.keys(dateFilter).length > 0 && {
               transactionDate: dateFilter,
             }),
+            OR: [
+              {
+                transactionType: TransactionType.DEBIT,
+              },
+              {
+                transactionType: TransactionType.CREDIT,
+                paymentType: {
+                  paymentType: {
+                    not: 'RECEIPT',
+                  },
+                },
+              },
+            ],
           },
           select: {
             transactionDate: true,

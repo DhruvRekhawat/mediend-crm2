@@ -8,14 +8,15 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, ArrowLeftRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { SearchableSelect } from '@/components/finance/searchable-select'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 interface Party {
   id: string
@@ -55,9 +56,15 @@ function formatCurrency(amount: number) {
 
 export default function NewLedgerEntryPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [transactionType, setTransactionType] = useState<'CREDIT' | 'DEBIT' | 'SELF_TRANSFER'>('CREDIT')
   const [transactionDate, setTransactionDate] = useState<Date>(new Date())
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [showPartyCreateDialog, setShowPartyCreateDialog] = useState(false)
+  const [showHeadCreateDialog, setShowHeadCreateDialog] = useState(false)
+  const [newPartyName, setNewPartyName] = useState('')
+  const [newHeadName, setNewHeadName] = useState('')
+  const [newPartyType, setNewPartyType] = useState<'BUYER' | 'SELLER' | 'VENDOR' | 'CLIENT' | 'SUPPLIER' | 'OTHER'>('OTHER')
   const [formData, setFormData] = useState({
     partyId: '',
     description: '',
@@ -96,6 +103,40 @@ export default function NewLedgerEntryPage() {
   const selectedPaymentMode = paymentModesData?.data.find((m) => m.id === formData.paymentModeId)
   const selectedFromMode = paymentModesData?.data.find((m) => m.id === formData.fromPaymentModeId)
   const selectedToMode = paymentModesData?.data.find((m) => m.id === formData.toPaymentModeId)
+  const selectedPaymentType = paymentTypesData?.data.find((t) => t.id === formData.paymentTypeId)
+  const isNonExpense = selectedPaymentType?.paymentType === 'NON_EXPENSE'
+
+  const createPartyMutation = useMutation({
+    mutationFn: async (data: { name: string; partyType: string }): Promise<Party> => {
+      return apiPost<Party>('/api/finance/parties', data)
+    },
+    onSuccess: (data: Party) => {
+      queryClient.invalidateQueries({ queryKey: ['parties-active'] })
+      setFormData({ ...formData, partyId: data.id })
+      setShowPartyCreateDialog(false)
+      setNewPartyName('')
+      toast.success('Party created successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create party')
+    },
+  })
+
+  const createHeadMutation = useMutation({
+    mutationFn: async (data: { name: string; department?: string }): Promise<Head> => {
+      return apiPost<Head>('/api/finance/heads', data)
+    },
+    onSuccess: (data: Head) => {
+      queryClient.invalidateQueries({ queryKey: ['heads-active'] })
+      setFormData({ ...formData, headId: data.id })
+      setShowHeadCreateDialog(false)
+      setNewHeadName('')
+      toast.success('Head created successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create head')
+    },
+  })
 
   const createMutation = useMutation({
     mutationFn: (data: {
@@ -181,10 +222,11 @@ export default function NewLedgerEntryPage() {
       createMutation.mutate(data)
     } else {
       // For DEBIT transactions, validate component A and B
-      const componentA = parseFloat(formData.componentA)
+      // If NON_EXPENSE, Component A should be 0
+      const componentA = isNonExpense ? 0 : parseFloat(formData.componentA)
       const componentB = parseFloat(formData.componentB) || 0
 
-      if (isNaN(componentA) || componentA <= 0) {
+      if (!isNonExpense && (isNaN(componentA) || componentA <= 0)) {
         toast.error('Please enter a valid Component A (main expense)')
         return
       }
@@ -202,7 +244,7 @@ export default function NewLedgerEntryPage() {
         headId: formData.headId,
         paymentTypeId: formData.paymentTypeId,
         paymentModeId: formData.paymentModeId,
-        componentA,
+        componentA: isNonExpense ? 0 : componentA,
         componentB: componentB > 0 ? componentB : undefined,
       }
 
@@ -211,11 +253,13 @@ export default function NewLedgerEntryPage() {
   }
 
   // Calculate balance impact preview
+  // For NON_EXPENSE, Component A is 0, so only Component B counts
+  const componentAValue = isNonExpense ? 0 : (parseFloat(formData.componentA) || 0)
   const amount = transactionType === 'CREDIT' 
     ? (parseFloat(formData.amount) || 0)
     : transactionType === 'SELF_TRANSFER'
     ? (parseFloat(formData.transferAmount) || 0)
-    : ((parseFloat(formData.componentA) || 0) + (parseFloat(formData.componentB) || 0))
+    : (componentAValue + (parseFloat(formData.componentB) || 0))
   const currentBalance = selectedPaymentMode?.currentBalance || 0
   const fromCurrentBalance = selectedFromMode?.currentBalance || 0
   const toCurrentBalance = selectedToMode?.currentBalance || 0
@@ -353,43 +397,43 @@ export default function NewLedgerEntryPage() {
                 {/* Party */}
                 <div className="space-y-2">
                   <Label htmlFor="party">Party *</Label>
-                  <Select
+                  <SearchableSelect
                     value={formData.partyId}
                     onValueChange={(value) => setFormData({ ...formData, partyId: value })}
+                    options={partiesData?.data || []}
+                    getOptionLabel={(party) => `${party.name} (${party.partyType})`}
+                    getOptionValue={(party) => party.id}
+                    placeholder="Select party"
+                    searchPlaceholder="Search parties..."
+                    emptyMessage="No parties found"
+                    createLabel="Create new party"
+                    onShowCreateDialog={(searchValue) => {
+                      setNewPartyName(searchValue)
+                      setShowPartyCreateDialog(true)
+                    }}
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select party" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {partiesData?.data.map((party) => (
-                        <SelectItem key={party.id} value={party.id}>
-                          {party.name} ({party.partyType})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 {/* Head */}
                 <div className="space-y-2">
                   <Label htmlFor="head">Head *</Label>
-                  <Select
+                  <SearchableSelect
                     value={formData.headId}
                     onValueChange={(value) => setFormData({ ...formData, headId: value })}
+                    options={headsData?.data || []}
+                    getOptionLabel={(head) => head.department ? `${head.name} (${head.department})` : head.name}
+                    getOptionValue={(head) => head.id}
+                    placeholder="Select head"
+                    searchPlaceholder="Search heads..."
+                    emptyMessage="No heads found"
+                    createLabel="Create new head"
+                    onShowCreateDialog={(searchValue) => {
+                      setNewHeadName(searchValue)
+                      setShowHeadCreateDialog(true)
+                    }}
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select head" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {headsData?.data.map((head) => (
-                        <SelectItem key={head.id} value={head.id}>
-                          {head.name} {head.department && `(${head.department})`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
                 {/* Payment Type */}
@@ -397,7 +441,14 @@ export default function NewLedgerEntryPage() {
                   <Label htmlFor="paymentType">Type of Payment *</Label>
                   <Select
                     value={formData.paymentTypeId}
-                    onValueChange={(value) => setFormData({ ...formData, paymentTypeId: value })}
+                    onValueChange={(value) => {
+                      setFormData({ 
+                        ...formData, 
+                        paymentTypeId: value,
+                        // Reset Component A when NON_EXPENSE is selected
+                        componentA: paymentTypesData?.data.find(t => t.id === value)?.paymentType === 'NON_EXPENSE' ? '0' : formData.componentA
+                      })
+                    }}
                     required
                   >
                     <SelectTrigger>
@@ -506,24 +557,26 @@ export default function NewLedgerEntryPage() {
 
             {transactionType === 'DEBIT' && (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="componentA">Component A (Main Expense) *</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                    <Input
-                      id="componentA"
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={formData.componentA}
-                      onChange={(e) => setFormData({ ...formData, componentA: e.target.value })}
-                      className="pl-8"
-                      placeholder="0.00"
-                      required
-                    />
+                {!isNonExpense && (
+                  <div className="space-y-2">
+                    <Label htmlFor="componentA">Component A (Main Expense) *</Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                      <Input
+                        id="componentA"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={formData.componentA}
+                        onChange={(e) => setFormData({ ...formData, componentA: e.target.value })}
+                        className="pl-8"
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">The main expense amount (more relevant)</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">The main expense amount (more relevant)</p>
-                </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="componentB">Component B (Claimable Amount)</Label>
                   <div className="relative">
@@ -545,11 +598,13 @@ export default function NewLedgerEntryPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Total Payment Amount:</span>
                     <span className="font-semibold text-lg">
-                      ₹{((parseFloat(formData.componentA) || 0) + (parseFloat(formData.componentB) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹{(componentAValue + (parseFloat(formData.componentB) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs mt-1 text-muted-foreground">
-                    <span>Component A: ₹{(parseFloat(formData.componentA) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    {!isNonExpense && (
+                      <span>Component A: ₹{componentAValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    )}
                     <span>Component B: ₹{(parseFloat(formData.componentB) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
@@ -627,7 +682,7 @@ export default function NewLedgerEntryPage() {
               </Card>
             )}
 
-            {transactionType !== 'SELF_TRANSFER' && formData.paymentModeId && (formData.amount || formData.componentA) && (
+            {transactionType !== 'SELF_TRANSFER' && formData.paymentModeId && (formData.amount || componentAValue || formData.componentB) && (
               <Card className={transactionType === 'CREDIT' ? 'bg-green-50 dark:bg-green-900/10' : 'bg-amber-50 dark:bg-amber-900/10'}>
                 <CardContent className="pt-4">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -691,6 +746,116 @@ export default function NewLedgerEntryPage() {
           </CardContent>
         </Card>
       </form>
+
+      {/* Create Party Dialog */}
+      <Dialog open={showPartyCreateDialog} onOpenChange={setShowPartyCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Party</DialogTitle>
+            <DialogDescription>Create a new party for transactions</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPartyName">Party Name *</Label>
+              <Input
+                id="newPartyName"
+                value={newPartyName}
+                onChange={(e) => setNewPartyName(e.target.value)}
+                placeholder="Enter party name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newPartyType">Party Type *</Label>
+              <Select value={newPartyType} onValueChange={(value: any) => setNewPartyType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BUYER">BUYER</SelectItem>
+                  <SelectItem value="SELLER">SELLER</SelectItem>
+                  <SelectItem value="VENDOR">VENDOR</SelectItem>
+                  <SelectItem value="CLIENT">CLIENT</SelectItem>
+                  <SelectItem value="SUPPLIER">SUPPLIER</SelectItem>
+                  <SelectItem value="OTHER">OTHER</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowPartyCreateDialog(false)
+                  setNewPartyName('')
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (!newPartyName.trim()) {
+                    toast.error('Party name is required')
+                    return
+                  }
+                  createPartyMutation.mutate({ name: newPartyName.trim(), partyType: newPartyType })
+                }}
+                disabled={createPartyMutation.isPending}
+              >
+                {createPartyMutation.isPending ? 'Creating...' : 'Create'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Head Dialog */}
+      <Dialog open={showHeadCreateDialog} onOpenChange={setShowHeadCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Head</DialogTitle>
+            <DialogDescription>Create a new transaction category</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newHeadName">Head Name *</Label>
+              <Input
+                id="newHeadName"
+                value={newHeadName}
+                onChange={(e) => setNewHeadName(e.target.value)}
+                placeholder="Enter head name"
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowHeadCreateDialog(false)
+                  setNewHeadName('')
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  if (!newHeadName.trim()) {
+                    toast.error('Head name is required')
+                    return
+                  }
+                  createHeadMutation.mutate({ name: newHeadName.trim() })
+                }}
+                disabled={createHeadMutation.isPending}
+              >
+                {createHeadMutation.isPending ? 'Creating...' : 'Create'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

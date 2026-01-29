@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
     const partyType = searchParams.get('partyType') as PartyType | null
     const isActive = searchParams.get('isActive')
     const search = searchParams.get('search')
+    const hasEntries = searchParams.get('hasEntries') === 'true'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
@@ -40,6 +41,29 @@ export async function GET(request: NextRequest) {
         { contactEmail: { contains: search, mode: 'insensitive' } },
         { gstNumber: { contains: search, mode: 'insensitive' } },
       ]
+    }
+
+    // Filter to only parties that have ledger entries
+    if (hasEntries) {
+      const partiesWithEntries = await prisma.ledgerEntry.findMany({
+        where: {
+          partyId: { not: null },
+          isDeleted: false,
+        },
+        select: {
+          partyId: true,
+        },
+        distinct: ['partyId'],
+      })
+      const partyIds = partiesWithEntries
+        .map((e) => e.partyId)
+        .filter((id): id is string => id !== null)
+      if (partyIds.length > 0) {
+        where.id = { in: partyIds }
+      } else {
+        // No parties with entries, return empty result
+        where.id = { in: [] }
+      }
     }
 
     const [parties, total] = await Promise.all([

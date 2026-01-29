@@ -892,6 +892,7 @@ enum PartyType {
   VENDOR
   CLIENT
   SUPPLIER
+  OTHER
 }
 
 enum TransactionType {
@@ -909,6 +910,7 @@ enum LedgerStatus {
 enum FinancePaymentType {
   EXPENSE
   NON_EXPENSE
+  RECEIPT
 }
 
 enum LedgerAuditAction {

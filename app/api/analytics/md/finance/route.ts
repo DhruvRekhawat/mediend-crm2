@@ -46,6 +46,12 @@ export async function GET(request: NextRequest) {
           ...where,
           transactionType: 'CREDIT',
           status: LedgerStatus.APPROVED,
+          paymentType: {
+            paymentType: {
+              not: 'RECEIPT',
+            },
+          },
+          paymentTypeId: { not: null },
         },
         _sum: { receivedAmount: true },
       }),
@@ -100,7 +106,7 @@ export async function GET(request: NextRequest) {
     const approvedAmountTotal = (approvedAmount._sum.receivedAmount || 0) + (approvedAmount._sum.paymentAmount || 0)
     const rejectedAmountTotal = (rejectedAmount._sum.receivedAmount || 0) + (rejectedAmount._sum.paymentAmount || 0)
 
-    // Transaction Trends (Daily) - Exclude SELF_TRANSFER
+    // Transaction Trends (Daily) - Exclude SELF_TRANSFER and RECEIPT payment type
     const dailyTrends = await prisma.ledgerEntry.groupBy({
       by: ['transactionDate', 'transactionType'],
       where: {
@@ -109,6 +115,20 @@ export async function GET(request: NextRequest) {
         transactionType: {
           in: [TransactionType.CREDIT, TransactionType.DEBIT],
         },
+        OR: [
+          {
+            transactionType: TransactionType.DEBIT,
+          },
+          {
+            transactionType: TransactionType.CREDIT,
+            paymentType: {
+              paymentType: {
+                not: 'RECEIPT',
+              },
+            },
+            paymentTypeId: { not: null },
+          },
+        ],
       },
       _sum: {
         receivedAmount: true,
@@ -136,7 +156,7 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
 
-    // Party Analysis
+    // Party Analysis - Exclude RECEIPT payment type from revenue
     const partyStats = await prisma.ledgerEntry.groupBy({
       by: ['partyId', 'transactionType'],
       where: {
@@ -145,6 +165,20 @@ export async function GET(request: NextRequest) {
         transactionType: {
           in: [TransactionType.CREDIT, TransactionType.DEBIT],
         },
+        OR: [
+          {
+            transactionType: TransactionType.DEBIT,
+          },
+          {
+            transactionType: TransactionType.CREDIT,
+            paymentType: {
+              paymentType: {
+                not: 'RECEIPT',
+              },
+            },
+            paymentTypeId: { not: null },
+          },
+        ],
       },
       _sum: {
         receivedAmount: true,
@@ -208,7 +242,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => Math.abs(b.netAmount) - Math.abs(a.netAmount))
       .slice(0, 20)
 
-    // Head/Category Analysis
+    // Head/Category Analysis - Exclude RECEIPT payment type from revenue
     const headStats = await prisma.ledgerEntry.groupBy({
       by: ['headId', 'transactionType'],
       where: {
@@ -217,6 +251,20 @@ export async function GET(request: NextRequest) {
         transactionType: {
           in: [TransactionType.CREDIT, TransactionType.DEBIT],
         },
+        OR: [
+          {
+            transactionType: TransactionType.DEBIT,
+          },
+          {
+            transactionType: TransactionType.CREDIT,
+            paymentType: {
+              paymentType: {
+                not: 'RECEIPT',
+              },
+            },
+            paymentTypeId: { not: null },
+          },
+        ],
       },
       _sum: {
         receivedAmount: true,

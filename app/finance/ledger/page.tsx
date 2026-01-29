@@ -13,6 +13,8 @@ import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X, Arr
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { Calendar } from '@/components/ui/calendar'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 
 interface LedgerEntry {
   id: string
@@ -120,6 +122,7 @@ export default function LedgerPage() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
   const [showStartCalendar, setShowStartCalendar] = useState(false)
   const [showEndCalendar, setShowEndCalendar] = useState(false)
+  const [showProjectedTotals, setShowProjectedTotals] = useState(false)
 
   // Fetch ledger entries
   const { data: ledgerData, isLoading } = useQuery<LedgerResponse>({
@@ -152,15 +155,15 @@ export default function LedgerPage() {
     },
   })
 
-  // Fetch masters for filters
+  // Fetch masters for filters - only show parties/heads that have entries
   const { data: partiesData } = useQuery({
-    queryKey: ['parties-list'],
-    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&limit=100'),
+    queryKey: ['parties-list-filtered'],
+    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&hasEntries=true&limit=100'),
   })
 
   const { data: headsData } = useQuery({
-    queryKey: ['heads-list'],
-    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&limit=100'),
+    queryKey: ['heads-list-filtered'],
+    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&hasEntries=true&limit=100'),
   })
 
   const { data: modesData } = useQuery({
@@ -214,6 +217,29 @@ export default function LedgerPage() {
     { credits: 0, debits: 0, debitComponentA: 0, debitComponentB: 0 }
   ) || { credits: 0, debits: 0, debitComponentA: 0, debitComponentB: 0 }
 
+  // Calculate projected totals assuming all transactions are approved - Exclude SELF_TRANSFER and RECEIPT payment types
+  const projectedTotals = ledgerData?.data.reduce(
+    (acc, entry) => {
+      if (entry.transactionType !== 'SELF_TRANSFER') {
+        // Exclude RECEIPT payment type from revenue calculations
+        const isReceipt = entry.paymentType?.paymentType === 'RECEIPT'
+        
+        if (entry.transactionType === 'CREDIT' && !isReceipt) {
+          acc.revenue += entry.receivedAmount || 0
+          acc.credits += entry.receivedAmount || 0
+        } else if (entry.transactionType === 'CREDIT' && isReceipt) {
+          // RECEIPT credits don't count toward revenue but still count as credits
+          acc.credits += entry.receivedAmount || 0
+        } else if (entry.transactionType === 'DEBIT') {
+          const totalDebit = entry.paymentAmount || 0
+          acc.debits += totalDebit
+        }
+      }
+      return acc
+    },
+    { revenue: 0, credits: 0, debits: 0 }
+  ) || { revenue: 0, credits: 0, debits: 0 }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -221,12 +247,27 @@ export default function LedgerPage() {
           <h1 className="text-3xl font-bold">Finance Ledger</h1>
           <p className="text-muted-foreground mt-1">View and manage all financial transactions</p>
         </div>
-        <Link href="/finance/ledger/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Entry
-          </Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-projected"
+              checked={showProjectedTotals}
+              onCheckedChange={(checked) => setShowProjectedTotals(checked === true)}
+            />
+            <Label
+              htmlFor="show-projected"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Show projected totals
+            </Label>
+          </div>
+          <Link href="/finance/ledger/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Entry
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -266,6 +307,48 @@ export default function LedgerPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Projected Totals Cards - Show when toggle is on */}
+      {showProjectedTotals && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-2 border-blue-200 dark:border-blue-800">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Projected Revenue</p>
+                  <p className="text-xs text-muted-foreground mb-1">(Excludes RECEIPT payment type)</p>
+                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(projectedTotals.revenue)}</p>
+                </div>
+                <ArrowUpCircle className="h-8 w-8 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-green-200 dark:border-green-800">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Projected Credits (All)</p>
+                  <p className="text-xs text-muted-foreground mb-1">(Includes all CREDIT transactions)</p>
+                  <p className="text-2xl font-bold text-green-600">{formatCurrency(projectedTotals.credits)}</p>
+                </div>
+                <ArrowUpCircle className="h-8 w-8 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-2 border-red-200 dark:border-red-800">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Projected Debits (All)</p>
+                  <p className="text-xs text-muted-foreground mb-1">(Includes all DEBIT transactions)</p>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(projectedTotals.debits)}</p>
+                </div>
+                <ArrowDownCircle className="h-8 w-8 text-red-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Debit Components Breakdown - Only show if there are approved debits */}
       {totals.debits > 0 && (
