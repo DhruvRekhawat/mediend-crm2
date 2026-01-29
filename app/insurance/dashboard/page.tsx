@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation'
 import { CaseStage } from '@prisma/client'
 import { useState } from 'react'
 import { FileText, AlertCircle, CheckCircle2, Clock, ArrowRight, Receipt } from 'lucide-react'
+import { PreAuthApprovalModal } from '@/components/kyp/pre-auth-approval-modal'
+import { PreAuthStatus } from '@prisma/client'
 
 interface LeadWithStage {
   id: string
@@ -30,10 +32,31 @@ interface LeadWithStage {
     preAuthData?: {
       id: string
       requestedHospitalName?: string | null
+      requestedRoomType?: string | null
       diseaseDescription?: string | null
+      diseaseImages?: Array<{ name: string; url: string }> | null
       preAuthRaisedAt?: string | null
       sumInsured?: string | null
+      roomRent?: string | null
+      capping?: string | null
+      copay?: string | null
+      icu?: string | null
+      insurance?: string | null
+      tpa?: string | null
+      hospitalNameSuggestion?: string | null
+      hospitalSuggestions?: string[] | null
+      roomTypes?: Array<{ name: string; rent: string }> | null
       handledAt?: string | null
+      approvalStatus?: PreAuthStatus
+      rejectionReason?: string | null
+      handledBy?: {
+        id: string
+        name: string
+      } | null
+      preAuthRaisedBy?: {
+        id: string
+        name: string
+      } | null
     } | null
   } | null
   admissionRecord?: {
@@ -49,18 +72,40 @@ interface LeadWithStage {
 export default function InsuranceDashboardPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'kyp-review' | 'preauth-raised' | 'preauth-complete' | 'admitted' | 'discharge-pending' | 'ipd-done'>('kyp-review')
+  const [selectedLead, setSelectedLead] = useState<LeadWithStage | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const { data: leads, isLoading } = useQuery<LeadWithStage[]>({
+  const { data: leads, isLoading, error } = useQuery<LeadWithStage[]>({
     queryKey: ['leads', 'insurance', activeTab],
-    queryFn: () => apiGet<LeadWithStage[]>('/api/leads'),
+    queryFn: async () => {
+      try {
+        const data = await apiGet<LeadWithStage[]>('/api/leads')
+        console.log('Insurance Dashboard - Fetched leads:', data?.length || 0)
+        console.log('Sample lead:', data?.[0])
+        console.log('Leads with caseStage:', data?.filter(l => l.caseStage).length || 0)
+        console.log('Leads with KYP:', data?.filter(l => l.kypSubmission).length || 0)
+        return data || []
+      } catch (err) {
+        console.error('Error fetching leads:', err)
+        return []
+      }
+    },
     enabled: true,
   })
 
   // Filter leads by stage
   const filteredLeads = leads?.filter((lead) => {
+    // Debug: log lead details for troubleshooting
+    if (lead.kypSubmission && !lead.caseStage) {
+      console.warn('Lead has KYP submission but no caseStage:', lead.leadRef, lead)
+    }
+    
     switch (activeTab) {
       case 'kyp-review':
-        return lead.caseStage === CaseStage.KYP_COMPLETE || lead.caseStage === CaseStage.KYP_PENDING
+        // Include leads with KYP_PENDING or KYP_COMPLETE, or leads with KYP submission but caseStage not set
+        return lead.caseStage === CaseStage.KYP_COMPLETE || 
+               lead.caseStage === CaseStage.KYP_PENDING ||
+               (lead.kypSubmission && (!lead.caseStage || lead.caseStage === CaseStage.NEW_LEAD))
       case 'preauth-raised':
         return lead.caseStage === CaseStage.PREAUTH_RAISED
       case 'preauth-complete':
@@ -77,7 +122,11 @@ export default function InsuranceDashboardPage() {
   }) || []
 
   const getTabStats = () => {
-    const kypReview = leads?.filter(l => l.caseStage === CaseStage.KYP_COMPLETE || l.caseStage === CaseStage.KYP_PENDING).length || 0
+    const kypReview = leads?.filter(l => 
+      l.caseStage === CaseStage.KYP_COMPLETE || 
+      l.caseStage === CaseStage.KYP_PENDING ||
+      (l.kypSubmission && (!l.caseStage || l.caseStage === CaseStage.NEW_LEAD))
+    ).length || 0
     const preAuthRaised = leads?.filter(l => l.caseStage === CaseStage.PREAUTH_RAISED).length || 0
     const preAuthComplete = leads?.filter(l => l.caseStage === CaseStage.PREAUTH_COMPLETE).length || 0
     const admitted = leads?.filter(l => l.caseStage === CaseStage.INITIATED || l.caseStage === CaseStage.ADMITTED).length || 0
@@ -235,9 +284,17 @@ export default function InsuranceDashboardPage() {
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : error ? (
+                <div className="text-center py-8 text-red-600">
+                  Error loading leads: {error instanceof Error ? error.message : 'Unknown error'}
+                </div>
+              ) : !leads || leads.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No leads found. Make sure KYP has been submitted for at least one lead.
+                </div>
               ) : filteredLeads.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  No cases found in this queue
+                  No cases found in this queue. Total leads available: {leads.length}
                 </div>
               ) : (
                 <Table>
@@ -271,13 +328,28 @@ export default function InsuranceDashboardPage() {
                             : '-'}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/patient/${lead.id}`)}
-                          >
-                            View
-                          </Button>
+                          <div className="flex gap-2">
+                            {lead.caseStage === CaseStage.PREAUTH_RAISED && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedLead(lead)
+                                  setIsModalOpen(true)
+                                }}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Complete Pre-Auth
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => router.push(`/patient/${lead.id}`)}
+                            >
+                              View
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -288,6 +360,24 @@ export default function InsuranceDashboardPage() {
           </Card>
         </div>
       </div>
+
+      {/* Pre-Auth Approval Modal */}
+      {selectedLead && selectedLead.kypSubmission && selectedLead.kypSubmission.preAuthData && (
+        <PreAuthApprovalModal
+          open={isModalOpen}
+          onOpenChange={(open) => {
+            setIsModalOpen(open)
+            if (!open) {
+              setSelectedLead(null)
+            }
+          }}
+          leadId={selectedLead.id}
+          leadRef={selectedLead.leadRef}
+          patientName={selectedLead.patientName}
+          kypSubmissionId={selectedLead.kypSubmission.id}
+          preAuthData={selectedLead.kypSubmission.preAuthData}
+        />
+      )}
     </ProtectedRoute>
   )
 }

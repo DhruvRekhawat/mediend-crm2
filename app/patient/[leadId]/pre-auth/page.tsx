@@ -13,10 +13,12 @@ import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { QueryList } from '@/components/kyp/query-list'
 import { QueryForm } from '@/components/kyp/query-form'
+import { PreAuthApprovalModal } from '@/components/kyp/pre-auth-approval-modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CaseStage } from '@prisma/client'
+import { CaseStage, PreAuthStatus } from '@prisma/client'
 import { canRaisePreAuth, canCompletePreAuth, canAddKYPDetails, canGeneratePDF } from '@/lib/case-permissions'
 import { useState } from 'react'
+import { CheckCircle2, XCircle } from 'lucide-react'
 
 interface KYPSubmission {
   id: string
@@ -53,6 +55,8 @@ interface KYPSubmission {
       id: string
       name: string
     } | null
+    approvalStatus?: PreAuthStatus
+    rejectionReason?: string | null
   } | null
 }
 
@@ -80,6 +84,7 @@ export default function PreAuthPage() {
 
   // Hooks must be called before any conditional returns
   const [showEditForm, setShowEditForm] = useState(false)
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -124,6 +129,7 @@ export default function PreAuthPage() {
   
   // Determine if we should show details view or form
   const hasPreAuthData = !!kypSubmission?.preAuthData
+  // Don't show details view if we're showing the approval interface
   const shouldShowDetails = hasPreAuthData && !showEditForm && !canRaise && !canAddDetails && !canComplete
 
   return (
@@ -189,8 +195,8 @@ export default function PreAuthPage() {
               </>
             )}
 
-            {/* Insurance: Show form to add details (first time) */}
-            {isInsurance && canAddDetails && !showEditForm && (
+            {/* Insurance: Show form to add details (first time) - only when NOT completing pre-auth */}
+            {isInsurance && canAddDetails && !showEditForm && !canComplete && (
               <PreAuthForm
                 kypSubmissionId={kypSubmission!.id}
                 initialData={{
@@ -207,22 +213,43 @@ export default function PreAuthPage() {
               />
             )}
 
-            {/* Insurance: Show form to complete pre-auth */}
-            {isInsurance && canComplete && !showEditForm && (
-              <PreAuthForm
-                kypSubmissionId={kypSubmission!.id}
-                initialData={{
-                  ...kypSubmission?.preAuthData,
-                  hospitalSuggestions: kypSubmission?.preAuthData?.hospitalSuggestions ?? undefined,
-                  roomTypes: kypSubmission?.preAuthData?.roomTypes ?? undefined,
-                }}
-                isReadOnly={false}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
-                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                }}
-                onCancel={() => router.push(`/patient/${leadId}`)}
-              />
+            {/* Insurance: Show approval/rejection interface when pre-auth is raised */}
+            {isInsurance && canComplete && !showEditForm && kypSubmission?.preAuthData && (
+              <>
+                <PreAuthDetailsView
+                  preAuthData={kypSubmission.preAuthData}
+                  caseStage={lead?.caseStage || CaseStage.PREAUTH_RAISED}
+                  leadRef={kypSubmission.lead.leadRef}
+                  patientName={kypSubmission.lead.patientName}
+                />
+                {(!kypSubmission.preAuthData.approvalStatus || 
+                  (kypSubmission.preAuthData.approvalStatus !== PreAuthStatus.APPROVED && 
+                   kypSubmission.preAuthData.approvalStatus !== PreAuthStatus.REJECTED)) && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Complete Pre-Authorization</CardTitle>
+                      <CardDescription>
+                        Review the pre-authorization details and approve or reject the request
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-3">
+                        <Button
+                          onClick={() => {
+                            console.log('Opening approval modal for lead:', leadId)
+                            setIsApprovalModalOpen(true)
+                          }}
+                          className="flex-1"
+                          variant="default"
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Complete Pre-Auth
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
 
             {/* Show details view when data exists and no form should be shown */}
@@ -323,6 +350,21 @@ export default function PreAuthPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Pre-Auth Approval Modal */}
+        {kypSubmission?.preAuthData && (
+          <PreAuthApprovalModal
+            open={isApprovalModalOpen}
+            onOpenChange={(open) => {
+              setIsApprovalModalOpen(open)
+            }}
+            leadId={leadId}
+            leadRef={kypSubmission.lead.leadRef}
+            patientName={kypSubmission.lead.patientName}
+            kypSubmissionId={kypSubmission.id}
+            preAuthData={kypSubmission.preAuthData}
+          />
+        )}
       </div>
     </AuthenticatedLayout>
   )

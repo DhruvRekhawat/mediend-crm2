@@ -4,690 +4,1672 @@ import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { Calendar } from '@/components/ui/calendar'
+import { format } from 'date-fns'
 import {
   TrendingUp,
-  DollarSign,
-  Activity,
   Users,
+  DollarSign,
+  Target,
+  Calendar as CalendarIcon,
+  FileText,
+  ShoppingCart,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  MapPin,
+  Building2,
+  Stethoscope,
+  Activity,
   BarChart3,
+  Clock,
+  Shield,
 } from 'lucide-react'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ComposedChart,
-} from 'recharts'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export interface SalesAnalytics {
-  kpis: {
-    totalRevenue: number
-    totalProfit: number
-    totalLeads: number
-    completedSurgeries: number
-    conversionRate: number
-    avgTicketSize: number
-    avgNetProfitPerSurgery: number
+interface DashboardStats {
+  totalSurgeries: number
+  totalProfit: number
+  avgTicketSize: number
+  totalLeads: number
+  conversionRate: number
+}
+
+interface StageStats {
+  pipelineStages: {
+    SALES: number
+    INSURANCE: number
+    PL: number
+    COMPLETED: number
+    LOST: number
   }
-  cityPerformance: Array<{
-    city: string
-    revenue: number
-    profit: number
-    surgeries: number
-    leads: number
-    conversionRate: number
-    avgTicketSize: number
-  }>
-  diseasePerformance: Array<{
-    disease: string
-    count: number
-    revenue: number
-    profit: number
-  }>
-  hospitalPerformance: Array<{
-    hospital: string
-    surgeries: number
-    revenue: number
-    profit: number
-  }>
-  crossAnalysis: {
-    diseaseByCity: Array<{ city: string; diseases: Array<{ disease: string; count: number; revenue: number; profit: number }> }>
-    hospitalByCity: Array<{ city: string; hospitals: Array<{ hospital: string; surgeries: number; revenue: number; profit: number }> }>
-    diseaseByHospital: Array<{ hospital: string; diseases: Array<{ disease: string; count: number; revenue: number; profit: number }> }>
-  }
-  paymentModeAnalysis: Array<{
-    mode: string
-    count: number
-    revenue: number
-    profit: number
-  }>
-  revenueProfitTrends: Array<{
-    date: string
-    revenue: number
-    profit: number
-    surgeries: number
-  }>
-  bdPerformance: Array<{
-    bdId: string
-    bdName: string
-    teamName: string
-    revenue: number
-    profit: number
-    closedLeads: number
-    totalLeads: number
-    conversionRate: number
-  }>
-  teamPerformance: Array<{
-    teamName: string
-    revenue: number
-    profit: number
-    closedLeads: number
-    totalLeads: number
-    conversionRate: number
-  }>
-  circlePerformance: Array<{
-    circle: string
-    revenue: number
-    profit: number
-    surgeries: number
-  }>
-  statusDistribution: Array<{
-    status: string
-    count: number
-  }>
-  conversionFunnel: {
-    totalLeads: number
+  statusCategories: {
+    new: number
     followUps: number
     ipdDone: number
+    dnp: number
+    lost: number
     completed: number
   }
 }
 
-const COLORS = {
-  revenue: '#10b981',
-  profit: '#3b82f6',
-  leads: '#8b5cf6',
-  warning: '#f59e0b',
-  success: '#059669',
-  danger: '#ef4444',
+interface LeaderboardEntry {
+  bdId?: string
+  bdName?: string
+  teamId?: string
+  teamName?: string
+  totalLeads?: number
+  closedLeads: number
+  conversionRate?: number
+  revenue?: number
+  netProfit: number
+  avgTicketSize?: number
 }
 
-const PIE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#06b6d4', '#a855f7', '#f97316']
+interface TodayLeadAssignment {
+  bdId: string
+  bdName: string
+  bdEmail: string
+  teamName: string | null
+  teamCircle: string | null
+  leadCount: number
+  leads: Array<{
+    id: string
+    leadRef: string
+    patientName: string
+    createdDate: Date
+  }>
+}
+
+interface TodayLeadAssignmentsResponse {
+  date: string
+  totalLeads: number
+  assignments: TodayLeadAssignment[]
+}
+
+interface GeographicData {
+  circlePerformance: Array<{
+    circle: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+  }>
+  cityPerformance: Array<{
+    city: string
+    circle: string
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    topHospital: string
+    topTreatment: string
+  }>
+}
+
+interface MedicalData {
+  treatmentPerformance: Array<{
+    treatment: string
+    count: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    avgProfitMargin: number
+    conversionRate: number
+  }>
+  hospitalPerformance: Array<{
+    hospitalName: string
+    city: string
+    circle: string
+    totalSurgeries: number
+    revenue: number
+    profit: number
+    hospitalShare: number
+    avgTicketSize: number
+    avgDiscount: number
+    avgCopay: number
+    avgSettledAmount: number
+  }>
+  surgeonPerformance: Array<{
+    surgeonName: string
+    surgeonType: string
+    totalSurgeries: number
+    revenue: number
+    profit: number
+    doctorShare: number
+    avgTicketSize: number
+  }>
+}
+
+interface FinancialData {
+  financialBreakdown: {
+    totalBillAmount: number
+    totalDiscount: number
+    totalCopay: number
+    totalDeduction: number
+    totalSettledAmount: number
+    totalNetProfit: number
+    mediendProfit: number
+    hospitalShare: number
+    doctorShare: number
+    othersShare: number
+    profitMargin: number
+    discountRate: number
+  }
+  paymentModeAnalysis: Array<{
+    modeOfPayment: string
+    count: number
+    totalAmount: number
+    avgAmount: number
+    percentage: number
+  }>
+  insuranceAnalysis: Array<{
+    insuranceName: string
+    tpa: string | null
+    totalCases: number
+    approvedCases: number
+    rejectedCases: number
+    approvalRate: number
+    avgSumInsured: number
+    avgRoomRent: number
+    avgICU: number
+    avgCapping: number
+    avgSettlementAmount: number
+    avgCopay: number
+    revenue: number
+    profit: number
+  }>
+}
+
+interface TrendsData {
+  period: string
+  trendData: Array<{
+    period: string
+    leadsCreated: number
+    leadsCompleted: number
+    leadsLost: number
+    revenue: number
+    profit: number
+    conversionRate: number
+    avgTicketSize: number
+    avgTimeToClose?: number
+  }>
+}
+
+interface SourceCampaignData {
+  sourcePerformance: Array<{
+    source: string
+    campaignName: string | null
+    bdeName: string | null
+    totalLeads: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    avgTicketSize: number
+    qualityScore: number
+  }>
+  campaignAnalysis: Array<{
+    campaignName: string
+    source: string
+    totalLeads: number
+    conversionRate: number
+    revenue: number
+    profit: number
+    startDate?: string
+    endDate?: string
+    cities?: string[]
+    topTreatments?: string[]
+  }>
+}
+
+interface TargetData {
+  overallSummary: {
+    leadsClosed: { target: number; achieved: number; percentage: number }
+    netProfit: { target: number; achieved: number; percentage: number }
+    billAmount: { target: number; achieved: number; percentage: number }
+    surgeriesDone: { target: number; achieved: number; percentage: number }
+  }
+  targetAchievements: Array<{
+    targetId: string
+    targetType: string
+    entityName: string
+    metric: string
+    periodType: string
+    periodStartDate: string
+    periodEndDate: string
+    targetValue: number
+    achieved: number
+    percentage: number
+    bonusRules: Array<{
+      id: string
+      type: string
+      threshold: number
+      bonusAmount: number | null
+      bonusPercentage: number | null
+      capAmount: number | null
+    }>
+  }>
+}
+
+interface OperationalData {
+  leadVelocity: {
+    avgSalesToInsurance: number
+    avgInsuranceToPL: number
+    avgPLToCompleted: number
+    avgEndToEnd: number
+  }
+  followUpMetrics: {
+    totalLeadsRequiringFollowUp: number
+    leadsWithScheduledFollowUp: number
+    overdueFollowUps: number
+    complianceRate: number
+    bdCompliance: Array<{
+      bd: string
+      rate: number
+    }>
+  }
+  dataQuality: {
+    leadsWithPhone: number
+    leadsWithEmail: number
+    leadsWithAlternate: number
+    leadsWithInsurance: number
+    leadsWithTreatment: number
+    duplicateLeads: number
+    invalidNumbers: number
+    overallQualityScore: number
+  }
+}
+
+interface RiskAlertsData {
+  atRiskLeads: {
+    leadsStuckInSales: number
+    leadsStuckInInsurance: number
+    overdueFollowUps: number
+    dnpLeads: number
+    highValueAtRisk: number
+  }
+  criticalLeads: Array<{
+    id: string
+    leadRef: string
+    patientName: string
+    riskType: string
+    daysStuck: number
+    billAmount: number
+    bdName: string
+  }>
+}
 
 export default function MDSalesDashboardPage() {
-  const [customDateRange, setCustomDateRange] = useState({
-    startDate: '',
-    endDate: '',
+  const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false)
+  const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false)
+  const [startDate, setStartDate] = useState<Date | undefined>(() => {
+    const date = new Date()
+    date.setDate(date.getDate() - 30)
+    return date
   })
-  const [period, setPeriod] = useState('all')
+  const [endDate, setEndDate] = useState<Date | undefined>(() => new Date())
 
-  const dateRange = useMemo(() => {
-    if (period === 'custom') {
-      return customDateRange
-    }
-    if (period === 'all') {
-      return { startDate: '', endDate: '' }
-    }
+  const dateRange = {
+    startDate: startDate ? format(startDate, 'yyyy-MM-dd') : '',
+    endDate: endDate ? format(endDate, 'yyyy-MM-dd') : '',
+  }
 
-    const endDate = new Date()
-    let startDate = new Date()
-    
-    switch (period) {
-      case '7':
-        startDate.setDate(endDate.getDate() - 7)
-        break
-      case '30':
-        startDate.setDate(endDate.getDate() - 30)
-        break
-      case '90':
-        startDate.setDate(endDate.getDate() - 90)
-        break
-      case 'thisMonth':
-        startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1)
-        break
-      case 'lastMonth':
-        startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1)
-        endDate.setDate(0) // Last day of previous month
-        break
-      case 'thisYear':
-        startDate = new Date(endDate.getFullYear(), 0, 1)
-        break
-      default:
-        startDate.setDate(endDate.getDate() - 30)
-    }
-
-    return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
-    }
-  }, [period, customDateRange])
-
-  const { data: analytics, isLoading } = useQuery<SalesAnalytics>({
-    queryKey: ['analytics', 'md', 'sales', dateRange],
+  const { data: stats } = useQuery<DashboardStats>({
+    queryKey: ['analytics', 'dashboard', dateRange],
     queryFn: async () => {
-      const params = new URLSearchParams()
-      if (dateRange.startDate) {
-        params.append('startDate', dateRange.startDate)
-      }
-      if (dateRange.endDate) {
-        params.append('endDate', dateRange.endDate)
-      }
-      const data = await apiGet<SalesAnalytics>(`/api/analytics/md/sales?${params.toString()}`)
-      return data
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<DashboardStats>(`/api/analytics/dashboard?${params.toString()}`)
     },
-    enabled: period === 'all' || (!!dateRange.startDate && !!dateRange.endDate),
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
+  const { data: stageStats } = useQuery<StageStats>({
+    queryKey: ['analytics', 'stage-stats', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<StageStats>(`/api/analytics/stage-stats?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
 
-  const paymentModeChartData = useMemo(() => {
-    if (!analytics?.paymentModeAnalysis) return []
-    const total = analytics.paymentModeAnalysis.reduce((sum, p) => sum + p.count, 0)
-    return analytics.paymentModeAnalysis.map((p) => ({
-      name: p.mode === 'cash' || p.mode.toLowerCase().includes('cash') ? 'Cash' : 
-            p.mode === 'cashless' || p.mode.toLowerCase().includes('cashless') ? 'Cashless' : p.mode,
-      value: p.count,
-      percentage: total > 0 ? ((p.count / total) * 100).toFixed(1) : 0,
-      revenue: p.revenue,
-      profit: p.profit,
-    }))
-  }, [analytics])
+  const { data: teamLeaderboard, isLoading: teamsLoading } = useQuery<LeaderboardEntry[]>({
+    queryKey: ['analytics', 'leaderboard', 'team', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        type: 'team',
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<LeaderboardEntry[]>(`/api/analytics/leaderboard?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
 
-  const topCities = useMemo(() => analytics?.cityPerformance.slice(0, 10) || [], [analytics])
-  const topHospitals = useMemo(() => analytics?.hospitalPerformance.slice(0, 10) || [], [analytics])
+  const { data: bdLeaderboard, isLoading: bdsLoading } = useQuery<LeaderboardEntry[]>({
+    queryKey: ['analytics', 'leaderboard', 'bd', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        type: 'bd',
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<LeaderboardEntry[]>(`/api/analytics/leaderboard?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: todayAssignments, isLoading: todayLoading } = useQuery<TodayLeadAssignmentsResponse>({
+    queryKey: ['analytics', 'today-leads-assignments'],
+    queryFn: () => apiGet<TodayLeadAssignmentsResponse>('/api/analytics/today-leads-assignments'),
+    refetchInterval: 60000, // Refetch every minute to keep data fresh
+  })
+
+  // Phase 2-4 Analytics Queries
+  const { data: geographicData } = useQuery<GeographicData>({
+    queryKey: ['analytics', 'geographic', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<GeographicData>(`/api/analytics/geographic?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: medicalData } = useQuery<MedicalData>({
+    queryKey: ['analytics', 'medical', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<MedicalData>(`/api/analytics/medical?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: financialData } = useQuery<FinancialData>({
+    queryKey: ['analytics', 'financial', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<FinancialData>(`/api/analytics/financial?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: trendsData } = useQuery<TrendsData>({
+    queryKey: ['analytics', 'trends', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        period: 'daily',
+      })
+      return apiGet<TrendsData>(`/api/analytics/trends?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: sourceCampaignData } = useQuery<SourceCampaignData>({
+    queryKey: ['analytics', 'source-campaign', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<SourceCampaignData>(`/api/analytics/source-campaign?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: targetData } = useQuery({
+    queryKey: ['analytics', 'target-achievement', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet(`/api/analytics/target-achievement?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: operationalData } = useQuery<OperationalData>({
+    queryKey: ['analytics', 'operational', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<OperationalData>(`/api/analytics/operational?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
+
+  const { data: riskAlertsData } = useQuery<RiskAlertsData>({
+    queryKey: ['analytics', 'risk-alerts', dateRange],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      })
+      return apiGet<RiskAlertsData>(`/api/analytics/risk-alerts?${params.toString()}`)
+    },
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
+  })
 
   return (
     <AuthenticatedLayout>
-      <div className="space-y-6 p-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Sales Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Comprehensive sales analytics and insights</p>
+            <p className="text-muted-foreground mt-1">Sales performance overview</p>
           </div>
-          <div className="flex gap-2 items-center">
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-                <SelectItem value="thisMonth">This Month</SelectItem>
-                <SelectItem value="lastMonth">Last Month</SelectItem>
-                <SelectItem value="thisYear">This Year</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-            {period === 'custom' && (
-              <>
-                <input
-                  type="date"
-                  value={customDateRange.startDate}
-                  onChange={(e) => setCustomDateRange({ ...customDateRange, startDate: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-                <input
-                  type="date"
-                  value={customDateRange.endDate}
-                  onChange={(e) => setCustomDateRange({ ...customDateRange, endDate: e.target.value })}
-                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </>
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">From:</span>
+              <Dialog open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {startDate ? format(startDate, 'PP') : 'Pick date'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={startDate}
+                    onSelect={(date) => {
+                      setStartDate(date)
+                      setIsStartCalendarOpen(false)
+                    }}
+                    initialFocus
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">To:</span>
+              <Dialog open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {endDate ? format(endDate, 'PP') : 'Pick date'}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={endDate}
+                    onSelect={(date) => {
+                      setEndDate(date)
+                      setIsEndCalendarOpen(false)
+                    }}
+                    initialFocus
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+            {(startDate || endDate) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate(undefined)
+                  setEndDate(undefined)
+                }}
+                className="text-muted-foreground"
+              >
+                Clear dates
+              </Button>
             )}
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-4 w-24 bg-slate-200 rounded"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-8 w-32 bg-slate-200 rounded"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : analytics ? (
-          <>
-            {/* KPI Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-l-4 border-l-green-500 bg-linear-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                  <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                    ₹{analytics.kpis.totalRevenue.toLocaleString('en-IN')}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Bill amount from completed surgeries</p>
-                </CardContent>
-              </Card>
+        {/* Pipeline Stage Breakdown */}
+        {stageStats && (
+          <Card className="border-l-4 border-l-blue-500 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/20">
+              <CardTitle className="text-blue-700 dark:text-blue-300">Pipeline Stage Breakdown</CardTitle>
+              <CardDescription>Leads by pipeline stage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-5">
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">SALES</p>
+                        <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                          {stageStats.pipelineStages.SALES}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center">
+                        <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-l-4 border-l-blue-500 bg-linear-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-                  <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                    ₹{analytics.kpis.totalProfit.toLocaleString('en-IN')}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Total net profit realized</p>
-                </CardContent>
-              </Card>
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">INSURANCE</p>
+                        <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+                          {stageStats.pipelineStages.INSURANCE}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-l-4 border-l-purple-500 bg-linear-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Leads</CardTitle>
-                  <Users className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                    {analytics.kpis.totalLeads.toLocaleString('en-IN')}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Leads created in period</p>
-                </CardContent>
-              </Card>
+                <Card className="border-l-4 border-l-orange-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">PL</p>
+                        <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                          {stageStats.pipelineStages.PL}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center">
+                        <AlertCircle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-l-4 border-l-emerald-500 bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed Surgeries</CardTitle>
-                  <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                    {analytics.kpis.completedSurgeries.toLocaleString('en-IN')}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Surgeries completed</p>
-                </CardContent>
-              </Card>
+                <Card className="border-l-4 border-l-teal-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">COMPLETED</p>
+                        <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">
+                          {stageStats.pipelineStages.COMPLETED}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-950/30 flex items-center justify-center">
+                        <CheckCircle2 className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-l-4 border-l-amber-500 bg-linear-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-                  <BarChart3 className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
-                    {analytics.kpis.conversionRate.toFixed(1)}%
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Leads to surgeries</p>
-                </CardContent>
-              </Card>
+                <Card className="border-l-4 border-l-gray-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">LOST</p>
+                        <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                          {stageStats.pipelineStages.LOST}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-950/30 flex items-center justify-center">
+                        <XCircle className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-              <Card className="border-l-4 border-l-cyan-500 bg-linear-to-br from-cyan-50 to-white dark:from-cyan-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Ticket Size</CardTitle>
-                  <DollarSign className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                    ₹{analytics.kpis.avgTicketSize.toLocaleString('en-IN')}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Average per surgery</p>
-                </CardContent>
-              </Card>
+        {/* Status Category Breakdown */}
+        {stageStats && (
+          <Card className="border-l-4 border-l-purple-500 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-950/20">
+              <CardTitle className="text-purple-700 dark:text-purple-300">Status Category Breakdown</CardTitle>
+              <CardDescription>Leads by status category</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                <Card className="border-l-4 border-l-green-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">New Leads</p>
+                        <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                          {stageStats.statusCategories.new}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card className="border-l-4 border-l-indigo-500 bg-linear-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-background">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Net Profit</CardTitle>
-                  <TrendingUp className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
-                    ₹{analytics.kpis.avgNetProfitPerSurgery.toLocaleString('en-IN')}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">Per surgery</p>
-                </CardContent>
-              </Card>
+                <Card className="border-l-4 border-l-yellow-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Follow-ups</p>
+                        <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                          {stageStats.statusCategories.followUps}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+                        <CalendarIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-emerald-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">IPD Done</p>
+                        <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                          {stageStats.statusCategories.ipdDone}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-slate-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">DNP</p>
+                        <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">
+                          {stageStats.statusCategories.dnp}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-950/30 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-slate-600 dark:text-slate-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-gray-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Lost/Inactive</p>
+                        <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                          {stageStats.statusCategories.lost}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-950/30 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-teal-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                        <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">
+                          {stageStats.statusCategories.completed}
+                        </p>
+                      </div>
+                      <div className="h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-950/30 flex items-center justify-center">
+                        <TrendingUp className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Team Leaderboard */}
+        <Card className="border-l-4 border-l-emerald-500 shadow-md">
+          <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
+            <CardTitle className="text-emerald-700 dark:text-emerald-300">Team Leaderboard</CardTitle>
+            <CardDescription>Team performance ranking</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {teamsLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rank</TableHead>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>Total Leads</TableHead>
+                    <TableHead>Closed Leads</TableHead>
+                    <TableHead>Conversion Rate</TableHead>
+                    <TableHead>Revenue</TableHead>
+                    <TableHead>Net Profit</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teamLeaderboard?.map((team, index) => (
+                    <TableRow key={team.teamId}>
+                      <TableCell>
+                        <Badge variant={index < 3 ? 'default' : 'secondary'}>#{index + 1}</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{team.teamName}</TableCell>
+                      <TableCell>{team.totalLeads || 0}</TableCell>
+                      <TableCell>{team.closedLeads}</TableCell>
+                      <TableCell>
+                        {team.conversionRate !== undefined ? `${team.conversionRate.toFixed(1)}%` : '0%'}
+                      </TableCell>
+                      <TableCell>₹{team.revenue?.toLocaleString('en-IN') || '0'}</TableCell>
+                      <TableCell>₹{team.netProfit.toLocaleString('en-IN')}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!teamLeaderboard || teamLeaderboard.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No team data available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* BD Leaderboard */}
+        <Card className="border-l-4 border-l-amber-500 shadow-md">
+          <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent dark:from-amber-950/20">
+            <CardTitle className="text-amber-700 dark:text-amber-300">BD Leaderboard</CardTitle>
+            <CardDescription>Top performing Business Development executives</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {bdsLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Rank</TableHead>
+                    <TableHead>BD Name</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead>Total Leads</TableHead>
+                    <TableHead>Closed Leads</TableHead>
+                    <TableHead>Conversion Rate</TableHead>
+                    <TableHead>Net Profit</TableHead>
+                    <TableHead>Avg Ticket Size</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bdLeaderboard?.slice(0, 20).map((bd, index) => (
+                    <TableRow key={bd.bdId}>
+                      <TableCell>
+                        <Badge variant={index < 3 ? 'default' : 'secondary'}>#{index + 1}</Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{bd.bdName}</TableCell>
+                      <TableCell>{bd.teamName || 'No Team'}</TableCell>
+                      <TableCell>{bd.totalLeads || 0}</TableCell>
+                      <TableCell>{bd.closedLeads}</TableCell>
+                      <TableCell>
+                        {bd.conversionRate !== undefined ? `${bd.conversionRate.toFixed(1)}%` : '0%'}
+                      </TableCell>
+                      <TableCell>₹{bd.netProfit.toLocaleString('en-IN')}</TableCell>
+                      <TableCell>₹{bd.avgTicketSize?.toLocaleString('en-IN') || '0'}</TableCell>
+                    </TableRow>
+                  ))}
+                  {(!bdLeaderboard || bdLeaderboard.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No BD data available
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Today's Lead Assignments */}
+        <Card className="border-l-4 border-l-teal-500 shadow-md">
+          <CardHeader className="bg-gradient-to-r from-teal-50 to-transparent dark:from-teal-950/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-teal-700 dark:text-teal-300">Today&apos;s Lead Assignments</CardTitle>
+                <CardDescription>
+                  New leads assigned to BDs today ({todayAssignments?.date || new Date().toISOString().split('T')[0]})
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                <Badge variant="outline" className="bg-teal-100 dark:bg-teal-950/30 text-teal-700 dark:text-teal-300">
+                  {todayAssignments?.totalLeads || 0} Total Leads
+                </Badge>
+              </div>
             </div>
-
-            {/* Charts Grid */}
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* City Performance */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Cities by Revenue</CardTitle>
-                  <CardDescription>Best performing cities</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {topCities.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        revenue: { label: 'Revenue', color: COLORS.revenue },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <BarChart data={topCities}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="city" angle={-45} textAnchor="end" height={100} />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="revenue" fill={COLORS.revenue} radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      No city data available for the selected period
-                    </div>
+          </CardHeader>
+          <CardContent>
+            {todayLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>BD Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead className="text-right">Leads Assigned</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {todayAssignments?.assignments.map((assignment) => (
+                    <TableRow key={assignment.bdId}>
+                      <TableCell className="font-medium">{assignment.bdName}</TableCell>
+                      <TableCell className="text-muted-foreground">{assignment.bdEmail}</TableCell>
+                      <TableCell>
+                        {assignment.teamName ? (
+                          <div className="flex items-center gap-2">
+                            <span>{assignment.teamName}</span>
+                            {assignment.teamCircle && (
+                              <Badge variant="outline" className="text-xs">
+                                {assignment.teamCircle}
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">No Team</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge variant="default" className="text-sm">
+                          {assignment.leadCount}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {(!todayAssignments || todayAssignments.assignments.length === 0) && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        No leads assigned today
+                      </TableCell>
+                    </TableRow>
                   )}
-                </CardContent>
-              </Card>
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-              {/* Payment Mode */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment Mode Distribution</CardTitle>
-                  <CardDescription>Cash vs Cashless breakdown</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {paymentModeChartData.length > 0 ? (
-                    <ChartContainer
-                      config={paymentModeChartData.reduce((acc, item) => {
-                        acc[item.name] = { label: item.name }
-                        return acc
-                      }, {} as Record<string, { label: string }>)}
-                      className="h-[300px]"
-                    >
-                      <RechartsPieChart>
-                        <Pie
-                          data={paymentModeChartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percentage }) => `${name}: ${percentage}%`}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {paymentModeChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </RechartsPieChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      No payment mode data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+        {/* Extended Analytics - Phase 2-4 */}
+        <Tabs defaultValue="geographic" className="w-full">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="geographic">
+              <MapPin className="mr-2 h-4 w-4" />
+              Geographic
+            </TabsTrigger>
+            <TabsTrigger value="medical">
+              <Stethoscope className="mr-2 h-4 w-4" />
+              Medical
+            </TabsTrigger>
+            <TabsTrigger value="financial">
+              <DollarSign className="mr-2 h-4 w-4" />
+              Financial
+            </TabsTrigger>
+            <TabsTrigger value="trends">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Trends
+            </TabsTrigger>
+            <TabsTrigger value="source">
+              <Activity className="mr-2 h-4 w-4" />
+              Source
+            </TabsTrigger>
+            <TabsTrigger value="target">
+              <Target className="mr-2 h-4 w-4" />
+              Targets
+            </TabsTrigger>
+            <TabsTrigger value="operational">
+              <Clock className="mr-2 h-4 w-4" />
+              Operations
+            </TabsTrigger>
+            <TabsTrigger value="risks">
+              <Shield className="mr-2 h-4 w-4" />
+              Risks
+            </TabsTrigger>
+          </TabsList>
 
-              {/* Revenue Trend */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Revenue Trend</CardTitle>
-                  <CardDescription>Daily revenue over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {analytics.revenueProfitTrends && analytics.revenueProfitTrends.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        revenue: { label: 'Revenue', color: COLORS.revenue },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <LineChart data={analytics.revenueProfitTrends}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="revenue" stroke={COLORS.revenue} strokeWidth={2} />
-                      </LineChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      No revenue trend data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Profit Trend */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profit Trend</CardTitle>
-                  <CardDescription>Daily profit over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {analytics.revenueProfitTrends && analytics.revenueProfitTrends.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        profit: { label: 'Profit', color: COLORS.profit },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <AreaChart data={analytics.revenueProfitTrends}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area type="monotone" dataKey="profit" stroke={COLORS.profit} fill={COLORS.profit} fillOpacity={0.3} />
-                      </AreaChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      No profit trend data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Circle Performance */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Circle Performance</CardTitle>
-                  <CardDescription>Revenue and profit by circle</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {analytics.circlePerformance && analytics.circlePerformance.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        revenue: { label: 'Revenue', color: COLORS.revenue },
-                        profit: { label: 'Profit', color: COLORS.profit },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <ComposedChart data={analytics.circlePerformance}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="circle" />
-                        <YAxis yAxisId="left" />
-                        <YAxis yAxisId="right" orientation="right" />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar yAxisId="left" dataKey="revenue" fill={COLORS.revenue} />
-                        <Bar yAxisId="right" dataKey="profit" fill={COLORS.profit} />
-                      </ComposedChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      No circle performance data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Status Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Lead Status Distribution</CardTitle>
-                  <CardDescription>Breakdown of lead statuses</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {analytics.statusDistribution && analytics.statusDistribution.length > 0 ? (
-                    <ChartContainer
-                      config={analytics.statusDistribution.reduce((acc, item) => {
-                        acc[item.status] = { label: item.status }
-                        return acc
-                      }, {} as Record<string, { label: string }>)}
-                      className="h-[300px]"
-                    >
-                      <RechartsPieChart>
-                        <Pie
-                          data={analytics.statusDistribution}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ status, count }) => `${status}: ${count}`}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          dataKey="count"
-                        >
-                          {analytics.statusDistribution.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </RechartsPieChart>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                      No status distribution data available
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Performance Tables */}
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* BD Leaderboard */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>BD Performance Leaderboard</CardTitle>
-                  <CardDescription>Top performing Business Developers</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
+          {/* Geographic Analytics */}
+          <TabsContent value="geographic" className="space-y-4">
+            {geographicData ? (
+              <>
+                <Card className="border-l-4 border-l-indigo-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-950/20">
+                    <CardTitle className="text-indigo-700 dark:text-indigo-300">Circle Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Rank</TableHead>
-                          <TableHead>BD Name</TableHead>
-                          <TableHead>Team</TableHead>
+                          <TableHead>Circle</TableHead>
+                          <TableHead>Total Leads</TableHead>
+                          <TableHead>Completed</TableHead>
+                          <TableHead>Conversion Rate</TableHead>
                           <TableHead>Revenue</TableHead>
                           <TableHead>Profit</TableHead>
-                          <TableHead>Leads</TableHead>
-                          <TableHead>Conv. %</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.bdPerformance.slice(0, 10).map((bd, index) => (
-                          <TableRow key={bd.bdId}>
-                            <TableCell className="font-medium">{index + 1}</TableCell>
-                            <TableCell>{bd.bdName}</TableCell>
-                            <TableCell>{bd.teamName}</TableCell>
-                            <TableCell>₹{bd.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell className="text-blue-600 dark:text-blue-400 font-semibold">
-                              ₹{bd.profit.toLocaleString('en-IN')}
-                            </TableCell>
-                            <TableCell>{bd.closedLeads}</TableCell>
-                            <TableCell>{bd.conversionRate.toFixed(1)}%</TableCell>
+                        {geographicData.circlePerformance?.map((circle: any) => (
+                          <TableRow key={circle.circle}>
+                            <TableCell className="font-medium">{circle.circle}</TableCell>
+                            <TableCell>{circle.totalLeads}</TableCell>
+                            <TableCell>{circle.completedSurgeries}</TableCell>
+                            <TableCell>{circle.conversionRate.toFixed(1)}%</TableCell>
+                            <TableCell>₹{circle.revenue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{circle.profit.toLocaleString('en-IN')}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Team Leaderboard */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Team Performance</CardTitle>
-                  <CardDescription>Team comparison</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
+                <Card className="border-l-4 border-l-violet-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-violet-50 to-transparent dark:from-violet-950/20">
+                    <CardTitle className="text-violet-700 dark:text-violet-300">Top 20 Cities by Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Team</TableHead>
+                          <TableHead>City</TableHead>
+                          <TableHead>Circle</TableHead>
+                          <TableHead>Total Leads</TableHead>
+                          <TableHead>Completed</TableHead>
+                          <TableHead>Conversion Rate</TableHead>
                           <TableHead>Revenue</TableHead>
-                          <TableHead>Profit</TableHead>
-                          <TableHead>Leads</TableHead>
-                          <TableHead>Conv. %</TableHead>
+                          <TableHead>Top Hospital</TableHead>
+                          <TableHead>Top Treatment</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.teamPerformance.map((team, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{team.teamName}</TableCell>
-                            <TableCell>₹{team.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell className="text-blue-600 dark:text-blue-400 font-semibold">
-                              ₹{team.profit.toLocaleString('en-IN')}
-                            </TableCell>
-                            <TableCell>{team.closedLeads}</TableCell>
-                            <TableCell>{team.conversionRate.toFixed(1)}%</TableCell>
+                        {geographicData.cityPerformance?.map((city: any) => (
+                          <TableRow key={city.city}>
+                            <TableCell className="font-medium">{city.city}</TableCell>
+                            <TableCell>{city.circle}</TableCell>
+                            <TableCell>{city.totalLeads}</TableCell>
+                            <TableCell>{city.completedSurgeries}</TableCell>
+                            <TableCell>{city.conversionRate.toFixed(1)}%</TableCell>
+                            <TableCell>₹{city.revenue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{city.topHospital || 'N/A'}</TableCell>
+                            <TableCell>{city.topTreatment || 'N/A'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </TabsContent>
 
-            {/* Top Hospitals Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Hospitals</CardTitle>
-                <CardDescription>Best performing hospitals by revenue</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
+          {/* Medical Analytics */}
+          <TabsContent value="medical" className="space-y-4">
+            {medicalData ? (
+               <>
+                <Card className="border-l-4 border-l-rose-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-rose-50 to-transparent dark:from-rose-950/20">
+                    <CardTitle className="text-rose-700 dark:text-rose-300">Top 20 Treatments by Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Treatment</TableHead>
+                          <TableHead>Count</TableHead>
+                          <TableHead>Revenue</TableHead>
+                          <TableHead>Profit</TableHead>
+                          <TableHead>Avg Ticket Size</TableHead>
+                          <TableHead>Conversion Rate</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {medicalData.treatmentPerformance?.map((treatment: any) => (
+                          <TableRow key={treatment.treatment}>
+                            <TableCell className="font-medium">{treatment.treatment}</TableCell>
+                            <TableCell>{treatment.count || 0}</TableCell>
+                            <TableCell>₹{treatment.revenue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{treatment.profit.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{treatment.avgTicketSize.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{treatment.conversionRate?.toFixed(1) || '0'}%</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-pink-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-pink-50 to-transparent dark:from-pink-950/20">
+                    <CardTitle className="text-pink-700 dark:text-pink-300">Top 20 Hospitals by Revenue</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Hospital</TableHead>
+                          <TableHead>City</TableHead>
+                          <TableHead>Surgeries</TableHead>
+                          <TableHead>Revenue</TableHead>
+                          <TableHead>Profit</TableHead>
+                          <TableHead>Hospital Share</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {medicalData.hospitalPerformance?.map((hospital: any) => (
+                          <TableRow key={hospital.hospitalName}>
+                            <TableCell className="font-medium">{hospital.hospitalName}</TableCell>
+                            <TableCell>{hospital.city}</TableCell>
+                            <TableCell>{hospital.totalSurgeries}</TableCell>
+                            <TableCell>₹{hospital.revenue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{hospital.profit.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{hospital.hospitalShare.toLocaleString('en-IN')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-fuchsia-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-fuchsia-50 to-transparent dark:from-fuchsia-950/20">
+                    <CardTitle className="text-fuchsia-700 dark:text-fuchsia-300">Top 20 Surgeons by Surgeries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Surgeon</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Surgeries</TableHead>
+                          <TableHead>Revenue</TableHead>
+                          <TableHead>Doctor Share</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {medicalData.surgeonPerformance?.map((surgeon: any) => (
+                          <TableRow key={surgeon.surgeonName}>
+                            <TableCell className="font-medium">{surgeon.surgeonName}</TableCell>
+                            <TableCell>{surgeon.surgeonType}</TableCell>
+                            <TableCell>{surgeon.totalSurgeries}</TableCell>
+                            <TableCell>₹{surgeon.revenue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{surgeon.doctorShare.toLocaleString('en-IN')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* Financial Analytics */}
+          <TabsContent value="financial" className="space-y-4">
+            {financialData ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card className="border-l-4 border-l-green-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
+                      <CardTitle className="text-sm text-green-700 dark:text-green-300">Total Bill Amount</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        ₹{financialData.financialBreakdown?.totalBillAmount.toLocaleString('en-IN') || '0'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-emerald-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
+                      <CardTitle className="text-sm text-emerald-700 dark:text-emerald-300">Total Profit</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        ₹{financialData.financialBreakdown?.totalNetProfit.toLocaleString('en-IN') || '0'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-cyan-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-cyan-50 to-transparent dark:from-cyan-950/20">
+                      <CardTitle className="text-sm text-cyan-700 dark:text-cyan-300">Profit Margin</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {financialData.financialBreakdown?.profitMargin.toFixed(1) || '0'}%
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-sky-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-sky-50 to-transparent dark:from-sky-950/20">
+                      <CardTitle className="text-sm text-sky-700 dark:text-sky-300">Mediend Profit</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        ₹{financialData.financialBreakdown?.mediendProfit.toLocaleString('en-IN') || '0'}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="border-l-4 border-l-lime-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-lime-50 to-transparent dark:from-lime-950/20">
+                    <CardTitle className="text-lime-700 dark:text-lime-300">Payment Mode Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Payment Mode</TableHead>
+                          <TableHead>Count</TableHead>
+                          <TableHead>Total Amount</TableHead>
+                          <TableHead>Avg Amount</TableHead>
+                          <TableHead>Percentage</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {financialData.paymentModeAnalysis?.map((mode: any) => (
+                          <TableRow key={mode.modeOfPayment}>
+                            <TableCell className="font-medium">{mode.modeOfPayment}</TableCell>
+                            <TableCell>{mode.count}</TableCell>
+                            <TableCell>₹{mode.totalAmount.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>₹{mode.avgAmount.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{mode.percentage.toFixed(1)}%</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-blue-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/20">
+                    <CardTitle className="text-blue-700 dark:text-blue-300">Insurance Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Insurance</TableHead>
+                          <TableHead>TPA</TableHead>
+                          <TableHead>Total Cases</TableHead>
+                          <TableHead>Approved</TableHead>
+                          <TableHead>Approval Rate</TableHead>
+                          <TableHead>Revenue</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {financialData.insuranceAnalysis?.slice(0, 20).map((insurance: any) => (
+                          <TableRow key={insurance.insuranceName}>
+                            <TableCell className="font-medium">{insurance.insuranceName}</TableCell>
+                            <TableCell>{insurance.tpa || 'N/A'}</TableCell>
+                            <TableCell>{insurance.totalCases}</TableCell>
+                            <TableCell>{insurance.approvedCases}</TableCell>
+                            <TableCell>{insurance.approvalRate.toFixed(1)}%</TableCell>
+                            <TableCell>₹{insurance.revenue.toLocaleString('en-IN')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* Trends Analytics */}
+          <TabsContent value="trends" className="space-y-4">
+            {trendsData ? (
+              <Card className="border-l-4 border-l-orange-500 shadow-md">
+                <CardHeader className="bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
+                  <CardTitle className="text-orange-700 dark:text-orange-300">Trend Analysis - {trendsData.period}</CardTitle>
+                </CardHeader>
+                <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Hospital</TableHead>
-                        <TableHead>Surgeries</TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead>Leads Created</TableHead>
+                        <TableHead>Leads Completed</TableHead>
+                        <TableHead>Leads Lost</TableHead>
                         <TableHead>Revenue</TableHead>
                         <TableHead>Profit</TableHead>
+                        <TableHead>Conversion Rate</TableHead>
+                        <TableHead>Avg Ticket Size</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {topHospitals.map((hospital, index) => (
+                      {trendsData.trendData?.map((trend: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">{hospital.hospital}</TableCell>
-                          <TableCell>{hospital.surgeries}</TableCell>
-                          <TableCell>₹{hospital.revenue.toLocaleString('en-IN')}</TableCell>
-                          <TableCell className="text-blue-600 dark:text-blue-400 font-semibold">
-                            ₹{hospital.profit.toLocaleString('en-IN')}
-                          </TableCell>
+                          <TableCell className="font-medium">{trend.period}</TableCell>
+                          <TableCell>{trend.leadsCreated}</TableCell>
+                          <TableCell>{trend.leadsCompleted}</TableCell>
+                          <TableCell>{trend.leadsLost}</TableCell>
+                          <TableCell>₹{trend.revenue.toLocaleString('en-IN')}</TableCell>
+                          <TableCell>₹{trend.profit.toLocaleString('en-IN')}</TableCell>
+                          <TableCell>{trend.conversionRate.toFixed(1)}%</TableCell>
+                          <TableCell>₹{trend.avgTicketSize.toLocaleString('en-IN')}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
+                </CardContent>
+              </Card>
+            ) : null}
+          </TabsContent>
+
+          {/* Source & Campaign Analytics */}
+          <TabsContent value="source" className="space-y-4">
+            {sourceCampaignData ? (
+              <>
+                <Card className="border-l-4 border-l-yellow-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-950/20">
+                    <CardTitle className="text-yellow-700 dark:text-yellow-300">Lead Source Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Source</TableHead>
+                          <TableHead>Campaign</TableHead>
+                          <TableHead>BDE</TableHead>
+                          <TableHead>Total Leads</TableHead>
+                          <TableHead>Conversion Rate</TableHead>
+                          <TableHead>Revenue</TableHead>
+                          <TableHead>Quality Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sourceCampaignData.sourcePerformance?.slice(0, 20).map((source: any, index: number) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{source.source}</TableCell>
+                            <TableCell>{source.campaignName || 'N/A'}</TableCell>
+                            <TableCell>{source.bdeName || 'N/A'}</TableCell>
+                            <TableCell>{source.totalLeads}</TableCell>
+                            <TableCell>{source.conversionRate.toFixed(1)}%</TableCell>
+                            <TableCell>₹{source.revenue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>
+                              <Badge variant={source.qualityScore > 50 ? 'default' : 'secondary'}>
+                                {source.qualityScore.toFixed(1)}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-amber-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent dark:from-amber-950/20">
+                    <CardTitle className="text-amber-700 dark:text-amber-300">Campaign Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Campaign</TableHead>
+                          <TableHead>Source</TableHead>
+                          <TableHead>Total Leads</TableHead>
+                          <TableHead>Conversion Rate</TableHead>
+                          <TableHead>Revenue</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sourceCampaignData.campaignAnalysis?.map((campaign: any) => (
+                          <TableRow key={campaign.campaignName}>
+                            <TableCell className="font-medium">{campaign.campaignName}</TableCell>
+                            <TableCell>{campaign.source}</TableCell>
+                            <TableCell>{campaign.totalLeads}</TableCell>
+                            <TableCell>{campaign.conversionRate.toFixed(1)}%</TableCell>
+                            <TableCell>₹{campaign.revenue.toLocaleString('en-IN')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* Target Achievement */}
+          <TabsContent value="target" className="space-y-4">
+            {targetData ? (
+              <>
+                {(() => {
+                  const data = targetData as TargetData
+                  return (
+                    <>
+                    <div className="grid gap-4 md:grid-cols-4">
+                      <Card className="border-l-4 border-l-green-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
+                          <CardTitle className="text-sm text-green-700 dark:text-green-300">Leads Closed</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {data.overallSummary.leadsClosed.achieved || 0} /{' '}
+                            {data.overallSummary.leadsClosed.target || 0}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.leadsClosed.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-l-4 border-l-emerald-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
+                          <CardTitle className="text-sm text-emerald-700 dark:text-emerald-300">Net Profit</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            ₹{data.overallSummary.netProfit.achieved.toLocaleString('en-IN') || '0'} / ₹
+                            {data.overallSummary.netProfit.target.toLocaleString('en-IN') || '0'}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.netProfit.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-l-4 border-l-teal-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-teal-50 to-transparent dark:from-teal-950/20">
+                          <CardTitle className="text-sm text-teal-700 dark:text-teal-300">Bill Amount</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            ₹{data.overallSummary.billAmount.achieved.toLocaleString('en-IN') || '0'} / ₹
+                            {data.overallSummary.billAmount.target.toLocaleString('en-IN') || '0'}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.billAmount.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-l-4 border-l-cyan-500 shadow-md">
+                        <CardHeader className="bg-gradient-to-r from-cyan-50 to-transparent dark:from-cyan-950/20">
+                          <CardTitle className="text-sm text-cyan-700 dark:text-cyan-300">Surgeries Done</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">
+                            {data.overallSummary.surgeriesDone.achieved || 0} /{' '}
+                            {data.overallSummary.surgeriesDone.target || 0}
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {data.overallSummary.surgeriesDone.percentage.toFixed(1) || 0}%
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <Card className="border-l-4 border-l-indigo-500 shadow-md">
+                      <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-950/20">
+                        <CardTitle className="text-indigo-700 dark:text-indigo-300">Target Achievement Details</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Entity</TableHead>
+                              <TableHead>Metric</TableHead>
+                              <TableHead>Target</TableHead>
+                              <TableHead>Achieved</TableHead>
+                              <TableHead>Percentage</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {data.targetAchievements.map((target: any) => (
+                          <TableRow key={target.targetId}>
+                            <TableCell className="font-medium">{target.entityName}</TableCell>
+                            <TableCell>{target.metric}</TableCell>
+                            <TableCell>{target.targetValue.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{target.achieved.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>
+                              <Badge variant={target.percentage >= 100 ? 'default' : 'secondary'}>
+                                {target.percentage.toFixed(1)}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+                    </>
+                  )
+                })()}
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* Operational Metrics */}
+          <TabsContent value="operational" className="space-y-4">
+            {operationalData ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <Card className="border-l-4 border-l-blue-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/20">
+                      <CardTitle className="text-sm text-blue-700 dark:text-blue-300">Avg Sales to Insurance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {operationalData.leadVelocity?.avgSalesToInsurance.toFixed(1) || '0'} days
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-purple-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-950/20">
+                      <CardTitle className="text-sm text-purple-700 dark:text-purple-300">Avg Insurance to PL</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {operationalData.leadVelocity?.avgInsuranceToPL.toFixed(1) || '0'} days
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-pink-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-pink-50 to-transparent dark:from-pink-950/20">
+                      <CardTitle className="text-sm text-pink-700 dark:text-pink-300">Avg PL to Completed</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {operationalData.leadVelocity?.avgPLToCompleted.toFixed(1) || '0'} days
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-rose-500 shadow-md">
+                    <CardHeader className="bg-gradient-to-r from-rose-50 to-transparent dark:from-rose-950/20">
+                      <CardTitle className="text-sm text-rose-700 dark:text-rose-300">Avg End to End</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {operationalData.leadVelocity?.avgEndToEnd.toFixed(1) || '0'} days
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
-          </>
-        ) : (
-          <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">No data available for the selected period</p>
-            </CardContent>
-          </Card>
-        )}
+
+                <Card className="border-l-4 border-l-violet-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-violet-50 to-transparent dark:from-violet-950/20">
+                    <CardTitle className="text-violet-700 dark:text-violet-300">Follow-up Compliance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between">
+                        <span>Total Leads Requiring Follow-up</span>
+                        <span className="font-bold">{operationalData.followUpMetrics?.totalLeadsRequiringFollowUp || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Leads with Scheduled Follow-up</span>
+                        <span className="font-bold">{operationalData.followUpMetrics?.leadsWithScheduledFollowUp || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Overdue Follow-ups</span>
+                        <span className="font-bold text-red-600">{operationalData.followUpMetrics?.overdueFollowUps || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Compliance Rate</span>
+                        <span className="font-bold">
+                          {operationalData.followUpMetrics?.complianceRate.toFixed(1) || '0'}%
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-fuchsia-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-fuchsia-50 to-transparent dark:from-fuchsia-950/20">
+                    <CardTitle className="text-fuchsia-700 dark:text-fuchsia-300">Data Quality Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Leads with Phone</span>
+                        <span>{operationalData.dataQuality?.leadsWithPhone || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Leads with Email</span>
+                        <span>{operationalData.dataQuality?.leadsWithEmail || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Duplicate Leads</span>
+                        <span className="text-red-600">{operationalData.dataQuality?.duplicateLeads || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Overall Quality Score</span>
+                        <Badge variant={operationalData.dataQuality?.overallQualityScore > 80 ? 'default' : 'secondary'}>
+                          {operationalData.dataQuality?.overallQualityScore.toFixed(1) || '0'}%
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </TabsContent>
+
+          {/* Risk Alerts */}
+          <TabsContent value="risks" className="space-y-4">
+            {riskAlertsData ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-5">
+                  <Card className="border-l-4 border-l-red-500">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Stuck in SALES</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-red-600">
+                        {riskAlertsData.atRiskLeads?.leadsStuckInSales || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-orange-500">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Stuck in INSURANCE</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {riskAlertsData.atRiskLeads?.leadsStuckInInsurance || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-yellow-500">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Overdue Follow-ups</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {riskAlertsData.atRiskLeads?.overdueFollowUps || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-gray-500">
+                    <CardHeader>
+                      <CardTitle className="text-sm">DNP Leads</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-gray-600">
+                        {riskAlertsData.atRiskLeads?.dnpLeads || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-purple-500">
+                    <CardHeader>
+                      <CardTitle className="text-sm">High Value At Risk</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {riskAlertsData.atRiskLeads?.highValueAtRisk || 0}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <Card className="border-l-4 border-l-red-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-red-50 to-transparent dark:from-red-950/20">
+                    <CardTitle className="text-red-700 dark:text-red-300">Critical Leads Requiring Attention</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Lead Ref</TableHead>
+                          <TableHead>Patient</TableHead>
+                          <TableHead>Risk Type</TableHead>
+                          <TableHead>Days Stuck</TableHead>
+                          <TableHead>Bill Amount</TableHead>
+                          <TableHead>BD</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {riskAlertsData.criticalLeads?.slice(0, 50).map((lead: any) => (
+                          <TableRow key={lead.id}>
+                            <TableCell className="font-medium">{lead.leadRef}</TableCell>
+                            <TableCell>{lead.patientName}</TableCell>
+                            <TableCell>
+                              <Badge variant="destructive">{lead.riskType}</Badge>
+                            </TableCell>
+                            <TableCell>{lead.daysStuck} days</TableCell>
+                            <TableCell>₹{lead.billAmount.toLocaleString('en-IN')}</TableCell>
+                            <TableCell>{lead.bdName}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </>
+            ) : null}
+          </TabsContent>
+        </Tabs>
       </div>
     </AuthenticatedLayout>
   )

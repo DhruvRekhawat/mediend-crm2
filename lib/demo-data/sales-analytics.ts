@@ -1,4 +1,87 @@
-import { SalesAnalytics } from '@/app/md/sales/page'
+export interface SalesAnalytics {
+  kpis: {
+    totalRevenue: number
+    totalProfit: number
+    totalLeads: number
+    completedSurgeries: number
+    conversionRate: number
+    avgTicketSize: number
+    avgNetProfitPerSurgery: number
+  }
+  cityPerformance: Array<{
+    city: string
+    revenue: number
+    profit: number
+    surgeries: number
+    leads: number
+    conversionRate: number
+    avgTicketSize: number
+  }>
+  diseasePerformance: Array<{
+    disease: string
+    count: number
+    revenue: number
+    profit: number
+  }>
+  hospitalPerformance: Array<{
+    hospital: string
+    surgeries: number
+    revenue: number
+    profit: number
+  }>
+  crossAnalysis: {
+    diseaseByCity: Array<{
+      city: string
+      diseases: Array<{ disease: string; count: number; revenue: number; profit: number }>
+    }>
+    hospitalByCity: Array<{
+      city: string
+      hospitals: Array<{ hospital: string; surgeries: number; revenue: number; profit: number }>
+    }>
+    diseaseByHospital: Array<{
+      hospital: string
+      diseases: Array<{ disease: string; count: number; revenue: number; profit: number }>
+    }>
+  }
+  paymentModeAnalysis: Array<{
+    mode: string
+    count: number
+    revenue: number
+    profit: number
+  }>
+  revenueProfitTrends: Array<{ date: string; revenue: number; profit: number; surgeries: number }>
+  bdPerformance: Array<{
+    bdId: string
+    bdName: string
+    teamName: string
+    revenue: number
+    profit: number
+    closedLeads: number
+    totalLeads: number
+    conversionRate: number
+  }>
+  teamPerformance: Array<{
+    teamName: string
+    revenue: number
+    profit: number
+    closedLeads: number
+    totalLeads: number
+    conversionRate: number
+  }>
+  circlePerformance: Array<{
+    circle: string
+    revenue: number
+    profit: number
+    surgeries: number
+  }>
+  statusDistribution: Array<{ status: string; count: number }>
+  conversionFunnel: {
+    totalLeads: number
+    followUps: number
+    ipdDone: number
+    completed: number
+  }
+}
 
 export function generateSalesDemoData(): SalesAnalytics {
   const cities = ['Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Surat']

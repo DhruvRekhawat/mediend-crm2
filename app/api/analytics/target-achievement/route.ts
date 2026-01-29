@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           lte: new Date(Math.min(periodEnd.getTime(), target.periodEndDate.getTime())),
         }
 
-        let where: Prisma.LeadWhereInput = {
+        const where: Prisma.LeadWhereInput = {
           pipelineStage: 'COMPLETED',
           conversionDate: dateFilter,
         }

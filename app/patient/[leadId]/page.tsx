@@ -3,7 +3,7 @@
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { useAuth } from '@/hooks/use-auth'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet } from '@/lib/api-client'
+import { apiGet, apiPost } from '@/lib/api-client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,18 @@ import { format } from 'date-fns'
 import Link from 'next/link'
 import { CaseStage } from '@prisma/client'
 import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 import { 
   canAddKYPDetails, 
   canCompletePreAuth, 
@@ -29,7 +41,8 @@ import {
   canEditKYP,
   canInitiate,
   canMarkDischarge,
-  canGeneratePDF
+  canGeneratePDF,
+  canEditDischargeSheet
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 
@@ -191,6 +204,17 @@ export default function PatientDetailsPage() {
 
   const [showKYPForm, setShowKYPForm] = useState(false)
   const [showPreAuthRaiseForm, setShowPreAuthRaiseForm] = useState(false)
+  const [showAdmitModal, setShowAdmitModal] = useState(false)
+  const [admitSubmitting, setAdmitSubmitting] = useState(false)
+  const [admitForm, setAdmitForm] = useState({
+    admissionDate: '',
+    admissionTime: '',
+    admittingHospital: '',
+    expectedSurgeryDate: '',
+    notes: '',
+  })
+  const [showDischargeConfirm, setShowDischargeConfirm] = useState(false)
+  const [dischargeSubmitting, setDischargeSubmitting] = useState(false)
 
   if (isLoading || isLoadingKYP) {
     return (
@@ -235,6 +259,7 @@ export default function PatientDetailsPage() {
   const canInit = user && canInitiate(user, lead)
   const canDischarge = user && canMarkDischarge(user, lead)
   const canPDF = user && canGeneratePDF(user, lead)
+  const canFillDischargeForm = user && canEditDischargeSheet(user, lead)
 
   return (
     <AuthenticatedLayout>
@@ -330,26 +355,31 @@ export default function PatientDetailsPage() {
                 )}
                 {canInit && (
                   <Button
-                    asChild
                     variant="default"
                     className="flex items-center gap-2"
+                    onClick={() => {
+                      setAdmitForm({
+                        admissionDate: new Date().toISOString().slice(0, 10),
+                        admissionTime: '',
+                        admittingHospital: lead.hospitalName || '',
+                        expectedSurgeryDate: '',
+                        notes: '',
+                      })
+                      setShowAdmitModal(true)
+                    }}
                   >
-                    <Link href={`/patient/${leadId}/initiate`}>
-                      <CheckCircle2 className="h-4 w-4" />
-                      Mark Admitted
-                    </Link>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Mark Admitted
                   </Button>
                 )}
                 {canDischarge && (
                   <Button
-                    asChild
                     variant="default"
                     className="flex items-center gap-2"
+                    onClick={() => setShowDischargeConfirm(true)}
                   >
-                    <Link href={`/patient/${leadId}/discharge`}>
-                      <CheckCircle2 className="h-4 w-4" />
-                      Mark Discharged
-                    </Link>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Mark Discharged
                   </Button>
                 )}
                 
@@ -387,6 +417,18 @@ export default function PatientDetailsPage() {
                     <Link href={`/patient/${leadId}/pre-auth`}>
                       <FileDown className="h-4 w-4" />
                       Generate PDF
+                    </Link>
+                  </Button>
+                )}
+                {canFillDischargeForm && (
+                  <Button
+                    asChild
+                    variant="default"
+                    className="flex items-center gap-2"
+                  >
+                    <Link href={`/patient/${leadId}/discharge`}>
+                      <Receipt className="h-4 w-4" />
+                      {lead.dischargeSheet ? 'View / Edit Discharge Sheet' : 'Fill Discharge Form'}
                     </Link>
                   </Button>
                 )}
@@ -570,6 +612,178 @@ export default function PatientDetailsPage() {
 
         {/* Activity Timeline */}
         {stageHistory && <ActivityTimeline history={stageHistory} />}
+
+        {/* Mark Admitted Modal */}
+        <Dialog open={showAdmitModal} onOpenChange={setShowAdmitModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Mark Admitted</DialogTitle>
+              <DialogDescription>
+                Record admission details. Insurance will be notified.
+              </DialogDescription>
+            </DialogHeader>
+            <form
+              className="space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (!admitForm.admissionDate || !admitForm.admittingHospital.trim()) {
+                  toast.error('Admission date and hospital are required')
+                  return
+                }
+                setAdmitSubmitting(true)
+                try {
+                  await apiPost(`/api/leads/${leadId}/initiate`, {
+                    admissionDate: admitForm.admissionDate,
+                    admissionTime: admitForm.admissionTime || undefined,
+                    admittingHospital: admitForm.admittingHospital.trim(),
+                    expectedSurgeryDate: admitForm.expectedSurgeryDate || undefined,
+                    notes: admitForm.notes || undefined,
+                  })
+                  toast.success('Patient marked as admitted. Insurance has been notified.')
+                  setShowAdmitModal(false)
+                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                  queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : 'Failed to mark admitted')
+                } finally {
+                  setAdmitSubmitting(false)
+                }
+              }}
+            >
+              <div className="space-y-2">
+                <Label htmlFor="admissionDate">Admission Date *</Label>
+                <Input
+                  id="admissionDate"
+                  type="date"
+                  value={admitForm.admissionDate}
+                  onChange={(e) =>
+                    setAdmitForm((prev) => ({ ...prev, admissionDate: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admissionTime">Admission Time</Label>
+                <Input
+                  id="admissionTime"
+                  type="time"
+                  value={admitForm.admissionTime}
+                  onChange={(e) =>
+                    setAdmitForm((prev) => ({ ...prev, admissionTime: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="admittingHospital">Admitting Hospital *</Label>
+                <Input
+                  id="admittingHospital"
+                  value={admitForm.admittingHospital}
+                  onChange={(e) =>
+                    setAdmitForm((prev) => ({ ...prev, admittingHospital: e.target.value }))
+                  }
+                  placeholder="Hospital name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="expectedSurgeryDate">Expected Surgery Date</Label>
+                <Input
+                  id="expectedSurgeryDate"
+                  type="date"
+                  value={admitForm.expectedSurgeryDate}
+                  onChange={(e) =>
+                    setAdmitForm((prev) => ({ ...prev, expectedSurgeryDate: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={admitForm.notes}
+                  onChange={(e) =>
+                    setAdmitForm((prev) => ({ ...prev, notes: e.target.value }))
+                  }
+                  placeholder="Optional notes"
+                  rows={2}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAdmitModal(false)}
+                  disabled={admitSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={admitSubmitting}>
+                  {admitSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Mark Admitted
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mark Discharged confirmation */}
+        <Dialog open={showDischargeConfirm} onOpenChange={setShowDischargeConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Mark Discharged</DialogTitle>
+              <DialogDescription>
+                Mark this patient as discharged? Insurance will be notified and can then fill the discharge form and send to PL.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowDischargeConfirm(false)}
+                disabled={dischargeSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={dischargeSubmitting}
+                onClick={async () => {
+                  setDischargeSubmitting(true)
+                  try {
+                    await apiPost(`/api/leads/${leadId}/discharge`, {})
+                    toast.success('Patient marked as discharged. Insurance has been notified.')
+                    setShowDischargeConfirm(false)
+                    queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                    queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : 'Failed to mark discharged')
+                  } finally {
+                    setDischargeSubmitting(false)
+                  }
+                }}
+              >
+                {dischargeSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Updating…
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Mark Discharged
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AuthenticatedLayout>
   )

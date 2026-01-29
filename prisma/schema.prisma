@@ -171,6 +171,12 @@ enum CaseStage {
   OUTSTANDING
 }
 
+enum PreAuthStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -1336,6 +1342,12 @@ model PreAuthorization {
   handledById String?
   handledBy   User?    @relation("PreAuthHandler", fields: [handledById], references: [id])
   handledAt   DateTime?
+
+  // Approval/Rejection
+  approvalStatus PreAuthStatus @default(PENDING)
+  rejectionReason String?      @db.Text
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
 
   // Q&A Queries
   queries InsuranceQuery[]

@@ -80,6 +80,8 @@ export async function GET(
                 insurance: true,
                 tpa: true,
                 handledAt: true,
+                approvalStatus: true,
+                rejectionReason: true,
                 handledBy: {
                   select: {
                     id: true,

@@ -217,6 +217,63 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Auto-create PL record from discharge sheet so it shows on PL dashboard
+    const existingPL = await prisma.pLRecord.findUnique({
+      where: { leadId: data.leadId },
+    })
+    if (!existingPL) {
+      const plRecord = await prisma.pLRecord.create({
+        data: {
+          leadId: dischargeSheet.leadId,
+          month: dischargeSheet.month,
+          surgeryDate: dischargeSheet.surgeryDate,
+          status: dischargeSheet.status,
+          paymentType: dischargeSheet.paymentType,
+          approvedOrCash: dischargeSheet.approvedOrCash,
+          paymentCollectedAt: dischargeSheet.paymentCollectedAt,
+          managerRole: dischargeSheet.managerRole,
+          managerName: dischargeSheet.managerName,
+          bdmName: dischargeSheet.bdmName,
+          patientName: dischargeSheet.patientName,
+          patientPhone: dischargeSheet.patientPhone,
+          doctorName: dischargeSheet.doctorName,
+          hospitalName: dischargeSheet.hospitalName,
+          category: dischargeSheet.category,
+          treatment: dischargeSheet.treatment,
+          circle: dischargeSheet.circle,
+          leadSource: dischargeSheet.leadSource,
+          totalAmount: dischargeSheet.totalAmount,
+          billAmount: dischargeSheet.billAmount,
+          cashPaidByPatient: dischargeSheet.cashPaidByPatient,
+          cashOrDedPaid: dischargeSheet.cashOrDedPaid,
+          referralAmount: dischargeSheet.referralAmount,
+          cabCharges: dischargeSheet.cabCharges,
+          implantCost: dischargeSheet.implantCost,
+          dcCharges: dischargeSheet.dcCharges,
+          doctorCharges: dischargeSheet.doctorCharges,
+          hospitalSharePct: dischargeSheet.hospitalSharePct,
+          hospitalShareAmount: dischargeSheet.hospitalShareAmount,
+          mediendSharePct: dischargeSheet.mediendSharePct,
+          mediendShareAmount: dischargeSheet.mediendShareAmount,
+          mediendNetProfit: dischargeSheet.mediendNetProfit,
+          finalProfit: dischargeSheet.mediendNetProfit,
+          hospitalPayoutStatus: 'PENDING',
+          doctorPayoutStatus: 'PENDING',
+          mediendInvoiceStatus: 'PENDING',
+          remarks: dischargeSheet.remarks,
+          handledById: user.id,
+        },
+      })
+      await prisma.dischargeSheet.update({
+        where: { id: dischargeSheet.id },
+        data: { plRecordId: plRecord.id },
+      })
+      await prisma.lead.update({
+        where: { id: data.leadId },
+        data: { pipelineStage: 'PL' },
+      })
+    }
+
     // Create notification for PL team
     const plUsers = await prisma.user.findMany({
       where: {

@@ -119,23 +119,25 @@ interface GeographicData {
 interface MedicalData {
   treatmentPerformance: Array<{
     treatment: string
-    totalLeads: number
-    completedSurgeries: number
-    conversionRate: number
+    count: number
     revenue: number
     profit: number
     avgTicketSize: number
     avgProfitMargin: number
+    conversionRate: number
   }>
   hospitalPerformance: Array<{
     hospitalName: string
-    totalLeads: number
-    completedSurgeries: number
-    conversionRate: number
+    city: string
+    circle: string
+    totalSurgeries: number
     revenue: number
     profit: number
+    hospitalShare: number
     avgTicketSize: number
-    topTreatment: string
+    avgDiscount: number
+    avgCopay: number
+    avgSettledAmount: number
   }>
   surgeonPerformance: Array<{
     surgeonName: string
@@ -192,39 +194,40 @@ interface TrendsData {
   period: string
   trendData: Array<{
     period: string
-    totalLeads: number
-    completedSurgeries: number
-    conversionRate: number
+    leadsCreated: number
+    leadsCompleted: number
+    leadsLost: number
     revenue: number
     profit: number
+    conversionRate: number
     avgTicketSize: number
-    avgTimeToClose: number
+    avgTimeToClose?: number
   }>
 }
 
 interface SourceCampaignData {
   sourcePerformance: Array<{
     source: string
+    campaignName: string | null
+    bdeName: string | null
     totalLeads: number
     conversionRate: number
     revenue: number
     profit: number
-    startDate: string
-    endDate: string
-    cities: string[]
-    topTreatments: string[]
+    avgTicketSize: number
+    qualityScore: number
   }>
   campaignAnalysis: Array<{
-    campaignId: string
     campaignName: string
+    source: string
     totalLeads: number
     conversionRate: number
     revenue: number
     profit: number
-    startDate: string
-    endDate: string
-    cities: string[]
-    topTreatments: string[]
+    startDate?: string
+    endDate?: string
+    cities?: string[]
+    topTreatments?: string[]
   }>
 }
 
@@ -545,9 +548,9 @@ export default function SalesDashboardPage() {
 
         {/* Pipeline Stage Breakdown */}
         {stageStats && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Pipeline Stage Breakdown</CardTitle>
+          <Card className="border-l-4 border-l-blue-500 shadow-md">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/20">
+              <CardTitle className="text-blue-700 dark:text-blue-300">Pipeline Stage Breakdown</CardTitle>
               <CardDescription>Leads by pipeline stage</CardDescription>
             </CardHeader>
             <CardContent>
@@ -960,9 +963,9 @@ export default function SalesDashboardPage() {
           <TabsContent value="geographic" className="space-y-4">
             {geographicData ? (
               <>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Circle Performance</CardTitle>
+                <Card className="border-l-4 border-l-indigo-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-950/20">
+                    <CardTitle className="text-indigo-700 dark:text-indigo-300">Circle Performance</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -1055,11 +1058,11 @@ export default function SalesDashboardPage() {
                         {medicalData.treatmentPerformance?.map((treatment: any) => (
                           <TableRow key={treatment.treatment}>
                             <TableCell className="font-medium">{treatment.treatment}</TableCell>
-                            <TableCell>{treatment.count}</TableCell>
+                            <TableCell>{treatment.count || 0}</TableCell>
                             <TableCell>₹{treatment.revenue.toLocaleString('en-IN')}</TableCell>
                             <TableCell>₹{treatment.profit.toLocaleString('en-IN')}</TableCell>
                             <TableCell>₹{treatment.avgTicketSize.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>{treatment.conversionRate.toFixed(1)}%</TableCell>
+                            <TableCell>{treatment.conversionRate?.toFixed(1) || '0'}%</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1630,9 +1633,9 @@ export default function SalesDashboardPage() {
                   </Card>
                 </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Critical Leads Requiring Attention</CardTitle>
+                <Card className="border-l-4 border-l-red-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-red-50 to-transparent dark:from-red-950/20">
+                    <CardTitle className="text-red-700 dark:text-red-300">Critical Leads Requiring Attention</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>

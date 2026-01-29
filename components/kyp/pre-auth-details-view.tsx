@@ -4,23 +4,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
-import { File, ExternalLink } from 'lucide-react'
+import { File, ExternalLink, CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CaseStage } from '@prisma/client'
+import { CaseStage, PreAuthStatus } from '@prisma/client'
 
 interface PreAuthDetailsViewProps {
   preAuthData: {
     id: string
-    sumInsured: string | null
-    roomRent: string | null
-    capping: string | null
-    copay: string | null
-    icu: string | null
-    hospitalNameSuggestion: string | null
+    sumInsured?: string | null
+    roomRent?: string | null
+    capping?: string | null
+    copay?: string | null
+    icu?: string | null
+    hospitalNameSuggestion?: string | null
     hospitalSuggestions?: string[] | null
     roomTypes?: Array<{ name: string; rent: string }> | null
-    insurance: string | null
-    tpa: string | null
+    insurance?: string | null
+    tpa?: string | null
     requestedHospitalName?: string | null
     requestedRoomType?: string | null
     diseaseDescription?: string | null
@@ -35,6 +35,8 @@ interface PreAuthDetailsViewProps {
       id: string
       name: string
     } | null
+    approvalStatus?: PreAuthStatus
+    rejectionReason?: string | null
   }
   caseStage: CaseStage
   leadRef?: string
@@ -108,7 +110,33 @@ export function PreAuthDetailsView({
                   {caseStage.replace(/_/g, ' ')}
                 </Badge>
               </div>
+              {preAuthData.approvalStatus && (
+                <div>
+                  <Label>Approval Status</Label>
+                  <div className="mt-1">
+                    {preAuthData.approvalStatus === PreAuthStatus.APPROVED ? (
+                      <Badge variant="default" className="bg-green-600">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Approved
+                      </Badge>
+                    ) : preAuthData.approvalStatus === PreAuthStatus.REJECTED ? (
+                      <Badge variant="destructive">
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Rejected
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">Pending</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+            {preAuthData.approvalStatus === PreAuthStatus.REJECTED && preAuthData.rejectionReason && (
+              <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900">
+                <Label className="text-red-900 dark:text-red-100">Rejection Reason</Label>
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">{preAuthData.rejectionReason}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

@@ -94,56 +94,54 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
 
   const [submitting, setSubmitting] = useState(false)
   const initializedRef = useRef(false)
+  // Only show MultiStepForm after we've populated formData from lead/initialData so it gets correct initial values
+  const [formReady, setFormReady] = useState(false)
 
   // Update form data when lead or initialData becomes available (only once)
   useEffect(() => {
     if (!lead && !initialData) return
     if (initializedRef.current) return
-    
-    // Use setTimeout to defer state update and avoid synchronous setState in effect
-    const timeoutId = setTimeout(() => {
-      setFormData((prev) => {
-        // Check if already initialized (has data from lead or initialData)
-        if (prev.patientName || prev.month) {
-          initializedRef.current = true
-          return prev
-        }
-        
-        let updated = { ...prev }
-        
-        if (lead) {
-          updated = {
-            ...updated,
-            patientName: lead.patientName || '',
-            patientPhone: lead.phoneNumber || '',
-            doctorName: lead.surgeonName || '',
-            hospitalName: lead.hospitalName || '',
-            category: lead.category || '',
-            treatment: lead.treatment || '',
-            circle: lead.circle || '',
-            leadSource: lead.source || '',
-            billAmount: lead.billAmount?.toString() || '',
-            implantCost: lead.implantAmount?.toString() || '',
-            surgeryDate: lead.surgeryDate ? new Date(lead.surgeryDate).toISOString().split('T')[0] : '',
-          }
-        }
-        
-        if (initialData) {
-          updated = {
-            ...updated,
-            ...initialData,
-            month: initialData.month ? new Date(initialData.month).toISOString().split('T')[0] : '',
-            dischargeDate: initialData.dischargeDate ? new Date(initialData.dischargeDate).toISOString().split('T')[0] : '',
-            surgeryDate: initialData.surgeryDate ? new Date(initialData.surgeryDate).toISOString().split('T')[0] : '',
-          }
-        }
-        
+
+    setFormData((prev) => {
+      if (prev.patientName || prev.month) {
         initializedRef.current = true
-        return updated
-      })
-    }, 0)
-    
-    return () => clearTimeout(timeoutId)
+        return prev
+      }
+
+      let updated = { ...prev }
+
+      if (lead) {
+        updated = {
+          ...updated,
+          patientName: lead.patientName || '',
+          patientPhone: lead.phoneNumber || '',
+          doctorName: lead.surgeonName || '',
+          hospitalName: lead.hospitalName || '',
+          category: lead.category || '',
+          treatment: lead.treatment || '',
+          circle: lead.circle || '',
+          leadSource: lead.source || '',
+          billAmount: lead.billAmount?.toString() || '',
+          implantCost: lead.implantAmount?.toString() || '',
+          surgeryDate: lead.surgeryDate ? new Date(lead.surgeryDate).toISOString().split('T')[0] : '',
+          status: 'Discharged', // Case is already discharged when Insurance fills this form
+        }
+      }
+
+      if (initialData) {
+        updated = {
+          ...updated,
+          ...initialData,
+          month: initialData.month ? new Date(initialData.month).toISOString().split('T')[0] : (updated.month as string) ?? '',
+          dischargeDate: initialData.dischargeDate ? new Date(initialData.dischargeDate).toISOString().split('T')[0] : (updated.dischargeDate as string) ?? '',
+          surgeryDate: initialData.surgeryDate ? new Date(initialData.surgeryDate).toISOString().split('T')[0] : (updated.surgeryDate as string) ?? '',
+        }
+      }
+
+      initializedRef.current = true
+      return updated
+    })
+    setFormReady(true)
   }, [lead, initialData])
 
   const handleSubmit = async () => {
@@ -153,9 +151,9 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
       
       const payload: any = {
         leadId,
-        month: finalData.month ? new Date(finalData.month as string) : null,
-        dischargeDate: finalData.dischargeDate ? new Date(finalData.dischargeDate as string) : null,
-        surgeryDate: finalData.surgeryDate ? new Date(finalData.surgeryDate as string) : null,
+        month: finalData.month ? (finalData.month as string) : undefined,
+        dischargeDate: finalData.dischargeDate ? (finalData.dischargeDate as string) : undefined,
+        surgeryDate: finalData.surgeryDate ? (finalData.surgeryDate as string) : undefined,
         status: finalData.status || '',
         paymentType: finalData.paymentType || '',
         approvedOrCash: finalData.approvedOrCash || '',
@@ -180,9 +178,9 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
         implantCost: parseFloat(finalData.implantCost as string) || 0,
         dcCharges: parseFloat(finalData.dcCharges as string) || 0,
         doctorCharges: parseFloat(finalData.doctorCharges as string) || 0,
-        hospitalSharePct: finalData.hospitalSharePct ? parseFloat(finalData.hospitalSharePct as string) : null,
+        hospitalSharePct: finalData.hospitalSharePct ? parseFloat(finalData.hospitalSharePct as string) : undefined,
         hospitalShareAmount: parseFloat(finalData.hospitalShareAmount as string) || 0,
-        mediendSharePct: finalData.mediendSharePct ? parseFloat(finalData.mediendSharePct as string) : null,
+        mediendSharePct: finalData.mediendSharePct ? parseFloat(finalData.mediendSharePct as string) : undefined,
         mediendShareAmount: parseFloat(finalData.mediendShareAmount as string) || 0,
         mediendNetProfit: parseFloat(finalData.mediendNetProfit as string) || 0,
         remarks: finalData.remarks || '',
@@ -284,20 +282,21 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
               />
             </div>
             <div>
-              <Label htmlFor="hospitalName">Hospital</Label>
+              <Label htmlFor="hospitalName">Hospital Name</Label>
               <Input
                 id="hospitalName"
                 value={(currentData.hospitalName as string) || ''}
-                readOnly
+                onChange={(e) => updateBoth({ hospitalName: e.target.value })}
+                placeholder="Admitting / discharge hospital"
               />
             </div>
             <div>
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">Case Status</Label>
               <Input
                 id="status"
                 value={(currentData.status as string) || ''}
                 onChange={(e) => updateBoth({ status: e.target.value })}
-                placeholder="Case status"
+                placeholder="e.g. Discharged"
               />
             </div>
             <div>
@@ -566,8 +565,20 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
     },
   ]
 
+  // Only mount MultiStepForm after formData is populated from lead so Hospital Name & Case Status pre-fill
+  if (!formReady && !initialData) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          Loading patient details…
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <MultiStepForm
+      key={`discharge-${leadId}-${formReady}`}
       steps={steps}
       onSubmit={handleSubmit}
       initialFormData={formData}

@@ -39,8 +39,28 @@ export async function GET(request: NextRequest) {
         teamId: user.teamId,
       }
     }
+    // Note: INSURANCE_HEAD can access all leads via canAccessLead, so we don't filter by bdId
 
-    if (pipelineStage) where.pipelineStage = pipelineStage as PipelineStage
+    // For insurance users, only show leads that have KYP submissions or are in insurance-related stages
+    if (user.role === 'INSURANCE_HEAD') {
+      where.OR = [
+        { kypSubmission: { isNot: null } },
+        { caseStage: { in: ['KYP_PENDING', 'KYP_COMPLETE', 'PREAUTH_RAISED', 'PREAUTH_COMPLETE', 'INITIATED', 'ADMITTED', 'DISCHARGED', 'IPD_DONE'] } },
+      ]
+    }
+
+    // Support comma-separated pipeline stages (e.g. PL,COMPLETED for PL dashboard)
+    if (pipelineStage) {
+      const stages = pipelineStage.split(',').map((s) => s.trim()).filter(Boolean)
+      const validStages = stages.filter((s) =>
+        ['SALES', 'INSURANCE', 'PL', 'COMPLETED', 'LOST'].includes(s)
+      ) as PipelineStage[]
+      if (validStages.length === 1) {
+        where.pipelineStage = validStages[0]
+      } else if (validStages.length > 1) {
+        where.pipelineStage = { in: validStages }
+      }
+    }
     if (status) where.status = status
     if (bdId) where.bdId = bdId
     if (city) where.city = city
@@ -77,6 +97,62 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        kypSubmission: {
+          select: {
+            id: true,
+            status: true,
+            submittedAt: true,
+            preAuthData: {
+              select: {
+                id: true,
+                requestedHospitalName: true,
+                requestedRoomType: true,
+                diseaseDescription: true,
+                diseaseImages: true,
+                preAuthRaisedAt: true,
+                sumInsured: true,
+                roomRent: true,
+                capping: true,
+                copay: true,
+                icu: true,
+                insurance: true,
+                tpa: true,
+                hospitalNameSuggestion: true,
+                hospitalSuggestions: true,
+                roomTypes: true,
+                handledAt: true,
+                approvalStatus: true,
+                rejectionReason: true,
+                handledBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+                preAuthRaisedBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        admissionRecord: {
+          select: {
+            id: true,
+            admissionDate: true,
+            admittingHospital: true,
+          },
+        },
+        dischargeSheet: {
+          select: {
+            id: true,
+            plRecordId: true,
+          },
+        },
+        plRecord: true,
       },
       orderBy: {
         createdDate: 'desc',
@@ -88,6 +164,17 @@ export async function GET(request: NextRequest) {
     const accessibleLeads = leads.filter((lead) =>
       canAccessLead(user, lead.bdId, lead.bd.team?.id)
     )
+
+    // Debug logging for insurance users
+    if (user.role === 'INSURANCE_HEAD') {
+      console.log(`[Insurance Dashboard] Total leads fetched: ${leads.length}`)
+      console.log(`[Insurance Dashboard] Accessible leads: ${accessibleLeads.length}`)
+      console.log(`[Insurance Dashboard] Leads with KYP: ${accessibleLeads.filter(l => l.kypSubmission).length}`)
+      console.log(`[Insurance Dashboard] Leads by caseStage:`, accessibleLeads.reduce((acc, l) => {
+        acc[l.caseStage] = (acc[l.caseStage] || 0) + 1
+        return acc
+      }, {} as Record<string, number>))
+    }
 
     // Map status and source codes to text values for display
     const mappedLeads = accessibleLeads.map((lead) => ({
