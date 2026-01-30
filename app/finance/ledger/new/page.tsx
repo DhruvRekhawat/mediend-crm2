@@ -15,8 +15,16 @@ import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { SearchableSelect } from '@/components/finance/searchable-select'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Plus } from 'lucide-react'
 
 interface Party {
   id: string
@@ -65,6 +73,8 @@ export default function NewLedgerEntryPage() {
   const [newPartyName, setNewPartyName] = useState('')
   const [newHeadName, setNewHeadName] = useState('')
   const [newPartyType, setNewPartyType] = useState<'BUYER' | 'SELLER' | 'VENDOR' | 'CLIENT' | 'SUPPLIER' | 'OTHER'>('OTHER')
+  const [partySearch, setPartySearch] = useState('')
+  const [headSearch, setHeadSearch] = useState('')
   const [formData, setFormData] = useState({
     partyId: '',
     description: '',
@@ -397,43 +407,97 @@ export default function NewLedgerEntryPage() {
                 {/* Party */}
                 <div className="space-y-2">
                   <Label htmlFor="party">Party *</Label>
-                  <SearchableSelect
-                    value={formData.partyId}
-                    onValueChange={(value) => setFormData({ ...formData, partyId: value })}
-                    options={partiesData?.data || []}
-                    getOptionLabel={(party) => `${party.name} (${party.partyType})`}
-                    getOptionValue={(party) => party.id}
-                    placeholder="Select party"
-                    searchPlaceholder="Search parties..."
-                    emptyMessage="No parties found"
-                    createLabel="Create new party"
-                    onShowCreateDialog={(searchValue) => {
-                      setNewPartyName(searchValue)
-                      setShowPartyCreateDialog(true)
-                    }}
-                    required
-                  />
+                  <Combobox<Party>
+                    items={partiesData?.data ?? []}
+                    value={partiesData?.data?.find((p) => p.id === formData.partyId) ?? null}
+                    onValueChange={(p) => setFormData((prev) => ({ ...prev, partyId: p?.id ?? '' }))}
+                    itemToStringLabel={(p) => `${p.name} (${p.partyType})`}
+                    isItemEqualToValue={(a, b) => a?.id === b?.id}
+                    inputValue={partySearch}
+                    onInputValueChange={setPartySearch}
+                  >
+                    <ComboboxInput
+                      id="party"
+                      placeholder="Select party"
+                      showClear
+                      className="w-full"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>
+                        {partySearch ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              setNewPartyName(partySearch)
+                              setShowPartyCreateDialog(true)
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create new party: {partySearch}
+                          </Button>
+                        ) : (
+                          'No parties found.'
+                        )}
+                      </ComboboxEmpty>
+                      <ComboboxList>
+                        {(party: Party) => (
+                          <ComboboxItem key={party.id} value={party}>
+                            {party.name} ({party.partyType})
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                 </div>
 
                 {/* Head */}
                 <div className="space-y-2">
                   <Label htmlFor="head">Head *</Label>
-                  <SearchableSelect
-                    value={formData.headId}
-                    onValueChange={(value) => setFormData({ ...formData, headId: value })}
-                    options={headsData?.data || []}
-                    getOptionLabel={(head) => head.department ? `${head.name} (${head.department})` : head.name}
-                    getOptionValue={(head) => head.id}
-                    placeholder="Select head"
-                    searchPlaceholder="Search heads..."
-                    emptyMessage="No heads found"
-                    createLabel="Create new head"
-                    onShowCreateDialog={(searchValue) => {
-                      setNewHeadName(searchValue)
-                      setShowHeadCreateDialog(true)
-                    }}
-                    required
-                  />
+                  <Combobox<Head>
+                    items={headsData?.data ?? []}
+                    value={headsData?.data?.find((h) => h.id === formData.headId) ?? null}
+                    onValueChange={(h) => setFormData((prev) => ({ ...prev, headId: h?.id ?? '' }))}
+                    itemToStringLabel={(h) => (h.department ? `${h.name} (${h.department})` : h.name)}
+                    isItemEqualToValue={(a, b) => a?.id === b?.id}
+                    inputValue={headSearch}
+                    onInputValueChange={setHeadSearch}
+                  >
+                    <ComboboxInput
+                      id="head"
+                      placeholder="Select head"
+                      showClear
+                      className="w-full"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>
+                        {headSearch ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              setNewHeadName(headSearch)
+                              setShowHeadCreateDialog(true)
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create new head: {headSearch}
+                          </Button>
+                        ) : (
+                          'No heads found.'
+                        )}
+                      </ComboboxEmpty>
+                      <ComboboxList>
+                        {(head: Head) => (
+                          <ComboboxItem key={head.id} value={head}>
+                            {head.department ? `${head.name} (${head.department})` : head.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                 </div>
 
                 {/* Payment Type */}
