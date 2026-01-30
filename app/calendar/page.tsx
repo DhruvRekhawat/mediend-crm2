@@ -107,52 +107,71 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">My Calendar</h1>
+      <div className="rounded-xl border bg-linear-to-br from-primary/5 via-primary/2 to-transparent p-6">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          My Calendar
+        </h1>
         <p className="text-muted-foreground mt-1">
           Manage your tasks and work logs
         </p>
       </div>
 
       <Tabs defaultValue="calendar" className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="calendar" className="gap-2">
+        <TabsList className="grid w-full max-w-md grid-cols-3 bg-muted/60 p-1">
+          <TabsTrigger
+            value="calendar"
+            className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
             <CalendarIcon className="h-4 w-4" />
             Calendar
           </TabsTrigger>
-          <TabsTrigger value="tasks" className="gap-2">
+          <TabsTrigger
+            value="tasks"
+            className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+          >
             <ListTodo className="h-4 w-4" />
             Tasks
           </TabsTrigger>
-          <TabsTrigger value="logs" className="gap-2">
+          <TabsTrigger
+            value="logs"
+            className="gap-2 data-[state=active]:bg-teal-500/10 data-[state=active]:text-teal-700 dark:data-[state=active]:text-teal-300 data-[state=active]:shadow-sm"
+          >
             <FileText className="h-4 w-4" />
             Logs
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-4">
-          <Card>
-            <CardContent className="pt-6">
-              <FullCalendarTasks
-                events={calendarTasks}
-                onEventClick={handleEventClick}
-                onEventDrop={handleEventDrop}
-                onDatesSet={handleDatesSet}
-                className="min-h-[500px]"
-              />
+          <Card className="overflow-hidden border-l-4 border-l-primary/60">
+            <CardHeader className="bg-primary/5 border-b border-border/50 py-4">
+              <CardTitle className="text-lg">Calendar</CardTitle>
+              <CardDescription>
+                Drag events to reschedule. Click an event for details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="p-4">
+                <FullCalendarTasks
+                  events={calendarTasks}
+                  onEventClick={handleEventClick}
+                  onEventDrop={handleEventDrop}
+                  onDatesSet={handleDatesSet}
+                  className="min-h-[500px]"
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="tasks" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Tasks</CardTitle>
+          <Card className="overflow-hidden border-l-4 border-l-primary/60">
+            <CardHeader className="bg-primary/5 border-b border-border/50">
+              <CardTitle className="text-lg">My Tasks</CardTitle>
               <CardDescription>
                 View and manage your tasks
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <TaskList
                 tasks={tasks}
                 isLoading={tasksLoading}
@@ -163,36 +182,39 @@ export default function CalendarPage() {
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-4">
-          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Work Logs</CardTitle>
-                    <CardDescription>
-                      Log your work in 3-hour intervals (9-12, 12-3, 3-6)
-                    </CardDescription>
-                  </div>
-                  <input
-                    type="date"
-                    value={format(selectedDate, "yyyy-MM-dd")}
-                    onChange={(e) =>
-                      setSelectedDate(new Date(e.target.value + "T12:00:00"))
-                    }
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  />
+          <Card className="overflow-hidden border-l-4 border-l-teal-500/60 lg:max-w-4xl">
+            <CardHeader className="bg-teal-500/5 border-b border-border/50">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/15 text-teal-600 dark:text-teal-400">
+                      <FileText className="h-4 w-4" />
+                    </span>
+                    Work Logs
+                  </CardTitle>
+                  <CardDescription>
+                    Log your work in 3-hour intervals (9-12, 12-3, 3-6)
+                  </CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <WorkLogPanel
-                  logs={workLogs}
-                  selectedDate={selectedDate}
-                  isLoading={logsLoading}
-                  onLogSubmitted={() => {}}
+                <input
+                  type="date"
+                  value={format(selectedDate, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setSelectedDate(new Date(e.target.value + "T12:00:00"))
+                  }
+                  className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30"
                 />
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <WorkLogPanel
+                logs={workLogs}
+                selectedDate={selectedDate}
+                isLoading={logsLoading}
+                onLogSubmitted={() => {}}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

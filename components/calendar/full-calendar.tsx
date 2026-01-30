@@ -123,7 +123,7 @@ export function FullCalendarTasks({
   )
 
   return (
-    <div className={cn("fc-theme-mediend", className)}>
+    <div className={cn("fc-theme-mediend fc-calendar-modern", className)}>
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"

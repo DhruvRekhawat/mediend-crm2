@@ -121,3 +121,70 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* FullCalendar modern theme (calendar page) */
+.fc-calendar-modern .fc {
+  --fc-border-color: oklch(0.92 0.004 286.32);
+  --fc-button-text-color: oklch(0.97 0.014 254.604);
+  --fc-button-bg-color: oklch(0.488 0.243 264.376);
+  --fc-button-border-color: oklch(0.488 0.243 264.376);
+  --fc-button-hover-bg-color: oklch(0.424 0.199 265.638);
+  --fc-button-hover-border-color: oklch(0.424 0.199 265.638);
+  --fc-button-active-bg-color: oklch(0.424 0.199 265.638);
+  --fc-button-active-border-color: oklch(0.424 0.199 265.638);
+  --fc-today-bg-color: oklch(0.97 0.02 264);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: oklch(0.967 0.001 286.375);
+  --fc-now-indicator-color: oklch(0.488 0.243 264.376);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+.dark .fc-calendar-modern .fc {
+  --fc-border-color: oklch(1 0 0 / 15%);
+  --fc-today-bg-color: oklch(0.3 0.05 264);
+  --fc-neutral-bg-color: oklch(0.274 0.006 286.033);
+}
+.fc-calendar-modern .fc-toolbar-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.fc-calendar-modern .fc-button {
+  border-radius: var(--radius);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.fc-calendar-modern .fc-scrollgrid {
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.fc-calendar-modern .fc-col-header-cell {
+  background: oklch(0.967 0.001 286.375);
+  font-weight: 600;
+  padding: 0.5rem 0;
+}
+.dark .fc-calendar-modern .fc-col-header-cell {
+  background: oklch(0.274 0.006 286.033);
+}
+.fc-calendar-modern .fc-daygrid-day-number {
+  border-radius: 9999px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.fc-calendar-modern .fc-day-today .fc-daygrid-day-number {
+  background: oklch(0.488 0.243 264.376);
+  color: oklch(0.97 0.014 254.604);
+}
+.fc-calendar-modern .fc-event {
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.8125rem;
+  border: none;
+}
+.fc-calendar-modern .fc-timegrid-slot {
+  height: 2.5rem;
+}
+.fc-calendar-modern .fc-timegrid-axis-cushion,
+.fc-calendar-modern .fc-timegrid-slot-label {
+  font-size: 0.75rem;
+  color: oklch(0.552 0.016 285.938);
+}

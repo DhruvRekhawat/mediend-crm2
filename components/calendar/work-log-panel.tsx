@@ -86,11 +86,7 @@ export function WorkLogPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Clock className="h-5 w-5" />
-        <h3 className="font-semibold">Work Logs</h3>
-      </div>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground font-medium">
         {format(selectedDate, "EEEE, MMMM d, yyyy")}
       </p>
 
@@ -102,16 +98,22 @@ export function WorkLogPanel({
             {INTERVALS.map((interval) => {
               const log = getLogForInterval(interval.start)
               return (
-                <Card key={interval.start} className="overflow-hidden">
-                  <CardHeader className="py-3 px-4">
+                <Card
+                  key={interval.start}
+                  className={`overflow-hidden border-l-4 ${log ? "border-l-teal-500/60" : "border-l-teal-500/30"}`}
+                >
+                  <CardHeader className={`py-3 px-4 ${log ? "bg-teal-500/5 border-b border-border/50" : ""}`}>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-medium">
+                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 text-xs font-semibold">
+                          {interval.start}
+                        </span>
                         {interval.label}
                       </CardTitle>
                       <Button
                         variant={log ? "ghost" : "outline"}
                         size="sm"
-                        className="shrink-0"
+                        className="shrink-0 border-teal-500/30 hover:bg-teal-500/10 text-teal-700 dark:text-teal-300"
                         onClick={() => handleOpenDialog(interval)}
                       >
                         {log ? "Edit" : "Log"}
@@ -119,7 +121,7 @@ export function WorkLogPanel({
                     </div>
                   </CardHeader>
                   {log && (
-                    <CardContent className="pt-0 px-4 pb-3">
+                    <CardContent className="pt-3 px-4 pb-3">
                       <p className="text-sm text-muted-foreground line-clamp-3">
                         {log.description}
                       </p>
