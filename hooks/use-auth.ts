@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiPost, apiGet } from '@/lib/api-client'
+import { getFirstNavUrl } from '@/lib/sidebar-nav'
 import { useRouter } from 'next/navigation'
 import { SessionUser } from '@/lib/auth'
 
@@ -21,7 +22,7 @@ export function useAuth() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['auth', 'me'], data.user)
-      router.push(getDashboardRoute(data.user.role))
+      router.push(getFirstNavUrl(data.user))
     },
   })
 
@@ -43,29 +44,3 @@ export function useAuth() {
     isLoggingIn: loginMutation.isPending,
   }
 }
-
-function getDashboardRoute(role: string): string {
-  switch (role) {
-    case 'MD':
-      return '/md/sales'
-    case 'SALES_HEAD':
-      return '/sales/dashboard'
-    case 'TEAM_LEAD':
-      return '/team-lead/dashboard'
-    case 'BD':
-      return '/bd/pipeline'
-    case 'INSURANCE_HEAD':
-      return '/insurance/dashboard'
-    case 'PL_HEAD':
-      return '/pl/dashboard'
-    case 'HR_HEAD':
-      return '/hr/users'
-    case 'USER':
-      return '/employee/profile'
-    case 'ADMIN':
-      return '/admin/dashboard'
-    default:
-      return '/dashboard'
-  }
-}
-

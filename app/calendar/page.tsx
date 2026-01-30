@@ -14,6 +14,7 @@ import { useWorkLogs } from "@/hooks/use-work-logs"
 import { FullCalendarTasks, type CalendarTask } from "@/components/calendar/full-calendar"
 import { TaskList } from "@/components/calendar/task-list"
 import { WorkLogPanel } from "@/components/calendar/work-log-panel"
+import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { Calendar as CalendarIcon, ListTodo, FileText } from "lucide-react"
 import {
   startOfMonth,
@@ -36,6 +37,7 @@ export default function CalendarPage() {
     }
   })
   const [selectedDate, setSelectedDate] = useState(new Date())
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const tasksParams = useMemo(
     () => ({
@@ -64,6 +66,7 @@ export default function CalendarPage() {
         allDay: t.allDay,
         status: t.status,
         priority: t.priority,
+        assignee: t.assignee,
       })),
     [tasks]
   )
@@ -76,7 +79,7 @@ export default function CalendarPage() {
   }
 
   const handleEventClick = (taskId: string) => {
-    // Could open task detail/edit - for now just a placeholder
+    setSelectedTaskId(taskId)
   }
 
   const handleEventDrop = async (
@@ -192,6 +195,14 @@ export default function CalendarPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <TaskDetailModal
+        open={!!selectedTaskId}
+        onOpenChange={(open) => {
+          if (!open) setSelectedTaskId(null)
+        }}
+        taskId={selectedTaskId}
+      />
     </div>
   )
 }

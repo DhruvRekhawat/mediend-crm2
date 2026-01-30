@@ -29,6 +29,7 @@ interface TaskFormProps {
   onOpenChange: (open: boolean) => void
   task?: Task | null
   employees?: { id: string; name: string; email: string }[]
+  defaultAssigneeId?: string
   onSuccess?: () => void
 }
 
@@ -37,6 +38,7 @@ export function TaskForm({
   onOpenChange,
   task,
   employees = [],
+  defaultAssigneeId,
   onSuccess,
 }: TaskFormProps) {
   const { user } = useAuth()
@@ -66,9 +68,9 @@ export function TaskForm({
       setDueDate("")
       setPriority("MEDIUM")
       setStatus("PENDING")
-      setAssigneeId(user?.id ?? "")
+      setAssigneeId(defaultAssigneeId ?? user?.id ?? "")
     }
-  }, [task, user?.id, open])
+  }, [task, user?.id, defaultAssigneeId, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

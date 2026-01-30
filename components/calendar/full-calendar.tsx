@@ -18,6 +18,7 @@ export interface CalendarTask {
   allDay: boolean
   status: string
   priority: string
+  assignee?: { id: string; name: string; email: string }
 }
 
 interface FullCalendarTasksProps {
@@ -31,6 +32,14 @@ interface FullCalendarTasksProps {
   ) => void | Promise<void>
   onDatesSet?: (start: Date, end: Date) => void
   className?: string
+}
+
+function getStatusColor(status: string, priority: string): string {
+  if (status === "COMPLETED") return "#22c55e"
+  if (status === "CANCELLED") return "#ef4444"
+  if (priority === "URGENT") return "#ef4444"
+  if (status === "PENDING") return "#eab308"
+  return "#3b82f6"
 }
 
 function tasksToEvents(tasks: CalendarTask[]): EventInput[] {
@@ -57,15 +66,22 @@ function tasksToEvents(tasks: CalendarTask[]): EventInput[] {
       endStr = undefined
     }
 
+    const assigneeName = task.assignee?.name ? ` - ${task.assignee.name}` : ""
+    const eventTitle = `${task.title}${assigneeName}`
+
     return {
       id: task.id,
-      title: task.title,
+      title: eventTitle,
       start: startStr,
       end: endStr,
       allDay: task.allDay,
+      backgroundColor: getStatusColor(task.status, task.priority),
+      borderColor: getStatusColor(task.status, task.priority),
+      textColor: "#ffffff",
       extendedProps: {
         status: task.status,
         priority: task.priority,
+        assignee: task.assignee,
       },
     }
   })

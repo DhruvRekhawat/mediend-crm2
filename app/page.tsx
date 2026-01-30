@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
+import { getFirstNavUrl } from '@/lib/sidebar-nav'
 
 export default function Home() {
   const router = useRouter()
@@ -11,18 +12,7 @@ export default function Home() {
   useEffect(() => {
     if (!isLoading) {
       if (user) {
-        // Redirect based on role
-        const routes: Record<string, string> = {
-          MD: '/md/sales',
-          SALES_HEAD: '/sales/dashboard',
-          TEAM_LEAD: '/team-lead/dashboard',
-          BD: '/bd/pipeline',
-          INSURANCE_HEAD: '/insurance/dashboard',
-          PL_HEAD: '/pl/dashboard',
-          HR_HEAD: '/hr/users',
-          ADMIN: '/admin/dashboard',
-        }
-        router.push(routes[user.role] || '/login')
+        router.push(getFirstNavUrl(user))
       } else {
         router.push('/login')
       }
