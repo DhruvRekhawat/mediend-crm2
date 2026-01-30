@@ -118,29 +118,52 @@ export default function MDTasksPage() {
     setFormOpen(true)
   }
 
+  const departmentBadgeColor = (name: string) => {
+    const palette = [
+      "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800",
+      "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800",
+      "bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800",
+      "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800",
+      "bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800",
+      "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800",
+    ]
+    let n = 0
+    for (let i = 0; i < name.length; i++) n += name.charCodeAt(i)
+    return palette[n % palette.length]
+  }
+
+  const roleBadgeColor = (role: string) => {
+    const r = role.toLowerCase()
+    if (r === "admin") return "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800"
+    if (r === "manager" || r === "md") return "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800"
+    return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Task Management</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex items-center justify-between rounded-xl border bg-linear-to-br from-primary/5 via-primary/2 to-transparent p-6">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Task Management
+          </h1>
+          <p className="text-muted-foreground">
             View and manage tasks across all employees
           </p>
         </div>
-        <Button onClick={handleAssignTask}>
+        <Button onClick={handleAssignTask} className="shadow-sm">
           <Plus className="h-4 w-4 mr-2" />
           Assign Task
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Employees</CardTitle>
+      <Card className="overflow-hidden border-l-4 border-l-primary/60">
+        <CardHeader className="bg-primary/5 border-b border-border/50">
+          <CardTitle className="text-lg">Employees</CardTitle>
           <CardDescription>
             Click on an employee to view their tasks, work logs, and attendance
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -148,7 +171,7 @@ export default function MDTasksPage() {
                 placeholder="Search by name, email, or code..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-9 border-muted-foreground/20 focus-visible:ring-primary/30"
               />
             </div>
             <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -173,36 +196,40 @@ export default function MDTasksPage() {
               No employees found
             </p>
           ) : (
-            <div className="border rounded-lg">
+            <div className="rounded-lg border border-border/80 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee Code</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Role</TableHead>
+                  <TableRow className="bg-muted/60 hover:bg-muted/60 border-b">
+                    <TableHead className="font-semibold text-foreground">Employee Code</TableHead>
+                    <TableHead className="font-semibold text-foreground">Name</TableHead>
+                    <TableHead className="font-semibold text-foreground">Email</TableHead>
+                    <TableHead className="font-semibold text-foreground">Department</TableHead>
+                    <TableHead className="font-semibold text-foreground">Role</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmployees.map((emp) => (
+                  {filteredEmployees.map((emp, idx) => (
                     <TableRow
                       key={emp.id}
-                      className="cursor-pointer hover:bg-muted/50"
+                      className={`cursor-pointer transition-colors hover:bg-primary/5 ${idx % 2 === 1 ? "bg-muted/20" : ""}`}
                       onClick={() => setSelectedEmployee(emp)}
                     >
-                      <TableCell className="font-medium">{emp.employeeCode}</TableCell>
-                      <TableCell>{emp.user.name}</TableCell>
+                      <TableCell className="font-medium text-foreground">{emp.employeeCode}</TableCell>
+                      <TableCell className="font-medium">{emp.user.name}</TableCell>
                       <TableCell className="text-muted-foreground">{emp.user.email}</TableCell>
                       <TableCell>
                         {emp.department ? (
-                          <Badge variant="secondary">{emp.department.name}</Badge>
+                          <Badge variant="outline" className={`font-medium ${departmentBadgeColor(emp.department.name)}`}>
+                            {emp.department.name}
+                          </Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">{emp.user.role}</Badge>
+                        <Badge variant="outline" className={roleBadgeColor(emp.user.role)}>
+                          {emp.user.role}
+                        </Badge>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -213,12 +240,12 @@ export default function MDTasksPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden border-l-4 border-l-amber-500/60">
+        <CardHeader className="bg-amber-500/5 border-b border-border/50">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 Due Date Change Requests
               </CardTitle>
               <CardDescription>
@@ -226,11 +253,13 @@ export default function MDTasksPage() {
               </CardDescription>
             </div>
             {approvals.length > 0 && (
-              <Badge variant="secondary">{approvals.length} pending</Badge>
+              <Badge className="bg-amber-500/20 text-amber-800 dark:text-amber-200 border-amber-500/30 font-semibold">
+                {approvals.length} pending
+              </Badge>
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {approvalsLoading ? (
             <p className="text-muted-foreground text-sm py-4">Loading...</p>
           ) : approvals.length === 0 ? (
@@ -242,7 +271,7 @@ export default function MDTasksPage() {
               {approvals.map((a) => (
                 <div
                   key={a.id}
-                  className="flex flex-col gap-2 rounded-lg border p-3"
+                  className="flex flex-col gap-2 rounded-lg border border-amber-500/20 bg-amber-500/3 p-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -265,7 +294,7 @@ export default function MDTasksPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300 border-emerald-200 dark:border-emerald-800"
                         onClick={() => handleApprove(a.id, "APPROVED")}
                         disabled={approveMutation.isPending}
                       >
@@ -275,7 +304,7 @@ export default function MDTasksPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300 border-red-200 dark:border-red-800"
                         onClick={() => handleApprove(a.id, "REJECTED")}
                         disabled={approveMutation.isPending}
                       >

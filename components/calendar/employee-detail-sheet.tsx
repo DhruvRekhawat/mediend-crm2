@@ -110,29 +110,40 @@ export function EmployeeDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto px-6">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <UserIcon className="h-5 w-5" />
+      <SheetContent className="w-full sm:max-w-2xl overflow-y-auto px-6 border-l-4 border-l-primary/60">
+        <SheetHeader className="rounded-lg bg-primary/5 border border-border/50 p-4 mt-8">
+          <SheetTitle className="flex items-center gap-2 text-foreground">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <UserIcon className="h-5 w-5" />
+            </span>
             {employee.user.name}
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-muted-foreground mt-1">
             {employee.employeeCode} · {employee.user.email}
             {employee.department && ` · ${employee.department.name}`}
           </SheetDescription>
         </SheetHeader>
 
         <Tabs defaultValue="tasks" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="tasks">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/60 p-1">
+            <TabsTrigger
+              value="tasks"
+              className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm"
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Tasks
             </TabsTrigger>
-            <TabsTrigger value="logs">
+            <TabsTrigger
+              value="logs"
+              className="data-[state=active]:bg-teal-500/10 data-[state=active]:text-teal-700 dark:data-[state=active]:text-teal-300 data-[state=active]:shadow-sm"
+            >
               <FileText className="h-4 w-4 mr-2" />
               Work Logs
             </TabsTrigger>
-            <TabsTrigger value="attendance">
+            <TabsTrigger
+              value="attendance"
+              className="data-[state=active]:bg-amber-500/10 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-300 data-[state=active]:shadow-sm"
+            >
               <Clock className="h-4 w-4 mr-2" />
               Attendance
             </TabsTrigger>
@@ -140,9 +151,9 @@ export function EmployeeDetailSheet({
 
           <TabsContent value="tasks" className="mt-4">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
                 <div>
-                  <h3 className="font-semibold">Tasks</h3>
+                  <h3 className="font-semibold text-foreground">Tasks</h3>
                   <p className="text-sm text-muted-foreground">
                     Week of {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d")}
                   </p>
@@ -151,6 +162,7 @@ export function EmployeeDetailSheet({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-primary/30 hover:bg-primary/10"
                     onClick={() => setSelectedWeek(new Date(selectedWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}
                   >
                     ←
@@ -163,11 +175,12 @@ export function EmployeeDetailSheet({
                         setSelectedWeek(new Date(e.target.value))
                       }
                     }}
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/30"
                   />
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-primary/30 hover:bg-primary/10"
                     onClick={() => setSelectedWeek(new Date(selectedWeek.getTime() + 7 * 24 * 60 * 60 * 1000))}
                   >
                     →
@@ -181,7 +194,7 @@ export function EmployeeDetailSheet({
                 onDeleteTask={onDeleteTask}
               />
               {onAssignTask && (
-                <Button onClick={onAssignTask} className="w-full">
+                <Button onClick={onAssignTask} className="w-full shadow-sm">
                   Assign New Task
                 </Button>
               )}
@@ -190,9 +203,9 @@ export function EmployeeDetailSheet({
 
           <TabsContent value="logs" className="mt-4">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between rounded-lg border border-teal-500/20 bg-teal-500/5 p-3">
                 <div>
-                  <h3 className="font-semibold">Work Logs</h3>
+                  <h3 className="font-semibold text-foreground">Work Logs</h3>
                   <p className="text-sm text-muted-foreground">
                     Week of {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d")}
                   </p>
@@ -201,6 +214,7 @@ export function EmployeeDetailSheet({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-teal-500/30 hover:bg-teal-500/10"
                     onClick={() => setSelectedWeek(new Date(selectedWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}
                   >
                     ←
@@ -213,11 +227,12 @@ export function EmployeeDetailSheet({
                         setSelectedWeek(new Date(e.target.value))
                       }
                     }}
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/30"
                   />
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-teal-500/30 hover:bg-teal-500/10"
                     onClick={() => setSelectedWeek(new Date(selectedWeek.getTime() + 7 * 24 * 60 * 60 * 1000))}
                   >
                     →
@@ -234,19 +249,22 @@ export function EmployeeDetailSheet({
                     {Array.from(workLogsByDate.entries())
                       .sort(([a], [b]) => b.localeCompare(a))
                       .map(([date, logs]) => (
-                        <Card key={date}>
-                          <CardHeader className="py-3 px-4">
-                            <CardTitle className="text-sm">
+                        <Card key={date} className="overflow-hidden border-l-4 border-l-teal-500/50">
+                          <CardHeader className="py-3 px-4 bg-teal-500/5 border-b border-border/50">
+                            <CardTitle className="text-sm font-medium">
                               {format(new Date(date), "EEEE, MMMM d, yyyy")}
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="pt-0 px-4 pb-3 space-y-2">
+                          <CardContent className="pt-3 px-4 pb-3 space-y-2">
                             {logs
                               .sort((a, b) => a.intervalStart - b.intervalStart)
                               .map((log) => (
-                                <div key={log.id} className="border-l-2 border-primary pl-3 py-2">
+                                <div
+                                  key={log.id}
+                                  className="border-l-2 border-teal-500 bg-teal-500/5 pl-3 py-2 rounded-r"
+                                >
                                   <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-medium">
+                                    <span className="text-sm font-medium text-foreground">
                                       {log.intervalStart}:00 - {log.intervalEnd}:00
                                     </span>
                                   </div>
@@ -266,9 +284,9 @@ export function EmployeeDetailSheet({
 
           <TabsContent value="attendance" className="mt-4">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
                 <div>
-                  <h3 className="font-semibold">Attendance</h3>
+                  <h3 className="font-semibold text-foreground">Attendance</h3>
                   <p className="text-sm text-muted-foreground">
                     Week of {format(weekStart, "MMM d")} - {format(weekEnd, "MMM d")}
                   </p>
@@ -277,6 +295,7 @@ export function EmployeeDetailSheet({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-amber-500/30 hover:bg-amber-500/10"
                     onClick={() => setSelectedWeek(new Date(selectedWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}
                   >
                     ←
@@ -289,11 +308,12 @@ export function EmployeeDetailSheet({
                         setSelectedWeek(new Date(e.target.value))
                       }
                     }}
-                    className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30"
                   />
                   <Button
                     variant="outline"
                     size="sm"
+                    className="border-amber-500/30 hover:bg-amber-500/10"
                     onClick={() => setSelectedWeek(new Date(selectedWeek.getTime() + 7 * 24 * 60 * 60 * 1000))}
                   >
                     →
@@ -306,11 +326,14 @@ export function EmployeeDetailSheet({
                 <ScrollArea className="h-[500px]">
                   <div className="space-y-2">
                     {attendance.map((a) => (
-                      <Card key={a.date}>
+                      <Card
+                        key={a.date}
+                        className={`overflow-hidden border-l-4 ${a.isLate ? "border-l-red-500/60" : "border-l-amber-500/50"}`}
+                      >
                         <CardContent className="py-3 px-4">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-medium">
+                              <p className="font-medium text-foreground">
                                 {format(new Date(a.date), "EEEE, MMM d")}
                               </p>
                               <div className="flex items-center gap-4 mt-1">
@@ -321,14 +344,14 @@ export function EmployeeDetailSheet({
                                   Out: {a.outTime ? format(new Date(a.outTime), "HH:mm") : "—"}
                                 </span>
                                 {a.workHours != null && (
-                                  <span className="text-sm text-muted-foreground">
+                                  <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
                                     Hours: {a.workHours.toFixed(1)}h
                                   </span>
                                 )}
                               </div>
                             </div>
                             {a.isLate && (
-                              <Badge variant="destructive">Late</Badge>
+                              <Badge variant="destructive" className="font-medium">Late</Badge>
                             )}
                           </div>
                         </CardContent>
