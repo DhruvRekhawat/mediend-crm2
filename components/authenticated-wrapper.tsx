@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { ProtectedRoute } from '@/components/protected-route'
@@ -11,6 +12,9 @@ import {
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
+import { Button } from '@/components/ui/button'
+import { CalendarIcon } from 'lucide-react'
 
 export function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -30,6 +34,7 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
 
   return (
     <ProtectedRoute>
+      {shouldShowSidebar && <WorkLogEnforcer />}
       {shouldShowSidebar ? (
         <SidebarProvider defaultOpen={true}>
           <AppSidebar />
@@ -38,6 +43,11 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <div className="flex flex-1 items-center gap-2 justify-end">
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href="/calendar" title="Calendar">
+                    <CalendarIcon className="h-5 w-5" />
+                  </Link>
+                </Button>
                 <NotificationBell />
               </div>
             </header>

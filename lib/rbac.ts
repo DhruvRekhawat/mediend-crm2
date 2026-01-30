@@ -48,6 +48,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:assign_head',
     'users:create_tl',
     'users:create_user',
+    'hrms:attendance:read',
+    'hrms:employees:read',
   ],
   SALES_HEAD: [
     'leads:read',

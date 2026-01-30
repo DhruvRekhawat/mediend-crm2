@@ -4,7 +4,16 @@ import { apiGet, apiPatch } from '@/lib/api-client'
 export interface Notification {
   id: string
   userId: string
-  type: 'KYP_SUBMITTED' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'KYP_COMPLETED'
+  type:
+    | 'KYP_SUBMITTED'
+    | 'PRE_AUTH_COMPLETE'
+    | 'FOLLOW_UP_COMPLETE'
+    | 'KYP_COMPLETED'
+    | 'TASK_ASSIGNED'
+    | 'TASK_DUE_SOON'
+    | 'DUE_DATE_CHANGE_REQUESTED'
+    | 'DUE_DATE_CHANGE_APPROVED'
+    | 'DUE_DATE_CHANGE_REJECTED'
   title: string
   message: string
   link: string | null

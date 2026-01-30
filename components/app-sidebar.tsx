@@ -291,6 +291,12 @@ const navItems: NavItem[] = [
     icon: CalendarCheck,
     roles: ['MD', 'ADMIN'],
   },
+  {
+    title: 'MD Task Management',
+    url: '/md/tasks',
+    icon: ClipboardList,
+    roles: ['MD', 'ADMIN'],
+  },
   // Finance Management - Only for FINANCE_HEAD, MD, and ADMIN
   {
     title: 'Fin Ledger',
@@ -375,9 +381,14 @@ export function AppSidebar() {
   }
 
   const filteredItems = navItems.filter((item) => {
-    // MD role only sees the 3 dashboards
+    // MD role sees dashboards + MD Portal items
     if (user.role === 'MD') {
-      return item.title === 'Sales Dashboard' || item.title === 'Finance Dashboard' || item.title === 'HR Dashboard'
+      return (
+        item.title === 'Sales Dashboard' ||
+        item.title === 'Finance Dashboard' ||
+        item.title === 'HR Dashboard' ||
+        item.title.startsWith('MD ')
+      )
     }
     // HRMS items (starting with "My " or "Svc ") are available to all authenticated users except MD
     if (item.title.startsWith('My ') || item.title.startsWith('Svc ')) {
