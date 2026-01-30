@@ -21,6 +21,9 @@ const INTERVAL_LABELS: Record<number, string> = {
   15: "3:00 PM - 6:00 PM",
 }
 
+/** Work log enforcement starts on this date (date only). Before this, the modal is never shown. */
+const WORKLOG_START_DATE = new Date(2026, 1, 1) // 1 Feb 2026
+
 export function WorkLogEnforcer() {
   const queryClient = useQueryClient()
   const { data: checkResult, isLoading } = useWorkLogCheck()
@@ -29,6 +32,12 @@ export function WorkLogEnforcer() {
   const [submittingInterval, setSubmittingInterval] = useState<number | null>(
     null
   )
+
+  const today = new Date()
+  const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  if (todayDateOnly < WORKLOG_START_DATE) {
+    return null
+  }
 
   const isBlocked = checkResult?.isBlocked ?? false
   const missingIntervals = checkResult?.missingIntervals ?? []

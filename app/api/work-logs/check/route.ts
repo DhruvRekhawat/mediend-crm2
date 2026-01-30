@@ -10,6 +10,9 @@ const INTERVALS = [
   { start: 15, end: 18, deadlineHour: 18, deadlineMinute: 30 },
 ] as const
 
+/** Work log enforcement starts on this date. Before this, the API never blocks. */
+const WORKLOG_START_DATE = new Date(2026, 1, 1) // 1 Feb 2026
+
 export async function GET(request: NextRequest) {
   const user = getSessionFromRequest(request)
   if (!user) return unauthorizedResponse()
@@ -19,6 +22,16 @@ export async function GET(request: NextRequest) {
   const now = dateParam ? new Date(dateParam) : new Date()
 
   const dayStart = startOfDay(now)
+  if (dayStart < WORKLOG_START_DATE) {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+    })
+  }
+
   const currentHour = getHours(now)
   const currentMinute = getMinutes(now)
   const currentTimeDecimal = currentHour + currentMinute / 60
