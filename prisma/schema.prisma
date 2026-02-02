@@ -267,6 +267,7 @@ model User {
   tasksCreated        Task[]               @relation("TaskCreator")
   taskApprovalsRequested TaskDueDateApproval[]
   workLogs            WorkLog[]
+  mdTaskTeamsOwned    MDTaskTeam[]         @relation("MDTaskTeamOwner")
 
   @@index([email])
   @@index([role])
@@ -639,6 +640,7 @@ model Employee {
   supportTickets       SupportTicket[]
   incrementRequests    IncrementRequest[]
   ijpApplications      IJPApplication[]
+  mdTaskTeamMemberships MDTaskTeamMember[]
 
   @@index([userId])
   @@index([employeeCode])
@@ -1708,6 +1710,32 @@ model TaskDueDateApproval {
   @@index([taskId])
   @@index([requestedById])
   @@index([status])
+}
+
+// MD (admin) task teams: saved sets of employees for quick task assignment
+model MDTaskTeam {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User     @relation("MDTaskTeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members   MDTaskTeamMember[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model MDTaskTeamMember {
+  id        String     @id @default(cuid())
+  teamId    String
+  team      MDTaskTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee  Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+
+  @@unique([teamId, employeeId])
+  @@index([teamId])
+  @@index([employeeId])
 }
 
 model WorkLog {

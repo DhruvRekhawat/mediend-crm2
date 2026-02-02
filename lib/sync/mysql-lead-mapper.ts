@@ -1,7 +1,7 @@
 import { Circle, PipelineStage, UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
-import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
+import { mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'
 
 /**
  * MySQL Lead row structure (based on DESCRIBE lead output)
@@ -263,6 +263,23 @@ function parseDate(value: Date | string | null | undefined): Date | null {
 }
 
 /**
+ * Get the canonical "lead received" date: Lead_Date (primary) → LeadEntryDate → create_date.
+ * Used by sync routes for maxDate and by mapper for createdDate. No fallback to "now".
+ */
+export function getLeadReceivedDate(row: {
+  Lead_Date?: Date | string | null
+  LeadEntryDate?: Date | string | null
+  create_date?: Date | string | null
+}): Date {
+  return (
+    parseDate(row.Lead_Date) ??
+    parseDate(row.LeadEntryDate) ??
+    parseDate(row.create_date) ??
+    new Date(0)
+  )
+}
+
+/**
  * Parse boolean from MySQL (can be 0/1, true/false, etc.)
  */
 function parseBoolean(value: number | boolean | null | undefined): boolean {
@@ -442,7 +459,7 @@ export async function mapMySQLLeadToPrisma(
   }
 
   const leadRef = String(mysqlRow.id)
-  const leadDate = parseDate(mysqlRow.Lead_Date) || new Date()
+  const leadDate = getLeadReceivedDate(mysqlRow)
   const updateDate = parseDate(mysqlRow.update_date)
 
   return {
@@ -459,7 +476,7 @@ export async function mapMySQLLeadToPrisma(
     circle: mysqlRow.Circle ? mapCircle(mysqlRow.Circle) : (bdInfo.circle || Circle.North),
     city: mysqlRow.city_option || 'Not Specified',
     category: toString(mysqlRow.Category),
-    treatment: mysqlRow.Treatment ? String(mysqlRow.Treatment) : null,
+    treatment: mapTreatmentCode(mysqlRow.Treatment) ?? null,
     hospitalName: mysqlRow.OPD_Hospital || mysqlRow.IPD_Hospital || 'Not Specified',
     createdById: systemUserId,
     updatedById: systemUserId,

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { apiGet } from "@/lib/api-client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api-client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,8 +22,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
-import { Search, CheckCircle, XCircle, Clock, Plus } from "lucide-react"
+import { Search, CheckCircle, XCircle, Clock, Plus, Users, Pencil, Trash2, ListTodo } from "lucide-react"
 import { TaskForm } from "@/components/calendar/task-form"
 import { EmployeeDetailSheet } from "@/components/calendar/employee-detail-sheet"
 import {
@@ -55,12 +65,38 @@ interface Department {
   headcount?: number
 }
 
+interface MDTaskTeamMember {
+  id: string
+  employeeId: string
+  employee: {
+    id: string
+    employeeCode: string
+    user: { id: string; name: string; email: string; role: string }
+    department: { id: string; name: string } | null
+  }
+}
+
+interface MDTaskTeam {
+  id: string
+  name: string
+  ownerId: string
+  members: MDTaskTeamMember[]
+  createdAt: string
+  updatedAt: string
+}
+
 export default function MDTasksPage() {
+  const queryClient = useQueryClient()
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [departmentFilter, setDepartmentFilter] = useState<string>("all")
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [teamFormOpen, setTeamFormOpen] = useState(false)
+  const [editingTeam, setEditingTeam] = useState<MDTaskTeam | null>(null)
+  const [teamFormName, setTeamFormName] = useState("")
+  const [teamFormEmployeeIds, setTeamFormEmployeeIds] = useState<Set<string>>(new Set())
+  const [assignTaskToTeamId, setAssignTaskToTeamId] = useState<string | null>(null)
 
   const { data: employees = [], isLoading: employeesLoading } = useQuery<Employee[]>({
     queryKey: ["employees"],
@@ -70,6 +106,42 @@ export default function MDTasksPage() {
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ["departments"],
     queryFn: () => apiGet<Department[]>("/api/departments"),
+  })
+
+  const { data: taskTeams = [], isLoading: taskTeamsLoading } = useQuery<MDTaskTeam[]>({
+    queryKey: ["md-task-teams"],
+    queryFn: () => apiGet<MDTaskTeam[]>("/api/md/task-teams"),
+  })
+
+  const createTeamMutation = useMutation({
+    mutationFn: (data: { name: string; employeeIds: string[] }) =>
+      apiPost<MDTaskTeam>("/api/md/task-teams", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["md-task-teams"] })
+      toast.success("Team created")
+      setTeamFormOpen(false)
+      setEditingTeam(null)
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to create team"),
+  })
+  const updateTeamMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; employeeIds?: string[] } }) =>
+      apiPatch<MDTaskTeam>(`/api/md/task-teams/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["md-task-teams"] })
+      toast.success("Team updated")
+      setTeamFormOpen(false)
+      setEditingTeam(null)
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to update team"),
+  })
+  const deleteTeamMutation = useMutation({
+    mutationFn: (id: string) => apiDelete(`/api/md/task-teams/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["md-task-teams"] })
+      toast.success("Team deleted")
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Failed to delete team"),
   })
 
   const { data: approvals = [], isLoading: approvalsLoading } = useTaskApprovals()
@@ -88,11 +160,63 @@ export default function MDTasksPage() {
     })
   }, [employees, searchQuery, departmentFilter])
 
-  const employeeList = employees.map((e) => ({
-    id: e.user.id,
-    name: e.user.name,
-    email: e.user.email,
-  }))
+  const employeeList = useMemo(() => {
+    if (assignTaskToTeamId) {
+      const team = taskTeams.find((t) => t.id === assignTaskToTeamId)
+      if (team) {
+        return team.members.map((m) => ({
+          id: m.employee.user.id,
+          name: m.employee.user.name,
+          email: m.employee.user.email,
+        }))
+      }
+    }
+    return employees.map((e) => ({
+      id: e.user.id,
+      name: e.user.name,
+      email: e.user.email,
+    }))
+  }, [assignTaskToTeamId, taskTeams, employees])
+
+  const openTeamFormCreate = () => {
+    setEditingTeam(null)
+    setTeamFormName("")
+    setTeamFormEmployeeIds(new Set())
+    setTeamFormOpen(true)
+  }
+  const openTeamFormEdit = (team: MDTaskTeam) => {
+    setEditingTeam(team)
+    setTeamFormName(team.name)
+    setTeamFormEmployeeIds(new Set(team.members.map((m) => m.employee.id)))
+    setTeamFormOpen(true)
+  }
+  const saveTeamForm = () => {
+    if (!teamFormName.trim()) {
+      toast.error("Team name is required")
+      return
+    }
+    const ids = Array.from(teamFormEmployeeIds)
+    if (editingTeam) {
+      updateTeamMutation.mutate({
+        id: editingTeam.id,
+        data: { name: teamFormName.trim(), employeeIds: ids },
+      })
+    } else {
+      createTeamMutation.mutate({ name: teamFormName.trim(), employeeIds: ids })
+    }
+  }
+  const toggleTeamFormEmployee = (employeeId: string) => {
+    setTeamFormEmployeeIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(employeeId)) next.delete(employeeId)
+      else next.add(employeeId)
+      return next
+    })
+  }
+  const assignTaskToTeam = (teamId: string | null) => {
+    setAssignTaskToTeamId(teamId)
+    setFormOpen(true)
+  }
 
   const handleApprove = async (approvalId: string, status: "APPROVED" | "REJECTED") => {
     try {
@@ -114,6 +238,7 @@ export default function MDTasksPage() {
   }
 
   const handleAssignTask = () => {
+    setAssignTaskToTeamId(null)
     setEditingTask(null)
     setFormOpen(true)
   }
@@ -155,6 +280,85 @@ export default function MDTasksPage() {
           Assign Task
         </Button>
       </div>
+
+      <Card className="overflow-hidden border-l-4 border-l-emerald-500/60">
+        <CardHeader className="bg-emerald-500/5 border-b border-border/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                My task teams
+              </CardTitle>
+              <CardDescription>
+                Create teams of employees you often assign tasks to, then assign tasks to a team quickly
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={openTeamFormCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create team
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-6">
+          {taskTeamsLoading ? (
+            <p className="text-muted-foreground text-sm py-4">Loading teams...</p>
+          ) : taskTeams.length === 0 ? (
+            <p className="text-muted-foreground text-sm py-4">
+              No teams yet. Create a team and add employees to quickly assign tasks to them.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {taskTeams.map((team) => (
+                <div
+                  key={team.id}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border/80 bg-muted/20 px-3 py-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium truncate">{team.name}</span>
+                    <Badge variant="secondary" className="shrink-0">
+                      {team.members.length} {team.members.length === 1 ? "member" : "members"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                      onClick={() => assignTaskToTeam(team.id)}
+                      title="Assign task to this team"
+                    >
+                      <ListTodo className="h-4 w-4 mr-1" />
+                      Assign task
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openTeamFormEdit(team)}
+                      title="Edit team"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (confirm(`Delete team "${team.name}"?`)) {
+                          deleteTeamMutation.mutate(team.id)
+                        }
+                      }}
+                      disabled={deleteTeamMutation.isPending}
+                      title="Delete team"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="overflow-hidden border-l-4 border-l-primary/60">
         <CardHeader className="bg-primary/5 border-b border-border/50">
@@ -342,6 +546,7 @@ export default function MDTasksPage() {
           if (!open) {
             setEditingTask(null)
             setSelectedEmployee(null)
+            setAssignTaskToTeamId(null)
           }
         }}
         task={editingTask}
@@ -350,8 +555,74 @@ export default function MDTasksPage() {
         onSuccess={() => {
           setFormOpen(false)
           setEditingTask(null)
+          setAssignTaskToTeamId(null)
         }}
       />
+
+      <Dialog open={teamFormOpen} onOpenChange={setTeamFormOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{editingTeam ? "Edit team" : "Create team"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="team-name">Team name</Label>
+              <Input
+                id="team-name"
+                value={teamFormName}
+                onChange={(e) => setTeamFormName(e.target.value)}
+                placeholder="e.g. Sales focus, HR team"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="mb-2 block">Select employees</Label>
+              <ScrollArea className="h-[240px] rounded-md border border-border/80 p-2">
+                <div className="space-y-2">
+                  {employees.map((emp) => (
+                    <label
+                      key={emp.id}
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60 cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={teamFormEmployeeIds.has(emp.id)}
+                        onCheckedChange={() => toggleTeamFormEmployee(emp.id)}
+                      />
+                      <span className="text-sm truncate">{emp.user.name}</span>
+                      <span className="text-xs text-muted-foreground truncate shrink-0">
+                        {emp.user.email}
+                      </span>
+                      {emp.department && (
+                        <Badge variant="outline" className="shrink-0 text-xs">
+                          {emp.department.name}
+                        </Badge>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground mt-1">
+                {teamFormEmployeeIds.size} selected
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTeamFormOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={saveTeamForm}
+              disabled={
+                !teamFormName.trim() ||
+                createTeamMutation.isPending ||
+                updateTeamMutation.isPending
+              }
+            >
+              {editingTeam ? "Update" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

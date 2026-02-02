@@ -55,7 +55,7 @@ LEADS_API_SECRET=your_secure_random_string_here_min_32_chars
 # SYNC_API_SECRET=your_sync_specific_secret_here
 
 # Historic Sync Date (optional, defaults to 2024-12-31)
-HISTORIC_SYNC_FROM_DATE=2024-12-31
+HISTORIC_SYNC_FROM_DATE=2025-12-01
 
 # Auth
 JWT_SECRET=your_jwt_secret_key_here_change_in_production
@@ -247,7 +247,7 @@ The system can sync leads from a legacy MySQL/MariaDB database:
 ```bash
 npm run sync:historic:leads
 # Or with custom date:
-HISTORIC_SYNC_FROM_DATE=2024-12-31 npm run sync:historic:leads
+HISTORIC_SYNC_FROM_DATE=2025-12-01 npm run sync:historic:leads
 ```
 
 **Automated Sync via API (Recommended - cron-job.org):**

@@ -79,3 +79,558 @@ MariaDB [kundkun_mediendcrm]> SELECT * FROM source;
 | 23 |              3 | Pt. Referral     |
 +----+----------------+------------------+
 23 rows in set (0.000 sec)
+
+
+
+MariaDB [kundkun_mediendcrm]> SELECT * FROM treatment;
++-----+----------+-------------------------------------+
+| id  | category | Treatment                           |
++-----+----------+-------------------------------------+
+|   1 |        1 | Gynecomastia                        |
+|   2 |        7 | Varicose Veins                      |
+|   3 |        1 | Lipoma                              |
+|   4 |        1 | Tummy Tuck                          |
+|   5 |        1 | Breast Lump                         |
+|   6 |        1 | Buccal Fat                          |
+|   7 |        1 | Breast Lift                         |
+|   8 |        1 | Breast Reduction                    |
+|   9 |        1 | Rhinoplasty                         |
+|  10 |        2 | Piles                               |
+|  11 |        2 | Fistula                             |
+|  12 |        2 | Fissure                             |
+|  13 |        2 | Pilonidal Sinus                     |
+|  14 |        3 | Hernia                              |
+|  15 |        3 | Gallstone                           |
+|  16 |        3 | Appendicitis                        |
+|  17 |        3 | Inguinal Hernia                     |
+|  18 |        3 | Umbilical Hernia                    |
+|  19 |        4 | MTP                                 |
+|  20 |        4 | Uterus Removal                      |
+|  21 |        5 | Tympanoplasty                       |
+|  22 |        5 | Adenoidectomy                       |
+|  23 |        5 | Sinus                               |
+|  24 |        5 | Mastoidectomy                       |
+|  25 |        5 | Throat Surgery                      |
+|  26 |        5 | Ear Surgery                         |
+|  27 |        5 | Vocal Cord Polyps                   |
+|  28 |        5 | Nasal Polyps                        |
+|  29 |        5 | Turbinate Reduction                 |
+|  30 |        6 | Circumcision                        |
+|  31 |        6 | Stapler Circumcision                |
+|  32 |        6 | Kidney Stones                       |
+|  33 |        6 | Hydrocele                           |
+|  34 |        6 | ESWL                                |
+|  35 |        6 | RIRS                                |
+|  36 |        6 | PCNL                                |
+|  37 |        6 | URSL                                |
+|  38 |        6 | Enlarged Prostate                   |
+|  39 |        7 | Varicocele                          |
+|  40 |        7 | DVT Treatment                       |
+|  41 |        7 | Diabetic Foot Ulcer                 |
+|  42 |        7 | Uterine Fibroids                    |
+|  43 |        1 | Breast Lift Surgery                 |
+|  44 |        1 | Sebaceous Cyst                      |
+|  45 |        1 | Breast Augmentation                 |
+|  46 |        1 | Axillary Breast                     |
+|  47 |        1 | Double Chin                         |
+|  48 |        1 | Earlobe Repair                      |
+|  49 |        1 | Blepharoplasty                      |
+|  50 |        1 | Beard Transplant                    |
+|  51 |        1 | Cleft Lip                           |
+|  52 |        8 | Knee Replacement                    |
+|  53 |        8 | Carpal Tunnel Syndrome              |
+|  54 |        8 | ACL Tear                            |
+|  55 |        8 | ProcMeniscus Tear Treatmenttology   |
+|  56 |        8 | Hip Replacement Surgery             |
+|  57 |        8 | Spine Surgery                       |
+|  58 |        8 | Shoulder Dislocation                |
+|  59 |        8 | Shoulder Replacement                |
+|  60 |        9 | Lasik Eye                           |
+|  61 |        9 | Cataract                            |
+|  62 |        9 | Retinal Detachment                  |
+|  63 |        9 | Glaucoma Treatment                  |
+|  64 |        9 | Squint                              |
+|  65 |        9 | Diabetic Retinopathy                |
+|  66 |        9 | Vitrectomy                          |
+|  67 |        9 | PRK Lasik                           |
+|  68 |        9 | SMILE Lasik                         |
+|  69 |        9 | FEMTO Lasik                         |
+|  70 |        9 | ICL                                 |
+|  71 |        9 | Contoura Vision                     |
+|  72 |        9 | Phaco Surgery                       |
+|  73 |       10 | Bariatric                           |
+|  74 |       10 | SPATZ intragastric balloon          |
+|  75 |       10 | Weightloss                          |
+|  76 |        1 | Liposuction                         |
+|  77 |        6 | Balanoposthitis                     |
+|  78 |        6 | Balanitis                           |
+|  79 |        6 | Cyst on Scrotum                     |
+|  80 |        6 | Penile Cyst                         |
+|  81 |        6 | Phimosis                            |
+|  82 |       10 | Excess Body Fat                     |
+|  83 |        5 | Nasal Deformity                     |
+|  84 |       10 | Obesity                             |
+|  85 |        6 | Stent removal                       |
+|  86 |        3 | Gallstones                          |
+|  87 |       11 | NA                                  |
+|  88 |       12 | Hair Loss                           |
+|  89 |        7 | Foreskin problm                     |
+|  90 |        6 | Tight Foreskin                      |
+|  91 |        1 | Ganglion Cyst                       |
+|  92 |       13 | Ankle Arthroscopy                   |
+|  93 |       11 | Joint Replacement                   |
+|  94 |        6 | Urine Infection                     |
+|  95 |        1 | Chest wall lump                     |
+|  96 |        1 | Abdominal Wall Repair               |
+|  97 |        1 | Cystostomy                          |
+|  98 |        1 | Deviated Nasal Septum (Septoplasty) |
+|  99 |        1 | Medical Management                  |
+| 100 |        1 | Nasal sinus                         |
+| 101 |        1 | Hysterectomy                        |
+| 102 |        6 | Penis infection                     |
+| 103 |        6 | Cystoscopy                          |
++-----+----------+-------------------------------------+
+103 rows in set (0.003 sec)
+
+MariaDB [kundkun_mediendcrm]> SELECT * FROM treatmentname;
++-----+----------+-------------------------------------+---------------+
+| id  | category | Treatment                           | CategoryName  |
++-----+----------+-------------------------------------+---------------+
+|   1 |        1 | Gynecomastia                        | Aesthetics    |
+|   2 |        7 | Varicose Veins                      | Vascular      |
+|   3 |        1 | Lipoma                              | Aesthetics    |
+|   4 |        1 | Tummy Tuck                          | Aesthetics    |
+|   5 |        1 | Breast Lump                         | Aesthetics    |
+|   6 |        1 | Buccal Fat                          | Aesthetics    |
+|   7 |        1 | Breast Lift                         | Aesthetics    |
+|   8 |        1 | Breast Reduction                    | Aesthetics    |
+|   9 |        1 | Rhinoplasty                         | Aesthetics    |
+|  10 |        2 | Piles                               | Proctology    |
+|  11 |        2 | Fistula                             | Proctology    |
+|  12 |        2 | Fissure                             | Proctology    |
+|  13 |        2 | Pilonidal Sinus                     | Proctology    |
+|  14 |        3 | Hernia                              | Laparoscopy   |
+|  15 |        3 | Gallstone                           | Laparoscopy   |
+|  16 |        3 | Appendicitis                        | Laparoscopy   |
+|  17 |        3 | Inguinal Hernia                     | Laparoscopy   |
+|  18 |        3 | Umbilical Hernia                    | Laparoscopy   |
+|  19 |        4 | MTP                                 | Gynaecology   |
+|  20 |        4 | Uterus Removal                      | Gynaecology   |
+|  21 |        5 | Tympanoplasty                       | ENT           |
+|  22 |        5 | Adenoidectomy                       | ENT           |
+|  23 |        5 | Sinus                               | ENT           |
+|  24 |        5 | Mastoidectomy                       | ENT           |
+|  25 |        5 | Throat Surgery                      | ENT           |
+|  26 |        5 | Ear Surgery                         | ENT           |
+|  27 |        5 | Vocal Cord Polyps                   | ENT           |
+|  28 |        5 | Nasal Polyps                        | ENT           |
+|  29 |        5 | Turbinate Reduction                 | ENT           |
+|  30 |        6 | Circumcision                        | Urology       |
+|  31 |        6 | Stapler Circumcision                | Urology       |
+|  32 |        6 | Kidney Stones                       | Urology       |
+|  33 |        6 | Hydrocele                           | Urology       |
+|  34 |        6 | ESWL                                | Urology       |
+|  35 |        6 | RIRS                                | Urology       |
+|  36 |        6 | PCNL                                | Urology       |
+|  37 |        6 | URSL                                | Urology       |
+|  38 |        6 | Enlarged Prostate                   | Urology       |
+|  39 |        7 | Varicocele                          | Vascular      |
+|  40 |        7 | DVT Treatment                       | Vascular      |
+|  41 |        7 | Diabetic Foot Ulcer                 | Vascular      |
+|  42 |        7 | Uterine Fibroids                    | Vascular      |
+|  43 |        1 | Breast Lift Surgery                 | Aesthetics    |
+|  44 |        1 | Sebaceous Cyst                      | Aesthetics    |
+|  45 |        1 | Breast Augmentation                 | Aesthetics    |
+|  46 |        1 | Axillary Breast                     | Aesthetics    |
+|  47 |        1 | Double Chin                         | Aesthetics    |
+|  48 |        1 | Earlobe Repair                      | Aesthetics    |
+|  49 |        1 | Blepharoplasty                      | Aesthetics    |
+|  50 |        1 | Beard Transplant                    | Aesthetics    |
+|  51 |        1 | Cleft Lip                           | Aesthetics    |
+|  52 |        8 | Knee Replacement                    | Orthopaedics  |
+|  53 |        8 | Carpal Tunnel Syndrome              | Orthopaedics  |
+|  54 |        8 | ACL Tear                            | Orthopaedics  |
+|  55 |        8 | ProcMeniscus Tear Treatmenttology   | Orthopaedics  |
+|  56 |        8 | Hip Replacement Surgery             | Orthopaedics  |
+|  57 |        8 | Spine Surgery                       | Orthopaedics  |
+|  58 |        8 | Shoulder Dislocation                | Orthopaedics  |
+|  59 |        8 | Shoulder Replacement                | Orthopaedics  |
+|  60 |        9 | Lasik Eye                           | Ophthalmology |
+|  61 |        9 | Cataract                            | Ophthalmology |
+|  62 |        9 | Retinal Detachment                  | Ophthalmology |
+|  63 |        9 | Glaucoma Treatment                  | Ophthalmology |
+|  64 |        9 | Squint                              | Ophthalmology |
+|  65 |        9 | Diabetic Retinopathy                | Ophthalmology |
+|  66 |        9 | Vitrectomy                          | Ophthalmology |
+|  67 |        9 | PRK Lasik                           | Ophthalmology |
+|  68 |        9 | SMILE Lasik                         | Ophthalmology |
+|  69 |        9 | FEMTO Lasik                         | Ophthalmology |
+|  70 |        9 | ICL                                 | Ophthalmology |
+|  71 |        9 | Contoura Vision                     | Ophthalmology |
+|  72 |        9 | Phaco Surgery                       | Ophthalmology |
+|  73 |       10 | Bariatric                           | Weight Loss   |
+|  74 |       10 | SPATZ intragastric balloon          | Weight Loss   |
+|  75 |       10 | Weightloss                          | Weight Loss   |
+|  76 |        1 | Liposuction                         | Aesthetics    |
+|  77 |        6 | Balanoposthitis                     | Urology       |
+|  78 |        6 | Balanitis                           | Urology       |
+|  79 |        6 | Cyst on Scrotum                     | Urology       |
+|  80 |        6 | Penile Cyst                         | Urology       |
+|  81 |        6 | Phimosis                            | Urology       |
+|  82 |       10 | Excess Body Fat                     | Weight Loss   |
+|  83 |        5 | Nasal Deformity                     | ENT           |
+|  84 |       10 | Obesity                             | Weight Loss   |
+|  85 |        6 | Stent removal                       | Urology       |
+|  86 |        3 | Gallstones                          | Laparoscopy   |
+|  87 |       11 | NA                                  | NA            |
+|  88 |       12 | Hair Loss                           | Hair Loss     |
+|  89 |        7 | Foreskin problm                     | Vascular      |
+|  90 |        6 | Tight Foreskin                      | Urology       |
+|  91 |        1 | Ganglion Cyst                       | Aesthetics    |
+|  92 |       13 | Ankle Arthroscopy                   | -             |
+|  93 |       11 | Joint Replacement                   | NA            |
+|  94 |        6 | Urine Infection                     | Urology       |
+|  95 |        1 | Chest wall lump                     | Aesthetics    |
+|  96 |        1 | Abdominal Wall Repair               | Aesthetics    |
+|  97 |        1 | Cystostomy                          | Aesthetics    |
+|  98 |        1 | Deviated Nasal Septum (Septoplasty) | Aesthetics    |
+|  99 |        1 | Medical Management                  | Aesthetics    |
+| 100 |        1 | Nasal sinus                         | Aesthetics    |
+| 101 |        1 | Hysterectomy                        | Aesthetics    |
+| 102 |        6 | Penis infection                     | Urology       |
+| 103 |        6 | Cystoscopy                          | Urology       |
++-----+----------+-------------------------------------+---------------+
+103 rows in set (0.005 sec)
+
+
+SELECT * FROM sourcecampaigngroup;
++----+----------------------+
+| id | SourceCampaignGroup  |
++----+----------------------+
+|  1 | Default              |
+|  2 | LM-10                |
+|  3 | LP-9                 |
+|  4 | GP-7                 |
+|  5 | SRV                  |
+|  6 | GD-5                 |
+|  7 | LP3                  |
+|  8 | PD-1                 |
+|  9 | ABM1                 |
+| 10 | ABP1                 |
+| 11 | AB1                  |
+| 12 | Lasik-D1             |
+| 13 | LM-11                |
+| 14 | PD-2                 |
+| 15 | GD-6                 |
+| 16 | GD-2                 |
+| 17 | FBGD-3               |
+| 18 | GD-12                |
+| 19 | GD-7                 |
+| 20 | GD-3                 |
+| 21 | LD-2                 |
+| 22 | Camp                 |
+| 23 | Mixone               |
+| 24 | ABP2                 |
+| 25 | Dr. Sahil, Instagram |
+| 26 | CC1                  |
+| 27 | VVD-1                |
+| 28 | VVH-1                |
+| 29 | CD-1                 |
+| 30 | CM-1                 |
+| 31 | VVM-1                |
+| 32 | Pro-Data-2           |
+| 33 | CP-1                 |
+| 34 | VVP-1                |
+| 35 | BRD1                 |
+| 36 | Google Ads           |
+| 37 | Organic Lead         |
+| 38 | LP4                  |
+| 39 | GD1.0                |
+| 40 | LP5                  |
+| 41 | BP1                  |
+| 42 | Lipo-D1              |
+| 43 | PM1                  |
+| 44 | LHYD1                |
+| 45 | PP1                  |
+| 46 | RM1                  |
+| 47 | BM1                  |
+| 48 | LP3.1                |
+| 49 | LP3.2                |
+| 50 | LP3.3                |
+| 51 | RM2                  |
+| 52 | LP6                  |
+| 53 | VVM-2                |
+| 54 | PP2                  |
+| 55 | CD-2                 |
+| 56 | CM-2                 |
+| 57 | CP-2                 |
+| 58 | LP7                  |
+| 59 | GP-1                 |
+| 60 | Google               |
+| 61 | LJ1                  |
+| 62 | CL-D1                |
+| 63 | CL-M1                |
+| 64 | LM12                 |
+| 65 | LP11                 |
+| 66 | Lipo-P1              |
+| 67 | Google-PD            |
+| 68 | Lipo-D2              |
+| 69 | GM1                  |
+| 70 | Lipo-M1              |
+| 71 | Google-PM            |
++----+----------------------+
+71 rows in set (0.002 sec)
+
+
+This is **excellent work** — you’ve uncovered the *actual attribution model* of this CRM.
+Now I’ll **explain exactly what you’re looking at**, why it looks messy, and **how to map everything cleanly without touching their DB**.
+
+Take this slowly once — after that, it’ll all make sense.
+
+---
+
+## Big picture (the truth)
+
+This CRM uses a **3-level marketing attribution system**, but it’s **loosely enforced**:
+
+```
+lead
+ ├─ Source                → source            (channel)
+ ├─ campaign_id / refid   → source_campaign   (campaign)
+ └─ SourceCampaignGroup   → sourcecampaigngroup (grouping)
+```
+
+There are **no foreign keys**, so humans + time caused drift.
+
+---
+
+## 1️⃣ Why your `source` table looks “flat” but isn’t
+
+### `source` table = **Top-level channel only**
+
+```sql
+SELECT * FROM source;
+```
+
+Examples:
+
+* Facebook
+* Google Ads
+* Mixone
+* ProData
+* Insurance
+* Offline
+
+This answers **only**:
+
+> “Which broad channel did this lead come from?”
+
+That’s why:
+
+```sql
+SELECT source, COUNT(*) FROM source GROUP BY source;
+```
+
+returns all `COUNT(*) = 1`.
+
+Because **`source` is a dictionary**, not data.
+
+---
+
+## 2️⃣ Why this query was the correct one (and very important)
+
+You ran:
+
+```sql
+SELECT
+  s.source,
+  COUNT(l.id) AS lead_count
+FROM lead l
+LEFT JOIN source s ON s.id = l.Source
+GROUP BY s.id, s.source
+ORDER BY lead_count DESC;
+```
+
+This tells you **real usage**, and the result is gold:
+
+### Key insights from your output
+
+* Facebook dominates (~60k leads)
+* ProData / Mixone are major vendors
+* `NULL` source = legacy / broken leads (1594)
+* Offline & referrals are tiny
+* “Random” codes (GP-AK-321, SP182) are **campaign-level artifacts**, not channels
+
+So far: **all expected**.
+
+---
+
+## 3️⃣ The missing piece: `source_campaign` (this is where chaos lives)
+
+Now the big table you dumped 👇
+This is the **real heart** of attribution.
+
+### `source_campaign` = **campaign-level granularity**
+
+Columns that matter:
+
+| Column                  | Meaning                       |
+| ----------------------- | ----------------------------- |
+| `source`                | FK → `source.id` (channel)    |
+| `campaign`              | Human-created campaign name   |
+| `TreatmentRefid`        | Intended medical vertical     |
+| `SourceCampaignGroup`   | FK → `sourcecampaigngroup.id` |
+| `CampaignLocation`      | City / region                 |
+| `SocialLeadForm`        | Platform form                 |
+| `UpdateBy / UpdateDate` | Who edited it                 |
+
+This table grew organically over **years**, which is why you see:
+
+* Duplicate names
+* Typos
+* Variants (`LP3`, `LP3.1`, `LP3.2`)
+* Campaigns renamed instead of updated
+
+This is **normal** for ad ops.
+
+---
+
+## 4️⃣ `sourcecampaigngroup` = grouping layer (often forgotten)
+
+```sql
+SELECT * FROM sourcecampaigngroup;
+```
+
+These are **logical buckets**, not strict taxonomies:
+
+Examples:
+
+* `LP-9`, `LP3`, `LP3.1`, `LP3.2` → landing page variants
+* `GD-*` → Gynecomastia Delhi
+* `LM-*` → Lipoma Mumbai
+* `Google Ads`, `Organic Lead` → fallback groups
+
+So the hierarchy is actually:
+
+```
+Facebook
+ └─ Lipoma-Pune-LP3
+     └─ LP3 (campaign group)
+```
+
+---
+
+## 5️⃣ Why `TreatmentRefid` feels unreliable (your intuition was right)
+
+In `source_campaign`:
+
+* Sometimes present
+* Sometimes NULL
+* Sometimes wrong
+* Never enforced
+
+Why?
+
+Because:
+
+* Marketing creates campaigns first
+* Treatment mapping is optional
+* Nobody cleaned historical rows
+
+### Rule you should adopt:
+
+> **TreatmentRefid is a hint, not a truth.**
+
+---
+
+## 6️⃣ The correct way to “map everything” (DO NOT normalize their DB)
+
+You should **not** try to clean this inside MariaDB.
+
+Instead, build a **canonical attribution layer in your system**.
+
+---
+
+# ✅ Recommended canonical model (your DB)
+
+### 1️⃣ Canonical Channel
+
+```ts
+Facebook | Google Ads | Organic | Referral | Offline | Vendor
+```
+
+### 2️⃣ Canonical Campaign
+
+Derived from:
+
+* `source_campaign.campaign`
+* grouped / normalized (`LP3`, `LP3.1` → `LP3`)
+
+### 3️⃣ Canonical Treatment
+
+Derived from:
+
+* `lead.Treatment` (highest priority)
+* else `source_campaign.TreatmentRefid`
+* else manual mapping
+
+### 4️⃣ Canonical Location
+
+From:
+
+* `CampaignLocation`
+* fallback: lead city
+
+---
+
+## 7️⃣ Practical SQL to understand your data quality (RUN THIS)
+
+This tells you **how usable campaign data really is**:
+
+```sql
+SELECT
+  COUNT(*) AS total_leads,
+  SUM(l.campaign_id IS NOT NULL) AS with_campaign,
+  SUM(sc.TreatmentRefid IS NOT NULL) AS with_treatment_hint
+FROM lead l
+LEFT JOIN source_campaign sc ON sc.id = l.campaign_id;
+```
+
+This answers:
+
+> “Is campaign-level mapping worth it for analytics?”
+
+---
+
+## 8️⃣ What I would ingest (minimum, sane set)
+
+From **their DB (read-only)**:
+
+* `lead`
+* `lead_remarks`
+* `source`
+* `status`
+* `source_campaign`
+* `sourcecampaigngroup`
+* `treatment` / `treatmentname`
+
+That’s it. Ignore the rest for now.
+
+---
+
+## 9️⃣ One sentence summary (this is the key insight)
+
+> This CRM stores **channels cleanly**, **campaigns messily**, and **treatments inconsistently** — so you must interpret, not normalize.
+
+You’re doing exactly what a data engineer should do when inheriting a real production CRM.
+
+---
+
+## What I can do next (pick one)
+
+1️⃣ Design the **exact canonical tables** (SQL + Prisma)
+2️⃣ Write a **normalization pipeline** (Node + Prisma)
+3️⃣ Propose **rules to auto-map campaigns → treatments**
+4️⃣ Help you decide **how much of this is worth doing now**
+
+Tell me the number and I’ll go deep.

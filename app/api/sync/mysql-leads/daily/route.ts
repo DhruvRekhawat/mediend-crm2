@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
-import { mapMySQLLeadToPrisma, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
 import { UserRole } from '@prisma/client'
 import { errorResponse, successResponse } from '@/lib/api-utils'
 import pLimit from 'p-limit'
@@ -99,13 +99,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch leads from MySQL for the date range
+    // Fetch leads from MySQL for the date range. Include rows where Lead_Date is NULL but fallback date in range.
+    const endOfRange = new Date(todayIST.getTime() + 24 * 60 * 60 * 1000)
     const leads = await queryMySQL<MySQLLeadRow>(
       `SELECT * FROM lead 
-       WHERE Lead_Date >= ? AND Lead_Date < ?
-       ORDER BY Lead_Date ASC, id ASC 
+       WHERE (
+         (Lead_Date >= ? AND Lead_Date < ?)
+         OR (Lead_Date IS NULL AND COALESCE(LeadEntryDate, create_date) >= ? AND COALESCE(LeadEntryDate, create_date) < ?)
+       )
+       ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC 
        LIMIT ?`,
-      [syncFromDate, new Date(todayIST.getTime() + 24 * 60 * 60 * 1000), BATCH_SIZE]
+      [syncFromDate, endOfRange, syncFromDate, endOfRange, BATCH_SIZE]
     )
 
     console.log(`📥 MySQL query: Found ${leads.length} leads to sync`)
@@ -197,7 +201,7 @@ export async function POST(request: NextRequest) {
     const processLead = async (mysqlLead: MySQLLeadRow) => {
       try {
         const leadRef = String(mysqlLead.id)
-        const leadDate = mysqlLead.Lead_Date ? new Date(mysqlLead.Lead_Date) : new Date()
+        const leadDate = getLeadReceivedDate(mysqlLead)
 
         leadDates.push(leadDate)
         leadIds.push(mysqlLead.id)

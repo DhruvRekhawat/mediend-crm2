@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -33,44 +33,60 @@ interface TaskFormProps {
   onSuccess?: () => void
 }
 
-export function TaskForm({
-  open,
-  onOpenChange,
-  task,
-  employees = [],
-  defaultAssigneeId,
-  onSuccess,
-}: TaskFormProps) {
-  const { user } = useAuth()
-  const isMDOrAdmin = user?.role === "MD" || user?.role === "ADMIN"
+function getInitialFormState(
+  task: Task | null | undefined,
+  defaultAssigneeId: string | undefined,
+  userId: string | undefined
+) {
+  if (task) {
+    return {
+      title: task.title,
+      description: task.description ?? "",
+      dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd'T'HH:mm") : "",
+      priority: task.priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+      status: task.status as "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
+      assigneeId: task.assigneeId,
+    }
+  }
+  return {
+    title: "",
+    description: "",
+    dueDate: "",
+    priority: "MEDIUM" as const,
+    status: "PENDING" as const,
+    assigneeId: defaultAssigneeId ?? userId ?? "",
+  }
+}
 
-  const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
-  const [dueDate, setDueDate] = useState("")
-  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">("MEDIUM")
-  const [status, setStatus] = useState<"PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED">("PENDING")
-  const [assigneeId, setAssigneeId] = useState("")
+interface TaskFormFieldsProps {
+  task: Task | null | undefined
+  defaultAssigneeId: string | undefined
+  userId: string | undefined
+  employees: { id: string; name: string; email: string }[]
+  isMDOrAdmin: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess?: () => void
+}
+
+function TaskFormFields({
+  task,
+  defaultAssigneeId,
+  userId,
+  employees,
+  isMDOrAdmin,
+  onOpenChange,
+  onSuccess,
+}: TaskFormFieldsProps) {
+  const initial = getInitialFormState(task, defaultAssigneeId, userId)
+  const [title, setTitle] = useState(initial.title)
+  const [description, setDescription] = useState(initial.description)
+  const [dueDate, setDueDate] = useState(initial.dueDate)
+  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">(initial.priority)
+  const [status, setStatus] = useState<"PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED">(initial.status)
+  const [assigneeId, setAssigneeId] = useState(initial.assigneeId)
 
   const createMutation = useCreateTask()
   const updateMutation = useUpdateTask()
-
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title)
-      setDescription(task.description ?? "")
-      setDueDate(task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd'T'HH:mm") : "")
-      setPriority(task.priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT")
-      setStatus(task.status as "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED")
-      setAssigneeId(task.assigneeId)
-    } else {
-      setTitle("")
-      setDescription("")
-      setDueDate("")
-      setPriority("MEDIUM")
-      setStatus("PENDING")
-      setAssigneeId(defaultAssigneeId ?? user?.id ?? "")
-    }
-  }, [task, user?.id, defaultAssigneeId, open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,7 +95,7 @@ export function TaskForm({
       return
     }
 
-    const effectiveAssigneeId = assigneeId || user?.id
+    const effectiveAssigneeId = assigneeId || userId
     if (!effectiveAssigneeId) {
       toast.error("Assignee is required")
       return
@@ -116,12 +132,11 @@ export function TaskForm({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{task ? "Edit Task" : "Add Task"}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+      <DialogHeader>
+        <DialogTitle>{task ? "Edit Task" : "Add Task"}</DialogTitle>
+      </DialogHeader>
+      <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="title">Title</Label>
             <Input
@@ -222,7 +237,36 @@ export function TaskForm({
               {task ? "Update" : "Create"}
             </Button>
           </DialogFooter>
-        </form>
+      </form>
+    </>
+  )
+}
+
+export function TaskForm({
+  open,
+  onOpenChange,
+  task,
+  employees = [],
+  defaultAssigneeId,
+  onSuccess,
+}: TaskFormProps) {
+  const { user } = useAuth()
+  const userId = user?.id
+  const isMDOrAdmin = user?.role === "MD" || user?.role === "ADMIN"
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <TaskFormFields
+          key={open ? (task?.id ?? "new") : "closed"}
+          task={task}
+          defaultAssigneeId={defaultAssigneeId}
+          userId={userId}
+          employees={employees}
+          isMDOrAdmin={isMDOrAdmin ?? false}
+          onOpenChange={onOpenChange}
+          onSuccess={onSuccess}
+        />
       </DialogContent>
     </Dialog>
   )

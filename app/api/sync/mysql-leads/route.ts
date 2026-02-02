@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
-import { mapMySQLLeadToPrisma, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
 import { UserRole } from '@prisma/client'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 
@@ -83,13 +83,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch leads from MySQL
+    // Fetch leads from MySQL. Include rows where Lead_Date is NULL but LeadEntryDate/create_date >= lastSyncedDate.
     const leads = await queryMySQL<MySQLLeadRow>(
       `SELECT * FROM lead 
-       WHERE Lead_Date >= ? 
-       ORDER BY Lead_Date ASC, id ASC 
+       WHERE (Lead_Date >= ? OR (Lead_Date IS NULL AND COALESCE(LeadEntryDate, create_date) >= ?))
+       ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC 
        LIMIT ?`,
-      [lastSyncedDate, BATCH_SIZE]
+      [lastSyncedDate, lastSyncedDate, BATCH_SIZE]
     )
 
     if (leads.length === 0) {
@@ -121,9 +121,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const leadRef = String(mysqlLead.id)
-        const leadDate = mysqlLead.Lead_Date
-          ? new Date(mysqlLead.Lead_Date)
-          : new Date()
+        const leadDate = getLeadReceivedDate(mysqlLead)
 
         if (leadDate > maxDate) {
           maxDate = leadDate

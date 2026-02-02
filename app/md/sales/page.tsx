@@ -4,7 +4,7 @@ import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,6 @@ import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
 import {
   TrendingUp,
-  Users,
   DollarSign,
   Target,
   Calendar as CalendarIcon,
@@ -22,8 +21,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  MapPin,
-  Building2,
   Stethoscope,
   Activity,
   BarChart3,
@@ -31,6 +28,21 @@ import {
   Shield,
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 
 interface DashboardStats {
   totalSurgeries: number
@@ -65,6 +77,7 @@ interface LeaderboardEntry {
   teamName?: string
   totalLeads?: number
   closedLeads: number
+  ipdDone?: number
   conversionRate?: number
   revenue?: number
   netProfit: number
@@ -90,30 +103,6 @@ interface TodayLeadAssignmentsResponse {
   date: string
   totalLeads: number
   assignments: TodayLeadAssignment[]
-}
-
-interface GeographicData {
-  circlePerformance: Array<{
-    circle: string
-    totalLeads: number
-    completedSurgeries: number
-    conversionRate: number
-    revenue: number
-    profit: number
-    avgTicketSize: number
-  }>
-  cityPerformance: Array<{
-    city: string
-    circle: string
-    totalLeads: number
-    completedSurgeries: number
-    conversionRate: number
-    revenue: number
-    profit: number
-    avgTicketSize: number
-    topHospital: string
-    topTreatment: string
-  }>
 }
 
 interface MedicalData {
@@ -380,18 +369,6 @@ export default function MDSalesDashboardPage() {
   })
 
   // Phase 2-4 Analytics Queries
-  const { data: geographicData } = useQuery<GeographicData>({
-    queryKey: ['analytics', 'geographic', dateRange],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      })
-      return apiGet<GeographicData>(`/api/analytics/geographic?${params.toString()}`)
-    },
-    enabled: !!dateRange.startDate && !!dateRange.endDate,
-  })
-
   const { data: medicalData } = useQuery<MedicalData>({
     queryKey: ['analytics', 'medical', dateRange],
     queryFn: async () => {
@@ -752,49 +729,58 @@ export default function MDSalesDashboardPage() {
         <Card className="border-l-4 border-l-emerald-500 shadow-md">
           <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
             <CardTitle className="text-emerald-700 dark:text-emerald-300">Team Leaderboard</CardTitle>
-            <CardDescription>Team performance ranking</CardDescription>
+            <CardDescription>Team performance ranking by cases closed</CardDescription>
           </CardHeader>
           <CardContent>
             {teamsLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : teamLeaderboard && teamLeaderboard.length > 0 ? (
+              <div className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={teamLeaderboard.slice(0, 10)} 
+                    layout="vertical" 
+                    margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis 
+                      type="category" 
+                      dataKey="teamName" 
+                      tick={{ fontSize: 12 }}
+                      width={90}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'Net Profit' || name === 'Revenue') {
+                          return [`₹${value.toLocaleString('en-IN')}`, name]
+                        }
+                        return [value, name]
+                      }}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="closedLeads" 
+                      name="Cases Closed"
+                      fill="#22c55e" 
+                      radius={[0, 4, 4, 0]}
+                    />
+                    <Bar 
+                      dataKey="totalLeads" 
+                      name="Total Leads"
+                      fill="#3b82f6" 
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>Team Name</TableHead>
-                    <TableHead>Total Leads</TableHead>
-                    <TableHead>Closed Leads</TableHead>
-                    <TableHead>Conversion Rate</TableHead>
-                    <TableHead>Revenue</TableHead>
-                    <TableHead>Net Profit</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teamLeaderboard?.map((team, index) => (
-                    <TableRow key={team.teamId}>
-                      <TableCell>
-                        <Badge variant={index < 3 ? 'default' : 'secondary'}>#{index + 1}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{team.teamName}</TableCell>
-                      <TableCell>{team.totalLeads || 0}</TableCell>
-                      <TableCell>{team.closedLeads}</TableCell>
-                      <TableCell>
-                        {team.conversionRate !== undefined ? `${team.conversionRate.toFixed(1)}%` : '0%'}
-                      </TableCell>
-                      <TableCell>₹{team.revenue?.toLocaleString('en-IN') || '0'}</TableCell>
-                      <TableCell>₹{team.netProfit.toLocaleString('en-IN')}</TableCell>
-                    </TableRow>
-                  ))}
-                  {(!teamLeaderboard || teamLeaderboard.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                        No team data available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <div className="text-center py-8 text-muted-foreground">No team data available</div>
             )}
           </CardContent>
         </Card>
@@ -803,51 +789,58 @@ export default function MDSalesDashboardPage() {
         <Card className="border-l-4 border-l-amber-500 shadow-md">
           <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent dark:from-amber-950/20">
             <CardTitle className="text-amber-700 dark:text-amber-300">BD Leaderboard</CardTitle>
-            <CardDescription>Top performing Business Development executives</CardDescription>
+            <CardDescription>Top performing Business Development executives by cases closed (IPD Done, Closed, etc.)</CardDescription>
           </CardHeader>
           <CardContent>
             {bdsLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
+            ) : bdLeaderboard && bdLeaderboard.length > 0 ? (
+              <div className="h-[500px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart 
+                    data={bdLeaderboard.slice(0, 15)} 
+                    layout="vertical" 
+                    margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <YAxis 
+                      type="category" 
+                      dataKey="bdName" 
+                      tick={{ fontSize: 11 }}
+                      width={110}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'Net Profit' || name === 'Avg Ticket') {
+                          return [`₹${value.toLocaleString('en-IN')}`, name]
+                        }
+                        return [value, name]
+                      }}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="closedLeads" 
+                      name="Cases Closed"
+                      fill="#f59e0b" 
+                      radius={[0, 4, 4, 0]}
+                    />
+                    <Bar 
+                      dataKey="ipdDone" 
+                      name="IPD Done"
+                      fill="#22c55e" 
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Rank</TableHead>
-                    <TableHead>BD Name</TableHead>
-                    <TableHead>Team</TableHead>
-                    <TableHead>Total Leads</TableHead>
-                    <TableHead>Closed Leads</TableHead>
-                    <TableHead>Conversion Rate</TableHead>
-                    <TableHead>Net Profit</TableHead>
-                    <TableHead>Avg Ticket Size</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {bdLeaderboard?.slice(0, 20).map((bd, index) => (
-                    <TableRow key={bd.bdId}>
-                      <TableCell>
-                        <Badge variant={index < 3 ? 'default' : 'secondary'}>#{index + 1}</Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{bd.bdName}</TableCell>
-                      <TableCell>{bd.teamName || 'No Team'}</TableCell>
-                      <TableCell>{bd.totalLeads || 0}</TableCell>
-                      <TableCell>{bd.closedLeads}</TableCell>
-                      <TableCell>
-                        {bd.conversionRate !== undefined ? `${bd.conversionRate.toFixed(1)}%` : '0%'}
-                      </TableCell>
-                      <TableCell>₹{bd.netProfit.toLocaleString('en-IN')}</TableCell>
-                      <TableCell>₹{bd.avgTicketSize?.toLocaleString('en-IN') || '0'}</TableCell>
-                    </TableRow>
-                  ))}
-                  {(!bdLeaderboard || bdLeaderboard.length === 0) && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        No BD data available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+              <div className="text-center py-8 text-muted-foreground">No BD data available</div>
             )}
           </CardContent>
         </Card>
@@ -923,12 +916,8 @@ export default function MDSalesDashboardPage() {
         </Card>
 
         {/* Extended Analytics - Phase 2-4 */}
-        <Tabs defaultValue="geographic" className="w-full">
-          <TabsList className="grid w-full grid-cols-8">
-            <TabsTrigger value="geographic">
-              <MapPin className="mr-2 h-4 w-4" />
-              Geographic
-            </TabsTrigger>
+        <Tabs defaultValue="medical" className="w-full">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="medical">
               <Stethoscope className="mr-2 h-4 w-4" />
               Medical
@@ -959,176 +948,148 @@ export default function MDSalesDashboardPage() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Geographic Analytics */}
-          <TabsContent value="geographic" className="space-y-4">
-            {geographicData ? (
-              <>
-                <Card className="border-l-4 border-l-indigo-500 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent dark:from-indigo-950/20">
-                    <CardTitle className="text-indigo-700 dark:text-indigo-300">Circle Performance</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Circle</TableHead>
-                          <TableHead>Total Leads</TableHead>
-                          <TableHead>Completed</TableHead>
-                          <TableHead>Conversion Rate</TableHead>
-                          <TableHead>Revenue</TableHead>
-                          <TableHead>Profit</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {geographicData.circlePerformance?.map((circle: any) => (
-                          <TableRow key={circle.circle}>
-                            <TableCell className="font-medium">{circle.circle}</TableCell>
-                            <TableCell>{circle.totalLeads}</TableCell>
-                            <TableCell>{circle.completedSurgeries}</TableCell>
-                            <TableCell>{circle.conversionRate.toFixed(1)}%</TableCell>
-                            <TableCell>₹{circle.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{circle.profit.toLocaleString('en-IN')}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-l-4 border-l-violet-500 shadow-md">
-                  <CardHeader className="bg-gradient-to-r from-violet-50 to-transparent dark:from-violet-950/20">
-                    <CardTitle className="text-violet-700 dark:text-violet-300">Top 20 Cities by Revenue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>City</TableHead>
-                          <TableHead>Circle</TableHead>
-                          <TableHead>Total Leads</TableHead>
-                          <TableHead>Completed</TableHead>
-                          <TableHead>Conversion Rate</TableHead>
-                          <TableHead>Revenue</TableHead>
-                          <TableHead>Top Hospital</TableHead>
-                          <TableHead>Top Treatment</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {geographicData.cityPerformance?.map((city: any) => (
-                          <TableRow key={city.city}>
-                            <TableCell className="font-medium">{city.city}</TableCell>
-                            <TableCell>{city.circle}</TableCell>
-                            <TableCell>{city.totalLeads}</TableCell>
-                            <TableCell>{city.completedSurgeries}</TableCell>
-                            <TableCell>{city.conversionRate.toFixed(1)}%</TableCell>
-                            <TableCell>₹{city.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>{city.topHospital || 'N/A'}</TableCell>
-                            <TableCell>{city.topTreatment || 'N/A'}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </>
-            ) : null}
-          </TabsContent>
-
           {/* Medical Analytics */}
           <TabsContent value="medical" className="space-y-4">
             {medicalData ? (
                <>
+                {/* Top Treatments Chart */}
                 <Card className="border-l-4 border-l-rose-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-rose-50 to-transparent dark:from-rose-950/20">
-                    <CardTitle className="text-rose-700 dark:text-rose-300">Top 20 Treatments by Revenue</CardTitle>
+                    <CardTitle className="text-rose-700 dark:text-rose-300">Top 10 Treatments by Revenue</CardTitle>
+                    <CardDescription>Treatment performance by revenue and case count</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Treatment</TableHead>
-                          <TableHead>Count</TableHead>
-                          <TableHead>Revenue</TableHead>
-                          <TableHead>Profit</TableHead>
-                          <TableHead>Avg Ticket Size</TableHead>
-                          <TableHead>Conversion Rate</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {medicalData.treatmentPerformance?.map((treatment: any) => (
-                          <TableRow key={treatment.treatment}>
-                            <TableCell className="font-medium">{treatment.treatment}</TableCell>
-                            <TableCell>{treatment.count || 0}</TableCell>
-                            <TableCell>₹{treatment.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{treatment.profit.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{treatment.avgTicketSize.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>{treatment.conversionRate?.toFixed(1) || '0'}%</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {medicalData.treatmentPerformance && medicalData.treatmentPerformance.length > 0 ? (
+                      <div className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={medicalData.treatmentPerformance.slice(0, 10)} 
+                            layout="vertical" 
+                            margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              type="number" 
+                              tick={{ fontSize: 12 }}
+                              tickFormatter={(value) => `₹${(value / 100000).toFixed(0)}L`}
+                            />
+                            <YAxis 
+                              type="category" 
+                              dataKey="treatment" 
+                              tick={{ fontSize: 11 }}
+                              width={140}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--background))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                              formatter={(value: number, name: string) => [`₹${value.toLocaleString('en-IN')}`, name]}
+                            />
+                            <Legend />
+                            <Bar dataKey="revenue" name="Revenue" fill="#f43f5e" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="profit" name="Profit" fill="#10b981" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No treatment data available</div>
+                    )}
                   </CardContent>
                 </Card>
 
+                {/* Top Hospitals Chart */}
                 <Card className="border-l-4 border-l-pink-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-pink-50 to-transparent dark:from-pink-950/20">
-                    <CardTitle className="text-pink-700 dark:text-pink-300">Top 20 Hospitals by Revenue</CardTitle>
+                    <CardTitle className="text-pink-700 dark:text-pink-300">Top 10 Hospitals by Revenue</CardTitle>
+                    <CardDescription>Hospital performance by revenue and surgeries</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Hospital</TableHead>
-                          <TableHead>City</TableHead>
-                          <TableHead>Surgeries</TableHead>
-                          <TableHead>Revenue</TableHead>
-                          <TableHead>Profit</TableHead>
-                          <TableHead>Hospital Share</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {medicalData.hospitalPerformance?.map((hospital: any) => (
-                          <TableRow key={hospital.hospitalName}>
-                            <TableCell className="font-medium">{hospital.hospitalName}</TableCell>
-                            <TableCell>{hospital.city}</TableCell>
-                            <TableCell>{hospital.totalSurgeries}</TableCell>
-                            <TableCell>₹{hospital.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{hospital.profit.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{hospital.hospitalShare.toLocaleString('en-IN')}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {medicalData.hospitalPerformance && medicalData.hospitalPerformance.length > 0 ? (
+                      <div className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={medicalData.hospitalPerformance.slice(0, 10)} 
+                            layout="vertical" 
+                            margin={{ top: 5, right: 30, left: 180, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              type="number" 
+                              tick={{ fontSize: 12 }}
+                              tickFormatter={(value) => `₹${(value / 100000).toFixed(0)}L`}
+                            />
+                            <YAxis 
+                              type="category" 
+                              dataKey="hospitalName" 
+                              tick={{ fontSize: 10 }}
+                              width={170}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--background))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                              formatter={(value: number, name: string) => [`₹${value.toLocaleString('en-IN')}`, name]}
+                            />
+                            <Legend />
+                            <Bar dataKey="revenue" name="Revenue" fill="#ec4899" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="profit" name="Profit" fill="#22c55e" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No hospital data available</div>
+                    )}
                   </CardContent>
                 </Card>
 
+                {/* Top Surgeons Chart */}
                 <Card className="border-l-4 border-l-fuchsia-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-fuchsia-50 to-transparent dark:from-fuchsia-950/20">
-                    <CardTitle className="text-fuchsia-700 dark:text-fuchsia-300">Top 20 Surgeons by Surgeries</CardTitle>
+                    <CardTitle className="text-fuchsia-700 dark:text-fuchsia-300">Top 10 Surgeons by Surgeries</CardTitle>
+                    <CardDescription>Surgeon performance by surgeries count</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Surgeon</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Surgeries</TableHead>
-                          <TableHead>Revenue</TableHead>
-                          <TableHead>Doctor Share</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {medicalData.surgeonPerformance?.map((surgeon: any) => (
-                          <TableRow key={surgeon.surgeonName}>
-                            <TableCell className="font-medium">{surgeon.surgeonName}</TableCell>
-                            <TableCell>{surgeon.surgeonType}</TableCell>
-                            <TableCell>{surgeon.totalSurgeries}</TableCell>
-                            <TableCell>₹{surgeon.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{surgeon.doctorShare.toLocaleString('en-IN')}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {medicalData.surgeonPerformance && medicalData.surgeonPerformance.length > 0 ? (
+                      <div className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={medicalData.surgeonPerformance.slice(0, 10)} 
+                            layout="vertical" 
+                            margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis type="number" tick={{ fontSize: 12 }} />
+                            <YAxis 
+                              type="category" 
+                              dataKey="surgeonName" 
+                              tick={{ fontSize: 11 }}
+                              width={140}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--background))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                              formatter={(value: number, name: string) => {
+                                if (name === 'Doctor Share' || name === 'Revenue') {
+                                  return [`₹${value.toLocaleString('en-IN')}`, name]
+                                }
+                                return [value, name]
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="totalSurgeries" name="Surgeries" fill="#d946ef" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No surgeon data available</div>
+                    )}
                   </CardContent>
                 </Card>
               </>
@@ -1184,31 +1145,70 @@ export default function MDSalesDashboardPage() {
 
                 <Card className="border-l-4 border-l-lime-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-lime-50 to-transparent dark:from-lime-950/20">
-                    <CardTitle className="text-lime-700 dark:text-lime-300">Payment Mode Analysis</CardTitle>
+                    <CardTitle className="text-lime-700 dark:text-lime-300">Payment Mode Distribution</CardTitle>
+                    <CardDescription>Breakdown of cases by payment mode</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Payment Mode</TableHead>
-                          <TableHead>Count</TableHead>
-                          <TableHead>Total Amount</TableHead>
-                          <TableHead>Avg Amount</TableHead>
-                          <TableHead>Percentage</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {financialData.paymentModeAnalysis?.map((mode: any) => (
-                          <TableRow key={mode.modeOfPayment}>
-                            <TableCell className="font-medium">{mode.modeOfPayment}</TableCell>
-                            <TableCell>{mode.count}</TableCell>
-                            <TableCell>₹{mode.totalAmount.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>₹{mode.avgAmount.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>{mode.percentage.toFixed(1)}%</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {financialData.paymentModeAnalysis && financialData.paymentModeAnalysis.length > 0 ? (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Pie Chart */}
+                        <div className="h-[350px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={financialData.paymentModeAnalysis}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ modeOfPayment, percentage }) => `${modeOfPayment}: ${percentage.toFixed(1)}%`}
+                                outerRadius={120}
+                                fill="#8884d8"
+                                dataKey="count"
+                                nameKey="modeOfPayment"
+                              >
+                                {financialData.paymentModeAnalysis.map((entry: any, index: number) => {
+                                  const colors = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e']
+                                  return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                                })}
+                              </Pie>
+                              <Tooltip 
+                                contentStyle={{ 
+                                  backgroundColor: 'hsl(var(--background))', 
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px'
+                                }}
+                                formatter={(value: number, name: string, props: any) => {
+                                  return [`${value} cases (₹${props.payload.totalAmount.toLocaleString('en-IN')})`, name]
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                        {/* Stats List */}
+                        <div className="space-y-3">
+                          {financialData.paymentModeAnalysis.map((mode: any, index: number) => {
+                            const colors = ['bg-green-500', 'bg-blue-500', 'bg-amber-500', 'bg-pink-500', 'bg-purple-500', 'bg-cyan-500', 'bg-rose-500']
+                            return (
+                              <div key={mode.modeOfPayment} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-3 h-3 rounded-full ${colors[index % colors.length]}`} />
+                                  <div>
+                                    <p className="font-medium">{mode.modeOfPayment}</p>
+                                    <p className="text-sm text-muted-foreground">{mode.count} cases</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold">₹{mode.totalAmount.toLocaleString('en-IN')}</p>
+                                  <p className="text-sm text-muted-foreground">{mode.percentage.toFixed(1)}%</p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No payment mode data available</div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -1250,41 +1250,182 @@ export default function MDSalesDashboardPage() {
           {/* Trends Analytics */}
           <TabsContent value="trends" className="space-y-4">
             {trendsData ? (
-              <Card className="border-l-4 border-l-orange-500 shadow-md">
-                <CardHeader className="bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
-                  <CardTitle className="text-orange-700 dark:text-orange-300">Trend Analysis - {trendsData.period}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Period</TableHead>
-                        <TableHead>Leads Created</TableHead>
-                        <TableHead>Leads Completed</TableHead>
-                        <TableHead>Leads Lost</TableHead>
-                        <TableHead>Revenue</TableHead>
-                        <TableHead>Profit</TableHead>
-                        <TableHead>Conversion Rate</TableHead>
-                        <TableHead>Avg Ticket Size</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {trendsData.trendData?.map((trend: any, index: number) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{trend.period}</TableCell>
-                          <TableCell>{trend.leadsCreated}</TableCell>
-                          <TableCell>{trend.leadsCompleted}</TableCell>
-                          <TableCell>{trend.leadsLost}</TableCell>
-                          <TableCell>₹{trend.revenue.toLocaleString('en-IN')}</TableCell>
-                          <TableCell>₹{trend.profit.toLocaleString('en-IN')}</TableCell>
-                          <TableCell>{trend.conversionRate.toFixed(1)}%</TableCell>
-                          <TableCell>₹{trend.avgTicketSize.toLocaleString('en-IN')}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <>
+                {/* Leads Trend Chart */}
+                <Card className="border-l-4 border-l-orange-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
+                    <CardTitle className="text-orange-700 dark:text-orange-300">Lead Trends - {trendsData.period}</CardTitle>
+                    <CardDescription>Daily leads created, completed, and lost over time</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[350px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trendsData.trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis 
+                            dataKey="period" 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => {
+                              const date = new Date(value)
+                              return `${date.getDate()}/${date.getMonth() + 1}`
+                            }}
+                          />
+                          <YAxis tick={{ fontSize: 12 }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                            labelFormatter={(value) => {
+                              const date = new Date(value)
+                              return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            }}
+                          />
+                          <Legend />
+                          <Line 
+                            type="monotone" 
+                            dataKey="leadsCreated" 
+                            name="Leads Created"
+                            stroke="#3b82f6" 
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="leadsCompleted" 
+                            name="Leads Completed"
+                            stroke="#22c55e" 
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="leadsLost" 
+                            name="Leads Lost"
+                            stroke="#ef4444" 
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            activeDot={{ r: 5 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Revenue & Profit Trend Chart */}
+                <Card className="border-l-4 border-l-emerald-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent dark:from-emerald-950/20">
+                    <CardTitle className="text-emerald-700 dark:text-emerald-300">Revenue & Profit Trends</CardTitle>
+                    <CardDescription>Daily revenue and profit over time</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[350px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={trendsData.trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis 
+                            dataKey="period" 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => {
+                              const date = new Date(value)
+                              return `${date.getDate()}/${date.getMonth() + 1}`
+                            }}
+                          />
+                          <YAxis 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                            labelFormatter={(value) => {
+                              const date = new Date(value)
+                              return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            }}
+                            formatter={(value: number) => [`₹${value.toLocaleString('en-IN')}`, '']}
+                          />
+                          <Legend />
+                          <Bar dataKey="revenue" name="Revenue" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="profit" name="Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Conversion Rate & Avg Ticket Size Chart */}
+                <Card className="border-l-4 border-l-purple-500 shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent dark:from-purple-950/20">
+                    <CardTitle className="text-purple-700 dark:text-purple-300">Conversion & Ticket Size Trends</CardTitle>
+                    <CardDescription>Daily conversion rate and average ticket size</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[350px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trendsData.trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis 
+                            dataKey="period" 
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => {
+                              const date = new Date(value)
+                              return `${date.getDate()}/${date.getMonth() + 1}`
+                            }}
+                          />
+                          <YAxis 
+                            yAxisId="left"
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => `${value}%`}
+                          />
+                          <YAxis 
+                            yAxisId="right"
+                            orientation="right"
+                            tick={{ fontSize: 12 }}
+                            tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                            labelFormatter={(value) => {
+                              const date = new Date(value)
+                              return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            }}
+                          />
+                          <Legend />
+                          <Line 
+                            yAxisId="left"
+                            type="monotone" 
+                            dataKey="conversionRate" 
+                            name="Conversion Rate (%)"
+                            stroke="#8b5cf6" 
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                          />
+                          <Line 
+                            yAxisId="right"
+                            type="monotone" 
+                            dataKey="avgTicketSize" 
+                            name="Avg Ticket Size (₹)"
+                            stroke="#06b6d4" 
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
             ) : null}
           </TabsContent>
 
@@ -1292,71 +1433,111 @@ export default function MDSalesDashboardPage() {
           <TabsContent value="source" className="space-y-4">
             {sourceCampaignData ? (
               <>
+                {/* Lead Source Performance Chart */}
                 <Card className="border-l-4 border-l-yellow-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-yellow-50 to-transparent dark:from-yellow-950/20">
                     <CardTitle className="text-yellow-700 dark:text-yellow-300">Lead Source Performance</CardTitle>
+                    <CardDescription>Leads and revenue by source</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Source</TableHead>
-                          <TableHead>Campaign</TableHead>
-                          <TableHead>BDE</TableHead>
-                          <TableHead>Total Leads</TableHead>
-                          <TableHead>Conversion Rate</TableHead>
-                          <TableHead>Revenue</TableHead>
-                          <TableHead>Quality Score</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {sourceCampaignData.sourcePerformance?.slice(0, 20).map((source: any, index: number) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-medium">{source.source}</TableCell>
-                            <TableCell>{source.campaignName || 'N/A'}</TableCell>
-                            <TableCell>{source.bdeName || 'N/A'}</TableCell>
-                            <TableCell>{source.totalLeads}</TableCell>
-                            <TableCell>{source.conversionRate.toFixed(1)}%</TableCell>
-                            <TableCell>₹{source.revenue.toLocaleString('en-IN')}</TableCell>
-                            <TableCell>
-                              <Badge variant={source.qualityScore > 50 ? 'default' : 'secondary'}>
-                                {source.qualityScore.toFixed(1)}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {sourceCampaignData.sourcePerformance && sourceCampaignData.sourcePerformance.length > 0 ? (
+                      <div className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={sourceCampaignData.sourcePerformance.slice(0, 12)} 
+                            margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              dataKey="source" 
+                              tick={{ fontSize: 11 }}
+                              angle={-45}
+                              textAnchor="end"
+                              height={80}
+                            />
+                            <YAxis 
+                              yAxisId="left"
+                              tick={{ fontSize: 12 }}
+                            />
+                            <YAxis 
+                              yAxisId="right"
+                              orientation="right"
+                              tick={{ fontSize: 12 }}
+                              tickFormatter={(value) => `₹${(value / 100000).toFixed(0)}L`}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--background))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                              formatter={(value: number, name: string) => {
+                                if (name === 'Revenue') {
+                                  return [`₹${value.toLocaleString('en-IN')}`, name]
+                                }
+                                return [value, name]
+                              }}
+                            />
+                            <Legend />
+                            <Bar yAxisId="left" dataKey="totalLeads" name="Total Leads" fill="#eab308" radius={[4, 4, 0, 0]} />
+                            <Bar yAxisId="right" dataKey="revenue" name="Revenue" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No source data available</div>
+                    )}
                   </CardContent>
                 </Card>
 
+                {/* Campaign Analysis Chart */}
                 <Card className="border-l-4 border-l-amber-500 shadow-md">
                   <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent dark:from-amber-950/20">
-                    <CardTitle className="text-amber-700 dark:text-amber-300">Campaign Analysis</CardTitle>
+                    <CardTitle className="text-amber-700 dark:text-amber-300">Campaign Performance</CardTitle>
+                    <CardDescription>Campaign comparison by leads and conversion rate</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Campaign</TableHead>
-                          <TableHead>Source</TableHead>
-                          <TableHead>Total Leads</TableHead>
-                          <TableHead>Conversion Rate</TableHead>
-                          <TableHead>Revenue</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {sourceCampaignData.campaignAnalysis?.map((campaign: any) => (
-                          <TableRow key={campaign.campaignName}>
-                            <TableCell className="font-medium">{campaign.campaignName}</TableCell>
-                            <TableCell>{campaign.source}</TableCell>
-                            <TableCell>{campaign.totalLeads}</TableCell>
-                            <TableCell>{campaign.conversionRate.toFixed(1)}%</TableCell>
-                            <TableCell>₹{campaign.revenue.toLocaleString('en-IN')}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    {sourceCampaignData.campaignAnalysis && sourceCampaignData.campaignAnalysis.length > 0 ? (
+                      <div className="h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart 
+                            data={sourceCampaignData.campaignAnalysis.slice(0, 10)} 
+                            layout="vertical"
+                            margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis type="number" tick={{ fontSize: 12 }} />
+                            <YAxis 
+                              type="category" 
+                              dataKey="campaignName" 
+                              tick={{ fontSize: 11 }}
+                              width={140}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--background))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                              formatter={(value: number, name: string) => {
+                                if (name === 'Revenue') {
+                                  return [`₹${value.toLocaleString('en-IN')}`, name]
+                                }
+                                if (name === 'Conversion Rate') {
+                                  return [`${value.toFixed(1)}%`, name]
+                                }
+                                return [value, name]
+                              }}
+                            />
+                            <Legend />
+                            <Bar dataKey="totalLeads" name="Total Leads" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="conversionRate" name="Conversion Rate" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">No campaign data available</div>
+                    )}
                   </CardContent>
                 </Card>
               </>

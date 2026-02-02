@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthenticatedWrapper } from "@/components/authenticated-wrapper";
+import { AIProvider } from "@/components/ai/ai-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
             {children}
           </AuthenticatedWrapper>
           <Toaster />
+          <AIProvider />
         </QueryProvider>
       </body>
     </html>

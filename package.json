@@ -17,12 +17,17 @@
     "sync:leads": "tsx scripts/sync-mysql-leads.ts",
     "sync:historic:leads": "tsx scripts/sync-historic-mysql-leads.ts",
     "verify:mysql": "tsx scripts/verify-mysql-connection.ts",
-    "migrate:case-stages": "prisma generate && tsx scripts/migrate-case-stages.ts"
+    "migrate:case-stages": "prisma generate && tsx scripts/migrate-case-stages.ts",
+    "fix:lead-mappings": "tsx scripts/fix-existing-lead-mappings.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.20",
+    "@ai-sdk/groq": "^3.0.21",
+    "@ai-sdk/openai": "^3.0.25",
+    "@ai-sdk/react": "^3.0.69",
     "@aws-sdk/client-s3": "^3.970.0",
     "@aws-sdk/s3-request-presigner": "^3.970.0",
     "@base-ui/react": "^1.1.0",
@@ -51,6 +56,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/supabase-js": "^2.86.2",
     "@tanstack/react-query": "^5.90.12",
+    "ai": "^6.0.67",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

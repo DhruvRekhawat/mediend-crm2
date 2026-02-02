@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { mapSourceCode } from '@/lib/mysql-code-mappings'
+import { resolveSourceForDisplay } from '@/lib/mysql-code-mappings'
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     >()
 
     sourceStats.forEach((stat) => {
-      const source = mapSourceCode(stat.source) || stat.source || 'Unknown'
+      const source = resolveSourceForDisplay(stat.source)
       const key = `${source}|${stat.campaignName || ''}|${stat.bdeName || ''}`
       sourceMap.set(key, {
         source,
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     })
 
     sourceCompleted.forEach((stat) => {
-      const source = mapSourceCode(stat.source) || stat.source || 'Unknown'
+      const source = resolveSourceForDisplay(stat.source)
       const key = `${source}|${stat.campaignName || ''}|${stat.bdeName || ''}`
       const existing = sourceMap.get(key)
       if (existing) {
@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     campaignStats.forEach((stat) => {
       if (stat.campaignName) {
-        const source = mapSourceCode(stat.source) || stat.source || 'Unknown'
+        const source = resolveSourceForDisplay(stat.source)
         campaignMap.set(stat.campaignName, {
           source,
           totalLeads: stat._count.id,

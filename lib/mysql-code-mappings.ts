@@ -84,6 +84,158 @@ const SOURCE_MAP: Record<string, string> = {
 }
 
 /**
+ * Legacy: campaign IDs that were wrongly stored in lead.Source (CRM source_campaign.id).
+ * Resolve to a display label. Add more as discovered.
+ */
+const SOURCE_AS_CAMPAIGN_LEGACY: Record<string, string> = {
+  '58': 'Dr. Sahil (campaign)',
+}
+
+/**
+ * Status IDs that were wrongly stored in lead.Source (status misuse). Treat as Unknown.
+ */
+const SOURCE_AS_STATUS_LEGACY_IDS = new Set(['25', '27', '28']) // Closed, New Lead, Hot Lead
+
+/**
+ * Resolve lead.Source to a display label (lookup-based, no guessing).
+ * Order: source table (1–23) → campaign legacy (e.g. 58) → status legacy (25,27,28) → Unknown.
+ * Do NOT treat unknown numerics as treatment IDs — data shows source is ~98% clean.
+ */
+export function resolveSourceForDisplay(value: string | null | undefined): string {
+  if (value == null || String(value).trim() === '') return 'Unknown'
+  const trimmed = String(value).trim()
+  if (SOURCE_MAP[trimmed]) return SOURCE_MAP[trimmed]
+  if (SOURCE_AS_CAMPAIGN_LEGACY[trimmed]) return SOURCE_AS_CAMPAIGN_LEGACY[trimmed]
+  if (SOURCE_AS_STATUS_LEGACY_IDS.has(trimmed)) return 'Unknown'
+  if (/^\d+$/.test(trimmed)) return 'Unknown' // other numeric = unknown, not treatment
+  return trimmed
+}
+
+/**
+ * Normalize lead.source for DB: only set when we can classify (source / campaign legacy / status legacy).
+ * Returns value to store, or null to leave unchanged.
+ */
+export function normalizeSourceForDb(value: string | null | undefined): string | null {
+  if (value == null || String(value).trim() === '') return 'Unknown'
+  const trimmed = String(value).trim()
+  if (SOURCE_MAP[trimmed]) return SOURCE_MAP[trimmed]
+  if (SOURCE_AS_CAMPAIGN_LEGACY[trimmed]) return SOURCE_AS_CAMPAIGN_LEGACY[trimmed]
+  if (SOURCE_AS_STATUS_LEGACY_IDS.has(trimmed)) return 'Unknown'
+  if (/^\d+$/.test(trimmed)) return 'Unknown'
+  return trimmed
+}
+
+/**
+ * Treatment code mappings (from MySQL treatment table)
+ * Maps treatment ID to treatment name
+ */
+const TREATMENT_MAP: Record<string, string> = {
+  '1': 'Gynecomastia',
+  '2': 'Varicose Veins',
+  '3': 'Lipoma',
+  '4': 'Tummy Tuck',
+  '5': 'Breast Lump',
+  '6': 'Buccal Fat',
+  '7': 'Breast Lift',
+  '8': 'Breast Reduction',
+  '9': 'Rhinoplasty',
+  '10': 'Piles',
+  '11': 'Fistula',
+  '12': 'Fissure',
+  '13': 'Pilonidal Sinus',
+  '14': 'Hernia',
+  '15': 'Gallstone',
+  '16': 'Appendicitis',
+  '17': 'Inguinal Hernia',
+  '18': 'Umbilical Hernia',
+  '19': 'MTP',
+  '20': 'Uterus Removal',
+  '21': 'Tympanoplasty',
+  '22': 'Adenoidectomy',
+  '23': 'Sinus',
+  '24': 'Mastoidectomy',
+  '25': 'Throat Surgery',
+  '26': 'Ear Surgery',
+  '27': 'Vocal Cord Polyps',
+  '28': 'Nasal Polyps',
+  '29': 'Turbinate Reduction',
+  '30': 'Circumcision',
+  '31': 'Stapler Circumcision',
+  '32': 'Kidney Stones',
+  '33': 'Hydrocele',
+  '34': 'ESWL',
+  '35': 'RIRS',
+  '36': 'PCNL',
+  '37': 'URSL',
+  '38': 'Enlarged Prostate',
+  '39': 'Varicocele',
+  '40': 'DVT Treatment',
+  '41': 'Diabetic Foot Ulcer',
+  '42': 'Uterine Fibroids',
+  '43': 'Breast Lift Surgery',
+  '44': 'Sebaceous Cyst',
+  '45': 'Breast Augmentation',
+  '46': 'Axillary Breast',
+  '47': 'Double Chin',
+  '48': 'Earlobe Repair',
+  '49': 'Blepharoplasty',
+  '50': 'Beard Transplant',
+  '51': 'Cleft Lip',
+  '52': 'Knee Replacement',
+  '53': 'Carpal Tunnel Syndrome',
+  '54': 'ACL Tear',
+  '55': 'ProcMeniscus Tear Treatmenttology',
+  '56': 'Hip Replacement Surgery',
+  '57': 'Spine Surgery',
+  '58': 'Shoulder Dislocation',
+  '59': 'Shoulder Replacement',
+  '60': 'Lasik Eye',
+  '61': 'Cataract',
+  '62': 'Retinal Detachment',
+  '63': 'Glaucoma Treatment',
+  '64': 'Squint',
+  '65': 'Diabetic Retinopathy',
+  '66': 'Vitrectomy',
+  '67': 'PRK Lasik',
+  '68': 'SMILE Lasik',
+  '69': 'FEMTO Lasik',
+  '70': 'ICL',
+  '71': 'Contoura Vision',
+  '72': 'Phaco Surgery',
+  '73': 'Bariatric',
+  '74': 'SPATZ intragastric balloon',
+  '75': 'Weightloss',
+  '76': 'Liposuction',
+  '77': 'Balanoposthitis',
+  '78': 'Balanitis',
+  '79': 'Cyst on Scrotum',
+  '80': 'Penile Cyst',
+  '81': 'Phimosis',
+  '82': 'Excess Body Fat',
+  '83': 'Nasal Deformity',
+  '84': 'Obesity',
+  '85': 'Stent removal',
+  '86': 'Gallstones',
+  '87': 'NA',
+  '88': 'Hair Loss',
+  '89': 'Foreskin problm',
+  '90': 'Tight Foreskin',
+  '91': 'Ganglion Cyst',
+  '92': 'Ankle Arthroscopy',
+  '93': 'Joint Replacement',
+  '94': 'Urine Infection',
+  '95': 'Chest wall lump',
+  '96': 'Abdominal Wall Repair',
+  '97': 'Cystostomy',
+  '98': 'Deviated Nasal Septum (Septoplasty)',
+  '99': 'Medical Management',
+  '100': 'Nasal sinus',
+  '101': 'Hysterectomy',
+  '102': 'Penis infection',
+  '103': 'Cystoscopy',
+}
+
+/**
  * Maps a status code to its text value
  * @param code - Status code (string number like "25") or text value
  * @returns Status text value, or original value if not found/not a code
@@ -137,6 +289,29 @@ export function isStatusCode(value: string | null | undefined): boolean {
  * @returns True if value is a numeric code
  */
 export function isSourceCode(value: string | null | undefined): boolean {
+  if (!value) return false
+  return /^\d+$/.test(String(value).trim())
+}
+
+/**
+ * Maps a treatment code to its text value
+ * @param code - Treatment code (string number like "3") or text value
+ * @returns Treatment text value, or original value if not found/not a code
+ */
+export function mapTreatmentCode(code: string | number | null | undefined): string | null {
+  if (code === null || code === undefined) return null
+  const trimmed = String(code).trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) {
+    return TREATMENT_MAP[trimmed] ?? trimmed
+  }
+  return trimmed
+}
+
+/**
+ * Checks if a value is a numeric treatment code that needs mapping
+ */
+export function isTreatmentCode(value: string | null | undefined): boolean {
   if (!value) return false
   return /^\d+$/.test(String(value).trim())
 }
