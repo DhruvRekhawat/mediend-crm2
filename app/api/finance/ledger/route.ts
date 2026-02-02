@@ -285,17 +285,21 @@ export async function POST(request: NextRequest) {
         return errorResponse('Received amount is required for credit transactions', 400)
       }
     } else if (transactionType === TransactionType.DEBIT) {
-      // For DEBIT transactions, componentA is required
-      if (!componentA || componentA <= 0) {
-        return errorResponse('Component A (main expense) is required for debit transactions', 400)
+      // Component A is required for expense entries, but 0 for NON_EXPENSE entries
+      const componentAValue = componentA ?? 0
+      if (componentAValue < 0) {
+        return errorResponse('Component A cannot be negative', 400)
       }
       // componentB is optional, defaults to 0 if not provided
       const componentBValue = componentB || 0
       if (componentBValue < 0) {
         return errorResponse('Component B (claimable amount) cannot be negative', 400)
       }
-      // Calculate total payment amount as A + B
-      const calculatedPaymentAmount = componentA + componentBValue
+      // Total payment must be positive (A + B > 0)
+      const calculatedPaymentAmount = componentAValue + componentBValue
+      if (calculatedPaymentAmount <= 0) {
+        return errorResponse('Total payment amount (Component A + Component B) must be greater than 0', 400)
+      }
       // If paymentAmount is provided, validate it matches; otherwise use calculated value
       if (paymentAmount && Math.abs(paymentAmount - calculatedPaymentAmount) > 0.01) {
         return errorResponse('Payment amount must equal Component A + Component B', 400)
@@ -404,11 +408,12 @@ export async function POST(request: NextRequest) {
       openingBalance = await getPaymentModeBalance(paymentModeId)
       currentBalance = await updatePaymentModeBalance(paymentModeId, transactionType, receivedAmount)
     } else {
-      // For debits, calculate payment amount from components
+      // For debits, calculate payment amount from components (componentA can be 0 for NON_EXPENSE)
       const componentBValue = componentB || 0
-      finalComponentA = componentA
+      const componentAValue = componentA ?? 0
+      finalComponentA = componentAValue
       finalComponentB = componentBValue
-      finalPaymentAmount = componentA + componentBValue
+      finalPaymentAmount = componentAValue + componentBValue
       openingBalance = await getPaymentModeBalance(paymentModeId)
       currentBalance = openingBalance // Balance unchanged until approved
     }
