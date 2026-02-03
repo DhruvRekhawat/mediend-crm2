@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useWorkLogCheck, useCreateWorkLog } from "@/hooks/use-work-logs"
-import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 const INTERVAL_LABELS: Record<number, string> = {
@@ -24,9 +23,22 @@ const INTERVAL_LABELS: Record<number, string> = {
 /** Work log enforcement starts on this date (date only). Before this, the modal is never shown. */
 const WORKLOG_START_DATE = new Date(2026, 1, 1) // 1 Feb 2026
 
+function getTzOffsetMinutes() {
+  return -new Date().getTimezoneOffset()
+}
+
+function formatDateOnly(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 export function WorkLogEnforcer() {
-  const queryClient = useQueryClient()
-  const { data: checkResult, isLoading } = useWorkLogCheck()
+  const tzOffsetMinutes = getTzOffsetMinutes()
+  const { data: checkResult, isLoading } = useWorkLogCheck({
+    tzOffsetMinutes,
+  })
   const createMutation = useCreateWorkLog()
   const [description, setDescription] = useState("")
   const [submittingInterval, setSubmittingInterval] = useState<number | null>(
@@ -51,18 +63,16 @@ export function WorkLogEnforcer() {
     setSubmittingInterval(intervalStart)
     try {
       const today = new Date()
-      const logDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-
       await createMutation.mutateAsync({
-        logDate: logDate.toISOString(),
+        logDate: formatDateOnly(today),
         intervalStart: intervalStart as 9 | 12 | 15,
         intervalEnd: intervalEnd as 12 | 15 | 18,
         description: description.trim(),
+        tzOffsetMinutes,
       })
       toast.success("Work log saved")
       setDescription("")
       setSubmittingInterval(null)
-      queryClient.invalidateQueries({ queryKey: ["work-logs", "check"] })
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save log")
       setSubmittingInterval(null)

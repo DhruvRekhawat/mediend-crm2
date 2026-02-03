@@ -39,14 +39,26 @@ export function useWorkLogs(startDate: Date, endDate: Date, employeeId?: string)
   })
 }
 
-export function useWorkLogCheck(date?: Date) {
-  const params = date
-    ? `?date=${format(date, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")}`
-    : ""
+export interface UseWorkLogCheckOptions {
+  date?: Date
+  tzOffsetMinutes?: number
+}
+
+export function useWorkLogCheck(options?: UseWorkLogCheckOptions) {
+  const tzOffsetMinutes =
+    options?.tzOffsetMinutes ?? -new Date().getTimezoneOffset()
 
   return useQuery<WorkLogCheckResult>({
-    queryKey: ["work-logs", "check", date?.toISOString() ?? "now"],
-    queryFn: () => apiGet<WorkLogCheckResult>(`/api/work-logs/check${params}`),
+    queryKey: ["work-logs", "check", tzOffsetMinutes],
+    queryFn: () => {
+      const date = options?.date ?? new Date()
+      const params = new URLSearchParams()
+      params.set("date", date.toISOString())
+      params.set("tzOffsetMinutes", String(tzOffsetMinutes))
+      return apiGet<WorkLogCheckResult>(
+        `/api/work-logs/check?${params.toString()}`
+      )
+    },
     refetchInterval: 60000,
   })
 }
@@ -56,6 +68,7 @@ export interface CreateWorkLogInput {
   intervalStart: 9 | 12 | 15
   intervalEnd: 12 | 15 | 18
   description: string
+  tzOffsetMinutes?: number
 }
 
 export function useCreateWorkLog() {

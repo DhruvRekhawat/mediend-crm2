@@ -25,6 +25,13 @@ const INTERVALS = [
   { start: 15, end: 18, label: "3:00 PM - 6:00 PM" },
 ] as const
 
+function formatDateOnly(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
 interface WorkLogPanelProps {
   logs: WorkLog[]
   selectedDate: Date
@@ -50,7 +57,7 @@ export function WorkLogPanel({
   const getLogForInterval = (start: number) =>
     logs.find(
       (l) =>
-        new Date(l.logDate).getTime() === dayStart.getTime() &&
+        formatDateOnly(new Date(l.logDate)) === formatDateOnly(selectedDate) &&
         l.intervalStart === start
     )
 
@@ -68,11 +75,13 @@ export function WorkLogPanel({
     }
 
     try {
+      const tzOffsetMinutes = -new Date().getTimezoneOffset()
       await createMutation.mutateAsync({
-        logDate: dayStart.toISOString(),
+        logDate: formatDateOnly(selectedDate),
         intervalStart: selectedInterval.start as 9 | 12 | 15,
         intervalEnd: selectedInterval.end as 12 | 15 | 18,
         description: description.trim(),
+        tzOffsetMinutes,
       })
       toast.success("Work log saved")
       setDialogOpen(false)

@@ -17,12 +17,7 @@ export async function GET(request: NextRequest) {
   const user = getSessionFromRequest(request)
   if (!user) return unauthorizedResponse()
 
-  const { searchParams } = new URL(request.url)
-  const dateParam = searchParams.get("date")
-  const now = dateParam ? new Date(dateParam) : new Date()
-
-  const dayStart = startOfDay(now)
-  if (dayStart < WORKLOG_START_DATE) {
+  if (user.role === "MD" || user.role === "ADMIN") {
     return successResponse({
       complete: true,
       isBlocked: false,
@@ -32,9 +27,40 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const currentHour = getHours(now)
-  const currentMinute = getMinutes(now)
-  const currentTimeDecimal = currentHour + currentMinute / 60
+  const { searchParams } = new URL(request.url)
+  const dateParam = searchParams.get("date")
+  const tzOffsetParam = searchParams.get("tzOffsetMinutes")
+  const now = dateParam ? new Date(dateParam) : new Date()
+  const tzOffsetMinutes = tzOffsetParam != null ? Number(tzOffsetParam) : 0
+
+  let dayStart: Date
+  let currentTimeDecimal: number
+  let dayForWeekend: Date
+
+  if (tzOffsetParam != null && !Number.isNaN(tzOffsetMinutes)) {
+    const clientLocalMs = now.getTime() + tzOffsetMinutes * 60 * 1000
+    dayForWeekend = new Date(clientLocalMs)
+    const y = dayForWeekend.getUTCFullYear()
+    const m = dayForWeekend.getUTCMonth()
+    const d = dayForWeekend.getUTCDate()
+    dayStart = new Date(Date.UTC(y, m, d))
+    const clientLocalHours = (clientLocalMs / (60 * 60 * 1000)) % 24
+    currentTimeDecimal = clientLocalHours >= 0 ? clientLocalHours : clientLocalHours + 24
+  } else {
+    dayStart = startOfDay(now)
+    currentTimeDecimal = getHours(now) + getMinutes(now) / 60
+    dayForWeekend = now
+  }
+
+  if (dayStart < WORKLOG_START_DATE) {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+    })
+  }
 
   const todayLogs = await prisma.workLog.findMany({
     where: {
@@ -62,7 +88,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const isWeekend = now.getDay() === 0 || now.getDay() === 6
+  const dayOfWeek =
+    tzOffsetParam != null && !Number.isNaN(tzOffsetMinutes)
+      ? dayForWeekend.getUTCDay()
+      : dayForWeekend.getDay()
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
   const isOutsideWorkHours =
     currentTimeDecimal < 9 || currentTimeDecimal >= 18.5
   const isExempt = isWeekend || isOutsideWorkHours

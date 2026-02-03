@@ -3,13 +3,16 @@ import { getSessionFromRequest } from "@/lib/session"
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { startOfDay } from "date-fns"
 
 const createWorkLogSchema = z.object({
-  logDate: z.string().datetime(),
+  logDate: z.union([
+    z.string().datetime(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  ]),
   intervalStart: z.number().refine((v) => [9, 12, 15].includes(v)),
   intervalEnd: z.number().refine((v) => [12, 15, 18].includes(v)),
   description: z.string().min(1),
+  tzOffsetMinutes: z.number().optional(),
 })
 
 const INTERVALS = [
@@ -62,10 +65,20 @@ export async function POST(request: NextRequest) {
     return errorResponse(parsed.error.message)
   }
 
-  const logDate = new Date(parsed.data.logDate)
-  const dayStart = startOfDay(logDate)
-  const dayEnd = new Date(dayStart)
-  dayEnd.setHours(23, 59, 59, 999)
+  const logDateStr = parsed.data.logDate
+  let dayStart: Date
+  if (/^\d{4}-\d{2}-\d{2}$/.test(logDateStr)) {
+    dayStart = new Date(logDateStr + "T00:00:00.000Z")
+  } else {
+    const logDate = new Date(logDateStr)
+    const tzOffsetMinutes = parsed.data.tzOffsetMinutes ?? 0
+    const clientLocalMs = logDate.getTime() + tzOffsetMinutes * 60 * 1000
+    const clientLocal = new Date(clientLocalMs)
+    const y = clientLocal.getUTCFullYear()
+    const m = clientLocal.getUTCMonth()
+    const d = clientLocal.getUTCDate()
+    dayStart = new Date(Date.UTC(y, m, d))
+  }
 
   const validInterval = INTERVALS.some(
     (i) => i.start === parsed.data.intervalStart && i.end === parsed.data.intervalEnd
