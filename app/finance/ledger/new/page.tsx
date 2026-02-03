@@ -62,6 +62,10 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
+function roundTo2Decimals(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
 export default function NewLedgerEntryPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -184,7 +188,7 @@ export default function NewLedgerEntryPage() {
     e.preventDefault()
 
     if (transactionType === 'CREDIT') {
-      const amount = parseFloat(formData.amount)
+      const amount = roundTo2Decimals(parseFloat(formData.amount))
       if (isNaN(amount) || amount <= 0) {
         toast.error('Please enter a valid amount')
         return
@@ -204,7 +208,7 @@ export default function NewLedgerEntryPage() {
       createMutation.mutate(data)
     } else if (transactionType === 'SELF_TRANSFER') {
       // For SELF_TRANSFER transactions
-      const transferAmount = parseFloat(formData.transferAmount)
+      const transferAmount = roundTo2Decimals(parseFloat(formData.transferAmount))
       if (isNaN(transferAmount) || transferAmount <= 0) {
         toast.error('Please enter a valid transfer amount')
         return
@@ -233,8 +237,8 @@ export default function NewLedgerEntryPage() {
     } else {
       // For DEBIT transactions, validate component A and B
       // If NON_EXPENSE, Component A should be 0
-      const componentA = isNonExpense ? 0 : parseFloat(formData.componentA)
-      const componentB = parseFloat(formData.componentB) || 0
+      const componentA = isNonExpense ? 0 : roundTo2Decimals(parseFloat(formData.componentA))
+      const componentB = roundTo2Decimals(parseFloat(formData.componentB) || 0)
 
       if (!isNonExpense && (isNaN(componentA) || componentA <= 0)) {
         toast.error('Please enter a valid Component A (main expense)')
@@ -586,7 +590,7 @@ export default function NewLedgerEntryPage() {
                       id="transferAmount"
                       type="number"
                       min="0.01"
-                      step="0.01"
+                      step="any"
                       value={formData.transferAmount}
                       onChange={(e) => setFormData({ ...formData, transferAmount: e.target.value })}
                       className="pl-8"
@@ -604,12 +608,12 @@ export default function NewLedgerEntryPage() {
                 <Label htmlFor="amount">Received Amount *</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
-                  <Input
-                    id="amount"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={formData.amount}
+                    <Input
+                      id="amount"
+                      type="number"
+                      min="0.01"
+                      step="any"
+                      value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     className="pl-8"
                     placeholder="0.00"
@@ -630,7 +634,7 @@ export default function NewLedgerEntryPage() {
                         id="componentA"
                         type="number"
                         min="0.01"
-                        step="0.01"
+                        step="any"
                         value={formData.componentA}
                         onChange={(e) => setFormData({ ...formData, componentA: e.target.value })}
                         className="pl-8"
@@ -649,7 +653,7 @@ export default function NewLedgerEntryPage() {
                       id="componentB"
                       type="number"
                       min="0"
-                      step="0.01"
+                      step="any"
                       value={formData.componentB}
                       onChange={(e) => setFormData({ ...formData, componentB: e.target.value })}
                       className="pl-8"
