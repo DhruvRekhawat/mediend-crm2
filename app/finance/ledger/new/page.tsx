@@ -58,12 +58,9 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount)
-}
-
-function roundTo2Decimals(n: number): number {
-  return Math.round(n * 100) / 100
 }
 
 export default function NewLedgerEntryPage() {
@@ -188,7 +185,7 @@ export default function NewLedgerEntryPage() {
     e.preventDefault()
 
     if (transactionType === 'CREDIT') {
-      const amount = roundTo2Decimals(parseFloat(formData.amount))
+      const amount = parseFloat(formData.amount)
       if (isNaN(amount) || amount <= 0) {
         toast.error('Please enter a valid amount')
         return
@@ -208,7 +205,7 @@ export default function NewLedgerEntryPage() {
       createMutation.mutate(data)
     } else if (transactionType === 'SELF_TRANSFER') {
       // For SELF_TRANSFER transactions
-      const transferAmount = roundTo2Decimals(parseFloat(formData.transferAmount))
+      const transferAmount = parseFloat(formData.transferAmount)
       if (isNaN(transferAmount) || transferAmount <= 0) {
         toast.error('Please enter a valid transfer amount')
         return
@@ -237,8 +234,8 @@ export default function NewLedgerEntryPage() {
     } else {
       // For DEBIT transactions, validate component A and B
       // If NON_EXPENSE, Component A should be 0
-      const componentA = isNonExpense ? 0 : roundTo2Decimals(parseFloat(formData.componentA))
-      const componentB = roundTo2Decimals(parseFloat(formData.componentB) || 0)
+      const componentA = isNonExpense ? 0 : parseFloat(formData.componentA)
+      const componentB = parseFloat(formData.componentB) || 0
 
       if (!isNonExpense && (isNaN(componentA) || componentA <= 0)) {
         toast.error('Please enter a valid Component A (main expense)')

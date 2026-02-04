@@ -17,9 +17,12 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowUpCircle,
-  ArrowDownCircle
+  ArrowDownCircle,
+  Download
 } from 'lucide-react'
 import { format, subDays } from 'date-fns'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface PaymentModeSummary {
   id: string
@@ -74,7 +77,18 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+function formatCurrencyForPDF(amount: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    currencyDisplay: 'code',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount)
 }
 
@@ -88,6 +102,79 @@ export default function ReportsPage() {
   const dateParams = new URLSearchParams()
   if (startDate) dateParams.set('startDate', startDate.toISOString())
   if (endDate) dateParams.set('endDate', endDate.toISOString())
+
+  const periodLabel = startDate && endDate
+    ? `${format(startDate, 'dd MMM yyyy')} - ${format(endDate, 'dd MMM yyyy')}`
+    : 'All time'
+
+  const handleDownloadPDF = () => {
+    const reportTitle =
+      { 'payment-mode': 'Payment Mode Balance Summary', 'party-wise': 'Party-wise Summary', 'head-wise': 'Head-wise Summary', 'day-wise': 'Day-wise Summary' }[
+        activeTab as 'payment-mode' | 'party-wise' | 'head-wise' | 'day-wise'
+      ] ?? 'Finance Report'
+
+    const doc = new jsPDF()
+    doc.setFontSize(18)
+    doc.text('Finance Reports', 14, 20)
+    doc.setFontSize(12)
+    doc.text(reportTitle, 14, 28)
+    doc.text(`Period: ${periodLabel}`, 14, 36)
+    const startY = 44
+
+    if (activeTab === 'payment-mode' && paymentModeData) {
+      autoTable(doc, {
+        head: [['Payment Mode', 'Opening Balance', 'Total Credits', 'Total Debits', 'Net Change', 'Current Balance']],
+        body: paymentModeData.data.map((m) => [
+          m.name,
+          formatCurrencyForPDF(m.openingBalance),
+          formatCurrencyForPDF(m.totalCredits),
+          formatCurrencyForPDF(m.totalDebits),
+          formatCurrencyForPDF(m.netChange),
+          formatCurrencyForPDF(m.currentBalance),
+        ]),
+        startY,
+      })
+    } else if (activeTab === 'party-wise' && partyWiseData) {
+      autoTable(doc, {
+        head: [['Party', 'Type', 'Total Credits', 'Total Debits', 'Net Amount', 'Entries']],
+        body: partyWiseData.data.map((p) => [
+          p.partyName,
+          p.partyType,
+          formatCurrencyForPDF(p.totalCredits),
+          formatCurrencyForPDF(p.totalDebits),
+          formatCurrencyForPDF(p.netAmount),
+          String(p.entriesCount),
+        ]),
+        startY,
+      })
+    } else if (activeTab === 'head-wise' && headWiseData) {
+      autoTable(doc, {
+        head: [['Head', 'Department', 'Total Credits', 'Total Debits', 'Net Amount', 'Entries']],
+        body: headWiseData.data.map((h) => [
+          h.headName,
+          h.department || '-',
+          formatCurrencyForPDF(h.totalCredits),
+          formatCurrencyForPDF(h.totalDebits),
+          formatCurrencyForPDF(h.netAmount),
+          String(h.entriesCount),
+        ]),
+        startY,
+      })
+    } else if (activeTab === 'day-wise' && dayWiseData) {
+      autoTable(doc, {
+        head: [['Date', 'Total Credits', 'Total Debits', 'Net Change', 'Entries']],
+        body: dayWiseData.data.map((d) => [
+          format(new Date(d.date), 'dd MMM yyyy'),
+          formatCurrencyForPDF(d.totalCredits),
+          formatCurrencyForPDF(d.totalDebits),
+          formatCurrencyForPDF(d.netChange),
+          String(d.entriesCount),
+        ]),
+        startY,
+      })
+    }
+    doc.save(`finance-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
+  }
 
   // Fetch payment mode summary
   const { data: paymentModeData, isLoading: loadingPaymentMode } = useQuery<ReportResponse<PaymentModeSummary>>({
@@ -223,8 +310,21 @@ export default function ReportsPage() {
         <TabsContent value="payment-mode">
           <Card>
             <CardHeader>
-              <CardTitle>Payment Mode Balance Summary</CardTitle>
-              <CardDescription>Current balances across all payment modes</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Payment Mode Balance Summary</CardTitle>
+                  <CardDescription>Current balances across all payment modes</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={loadingPaymentMode || !paymentModeData?.data?.length}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {/* Totals */}
@@ -307,8 +407,21 @@ export default function ReportsPage() {
         <TabsContent value="party-wise">
           <Card>
             <CardHeader>
-              <CardTitle>Party-wise Summary</CardTitle>
-              <CardDescription>Transaction totals by party</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Party-wise Summary</CardTitle>
+                  <CardDescription>Transaction totals by party</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={loadingPartyWise || !partyWiseData?.data?.length}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingPartyWise ? (
@@ -360,10 +473,64 @@ export default function ReportsPage() {
         <TabsContent value="head-wise">
           <Card>
             <CardHeader>
-              <CardTitle>Head-wise Summary</CardTitle>
-              <CardDescription>Transaction totals by head/category</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Head-wise Summary</CardTitle>
+                  <CardDescription>Transaction totals by head/category</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={loadingHeadWise || !headWiseData?.data?.length}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
+              {/* Totals for head-wise */}
+              {headWiseData && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <Card className="bg-green-50 dark:bg-green-900/10">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-green-600">Total Credits</p>
+                          <p className="text-2xl font-bold">{formatCurrency(headWiseData.totals.totalCredits)}</p>
+                        </div>
+                        <ArrowUpCircle className="h-8 w-8 text-green-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-red-50 dark:bg-red-900/10">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-red-600">Total Debits</p>
+                          <p className="text-2xl font-bold">{formatCurrency(headWiseData.totals.totalDebits)}</p>
+                        </div>
+                        <ArrowDownCircle className="h-8 w-8 text-red-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-blue-50 dark:bg-blue-900/10">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-blue-600">Net Amount</p>
+                          <p className="text-2xl font-bold">
+                            {formatCurrency(headWiseData.totals.totalCredits - headWiseData.totals.totalDebits)}
+                          </p>
+                        </div>
+                        <FolderTree className="h-8 w-8 text-blue-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {loadingHeadWise ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : (
@@ -411,8 +578,21 @@ export default function ReportsPage() {
         <TabsContent value="day-wise">
           <Card>
             <CardHeader>
-              <CardTitle>Day-wise Summary</CardTitle>
-              <CardDescription>Daily transaction totals</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Day-wise Summary</CardTitle>
+                  <CardDescription>Daily transaction totals</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={loadingDayWise || !dayWiseData?.data?.length}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingDayWise ? (

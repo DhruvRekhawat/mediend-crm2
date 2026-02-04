@@ -233,8 +233,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const round2 = (n: number) => Math.round(n * 100) / 100
-    let {
+    const {
       transactionType,
       transactionDate,
       partyId,
@@ -250,10 +249,6 @@ export async function POST(request: NextRequest) {
       toPaymentModeId,
       transferAmount,
     } = body
-    if (typeof receivedAmount === 'number') receivedAmount = round2(receivedAmount)
-    if (typeof transferAmount === 'number') transferAmount = round2(transferAmount)
-    if (typeof componentA === 'number') componentA = round2(componentA)
-    if (typeof componentB === 'number') componentB = round2(componentB)
 
     if (!transactionType || !description) {
       return errorResponse('Missing required fields', 400)
