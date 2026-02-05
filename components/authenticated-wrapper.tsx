@@ -42,10 +42,10 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
   const isPayslipPage = pathname?.includes('/payroll/') && pathname?.includes('/slip')
   const isDocumentViewPage = pathname?.includes('/documents/') && pathname?.includes('/view')
   const isMdOrAdmin = user?.role === 'MD' || user?.role === 'ADMIN'
-  const isMdContext = pathname?.startsWith('/md') || pathname === '/finance/approvals'
   // Show sidebar if user is authenticated and not on special pages
   const shouldShowSidebar = !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage
-  const showMdBottomNav = isMdOrAdmin && isMdContext && shouldShowSidebar
+  // Show MD bottom nav on all pages for MD/ADMIN users (except special pages)
+  const showMdBottomNav = isMdOrAdmin && shouldShowSidebar
 
   if (isLoginPage || isPayslipPage || isDocumentViewPage) {
     return <>{children}</>

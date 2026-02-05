@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
@@ -10,9 +10,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'
+import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, XCircle, Search, RotateCcw } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -31,6 +33,12 @@ interface LedgerEntry {
   openingBalance: number
   currentBalance: number
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  approvedAt?: string | null
+  approvedBy?: {
+    id: string
+    name: string
+    email: string
+  } | null
   editRequestStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null
   editRequestReason: string | null
   editRequestData: Record<string, unknown> | null
@@ -48,16 +56,16 @@ interface LedgerEntry {
   head: {
     id: string
     name: string
-  }
+  } | null
   paymentType: {
     id: string
     name: string
     paymentType: string
-  }
+  } | null
   paymentMode: {
     id: string
     name: string
-  }
+  } | null
   createdBy: {
     id: string
     name: string
@@ -73,6 +81,14 @@ interface LedgerResponse {
     total: number
     totalPages: number
   }
+}
+
+interface Head {
+  id: string
+  name: string
+  department: string | null
+  description: string | null
+  isActive: boolean
 }
 
 function formatCurrency(amount: number) {
@@ -147,6 +163,222 @@ interface SwipeCardProps {
   onReject: () => void
 }
 
+interface HistoryCardProps {
+  entry: LedgerEntry
+  onUndo?: () => void
+}
+
+interface EditRequestCardProps {
+  entry: LedgerEntry
+  onApprove: () => void
+  onReject: () => void
+}
+
+function EditRequestCard({ entry, onApprove, onReject }: EditRequestCardProps) {
+  return (
+    <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10 dark:border-yellow-800">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono">
+              {entry.serialNumber}
+            </Badge>
+            <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+              Edit Request
+            </Badge>
+          </div>
+          <span className="text-sm text-muted-foreground">
+            {format(new Date(entry.transactionDate), 'dd MMM yyyy')}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <div className="font-semibold text-lg">{entry.party.name}</div>
+          <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
+        </div>
+
+        <div>
+          <div className="text-xs text-muted-foreground mb-1">Description</div>
+          <div className="text-sm wrap-break-word">{entry.description}</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-muted-foreground text-xs">Head</div>
+            <div className="font-medium">{entry.head?.name || 'N/A'}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground text-xs">Payment Mode</div>
+            <Badge variant="outline">{entry.paymentMode?.name || 'N/A'}</Badge>
+          </div>
+        </div>
+
+        <div className="border-t pt-3 space-y-2">
+          <div>
+            <div className="text-xs text-muted-foreground">Requested by</div>
+            <div className="text-sm font-medium">{entry.editRequestedBy?.name || 'Unknown'}</div>
+            {entry.editRequestedAt && (
+              <div className="text-xs text-muted-foreground">
+                {format(new Date(entry.editRequestedAt), 'dd MMM yyyy HH:mm')}
+              </div>
+            )}
+          </div>
+          {entry.editRequestReason && (
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Reason</div>
+              <div className="text-sm wrap-break-word bg-yellow-100/50 dark:bg-yellow-900/20 p-2 rounded">
+                {entry.editRequestReason}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t pt-3">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="text-xs text-muted-foreground">Amount</div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-red-600">
+                -{formatCurrency(entry.paymentAmount || 0)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button
+            size="sm"
+            variant="destructive"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation()
+              onReject()
+            }}
+          >
+            <X className="h-4 w-4 mr-1" />
+            Reject
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1 bg-green-600 hover:bg-green-700"
+            onClick={(e) => {
+              e.stopPropagation()
+              onApprove()
+            }}
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Approve
+          </Button>
+          <Link href={`/finance/ledger/${entry.id}`}>
+            <Button size="sm" variant="outline">
+              View
+            </Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function HistoryCard({ entry, onUndo }: HistoryCardProps) {
+  const isApproved = entry.status === 'APPROVED'
+  const isRejected = entry.status === 'REJECTED'
+  
+  return (
+    <Card className={`border-2 ${
+      isApproved 
+        ? 'border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-800' 
+        : isRejected
+        ? 'border-red-200 bg-red-50 dark:bg-red-900/10 dark:border-red-800'
+        : 'border-gray-200 bg-white dark:bg-slate-800'
+    }`}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono">
+              {entry.serialNumber}
+            </Badge>
+            {isApproved && (
+              <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                Approved
+              </Badge>
+            )}
+            {isRejected && (
+              <Badge variant="destructive">
+                Rejected
+              </Badge>
+            )}
+          </div>
+          <span className="text-sm text-muted-foreground">
+            {format(new Date(entry.transactionDate), 'dd MMM yyyy')}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <div className="font-semibold text-lg">{entry.party.name}</div>
+          <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
+        </div>
+
+        <div>
+          <div className="text-xs text-muted-foreground mb-1">Description</div>
+          <div className="text-sm wrap-break-word">{entry.description}</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-muted-foreground text-xs">Head</div>
+            <div className="font-medium">{entry.head?.name || 'N/A'}</div>
+          </div>
+          <div>
+            <div className="text-muted-foreground text-xs">Payment Mode</div>
+            <Badge variant="outline">{entry.paymentMode?.name || 'N/A'}</Badge>
+          </div>
+        </div>
+
+        <div className="border-t pt-3">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <div className="text-xs text-muted-foreground">Created by</div>
+              <div className="text-sm">{entry.createdBy.name}</div>
+            </div>
+            <div className="text-right">
+              <div className={`text-2xl font-bold ${isApproved ? 'text-green-600' : 'text-red-600'}`}>
+                -{formatCurrency(entry.paymentAmount || 0)}
+              </div>
+            </div>
+          </div>
+          {entry.approvedAt && (
+            <div className="text-xs text-muted-foreground">
+              {isApproved ? 'Approved' : 'Rejected'} at: {format(new Date(entry.approvedAt), 'dd MMM yyyy HH:mm')}
+            </div>
+          )}
+        </div>
+
+        {onUndo && (
+          <div className="pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className={`w-full ${
+                isApproved
+                  ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400'
+                  : 'text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:text-amber-400'
+              }`}
+              onClick={onUndo}
+            >
+              <RotateCcw className="h-4 w-4 mr-1" />
+              Undo {isApproved ? 'Approval' : 'Rejection'}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 function SwipeCard({ entry, onApprove, onReject }: SwipeCardProps) {
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
   const [swipeOffset, setSwipeOffset] = useState(0)
@@ -215,17 +447,17 @@ function SwipeCard({ entry, onApprove, onReject }: SwipeCardProps) {
 
             <div>
               <div className="text-xs text-muted-foreground mb-1">Description</div>
-              <div className="text-sm break-words">{entry.description}</div>
+              <div className="text-sm wrap-break-word">{entry.description}</div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <div className="text-muted-foreground text-xs">Head</div>
-                <div className="font-medium">{entry.head.name}</div>
+                <div className="font-medium">{entry.head?.name || 'N/A'}</div>
               </div>
               <div>
                 <div className="text-muted-foreground text-xs">Payment Mode</div>
-                <Badge variant="outline">{entry.paymentMode.name}</Badge>
+                <Badge variant="outline">{entry.paymentMode?.name || 'N/A'}</Badge>
               </div>
             </div>
 
@@ -289,6 +521,8 @@ export default function ApprovalsPage() {
   const [dialogType, setDialogType] = useState<'debit' | 'edit'>('debit')
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [headFilter, setHeadFilter] = useState<string>('all')
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const previousPendingCountRef = useRef(0)
 
   const queryClient = useQueryClient()
@@ -312,6 +546,59 @@ export default function ApprovalsPage() {
   const { data: editRequestsData, isLoading: isLoadingEdits } = useQuery<LedgerResponse>({
     queryKey: ['pending-edit-requests'],
     queryFn: () => apiGet<LedgerResponse>('/api/finance/ledger?editRequestStatus=PENDING&status=APPROVED&limit=1000'),
+  })
+
+  // Fetch approved debit entries for summary
+  const { data: approvedData } = useQuery<LedgerResponse>({
+    queryKey: ['approved-debits-summary'],
+    queryFn: () => apiGet<LedgerResponse>('/api/finance/ledger?status=APPROVED&transactionType=DEBIT&limit=1000'),
+    staleTime: 30000, // Cache for 30 seconds
+  })
+
+  // Fetch approved and rejected entries for history tab
+  const { data: historyData, isLoading: isLoadingHistory } = useQuery<LedgerResponse>({
+    queryKey: ['approved-debits-history', headFilter, searchQuery],
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      params.set('transactionType', 'DEBIT')
+      params.set('limit', '1000')
+      if (headFilter !== 'all') {
+        params.set('headId', headFilter)
+      }
+      if (searchQuery) {
+        params.set('search', searchQuery)
+      }
+      
+      // Fetch both approved and rejected entries
+      const [approvedRes, rejectedRes] = await Promise.all([
+        apiGet<LedgerResponse>(`/api/finance/ledger?${params.toString()}&status=APPROVED`),
+        apiGet<LedgerResponse>(`/api/finance/ledger?${params.toString()}&status=REJECTED`),
+      ])
+      
+      // Combine and sort by date (newest first)
+      const combined = [...(approvedRes.data || []), ...(rejectedRes.data || [])]
+      combined.sort((a, b) => {
+        const dateA = new Date(a.approvedAt || a.transactionDate).getTime()
+        const dateB = new Date(b.approvedAt || b.transactionDate).getTime()
+        return dateB - dateA
+      })
+      
+      return {
+        data: combined,
+        pagination: {
+          page: 1,
+          limit: 1000,
+          total: combined.length,
+          totalPages: 1,
+        },
+      }
+    },
+  })
+
+  // Fetch heads for filter
+  const { data: headsData } = useQuery<{ data: Head[] }>({
+    queryKey: ['heads-list-filtered'],
+    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&hasEntries=true&limit=100'),
   })
 
   const triggerConfetti = () => {
@@ -350,6 +637,7 @@ export default function ApprovalsPage() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pending-debits'] })
+      queryClient.invalidateQueries({ queryKey: ['approved-debits-summary'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
       setIsDialogOpen(false)
@@ -382,6 +670,7 @@ export default function ApprovalsPage() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pending-debits'] })
+      queryClient.invalidateQueries({ queryKey: ['approved-debits-summary'] })
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
@@ -456,10 +745,12 @@ export default function ApprovalsPage() {
     mutationFn: (id: string) => apiPost(`/api/finance/ledger/${id}/undo`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-debits'] })
+      queryClient.invalidateQueries({ queryKey: ['approved-debits-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['approved-debits-history'] })
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
-      toast.success('Action undone')
+      toast.success('Approval undone - entry is now pending again')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to undo')
@@ -526,8 +817,34 @@ export default function ApprovalsPage() {
     }
   }
 
-  const pendingCount = pendingData?.pagination.total || 0
-  const totalPendingAmount = pendingData?.data.reduce((sum, e) => sum + (e.paymentAmount || 0), 0) || 0
+  // Filter pending data by head and search
+  const filteredPendingData = useMemo(() => {
+    if (!pendingData?.data) return []
+    let filtered = pendingData.data
+
+    // Filter by head
+    if (headFilter !== 'all') {
+      filtered = filtered.filter((e) => e.head?.id === headFilter)
+    }
+
+    // Filter by search (party name, description, serial number)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (e) =>
+          e.party?.name.toLowerCase().includes(query) ||
+          e.description.toLowerCase().includes(query) ||
+          e.serialNumber.toLowerCase().includes(query) ||
+          e.createdBy?.name.toLowerCase().includes(query)
+      )
+    }
+
+    return filtered
+  }, [pendingData?.data, headFilter, searchQuery])
+
+  const pendingCount = filteredPendingData.length
+  const totalPendingAmount = filteredPendingData.reduce((sum, e) => sum + (e.paymentAmount || 0), 0)
+  const totalApprovedAmount = approvedData?.data?.reduce((sum, e) => sum + (e.paymentAmount || 0), 0) || 0
   const editRequestsCount = editRequestsData?.pagination.total || 0
 
   // Trigger confetti when all approvals are done
@@ -576,10 +893,10 @@ export default function ApprovalsPage() {
   }
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === pendingData?.data.length) {
+    if (selectedIds.size === filteredPendingData.length) {
       setSelectedIds(new Set())
     } else {
-      setSelectedIds(new Set(pendingData?.data.map((e) => e.id) || []))
+      setSelectedIds(new Set(filteredPendingData.map((e) => e.id)))
     }
   }
 
@@ -627,12 +944,45 @@ export default function ApprovalsPage() {
               </Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="history">
+            History
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="debits" className="space-y-6">
 
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by party name, description, serial number..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={headFilter} onValueChange={setHeadFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="All Heads" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Heads</SelectItem>
+                    {headsData?.data.map((head) => (
+                      <SelectItem key={head.id} value={head.id}>
+                        {head.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -655,23 +1005,19 @@ export default function ApprovalsPage() {
                 </div>
               </CardContent>
             </Card>
+            <Card className="border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-800">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-green-600 dark:text-green-400">Approved Amount</p>
+                    <p className="text-3xl font-bold">{formatCurrency(totalApprovedAmount)}</p>
+                  </div>
+                  <Check className="h-10 w-10 text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Alert for MD */}
-          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/10 dark:border-blue-800">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="font-medium text-blue-900 dark:text-blue-100">Important</p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Only debit (outgoing) transactions require your approval. Credit transactions are auto-approved.
-                    When you approve a debit, the amount will be deducted from the payment mode balance immediately.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Bulk Action Bar */}
           {viewMode === 'table' && selectedIds.size > 0 && (
@@ -710,12 +1056,8 @@ export default function ApprovalsPage() {
           )}
 
           {/* Pending Entries Table/Cards */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pending Debit Entries</CardTitle>
-          <CardDescription>Review each entry and approve or reject</CardDescription>
-        </CardHeader>
-        <CardContent>
+
+        <div>
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
           ) : pendingCount === 0 ? (
@@ -726,7 +1068,7 @@ export default function ApprovalsPage() {
             </div>
           ) : viewMode === 'cards' ? (
             <div className="space-y-4">
-              {pendingData?.data.map((entry) => (
+              {filteredPendingData.map((entry) => (
                 <SwipeCard
                   key={entry.id}
                   entry={entry}
@@ -756,7 +1098,7 @@ export default function ApprovalsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pendingData?.data.map((entry) => (
+                {filteredPendingData.map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell>
                       <Checkbox
@@ -772,9 +1114,9 @@ export default function ApprovalsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
-                    <TableCell>{entry.head.name}</TableCell>
+                    <TableCell>{entry.head?.name || 'N/A'}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{entry.paymentMode.name}</Badge>
+                      <Badge variant="outline">{entry.paymentMode?.name || 'N/A'}</Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono font-semibold text-red-600">
                       -{formatCurrency(entry.paymentAmount || 0)}
@@ -807,8 +1149,7 @@ export default function ApprovalsPage() {
               </TableBody>
             </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
         </TabsContent>
 
@@ -844,73 +1185,80 @@ export default function ApprovalsPage() {
                   <p className="text-muted-foreground">No pending edit requests to review.</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Party</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Requested By</TableHead>
-                      <TableHead>Request Reason</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {editRequestsData?.data.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell>{format(new Date(entry.transactionDate), 'dd MMM yyyy')}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{entry.party.name}</div>
-                            <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {entry.editRequestedBy?.name || 'Unknown'}
-                            {entry.editRequestedAt && (
-                              <div className="text-xs text-muted-foreground">
-                                {format(new Date(entry.editRequestedAt), 'dd MMM yyyy')}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <p className="text-sm truncate">{entry.editRequestReason || '-'}</p>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleReject(entry, 'edit')}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => handleApprove(entry, 'edit')}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Link href={`/finance/ledger/${entry.id}`}>
-                              <Button size="sm" variant="outline">
-                                View
-                              </Button>
-                            </Link>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="space-y-4">
+                  {editRequestsData?.data.map((entry) => (
+                    <EditRequestCard
+                      key={entry.id}
+                      entry={entry}
+                      onApprove={() => handleApprove(entry, 'edit')}
+                      onReject={() => handleReject(entry, 'edit')}
+                    />
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          {/* History Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by party name, description, serial number..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Select value={headFilter} onValueChange={setHeadFilter}>
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="All Heads" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Heads</SelectItem>
+                    {headsData?.data.map((head) => (
+                      <SelectItem key={head.id} value={head.id}>
+                        {head.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+
+            <div>
+              {isLoadingHistory ? (
+                <div className="text-center py-8 text-muted-foreground">Loading history...</div>
+              ) : !historyData?.data || historyData.data.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium">No history entries</p>
+                  <p className="text-muted-foreground">Approved and rejected entries will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {historyData.data.map((entry) => (
+                    <HistoryCard
+                      key={entry.id}
+                      entry={entry}
+                      onUndo={() => {
+                        const action = entry.status === 'APPROVED' ? 'approval' : 'rejection'
+                        if (confirm(`Are you sure you want to undo this ${action}? This will revert the entry to pending status.`)) {
+                          undoMutation.mutate(entry.id)
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
         </TabsContent>
       </Tabs>
 
@@ -1003,7 +1351,7 @@ export default function ApprovalsPage() {
                   <>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Payment Mode</span>
-                      <span>{selectedEntry.paymentMode.name}</span>
+                      <span>{selectedEntry.paymentMode?.name || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between text-sm font-semibold">
                       <span>Amount</span>
@@ -1033,7 +1381,7 @@ export default function ApprovalsPage() {
                 <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
                   <p className="text-sm text-green-700 dark:text-green-300">
                     <strong>Balance Impact:</strong> This amount will be deducted from{' '}
-                    <strong>{selectedEntry.paymentMode.name}</strong> immediately upon approval.
+                    <strong>{selectedEntry.paymentMode?.name || 'N/A'}</strong> immediately upon approval.
                   </p>
                 </div>
               )}

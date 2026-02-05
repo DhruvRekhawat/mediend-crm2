@@ -268,6 +268,7 @@ model User {
   taskApprovalsRequested TaskDueDateApproval[]
   workLogs            WorkLog[]
   mdTaskTeamsOwned    MDTaskTeam[]         @relation("MDTaskTeamOwner")
+  mdWatchlistOwned    MDWatchlistEmployee[] @relation("MDWatchlistOwner")
 
   @@index([email])
   @@index([role])
@@ -641,6 +642,7 @@ model Employee {
   incrementRequests    IncrementRequest[]
   ijpApplications      IJPApplication[]
   mdTaskTeamMemberships MDTaskTeamMember[]
+  mdWatchlistMemberships MDWatchlistEmployee[]
 
   @@index([userId])
   @@index([employeeCode])
@@ -1735,6 +1737,20 @@ model MDTaskTeamMember {
 
   @@unique([teamId, employeeId])
   @@index([teamId])
+  @@index([employeeId])
+}
+
+// MD Watchlist: Personal list of employees to monitor
+model MDWatchlistEmployee {
+  id         String   @id @default(cuid())
+  ownerId    String
+  owner      User     @relation("MDWatchlistOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([ownerId, employeeId])
+  @@index([ownerId])
   @@index([employeeId])
 }
 

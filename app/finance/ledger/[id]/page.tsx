@@ -400,30 +400,33 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
   const canApplyEdit = isFinance && entry.editRequestStatus === 'APPROVED'
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Link href="/finance/ledger">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold font-mono">{entry.serialNumber}</h1>
-            {getStatusBadge(entry.status)}
-            {entry.editRequestStatus && (
-              <Badge variant="outline" className={entry.editRequestStatus === 'APPROVED' ? 'border-green-500 text-green-600' : entry.editRequestStatus === 'REJECTED' ? 'border-red-500 text-red-600' : 'border-yellow-500 text-yellow-600'}>
-                Edit {entry.editRequestStatus}
-              </Badge>
-            )}
+    <div className="space-y-6 max-w-4xl mx-auto px-4 sm:px-0 pb-24 sm:pb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Link href="/finance/ledger">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex-1 sm:flex-initial">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold font-mono">{entry.serialNumber}</h1>
+              {getStatusBadge(entry.status)}
+              {entry.editRequestStatus && (
+                <Badge variant="outline" className={entry.editRequestStatus === 'APPROVED' ? 'border-green-500 text-green-600' : entry.editRequestStatus === 'REJECTED' ? 'border-red-500 text-red-600' : 'border-yellow-500 text-yellow-600'}>
+                  Edit {entry.editRequestStatus}
+                </Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">Ledger Entry Details</p>
           </div>
-          <p className="text-muted-foreground mt-1">Ledger Entry Details</p>
         </div>
-        <div className="flex gap-2">
+        {/* Desktop Action Buttons */}
+        <div className="hidden sm:flex items-center gap-2 flex-wrap">
           {canRequestEdit && (
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" onClick={() => {
+                <Button variant="outline" size="sm" onClick={() => {
                   setEditFormData({
                     description: entry.description,
                     transactionDate: entry.transactionDate.split('T')[0],
@@ -579,9 +582,10 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
               </Dialog>
               <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="destructive">
+                  <Button variant="destructive" size="sm">
                     <X className="h-4 w-4 mr-2" />
-                    Reject Edit
+                    <span className="hidden md:inline">Reject Edit</span>
+                    <span className="md:hidden">Reject</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -621,15 +625,16 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
             </>
           )}
           {canApplyEdit && (
-            <Button onClick={() => applyEditMutation.mutate()} disabled={applyEditMutation.isPending} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={() => applyEditMutation.mutate()} disabled={applyEditMutation.isPending} size="sm" className="bg-green-600 hover:bg-green-700">
               <Check className="h-4 w-4 mr-2" />
-              Apply Approved Edit
+              <span className="hidden md:inline">Apply Approved Edit</span>
+              <span className="md:hidden">Apply</span>
             </Button>
           )}
           {isAdmin && !entry.isDeleted && (
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">
+                <Button variant="destructive" size="sm">
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
@@ -664,19 +669,253 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
             </AlertDialog>
           )}
         </div>
-        <div className={`p-4 rounded-lg ${
-          isCredit ? 'bg-green-100 dark:bg-green-900/20' :
-          isSelfTransfer ? 'bg-blue-100 dark:bg-blue-900/20' :
-          'bg-red-100 dark:bg-red-900/20'
-        }`}>
-          {isCredit ? (
-            <ArrowUpCircle className="h-8 w-8 text-green-600" />
-          ) : isSelfTransfer ? (
-            <ArrowLeftRight className="h-8 w-8 text-blue-600" />
-          ) : (
-            <ArrowDownCircle className="h-8 w-8 text-red-600" />
-          )}
-        </div>
+      </div>
+
+      {/* Mobile Action Buttons - Fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-background border-t p-4 space-y-2 z-50 shadow-lg">
+        {canRequestEdit && (
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full" onClick={() => {
+                setEditFormData({
+                  description: entry.description,
+                  transactionDate: entry.transactionDate.split('T')[0],
+                  partyId: entry.party?.id || '',
+                  headId: entry.head?.id || '',
+                  paymentTypeId: entry.paymentType?.id || '',
+                  reason: '',
+                })
+              }}>
+                <Edit className="h-4 w-4 mr-2" />
+                Request Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Request Edit</DialogTitle>
+                <DialogDescription>Request changes to this approved entry</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="description-mobile">Description</Label>
+                  <Input
+                    id="description-mobile"
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="transactionDate-mobile">Transaction Date</Label>
+                  <Input
+                    id="transactionDate-mobile"
+                    type="date"
+                    value={editFormData.transactionDate}
+                    onChange={(e) => setEditFormData({ ...editFormData, transactionDate: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="partyId-mobile">Party</Label>
+                  <Select value={editFormData.partyId} onValueChange={(value) => setEditFormData({ ...editFormData, partyId: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {partiesData?.data.map((party) => (
+                        <SelectItem key={party.id} value={party.id}>
+                          {party.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="headId-mobile">Head</Label>
+                  <Select value={editFormData.headId} onValueChange={(value) => setEditFormData({ ...editFormData, headId: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {headsData?.data.map((head) => (
+                        <SelectItem key={head.id} value={head.id}>
+                          {head.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="paymentTypeId-mobile">Payment Type</Label>
+                  <Select value={editFormData.paymentTypeId} onValueChange={(value) => setEditFormData({ ...editFormData, paymentTypeId: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentTypesData?.data.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name} ({type.paymentType})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reason-mobile">Reason for Edit *</Label>
+                  <Textarea
+                    id="reason-mobile"
+                    value={editFormData.reason}
+                    onChange={(e) => setEditFormData({ ...editFormData, reason: e.target.value })}
+                    placeholder="Explain why this edit is needed..."
+                    rows={3}
+                    required
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleRequestEdit} disabled={requestEditMutation.isPending}>
+                    Submit Request
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+        {canApproveEdit && (
+          <>
+            <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" className="w-full bg-green-600 hover:bg-green-700">
+                  <Check className="h-4 w-4 mr-2" />
+                  Approve Edit
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Approve Edit Request</DialogTitle>
+                  <DialogDescription>Provide a reason for approving this edit request</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {entry.editRequestData && (
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm font-medium mb-2">Requested Changes:</p>
+                      <pre className="text-xs overflow-auto">{JSON.stringify(entry.editRequestData, null, 2)}</pre>
+                    </div>
+                  )}
+                  {entry.editRequestReason && (
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm font-medium mb-1">Request Reason:</p>
+                      <p className="text-sm">{entry.editRequestReason}</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="approvalReason-mobile">Approval Reason *</Label>
+                    <Textarea
+                      id="approvalReason-mobile"
+                      value={approvalReason}
+                      onChange={(e) => setApprovalReason(e.target.value)}
+                      placeholder="Explain why you are approving this edit..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleApproveEdit} disabled={approveEditMutation.isPending} className="bg-green-600 hover:bg-green-700">
+                      Approve
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive" className="w-full">
+                  <X className="h-4 w-4 mr-2" />
+                  Reject Edit
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Reject Edit Request</DialogTitle>
+                  <DialogDescription>Provide a reason for rejecting this edit request</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {entry.editRequestReason && (
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm font-medium mb-1">Request Reason:</p>
+                      <p className="text-sm">{entry.editRequestReason}</p>
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="rejectionReason-mobile">Rejection Reason *</Label>
+                    <Textarea
+                      id="rejectionReason-mobile"
+                      value={rejectionReason}
+                      onChange={(e) => setRejectionReason(e.target.value)}
+                      placeholder="Explain why you are rejecting this edit..."
+                      rows={3}
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleRejectEdit} disabled={rejectEditMutation.isPending} variant="destructive">
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
+        {canApplyEdit && (
+          <Button onClick={() => applyEditMutation.mutate()} disabled={applyEditMutation.isPending} className="w-full bg-green-600 hover:bg-green-700">
+            <Check className="h-4 w-4 mr-2" />
+            Apply Approved Edit
+          </Button>
+        )}
+        {isAdmin && !entry.isDeleted && (
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Ledger Entry</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will soft delete the entry. You must provide a reason for deletion.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="deleteReason-mobile">Deletion Reason *</Label>
+                  <Textarea
+                    id="deleteReason-mobile"
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    placeholder="Explain why you are deleting this entry..."
+                    rows={3}
+                    required
+                  />
+                </div>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} disabled={deleteMutation.isPending} className="bg-red-600 hover:bg-red-700">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       {/* Edit Request Status */}
@@ -834,7 +1073,7 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
           <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-muted rounded-lg">
               <label className="text-sm text-muted-foreground">Opening Balance</label>
-              <p className="text-xl font-mono font-semibold">{formatCurrency(entry.openingBalance)}</p>
+              <p className="text-lg sm:text-xl font-mono font-semibold">{formatCurrency(entry.openingBalance)}</p>
             </div>
             <div className={`p-4 rounded-lg ${
               isCredit ? 'bg-green-50 dark:bg-green-900/10' :
@@ -842,7 +1081,7 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
               'bg-red-50 dark:bg-red-900/10'
             }`}>
               <label className="text-sm text-muted-foreground">Transaction</label>
-              <p className={`text-xl font-mono font-semibold ${
+              <p className={`text-lg sm:text-xl font-mono font-semibold ${
                 isCredit ? 'text-green-600' :
                 isSelfTransfer ? 'text-blue-600' :
                 'text-red-600'
@@ -852,7 +1091,7 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
             </div>
             <div className="p-4 bg-muted rounded-lg">
               <label className="text-sm text-muted-foreground">Current Balance</label>
-              <p className="text-xl font-mono font-semibold">{formatCurrency(entry.currentBalance)}</p>
+              <p className="text-lg sm:text-xl font-mono font-semibold">{formatCurrency(entry.currentBalance)}</p>
             </div>
           </div>
         </CardContent>
