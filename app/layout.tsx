@@ -32,11 +32,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <AuthenticatedWrapper>
-            {children}
-          </AuthenticatedWrapper>
-          <Toaster />
-          <AIProvider />
+          <AIProvider>
+            <AuthenticatedWrapper>{children}</AuthenticatedWrapper>
+            <Toaster />
+          </AIProvider>
         </QueryProvider>
       </body>
     </html>

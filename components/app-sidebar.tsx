@@ -12,6 +12,7 @@ import {
   SidebarMenuItem
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
+import { useSidebar } from '@/components/ui/sidebar'
 import { getFilteredNavItemsWithUrls } from '@/lib/sidebar-nav'
 import {
   BarChart3,
@@ -51,6 +52,11 @@ import logo from '@/public/logo-mediend.png'
 export function AppSidebar() {
   const { user, logout } = useAuth()
   const pathname = usePathname()
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const closeSidebarOnMobile = React.useCallback(() => {
+    if (isMobile) setOpenMobile(false)
+  }, [isMobile, setOpenMobile])
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({
     myHrms: false,
     services: false,
@@ -118,7 +124,7 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
-                      <Link href={item.url}>
+                      <Link href={item.url} onClick={closeSidebarOnMobile}>
                         <Icon />
                         <span>{label}</span>
                       </Link>
@@ -161,7 +167,7 @@ export function AppSidebar() {
                       return (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                            <Link href={item.url}>
+                            <Link href={item.url} onClick={closeSidebarOnMobile}>
                               <Icon />
                               <span>{item.title}</span>
                             </Link>
@@ -207,7 +213,7 @@ export function AppSidebar() {
                       return (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Svc ', '')}>
-                            <Link href={item.url}>
+                            <Link href={item.url} onClick={closeSidebarOnMobile}>
                               <Icon />
                               <span>{item.title.replace('Svc ', '')}</span>
                             </Link>
@@ -253,7 +259,7 @@ export function AppSidebar() {
                       return (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                            <Link href={item.url}>
+                            <Link href={item.url} onClick={closeSidebarOnMobile}>
                               <Icon />
                               <span>{item.title}</span>
                             </Link>
@@ -299,7 +305,7 @@ export function AppSidebar() {
                         return (
                           <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Fin ', '')}>
-                              <Link href={item.url}>
+                              <Link href={item.url} onClick={closeSidebarOnMobile}>
                                 <Icon />
                                 <span>{item.title.replace('Fin ', '')}</span>
                               </Link>
@@ -344,8 +350,8 @@ export function AppSidebar() {
                         const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                         return (
                           <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('MD ', '')}>
-                              <Link href={item.url}>
+                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('MD ', '')}>
+                            <Link href={item.url} onClick={closeSidebarOnMobile}>
                                 <Icon />
                                 <span>{item.title.replace('MD ', '')}</span>
                               </Link>
@@ -364,7 +370,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile">
-              <Link href="/profile">
+              <Link href="/profile" onClick={closeSidebarOnMobile}>
                 <User />
                 <span>Profile</span>
               </Link>

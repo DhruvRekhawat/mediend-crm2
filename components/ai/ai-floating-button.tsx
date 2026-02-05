@@ -17,12 +17,11 @@ export function AIFloatingButton({ onClick }: AIFloatingButtonProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        'fixed bottom-6 right-6 z-50',
+        'fixed bottom-6 right-6 z-50 hidden md:flex items-center justify-center',
         'h-16 w-16 rounded-full',
         'bg-gradient-to-br from-purple-600 via-purple-500 to-white',
         'bg-[length:300%_300%]',
         'shadow-lg shadow-purple-500/50',
-        'flex items-center justify-center',
         'transition-all duration-300',
         'hover:scale-110 hover:shadow-xl hover:shadow-purple-500/60',
         'active:scale-95',
