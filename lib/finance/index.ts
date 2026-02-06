@@ -8,6 +8,7 @@ export {
   generateSerialNumber,
   parseSerialNumber,
   isValidSerialNumber,
+  generateSalesSerialNumber,
 } from './serial-utils'
 
 // Balance utilities

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, FileText, MessageSquare, ClipboardList, Receipt, Plus, FileDown, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, FileText, MessageSquare, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { KYPDetailsView } from '@/components/kyp/kyp-details-view'
 import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
@@ -236,19 +236,40 @@ export default function PatientDetailsPage() {
     )
   }
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      PENDING: 'secondary',
-      KYP_DETAILS_ADDED: 'default',
-      PRE_AUTH_COMPLETE: 'default',
-      FOLLOW_UP_COMPLETE: 'default',
-      COMPLETED: 'default',
+  const getStatusBadgeColor = (status: string) => {
+    const badgeConfig: Record<string, string> = {
+      PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+      KYP_DETAILS_ADDED: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+      PRE_AUTH_COMPLETE: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+      FOLLOW_UP_COMPLETE: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300',
+      COMPLETED: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
     }
+    return badgeConfig[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
+  }
+
+  const getStatusBadge = (status: string) => {
     return (
-      <Badge variant={variants[status] || 'secondary'}>
+      <Badge className={`border-0 ${getStatusBadgeColor(status)}`}>
         {getKYPStatusLabel(status)}
       </Badge>
     )
+  }
+
+  const getStageBadgeColor = (stage: CaseStage) => {
+    const colors: Record<CaseStage, string> = {
+      [CaseStage.NEW_LEAD]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+      [CaseStage.KYP_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.KYP_COMPLETE]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.PREAUTH_RAISED]: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300 border-teal-300',
+      [CaseStage.PREAUTH_COMPLETE]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+      [CaseStage.INITIATED]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.ADMITTED]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.DISCHARGED]: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 border-orange-300',
+      [CaseStage.IPD_DONE]: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300 border-teal-300',
+      [CaseStage.PL_PENDING]: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300',
+      [CaseStage.OUTSTANDING]: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300',
+    }
+    return colors[stage] || 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300'
   }
 
   // Permission checks
@@ -264,61 +285,89 @@ export default function PatientDetailsPage() {
   return (
     <AuthenticatedLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">{lead.patientName}</h1>
-              <p className="text-muted-foreground">
-                {lead.leadRef} • {lead.hospitalName}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">{lead.pipelineStage}</Badge>
-            <Badge variant="secondary">{lead.status}</Badge>
-          </div>
-        </div>
+        {/* Professional Header Section */}
+        <Card className="border-2 shadow-sm">
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              {/* Top Row: Back Button and Patient Name */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.back()}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{lead.patientName}</h1>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
+                        {lead.leadRef} • {lead.hospitalName}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-gray-300 dark:border-gray-700">
+                    {lead.pipelineStage}
+                  </Badge>
+                  <Badge className={`border-2 ${getStageBadgeColor(lead.caseStage)}`}>
+                    {lead.caseStage.replace(/_/g, ' ')}
+                  </Badge>
+                </div>
+              </div>
 
-        {/* Stage Progress */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Case Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <StageProgress currentStage={lead.caseStage} />
-          </CardContent>
-        </Card>
+              {/* Patient Info Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Phone</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.phoneNumber}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-50 dark:bg-teal-950/30 rounded-lg border border-teal-200 dark:border-teal-800">
+                    <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">City</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.city}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                    <Stethoscope className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Treatment</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.treatment || '-'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
+                    <Tag className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Category</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.category || '-'}</p>
+                  </div>
+                </div>
+              </div>
 
-        {/* Patient Info Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Patient Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{lead.phoneNumber}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">City</p>
-                <p className="font-medium">{lead.city}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Treatment</p>
-                <p className="font-medium">{lead.treatment || '-'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Category</p>
-                <p className="font-medium">{lead.category || '-'}</p>
+              {/* Compact Stage Progress */}
+              <div className="border-t border-gray-200 dark:border-gray-800 pt-4">
+                <div className="mb-3">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold">Case Progress</p>
+                </div>
+                <StageProgress currentStage={lead.caseStage} />
               </div>
             </div>
           </CardContent>
@@ -326,9 +375,9 @@ export default function PatientDetailsPage() {
 
         {/* Action Buttons Section */}
         {user && (
-          <Card className="border-primary/50 bg-primary/5">
+          <Card className="border-2 shadow-sm">
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
+              <CardTitle className="text-xl">Actions</CardTitle>
               <CardDescription>Available actions based on case stage and your role</CardDescription>
             </CardHeader>
             <CardContent>
@@ -337,7 +386,7 @@ export default function PatientDetailsPage() {
                 {!lead.kypSubmission && (user.role === 'BD' || user.role === 'ADMIN') && (
                   <Button
                     onClick={() => setShowKYPForm(true)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
                   >
                     <Plus className="h-4 w-4" />
                     Start KYP
@@ -346,8 +395,7 @@ export default function PatientDetailsPage() {
                 {canRaise && (
                   <Button
                     onClick={() => setShowPreAuthRaiseForm(true)}
-                    variant="default"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white border-0"
                   >
                     <FileText className="h-4 w-4" />
                     Raise Pre-Auth
@@ -355,8 +403,7 @@ export default function PatientDetailsPage() {
                 )}
                 {canInit && (
                   <Button
-                    variant="default"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white border-0"
                     onClick={() => {
                       setAdmitForm({
                         admissionDate: new Date().toISOString().slice(0, 10),
@@ -374,8 +421,7 @@ export default function PatientDetailsPage() {
                 )}
                 {canDischarge && (
                   <Button
-                    variant="default"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white border-0"
                     onClick={() => setShowDischargeConfirm(true)}
                   >
                     <CheckCircle2 className="h-4 w-4" />
@@ -387,8 +433,7 @@ export default function PatientDetailsPage() {
                 {canAddDetails && (
                   <Button
                     asChild
-                    variant="default"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
                   >
                     <Link href={`/patient/${leadId}/pre-auth`}>
                       <Plus className="h-4 w-4" />
@@ -399,8 +444,7 @@ export default function PatientDetailsPage() {
                 {canComplete && (
                   <Button
                     asChild
-                    variant="default"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
                   >
                     <Link href={`/patient/${leadId}/pre-auth`}>
                       <CheckCircle2 className="h-4 w-4" />
@@ -412,7 +456,7 @@ export default function PatientDetailsPage() {
                   <Button
                     asChild
                     variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 border-2"
                   >
                     <Link href={`/patient/${leadId}/pre-auth`}>
                       <FileDown className="h-4 w-4" />
@@ -423,8 +467,7 @@ export default function PatientDetailsPage() {
                 {canFillDischargeForm && (
                   <Button
                     asChild
-                    variant="default"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white border-0"
                   >
                     <Link href={`/patient/${leadId}/discharge`}>
                       <Receipt className="h-4 w-4" />
@@ -439,31 +482,43 @@ export default function PatientDetailsPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="kyp" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="kyp" className="flex items-center gap-2">
+          <TabsList className="border-2 bg-white dark:bg-gray-950">
+            <TabsTrigger 
+              value="kyp" 
+              className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/30"
+            >
               <FileText className="h-4 w-4" />
               KYP
               {lead.kypSubmission && (
-                <Badge variant="secondary" className="ml-1">
+                <Badge className={`ml-1 border-0 ${getStatusBadgeColor(lead.kypSubmission.status)}`}>
                   {getKYPStatusLabel(lead.kypSubmission.status)}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="pre-auth" className="flex items-center gap-2">
+            <TabsTrigger 
+              value="pre-auth" 
+              className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/30"
+            >
               <MessageSquare className="h-4 w-4" />
               Pre-Auth
               {lead.caseStage === CaseStage.PREAUTH_COMPLETE && (
-                <Badge variant="secondary" className="ml-1">Complete</Badge>
+                <Badge className="ml-1 border-0 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">Complete</Badge>
               )}
             </TabsTrigger>
             {lead.kypSubmission?.followUpData && (
-              <TabsTrigger value="follow-up" className="flex items-center gap-2">
+              <TabsTrigger 
+                value="follow-up" 
+                className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-teal-600 data-[state=active]:bg-teal-50 dark:data-[state=active]:bg-teal-950/30"
+              >
                 <ClipboardList className="h-4 w-4" />
                 Follow-Up
               </TabsTrigger>
             )}
             {lead.dischargeSheet && (
-              <TabsTrigger value="discharge" className="flex items-center gap-2">
+              <TabsTrigger 
+                value="discharge" 
+                className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-orange-600 data-[state=active]:bg-orange-50 dark:data-[state=active]:bg-orange-950/30"
+              >
                 <Receipt className="h-4 w-4" />
                 Discharge Sheet
               </TabsTrigger>

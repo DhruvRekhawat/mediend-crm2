@@ -232,6 +232,9 @@ model User {
   editRequestedLedgerEntries LedgerEntry[]    @relation("LedgerEditRequester")
   editApprovedLedgerEntries  LedgerEntry[]    @relation("LedgerEditApprover")
   ledgerAuditLogs            LedgerAuditLog[] @relation("LedgerAuditPerformer")
+  
+  // Finance Sales Relations
+  createdSalesEntries        SalesEntry[]     @relation("SalesCreator")
 
   // Inventory Relations
   stockMovementsCreated      StockMovement[]      @relation("StockMovementCreator")
@@ -999,6 +1002,21 @@ model HeadMaster {
   @@index([isActive])
 }
 
+// Project Master - For sales/revenue categorization
+model ProjectMaster {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  salesEntries SalesEntry[]
+
+  @@index([name])
+  @@index([isActive])
+}
+
 // Payment Type Master - Expense classification
 model PaymentTypeMaster {
   id          String             @id @default(cuid())
@@ -1121,6 +1139,28 @@ model LedgerAuditLog {
   @@index([ledgerEntryId])
   @@index([action])
   @@index([performedAt])
+}
+
+// Sales Entry - Booked sales/revenue (does not affect bank balances)
+model SalesEntry {
+  id              String         @id @default(cuid())
+  serialNumber    String         @unique   // Format: SL-0001
+  transactionDate DateTime       @default(now())
+  projectId       String
+  project         ProjectMaster  @relation(fields: [projectId], references: [id])
+  description     String
+  amount          Float          // Booked sale amount
+  notes           String?
+  isDeleted       Boolean        @default(false)
+  deletedAt       DateTime?
+  createdById     String
+  createdBy       User           @relation("SalesCreator", fields: [createdById], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([transactionDate])
+  @@index([projectId])
+  @@index([isDeleted])
 }
 
 // ==========================================

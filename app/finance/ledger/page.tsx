@@ -6,15 +6,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X, ArrowLeftRight } from 'lucide-react'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import Link from 'next/link'
 import { Calendar } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 
 interface LedgerEntry {
   id: string
@@ -110,6 +118,21 @@ interface PaymentType {
   paymentType: string
 }
 
+interface TypeOption {
+  value: string
+  label: string
+}
+
+interface StatusOption {
+  value: string
+  label: string
+}
+
+interface ComponentOption {
+  value: string
+  label: string
+}
+
 export default function LedgerPage() {
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -124,6 +147,37 @@ export default function LedgerPage() {
   const [showStartCalendar, setShowStartCalendar] = useState(false)
   const [showEndCalendar, setShowEndCalendar] = useState(false)
   const [showProjectedTotals, setShowProjectedTotals] = useState(false)
+  
+  // Search states for comboboxes
+  const [typeSearch, setTypeSearch] = useState('')
+  const [statusSearch, setStatusSearch] = useState('')
+  const [partySearch, setPartySearch] = useState('')
+  const [headSearch, setHeadSearch] = useState('')
+  const [paymentModeSearch, setPaymentModeSearch] = useState('')
+  const [paymentTypeSearch, setPaymentTypeSearch] = useState('')
+  const [componentSearch, setComponentSearch] = useState('')
+
+  // Simple option arrays
+  const typeOptions: TypeOption[] = [
+    { value: 'all', label: 'All Types' },
+    { value: 'CREDIT', label: 'Credit' },
+    { value: 'DEBIT', label: 'Debit' },
+    { value: 'SELF_TRANSFER', label: 'Self Transfer' },
+  ]
+
+  const statusOptions: StatusOption[] = [
+    { value: 'all', label: 'All Status' },
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'APPROVED', label: 'Approved' },
+    { value: 'REJECTED', label: 'Rejected' },
+  ]
+
+  const componentOptions: ComponentOption[] = [
+    { value: 'all', label: 'All Components' },
+    { value: 'aOnly', label: 'A Only (0 B)' },
+    { value: 'bOnly', label: 'B Only (0 A)' },
+    { value: 'both', label: 'Both A and B' },
+  ]
 
   // Fetch ledger entries
   const { data: ledgerData, isLoading } = useQuery<LedgerResponse>({
@@ -274,34 +328,34 @@ export default function LedgerPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="border-green-200 dark:border-green-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Credits (In)</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(totals.credits)}</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-500">{formatCurrency(totals.credits)}</p>
               </div>
-              <ArrowUpCircle className="h-8 w-8 text-green-200" />
+              <ArrowUpCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-red-200 dark:border-red-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Debits (Out)</p>
-                <p className="text-2xl font-bold text-red-600">{formatCurrency(totals.debits)}</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-500">{formatCurrency(totals.debits)}</p>
               </div>
-              <ArrowDownCircle className="h-8 w-8 text-red-200" />
+              <ArrowDownCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-blue-200 dark:border-blue-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Net (Credits - Debits)</p>
-                <p className={`text-2xl font-bold ${totals.credits - totals.debits >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-2xl font-bold ${totals.credits - totals.debits >= 0 ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'}`}>
                   {formatCurrency(totals.credits - totals.debits)}
                 </p>
               </div>
@@ -313,39 +367,39 @@ export default function LedgerPage() {
       {/* Projected Totals Cards - Show when toggle is on */}
       {showProjectedTotals && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-2 border-blue-200 dark:border-blue-800">
+          <Card className="border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Projected Revenue</p>
                   <p className="text-xs text-muted-foreground mb-1">(Excludes RECEIPT payment type)</p>
-                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(projectedTotals.revenue)}</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">{formatCurrency(projectedTotals.revenue)}</p>
                 </div>
-                <ArrowUpCircle className="h-8 w-8 text-blue-200" />
+                <ArrowUpCircle className="h-8 w-8 text-blue-500 dark:text-blue-400" />
               </div>
             </CardContent>
           </Card>
-          <Card className="border-2 border-green-200 dark:border-green-800">
+          <Card className="border-green-200 dark:border-green-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Projected Credits (All)</p>
                   <p className="text-xs text-muted-foreground mb-1">(Includes all CREDIT transactions)</p>
-                  <p className="text-2xl font-bold text-green-600">{formatCurrency(projectedTotals.credits)}</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-500">{formatCurrency(projectedTotals.credits)}</p>
                 </div>
-                <ArrowUpCircle className="h-8 w-8 text-green-200" />
+                <ArrowUpCircle className="h-8 w-8 text-green-500 dark:text-green-400" />
               </div>
             </CardContent>
           </Card>
-          <Card className="border-2 border-red-200 dark:border-red-800">
+          <Card className="border-red-200 dark:border-red-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Projected Debits (All)</p>
                   <p className="text-xs text-muted-foreground mb-1">(Includes all DEBIT transactions)</p>
-                  <p className="text-2xl font-bold text-red-600">{formatCurrency(projectedTotals.debits)}</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-500">{formatCurrency(projectedTotals.debits)}</p>
                 </div>
-                <ArrowDownCircle className="h-8 w-8 text-red-200" />
+                <ArrowDownCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
               </div>
             </CardContent>
           </Card>
@@ -355,33 +409,33 @@ export default function LedgerPage() {
       {/* Debit Components Breakdown - Only show if there are approved debits */}
       {totals.debits > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+          <Card className="border-red-200 dark:border-red-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Debit (A + B)</p>
-                  <p className="text-2xl font-bold text-red-600">{formatCurrency(totals.debits)}</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-500">{formatCurrency(totals.debits)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Component A</p>
-                  <p className="text-2xl font-bold text-orange-600">{formatCurrency(totals.debitComponentA)}</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">{formatCurrency(totals.debitComponentA)}</p>
                   <p className="text-xs text-muted-foreground mt-1">Main expense</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Component B</p>
-                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(totals.debitComponentB)}</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">{formatCurrency(totals.debitComponentB)}</p>
                   <p className="text-xs text-muted-foreground mt-1">Claimable amount</p>
                 </div>
               </div>
@@ -398,108 +452,271 @@ export default function LedgerPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Transaction Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="CREDIT">Credit</SelectItem>
-                  <SelectItem value="DEBIT">Debit</SelectItem>
-                  <SelectItem value="SELF_TRANSFER">Self Transfer</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="APPROVED">Approved</SelectItem>
-                  <SelectItem value="REJECTED">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Payment Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Payment Types</SelectItem>
-                  {paymentTypesData?.data.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name} ({type.paymentType})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={partyFilter} onValueChange={setPartyFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Party" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Parties</SelectItem>
-                  {partiesData?.data.map((party) => (
-                    <SelectItem key={party.id} value={party.id}>
-                      {party.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={headFilter} onValueChange={setHeadFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Head" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Heads</SelectItem>
-                  {headsData?.data.map((head) => (
-                    <SelectItem key={head.id} value={head.id}>
-                      {head.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by serial number, description, or party..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Select value={paymentModeFilter} onValueChange={setPaymentModeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Payment Mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Modes</SelectItem>
-                  {modesData?.data.map((mode) => (
-                    <SelectItem key={mode.id} value={mode.id}>
-                      {mode.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={componentFilter} onValueChange={setComponentFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Component Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="aOnly">A Only (0 B)</SelectItem>
-                  <SelectItem value="bOnly">B Only (0 A)</SelectItem>
-                  <SelectItem value="both">Both A and B</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
+
+            {/* All Filters in Horizontal Layout */}
+            <div className="flex flex-wrap gap-3 items-end">
+              {/* Transaction Type */}
+              <div className="flex-shrink-0 min-w-[140px]">
+                <Label htmlFor="typeFilter" className="text-xs text-muted-foreground mb-1 block">Type</Label>
+                <Combobox<TypeOption>
+                  items={typeOptions}
+                  value={typeOptions.find((t) => t.value === typeFilter) ?? null}
+                  onValueChange={(t) => setTypeFilter(t?.value ?? 'all')}
+                  itemToStringLabel={(t) => t.label}
+                  isItemEqualToValue={(a, b) => a?.value === b?.value}
+                  inputValue={typeSearch}
+                  onInputValueChange={setTypeSearch}
+                >
+                  <ComboboxInput
+                    id="typeFilter"
+                    placeholder="Select type"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No types found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(type: TypeOption) => (
+                        <ComboboxItem key={type.value} value={type}>
+                          {type.label}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Status */}
+              <div className="flex-shrink-0 min-w-[140px]">
+                <Label htmlFor="statusFilter" className="text-xs text-muted-foreground mb-1 block">Status</Label>
+                <Combobox<StatusOption>
+                  items={statusOptions}
+                  value={statusOptions.find((s) => s.value === statusFilter) ?? null}
+                  onValueChange={(s) => setStatusFilter(s?.value ?? 'all')}
+                  itemToStringLabel={(s) => s.label}
+                  isItemEqualToValue={(a, b) => a?.value === b?.value}
+                  inputValue={statusSearch}
+                  onInputValueChange={setStatusSearch}
+                >
+                  <ComboboxInput
+                    id="statusFilter"
+                    placeholder="Select status"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No status found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(status: StatusOption) => (
+                        <ComboboxItem key={status.value} value={status}>
+                          {status.label}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Payment Type */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="paymentTypeFilter" className="text-xs text-muted-foreground mb-1 block">Payment Type</Label>
+                <Combobox<PaymentType | { id: string; name: string; paymentType: string }>
+                  items={[
+                    { id: 'all', name: 'All Payment Types', paymentType: '' },
+                    ...(paymentTypesData?.data ?? []),
+                  ]}
+                  value={
+                    paymentTypeFilter === 'all'
+                      ? { id: 'all', name: 'All Payment Types', paymentType: '' }
+                      : paymentTypesData?.data?.find((t) => t.id === paymentTypeFilter) ?? null
+                  }
+                  onValueChange={(t) => setPaymentTypeFilter(t?.id ?? 'all')}
+                  itemToStringLabel={(t) => t.id === 'all' ? 'All Payment Types' : `${t.name} (${t.paymentType})`}
+                  isItemEqualToValue={(a, b) => a?.id === b?.id}
+                  inputValue={paymentTypeSearch}
+                  onInputValueChange={setPaymentTypeSearch}
+                >
+                  <ComboboxInput
+                    id="paymentTypeFilter"
+                    placeholder="Select payment type"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No payment types found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(type: PaymentType | { id: string; name: string; paymentType: string }) => (
+                        <ComboboxItem key={type.id} value={type}>
+                          {type.id === 'all' ? 'All Payment Types' : `${type.name} (${type.paymentType})`}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Party */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="partyFilter" className="text-xs text-muted-foreground mb-1 block">Party</Label>
+                <Combobox<Party | { id: string; name: string }>
+                  items={[
+                    { id: 'all', name: 'All Parties' },
+                    ...(partiesData?.data ?? []),
+                  ]}
+                  value={
+                    partyFilter === 'all'
+                      ? { id: 'all', name: 'All Parties' }
+                      : partiesData?.data?.find((p) => p.id === partyFilter) ?? null
+                  }
+                  onValueChange={(p) => setPartyFilter(p?.id ?? 'all')}
+                  itemToStringLabel={(p) => p.name}
+                  isItemEqualToValue={(a, b) => a?.id === b?.id}
+                  inputValue={partySearch}
+                  onInputValueChange={setPartySearch}
+                >
+                  <ComboboxInput
+                    id="partyFilter"
+                    placeholder="Select party"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No parties found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(party: Party | { id: string; name: string }) => (
+                        <ComboboxItem key={party.id} value={party}>
+                          {party.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Head */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="headFilter" className="text-xs text-muted-foreground mb-1 block">Head</Label>
+                <Combobox<Head | { id: string; name: string }>
+                  items={[
+                    { id: 'all', name: 'All Heads' },
+                    ...(headsData?.data ?? []),
+                  ]}
+                  value={
+                    headFilter === 'all'
+                      ? { id: 'all', name: 'All Heads' }
+                      : headsData?.data?.find((h) => h.id === headFilter) ?? null
+                  }
+                  onValueChange={(h) => setHeadFilter(h?.id ?? 'all')}
+                  itemToStringLabel={(h) => h.name}
+                  isItemEqualToValue={(a, b) => a?.id === b?.id}
+                  inputValue={headSearch}
+                  onInputValueChange={setHeadSearch}
+                >
+                  <ComboboxInput
+                    id="headFilter"
+                    placeholder="Select head"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No heads found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(head: Head | { id: string; name: string }) => (
+                        <ComboboxItem key={head.id} value={head}>
+                          {head.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Payment Mode */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="paymentModeFilter" className="text-xs text-muted-foreground mb-1 block">Payment Mode</Label>
+                <Combobox<PaymentMode | { id: string; name: string }>
+                  items={[
+                    { id: 'all', name: 'All Modes' },
+                    ...(modesData?.data ?? []),
+                  ]}
+                  value={
+                    paymentModeFilter === 'all'
+                      ? { id: 'all', name: 'All Modes' }
+                      : modesData?.data?.find((m) => m.id === paymentModeFilter) ?? null
+                  }
+                  onValueChange={(m) => setPaymentModeFilter(m?.id ?? 'all')}
+                  itemToStringLabel={(m) => m.name}
+                  isItemEqualToValue={(a, b) => a?.id === b?.id}
+                  inputValue={paymentModeSearch}
+                  onInputValueChange={setPaymentModeSearch}
+                >
+                  <ComboboxInput
+                    id="paymentModeFilter"
+                    placeholder="Select payment mode"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No payment modes found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(mode: PaymentMode | { id: string; name: string }) => (
+                        <ComboboxItem key={mode.id} value={mode}>
+                          {mode.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Component Filter */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="componentFilter" className="text-xs text-muted-foreground mb-1 block">Component</Label>
+                <Combobox<ComponentOption>
+                  items={componentOptions}
+                  value={componentOptions.find((c) => c.value === componentFilter) ?? null}
+                  onValueChange={(c) => setComponentFilter(c?.value ?? 'all')}
+                  itemToStringLabel={(c) => c.label}
+                  isItemEqualToValue={(a, b) => a?.value === b?.value}
+                  inputValue={componentSearch}
+                  onInputValueChange={setComponentSearch}
+                >
+                  <ComboboxInput
+                    id="componentFilter"
+                    placeholder="Select component"
+                    showClear
+                    className="h-9"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No components found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(component: ComponentOption) => (
+                        <ComboboxItem key={component.value} value={component}>
+                          {component.label}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
+              </div>
+
+              {/* Date Quick Buttons */}
+              <div className="flex-shrink-0 flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="h-9"
                   onClick={() => {
                     const now = new Date()
                     setStartDate(startOfMonth(now))
@@ -512,6 +729,7 @@ export default function LedgerPage() {
                   type="button"
                   variant="outline"
                   size="sm"
+                  className="h-9"
                   onClick={() => {
                     const lastMonth = subMonths(new Date(), 1)
                     setStartDate(startOfMonth(lastMonth))
@@ -521,83 +739,95 @@ export default function LedgerPage() {
                   Last Month
                 </Button>
               </div>
-              <div className="relative">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowStartCalendar(!showStartCalendar)}
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, 'dd MMM yyyy') : 'Start Date'}
-                  </Button>
+
+              {/* Start Date */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="startDate" className="text-xs text-muted-foreground mb-1 block">Start Date</Label>
+                <div className="flex items-center gap-1">
+                  <Dialog open={showStartCalendar} onOpenChange={setShowStartCalendar}>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        id="startDate"
+                        className="h-9 flex-1 justify-start text-left font-normal text-xs px-2"
+                      >
+                        <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                        {startDate ? format(startDate, 'dd MMM') : 'Start'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={startDate}
+                        onSelect={(date) => {
+                          setStartDate(date)
+                          setShowStartCalendar(false)
+                        }}
+                        initialFocus
+                      />
+                    </DialogContent>
+                  </Dialog>
                   {startDate && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      className="h-9 w-9"
                       onClick={() => {
                         setStartDate(undefined)
                         setShowStartCalendar(false)
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </Button>
                   )}
                 </div>
-                {showStartCalendar && (
-                  <div className="absolute top-full left-0 mt-2 z-50 bg-background border rounded-md shadow-lg">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date)
-                        setShowStartCalendar(false)
-                      }}
-                      initialFocus
-                    />
-                  </div>
-                )}
               </div>
-              <div className="relative">
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowEndCalendar(!showEndCalendar)}
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, 'dd MMM yyyy') : 'End Date'}
-                  </Button>
+
+              {/* End Date */}
+              <div className="flex-shrink-0 min-w-[160px]">
+                <Label htmlFor="endDate" className="text-xs text-muted-foreground mb-1 block">End Date</Label>
+                <div className="flex items-center gap-1">
+                  <Dialog open={showEndCalendar} onOpenChange={setShowEndCalendar}>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        id="endDate"
+                        className="h-9 flex-1 justify-start text-left font-normal text-xs px-2"
+                      >
+                        <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
+                        {endDate ? format(endDate, 'dd MMM') : 'End'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={endDate}
+                        onSelect={(date) => {
+                          setEndDate(date)
+                          setShowEndCalendar(false)
+                        }}
+                        initialFocus
+                      />
+                    </DialogContent>
+                  </Dialog>
                   {endDate && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      className="h-9 w-9"
                       onClick={() => {
                         setEndDate(undefined)
                         setShowEndCalendar(false)
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </Button>
                   )}
                 </div>
-                {showEndCalendar && (
-                  <div className="absolute top-full left-0 mt-2 z-50 bg-background border rounded-md shadow-lg">
-                    <Calendar
-                      mode="single"
-                      selected={endDate}
-                      onSelect={(date) => {
-                        setEndDate(date)
-                        setShowEndCalendar(false)
-                      }}
-                      initialFocus
-                    />
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -617,22 +847,22 @@ export default function LedgerPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Serial No</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Party</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Head</TableHead>
-                  <TableHead>Payment Type</TableHead>
-                  <TableHead>Payment Mode</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Serial No</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Date</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Type</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Party</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Description</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Head</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Payment Type</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Payment Mode</TableHead>
+                  <TableHead className="text-right bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Amount</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Status</TableHead>
+                  <TableHead className="bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-100 font-semibold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ledgerData?.data.map((entry) => (
-                  <TableRow key={entry.id}>
+                {ledgerData?.data.map((entry, index) => (
+                  <TableRow key={entry.id} className={index % 2 === 0 ? 'bg-zinc-50/50 dark:bg-zinc-900/20' : ''}>
                     <TableCell className="font-mono font-medium">{entry.serialNumber}</TableCell>
                     <TableCell>{format(new Date(entry.transactionDate), 'dd MMM yyyy')}</TableCell>
                     <TableCell>

@@ -22,6 +22,7 @@ interface PaymentMode {
   description: string | null
   openingBalance: number
   currentBalance: number
+  projectedBalance?: number
   isActive: boolean
   createdAt: string
 }
@@ -139,6 +140,7 @@ export default function PaymentModesPage() {
 
   // Calculate totals
   const totalBalance = modesData?.data.reduce((sum, m) => sum + m.currentBalance, 0) || 0
+  const totalProjectedBalance = modesData?.data.reduce((sum, m) => sum + (m.projectedBalance ?? m.currentBalance), 0) || 0
 
   return (
     <div className="space-y-6">
@@ -249,20 +251,40 @@ export default function PaymentModesPage() {
         </Dialog>
       </div>
 
-      {/* Summary Card */}
-      <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-emerald-100 text-sm">
-                {asOfDate ? `Total Balance as of ${format(asOfDate, 'dd MMM yyyy')}` : 'Total Balance (All Active Modes)'}
-              </p>
-              <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 text-sm">
+                  {asOfDate ? `Total Balance as of ${format(asOfDate, 'dd MMM yyyy')}` : 'Total Balance (All Active Modes)'}
+                </p>
+                <p className="text-3xl font-bold">{formatCurrency(totalBalance)}</p>
+              </div>
+              <Wallet className="h-12 w-12 text-emerald-200" />
             </div>
-            <Wallet className="h-12 w-12 text-emerald-200" />
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        {!asOfDate && (
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">
+                    Projected Balance (If All Debits Approved)
+                  </p>
+                  <p className="text-3xl font-bold">{formatCurrency(totalProjectedBalance)}</p>
+                  <p className="text-blue-100 text-xs mt-1">
+                    Difference: {formatCurrency(totalProjectedBalance - totalBalance)}
+                  </p>
+                </div>
+                <TrendingDown className="h-12 w-12 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <Card>
         <CardHeader>
@@ -279,33 +301,19 @@ export default function PaymentModesPage() {
                 className="pl-10"
               />
             </div>
-            <div className="relative">
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowCalendar(!showCalendar)}
-                  className="min-w-[200px] justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {asOfDate ? format(asOfDate, 'dd MMM yyyy') : 'Select date for opening balance'}
-                </Button>
-                {asOfDate && (
+            <div className="flex items-center gap-2">
+              <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
+                <DialogTrigger asChild>
                   <Button
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setAsOfDate(undefined)
-                      setShowCalendar(false)
-                    }}
+                    variant="outline"
+                    className="min-w-[200px] justify-start text-left font-normal"
                   >
-                    <X className="h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {asOfDate ? format(asOfDate, 'dd MMM yyyy') : 'Select date for opening balance'}
                   </Button>
-                )}
-              </div>
-              {showCalendar && (
-                <div className="absolute top-full left-0 mt-2 z-50 bg-background border rounded-md shadow-lg">
+                </DialogTrigger>
+                <DialogContent className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={asOfDate}
@@ -315,7 +323,19 @@ export default function PaymentModesPage() {
                     }}
                     initialFocus
                   />
-                </div>
+                </DialogContent>
+              </Dialog>
+              {asOfDate && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setAsOfDate(undefined)
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               )}
             </div>
           </div>
@@ -343,6 +363,9 @@ export default function PaymentModesPage() {
                   <TableHead className="text-right">
                     {asOfDate ? `Balance (as of ${format(asOfDate, 'dd MMM yyyy')})` : 'Current Balance'}
                   </TableHead>
+                  {!asOfDate && (
+                    <TableHead className="text-right">Projected Balance</TableHead>
+                  )}
                   <TableHead className="text-right">Change</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
@@ -352,6 +375,8 @@ export default function PaymentModesPage() {
                 {modesData?.data.map((mode) => {
                   const change = mode.currentBalance - mode.openingBalance
                   const isPositive = change >= 0
+                  const projectedBalance = mode.projectedBalance ?? mode.currentBalance
+                  const projectedChange = projectedBalance - mode.currentBalance
                   return (
                     <TableRow key={mode.id}>
                       <TableCell className="font-medium">{mode.name}</TableCell>
@@ -367,6 +392,20 @@ export default function PaymentModesPage() {
                       <TableCell className="text-right font-mono font-semibold">
                         {formatCurrency(mode.currentBalance)}
                       </TableCell>
+                      {!asOfDate && (
+                        <TableCell className="text-right font-mono">
+                          <div className="flex flex-col items-end">
+                            <span className={`font-semibold ${projectedChange < 0 ? 'text-red-600' : projectedChange > 0 ? 'text-green-600' : ''}`}>
+                              {formatCurrency(projectedBalance)}
+                            </span>
+                            {projectedChange !== 0 && (
+                              <span className={`text-xs ${projectedChange < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                {projectedChange < 0 ? '↓' : '↑'} {formatCurrency(Math.abs(projectedChange))}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                       <TableCell className="text-right">
                         {!asOfDate && (
                           <div
@@ -408,7 +447,7 @@ export default function PaymentModesPage() {
                 })}
                 {(!modesData?.data || modesData.data.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={asOfDate ? 8 : 9} className="text-center text-muted-foreground py-8">
                       No payment modes found
                     </TableCell>
                   </TableRow>

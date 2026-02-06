@@ -12,7 +12,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, ArrowLeftRight } from 'lucide-react'
 import { format } from 'date-fns'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
@@ -64,7 +63,6 @@ function formatCurrency(amount: number) {
 }
 
 export default function NewLedgerEntryPage() {
-  const router = useRouter()
   const queryClient = useQueryClient()
   const [transactionType, setTransactionType] = useState<'CREDIT' | 'DEBIT' | 'SELF_TRANSFER'>('CREDIT')
   const [transactionDate, setTransactionDate] = useState<Date>(new Date())
@@ -165,16 +163,86 @@ export default function NewLedgerEntryPage() {
       fromPaymentModeId?: string
       toPaymentModeId?: string
       transferAmount?: number
-    }) => apiPost('/api/finance/ledger', data),
-    onSuccess: () => {
+    }) => apiPost<{
+      id: string
+      serialNumber: string
+      transactionType: string
+      transactionDate: string
+      description: string
+      status: string
+      receivedAmount?: number
+      paymentAmount?: number
+      componentA?: number
+      componentB?: number
+      transferAmount?: number
+      party?: { name: string }
+      head?: { name: string }
+      paymentMode?: { name: string }
+      fromPaymentMode?: { name: string }
+      toPaymentMode?: { name: string }
+    }>('/api/finance/ledger', data),
+    onSuccess: (data) => {
+      // Show detailed toast
+      const entry = data
+      let message = ''
+      let details: string[] = []
+      
       if (transactionType === 'CREDIT') {
-        toast.success('Credit entry created and auto-approved!')
+        message = 'Credit entry created and auto-approved!'
+        details = [
+          `Serial: ${entry.serialNumber}`,
+          `Amount: ${formatCurrency(entry.receivedAmount || 0)}`,
+          entry.party ? `Party: ${entry.party.name}` : '',
+          entry.head ? `Head: ${entry.head.name}` : '',
+          entry.paymentMode ? `Payment Mode: ${entry.paymentMode.name}` : '',
+        ].filter(Boolean)
       } else if (transactionType === 'SELF_TRANSFER') {
-        toast.success('Self transfer entry created and auto-approved!')
+        message = 'Self transfer entry created and auto-approved!'
+        details = [
+          `Serial: ${entry.serialNumber}`,
+          `Amount: ${formatCurrency(entry.transferAmount || 0)}`,
+          entry.fromPaymentMode ? `From: ${entry.fromPaymentMode.name}` : '',
+          entry.toPaymentMode ? `To: ${entry.toPaymentMode.name}` : '',
+        ].filter(Boolean)
       } else {
-        toast.success('Debit entry created! Awaiting MD approval.')
+        message = 'Debit entry created! Awaiting MD approval.'
+        details = [
+          `Serial: ${entry.serialNumber}`,
+          `Total: ${formatCurrency(entry.paymentAmount || 0)}`,
+          entry.componentA !== undefined ? `Component A: ${formatCurrency(entry.componentA)}` : '',
+          entry.componentB !== undefined && entry.componentB > 0 ? `Component B: ${formatCurrency(entry.componentB)}` : '',
+          entry.party ? `Party: ${entry.party.name}` : '',
+          entry.head ? `Head: ${entry.head.name}` : '',
+          entry.paymentMode ? `Payment Mode: ${entry.paymentMode.name}` : '',
+        ].filter(Boolean)
       }
-      router.push('/finance/ledger')
+      
+      toast.success(message, {
+        description: details.join(' • '),
+        duration: 5000,
+      })
+      
+      // Reset form instead of redirecting
+      setTransactionDate(new Date())
+      setFormData({
+        partyId: '',
+        description: '',
+        headId: '',
+        paymentTypeId: '',
+        paymentModeId: '',
+        amount: '',
+        componentA: '',
+        componentB: '',
+        fromPaymentModeId: '',
+        toPaymentModeId: '',
+        transferAmount: '',
+      })
+      setPartySearch('')
+      setHeadSearch('')
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['ledger'] })
+      queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to create entry')

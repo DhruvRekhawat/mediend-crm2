@@ -64,6 +64,39 @@ async function getOpeningBalanceOnDate(paymentModeId: string, date: Date): Promi
   return paymentMode.openingBalance + totalCredits - totalDebits
 }
 
+/**
+ * Calculate projected balance assuming all pending debit entries are approved
+ * Projected balance = current balance - sum of all pending debit amounts
+ */
+async function getProjectedBalance(paymentModeId: string): Promise<number> {
+  const paymentMode = await prisma.paymentModeMaster.findUnique({
+    where: { id: paymentModeId },
+    select: { currentBalance: true },
+  })
+
+  if (!paymentMode) {
+    return 0
+  }
+
+  // Get sum of all pending debit entries
+  const pendingDebits = await prisma.ledgerEntry.aggregate({
+    where: {
+      paymentModeId,
+      transactionType: TransactionType.DEBIT,
+      status: LedgerStatus.PENDING,
+      isDeleted: false,
+    },
+    _sum: {
+      paymentAmount: true,
+    },
+  })
+
+  const totalPendingDebits = pendingDebits._sum.paymentAmount ?? 0
+
+  // Projected balance = current balance - pending debits (since debits reduce balance)
+  return paymentMode.currentBalance - totalPendingDebits
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
@@ -115,6 +148,18 @@ export async function GET(request: NextRequest) {
             ...mode,
             openingBalance: openingBalanceOnDate,
             currentBalance: openingBalanceOnDate, // On that date, opening = current
+            projectedBalance: openingBalanceOnDate, // For historical dates, projected = current
+          }
+        })
+      )
+    } else {
+      // Calculate projected balance for current date (assuming all pending debits are approved)
+      modesWithBalance = await Promise.all(
+        paymentModes.map(async (mode) => {
+          const projectedBalance = await getProjectedBalance(mode.id)
+          return {
+            ...mode,
+            projectedBalance,
           }
         })
       )

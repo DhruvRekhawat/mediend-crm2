@@ -70,3 +70,36 @@ export function isValidSerialNumber(serialNumber: string): boolean {
   return /^(CR|DR)-\d{4,}$/.test(serialNumber)
 }
 
+/**
+ * Generate the next serial number for a sales entry
+ * Format: SL-0001, SL-0002, etc.
+ */
+export async function generateSalesSerialNumber(): Promise<string> {
+  const prefix = 'SL'
+  
+  // Find the highest existing serial number for sales entries
+  const lastEntry = await prisma.salesEntry.findFirst({
+    orderBy: {
+      serialNumber: 'desc',
+    },
+    select: {
+      serialNumber: true,
+    },
+  })
+
+  let nextNumber = 1
+  
+  if (lastEntry?.serialNumber) {
+    // Extract the number part from the serial (e.g., "SL-0042" -> 42)
+    const match = lastEntry.serialNumber.match(/\d+$/)
+    if (match) {
+      nextNumber = parseInt(match[0], 10) + 1
+    }
+  }
+
+  // Pad the number to 4 digits
+  const paddedNumber = nextNumber.toString().padStart(4, '0')
+  
+  return `${prefix}-${paddedNumber}`
+}
+

@@ -14,8 +14,10 @@ import { Separator } from '@/components/ui/separator'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
 import { Button } from '@/components/ui/button'
-import { CalendarIcon, CheckSquare, ListTodo, MessageSquare, Calendar, Sparkles } from 'lucide-react'
+import { CalendarIcon, CheckSquare, ListTodo, MessageSquare, Calendar, Sparkles, Search } from 'lucide-react'
 import { useAI } from '@/components/ai/ai-provider'
+import { CommandPalette } from '@/components/command-palette'
+import { useState } from 'react'
 
 function AIHeaderButton() {
   const ai = useAI()
@@ -36,6 +38,7 @@ function AIHeaderButton() {
 export function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, isLoading } = useAuth()
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   
   // Don't show sidebar on login page, payslip page, or document view page
   const isLoginPage = pathname === '/login'
@@ -62,6 +65,15 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <div className="flex flex-1 items-center gap-2 justify-end">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCommandPaletteOpen(true)}
+                  className="hidden md:flex"
+                  title="Search pages (Ctrl+K)"
+                >
+                  <Search className="h-5 w-5" />
+                </Button>
                 <AIHeaderButton />
                 <Button variant="ghost" size="icon" asChild>
                   <Link href="/calendar" title="Calendar">
@@ -112,6 +124,9 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
         </SidebarProvider>
       ) : (
         <>{children}</>
+      )}
+      {shouldShowSidebar && (
+        <CommandPalette open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
       )}
     </ProtectedRoute>
   )

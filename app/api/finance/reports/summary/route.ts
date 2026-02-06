@@ -429,6 +429,102 @@ export async function GET(request: NextRequest) {
         })
       }
 
+      case 'revenue': {
+        // Revenue report - From SalesEntry grouped by project
+        const entries = await prisma.salesEntry.groupBy({
+          by: ['projectId'],
+          where: {
+            isDeleted: false,
+            ...(Object.keys(dateFilter).length > 0 && {
+              transactionDate: dateFilter,
+            }),
+          },
+          _sum: {
+            amount: true,
+          },
+          _count: true,
+        })
+
+        // Get project names
+        const projectIds = [...new Set(entries.map((e) => e.projectId).filter((id): id is string => id !== null))]
+        const projects = await prisma.projectMaster.findMany({
+          where: { id: { in: projectIds } },
+          select: { id: true, name: true, description: true },
+        })
+        const projectMap = new Map(projects.map((p) => [p.id, p]))
+
+        // Aggregate by project
+        const summary = entries
+          .filter((entry) => entry.projectId !== null)
+          .map((entry) => {
+            const project = projectMap.get(entry.projectId!)
+            return {
+              projectId: entry.projectId!,
+              projectName: project?.name || 'Unknown',
+              totalRevenue: entry._sum.amount || 0,
+              entriesCount: entry._count,
+            }
+          })
+          .sort((a, b) => b.totalRevenue - a.totalRevenue)
+
+        return successResponse({
+          type: 'revenue',
+          data: summary,
+          totals: {
+            totalRevenue: summary.reduce((sum, s) => sum + s.totalRevenue, 0),
+            entriesCount: summary.reduce((sum, s) => sum + s.entriesCount, 0),
+          },
+        })
+      }
+
+      case 'profit-loss': {
+        // P/L Report - Revenue (from SalesEntry by Project) minus Expenses (from LedgerEntry componentA by Head)
+        // Note: Revenue uses Project categorization, expenses use Head categorization
+        // So we compare totals only, not per-item
+        
+        // Get total revenue from SalesEntry (all projects)
+        const revenueEntries = await prisma.salesEntry.aggregate({
+          where: {
+            isDeleted: false,
+            ...(Object.keys(dateFilter).length > 0 && {
+              transactionDate: dateFilter,
+            }),
+          },
+          _sum: {
+            amount: true,
+          },
+          _count: true,
+        })
+
+        // Get total expenses from LedgerEntry (approved DEBIT entries, componentA, all heads)
+        const expenseEntries = await prisma.ledgerEntry.aggregate({
+          where: {
+            status: LedgerStatus.APPROVED,
+            transactionType: TransactionType.DEBIT,
+            componentA: { gt: 0 },
+            ...(Object.keys(dateFilter).length > 0 && {
+              transactionDate: dateFilter,
+            }),
+          },
+          _sum: {
+            componentA: true,
+          },
+        })
+
+        const totalRevenue = revenueEntries._sum.amount || 0
+        const totalExpenses = expenseEntries._sum.componentA || 0
+
+        return successResponse({
+          type: 'profit-loss',
+          data: [], // Empty array since we're showing totals only
+          totals: {
+            totalRevenue,
+            totalExpenses,
+            netProfitLoss: totalRevenue - totalExpenses,
+          },
+        })
+      }
+
       default:
         return errorResponse('Invalid report type', 400)
     }

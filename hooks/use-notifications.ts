@@ -60,3 +60,17 @@ export function useMarkNotificationRead() {
     },
   })
 }
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      return apiPatch<{ count: number }>('/api/notifications/read-all', {})
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
+    },
+  })
+}
