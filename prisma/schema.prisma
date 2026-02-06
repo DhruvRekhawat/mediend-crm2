@@ -1080,6 +1080,7 @@ model LedgerEntry {
   editApprovedById   String?
   editApprovedBy     User?             @relation("LedgerEditApprover", fields: [editApprovedById], references: [id])
   editApprovedAt     DateTime?
+  editCount          Int               @default(0) // Number of completed edit cycles (max 5)
   createdById        String
   createdBy          User              @relation("LedgerCreator", fields: [createdById], references: [id])
   approvedById       String?

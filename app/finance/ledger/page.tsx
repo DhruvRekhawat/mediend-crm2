@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X, ArrowLeftRight } from 'lucide-react'
-import { format } from 'date-fns'
+import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import Link from 'next/link'
 import { Calendar } from '@/components/ui/calendar'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -119,8 +119,8 @@ export default function LedgerPage() {
   const [paymentModeFilter, setPaymentModeFilter] = useState<string>('all')
   const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>('all')
   const [componentFilter, setComponentFilter] = useState<string>('all')
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
+  const [startDate, setStartDate] = useState<Date | undefined>(startOfMonth(new Date()))
+  const [endDate, setEndDate] = useState<Date | undefined>(endOfMonth(new Date()))
   const [showStartCalendar, setShowStartCalendar] = useState(false)
   const [showEndCalendar, setShowEndCalendar] = useState(false)
   const [showProjectedTotals, setShowProjectedTotals] = useState(false)
@@ -152,6 +152,7 @@ export default function LedgerPage() {
         const day = String(endDate.getDate()).padStart(2, '0')
         params.set('endDate', `${year}-${month}-${day}`)
       }
+      params.set('limit', '10000')
       return apiGet<LedgerResponse>(`/api/finance/ledger?${params.toString()}`)
     },
   })
@@ -494,6 +495,32 @@ export default function LedgerPage() {
                   <SelectItem value="both">Both A and B</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const now = new Date()
+                    setStartDate(startOfMonth(now))
+                    setEndDate(endOfMonth(now))
+                  }}
+                >
+                  This Month
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const lastMonth = subMonths(new Date(), 1)
+                    setStartDate(startOfMonth(lastMonth))
+                    setEndDate(endOfMonth(lastMonth))
+                  }}
+                >
+                  Last Month
+                </Button>
+              </div>
               <div className="relative">
                 <div className="flex items-center gap-2">
                   <Button

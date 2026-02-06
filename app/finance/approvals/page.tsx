@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, XCircle, Search, RotateCcw } from 'lucide-react'
+import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, Search, RotateCcw } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -98,63 +98,6 @@ function formatCurrency(amount: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount)
-}
-
-const UNDO_DURATION_MS = 2 * 60 * 1000 // 2 minutes
-
-function ApprovalUndoToast({
-  message,
-  onUndo,
-  onDismiss,
-}: {
-  message: string
-  onUndo: () => void
-  onDismiss: () => void
-}) {
-  const [elapsed, setElapsed] = useState(0)
-  const startRef = useRef(Date.now())
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed(Date.now() - startRef.current)
-    }, 50)
-    return () => clearInterval(interval)
-  }, [])
-
-  const remainingPercent = Math.max(0, 1 - elapsed / UNDO_DURATION_MS) * 100
-
-  return (
-    <div className="relative w-[420px] overflow-hidden rounded-lg border-0 bg-green-600 px-4 py-3 shadow-lg">
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="absolute right-2 top-2 rounded p-1 text-white/80 transition-colors hover:bg-white/20 hover:text-white"
-        aria-label="Dismiss"
-      >
-        <XCircle className="h-4 w-4" />
-      </button>
-      <div className="flex items-center justify-between gap-4 pr-8">
-        <p className="text-sm font-medium text-white">{message}</p>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDismiss()
-            onUndo()
-          }}
-          className="shrink-0 rounded-md bg-white/20 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/30"
-        >
-          Undo
-        </button>
-      </div>
-      <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/20">
-        <div
-          className="h-full rounded-full bg-white/90 transition-all duration-75 ease-linear"
-          style={{ width: `${remainingPercent}%` }}
-        />
-      </div>
-    </div>
-  )
 }
 
 interface SwipeCardProps {
@@ -516,7 +459,6 @@ export default function ApprovalsPage() {
   const [selectedEntry, setSelectedEntry] = useState<LedgerEntry | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
-  const [approvalReason, setApprovalReason] = useState('')
   const [dialogAction, setDialogAction] = useState<'approve' | 'reject'>('approve')
   const [dialogType, setDialogType] = useState<'debit' | 'edit'>('debit')
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
@@ -644,20 +586,6 @@ export default function ApprovalsPage() {
       setSelectedEntry(null)
       setRejectionReason('')
 
-      const message = variables.action === 'approve'
-        ? 'Debit entry approved! Balance has been updated.'
-        : 'Debit entry rejected.'
-
-      toast.custom(
-        (toastId) => (
-          <ApprovalUndoToast
-            message={message}
-            onUndo={() => undoMutation.mutate(variables.id)}
-            onDismiss={() => toast.dismiss(toastId)}
-          />
-        ),
-        { duration: 120000 }
-      )
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to process approval')
@@ -678,11 +606,6 @@ export default function ApprovalsPage() {
       setIsDialogOpen(false)
       setRejectionReason('')
       
-      if (variables.action === 'approve') {
-        toast.success(`${variables.ids.length} entries approved successfully!`)
-      } else {
-        toast.success(`${variables.ids.length} entries rejected.`)
-      }
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to process bulk approval')
@@ -691,24 +614,11 @@ export default function ApprovalsPage() {
 
   const approveEditMutation = useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
-      return apiPost(`/api/finance/ledger/${id}/approve-edit`, { reason })
+      return apiPost(`/api/finance/ledger/${id}/approve-edit`, { reason: reason || '' })
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
-      setIsDialogOpen(false)
-      setSelectedEntry(null)
-      setApprovalReason('')
-      toast.custom(
-        (toastId) => (
-          <ApprovalUndoToast
-            message="Edit request approved"
-            onUndo={() => undoMutation.mutate(variables.id)}
-            onDismiss={() => toast.dismiss(toastId)}
-          />
-        ),
-        { duration: 120000 }
-      )
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to approve edit request')
@@ -725,16 +635,6 @@ export default function ApprovalsPage() {
       setIsDialogOpen(false)
       setSelectedEntry(null)
       setRejectionReason('')
-      toast.custom(
-        (toastId) => (
-          <ApprovalUndoToast
-            message="Edit request rejected"
-            onUndo={() => undoMutation.mutate(variables.id)}
-            onDismiss={() => toast.dismiss(toastId)}
-          />
-        ),
-        { duration: 120000 }
-      )
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to reject edit request')
@@ -750,7 +650,6 @@ export default function ApprovalsPage() {
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
-      toast.success('Approval undone - entry is now pending again')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to undo')
@@ -758,10 +657,15 @@ export default function ApprovalsPage() {
   })
 
   const handleApprove = (entry: LedgerEntry, type: 'debit' | 'edit' = 'debit') => {
-    setSelectedEntry(entry)
-    setDialogAction('approve')
-    setDialogType(type)
-    setIsDialogOpen(true)
+    if (type === 'debit') {
+      approveMutation.mutate({ id: entry.id, action: 'approve' })
+      return
+    }
+    // Edit request - approve directly without modal
+    approveEditMutation.mutate({
+      id: entry.id,
+      reason: '',
+    })
   }
 
   const handleReject = (entry: LedgerEntry, type: 'debit' | 'edit' = 'debit') => {
@@ -769,7 +673,6 @@ export default function ApprovalsPage() {
     setDialogAction('reject')
     setDialogType(type)
     setRejectionReason('')
-    setApprovalReason('')
     setIsDialogOpen(true)
   }
 
@@ -794,26 +697,15 @@ export default function ApprovalsPage() {
         rejectionReason: dialogAction === 'reject' ? rejectionReason.trim() : undefined,
       })
     } else {
-      // Edit request
-      if (dialogAction === 'approve') {
-        if (!approvalReason.trim()) {
-          toast.error('Approval reason is required')
-          return
-        }
-        approveEditMutation.mutate({
-          id: selectedEntry.id,
-          reason: approvalReason.trim(),
-        })
-      } else {
-        if (!rejectionReason.trim()) {
-          toast.error('Rejection reason is required')
-          return
-        }
-        rejectEditMutation.mutate({
-          id: selectedEntry.id,
-          reason: rejectionReason.trim(),
-        })
+      // Edit request - only reject goes through dialog (approve is handled directly)
+      if (!rejectionReason.trim()) {
+        toast.error('Rejection reason is required')
+        return
       }
+      rejectEditMutation.mutate({
+        id: selectedEntry.id,
+        reason: rejectionReason.trim(),
+      })
     }
   }
 
@@ -1268,7 +1160,6 @@ export default function ApprovalsPage() {
         if (!open) {
           setSelectedEntry(null)
           setRejectionReason('')
-          setApprovalReason('')
         }
       }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1277,20 +1168,18 @@ export default function ApprovalsPage() {
               {!selectedEntry && selectedIds.size > 0
                 ? `Reject ${selectedIds.size} Entries`
                 : dialogType === 'edit' 
-                ? (dialogAction === 'approve' ? 'Approve Edit Request' : 'Reject Edit Request')
+                ? 'Reject Edit Request'
                 : (dialogAction === 'approve' ? 'Confirm Approval' : 'Reject Entry')}
             </DialogTitle>
-            <DialogDescription>
-              {!selectedEntry && selectedIds.size > 0
-                ? `You are about to reject ${selectedIds.size} entries. Please provide a reason.`
-                : dialogType === 'edit'
-                ? (dialogAction === 'approve'
-                    ? 'Review the requested changes and provide an approval reason.'
-                    : 'Please provide a reason for rejecting this edit request.')
-                : (dialogAction === 'approve'
-                    ? 'Are you sure you want to approve this debit entry?'
-                    : 'Please provide a reason for rejection.')}
-            </DialogDescription>
+          <DialogDescription>
+            {!selectedEntry && selectedIds.size > 0
+              ? `You are about to reject ${selectedIds.size} entries. Please provide a reason.`
+              : dialogType === 'edit'
+              ? 'Please provide a reason for rejecting this edit request.'
+              : (dialogAction === 'approve'
+                  ? 'Are you sure you want to approve this debit entry?'
+                  : 'Please provide a reason for rejection.')}
+          </DialogDescription>
           </DialogHeader>
 
           {!selectedEntry && selectedIds.size > 0 ? (
@@ -1386,20 +1275,6 @@ export default function ApprovalsPage() {
                 </div>
               )}
 
-              {dialogAction === 'approve' && dialogType === 'edit' && (
-                <div className="space-y-2">
-                  <Label htmlFor="approvalReason">Approval Reason *</Label>
-                  <Textarea
-                    id="approvalReason"
-                    value={approvalReason}
-                    onChange={(e) => setApprovalReason(e.target.value)}
-                    placeholder="Explain why you are approving this edit request..."
-                    rows={3}
-                    required
-                  />
-                </div>
-              )}
-
               {dialogAction === 'reject' && (
                 <div className="space-y-2">
                   <Label htmlFor="rejectionReason">Rejection Reason *</Label>
@@ -1421,7 +1296,6 @@ export default function ApprovalsPage() {
                     setIsDialogOpen(false)
                     setSelectedEntry(null)
                     setRejectionReason('')
-                    setApprovalReason('')
                   }}
                 >
                   Cancel

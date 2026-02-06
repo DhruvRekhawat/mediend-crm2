@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const componentFilter = searchParams.get('componentFilter') // 'all', 'aOnly', 'bOnly', 'both'
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = parseInt(searchParams.get('limit') || '10000')
 
     const where: Prisma.LedgerEntryWhereInput = {
       isDeleted: false, // Exclude deleted entries by default

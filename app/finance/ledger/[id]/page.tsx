@@ -73,6 +73,7 @@ interface LedgerEntry {
     name: string
     email: string
   } | null
+  editCount: number
   party: {
     id: string
     name: string
@@ -146,7 +147,6 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   
@@ -156,10 +156,18 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
     partyId: '',
     headId: '',
     paymentTypeId: '',
+    transactionType: 'DEBIT' as 'CREDIT' | 'DEBIT' | 'SELF_TRANSFER',
+    paymentAmount: 0,
+    componentA: 0,
+    componentB: 0,
+    receivedAmount: 0,
+    transferAmount: 0,
+    paymentModeId: '',
+    fromPaymentModeId: '',
+    toPaymentModeId: '',
     reason: '',
   })
 
-  const [approvalReason, setApprovalReason] = useState('')
   const [rejectionReason, setRejectionReason] = useState('')
   const [deleteReason, setDeleteReason] = useState('')
 
@@ -179,6 +187,16 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
     queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&limit=100'),
   })
 
+  const { data: paymentModesData } = useQuery({
+    queryKey: ['payment-modes-list'],
+    queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=100'),
+  })
+
+  interface PaymentMode {
+    id: string
+    name: string
+  }
+
   const { data: paymentTypesData } = useQuery({
     queryKey: ['payment-types-list'],
     queryFn: () => apiGet<{ data: PaymentType[] }>('/api/finance/payment-types?isActive=true&limit=100'),
@@ -190,7 +208,23 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ledger-entry', id] })
       setEditDialogOpen(false)
-      setEditFormData({ description: '', transactionDate: '', partyId: '', headId: '', paymentTypeId: '', reason: '' })
+      setEditFormData({
+        description: '',
+        transactionDate: '',
+        partyId: '',
+        headId: '',
+        paymentTypeId: '',
+        transactionType: 'DEBIT' as 'CREDIT' | 'DEBIT' | 'SELF_TRANSFER',
+        paymentAmount: 0,
+        componentA: 0,
+        componentB: 0,
+        receivedAmount: 0,
+        transferAmount: 0,
+        paymentModeId: '',
+        fromPaymentModeId: '',
+        toPaymentModeId: '',
+        reason: '',
+      })
       toast.success('Edit request submitted successfully')
     },
     onError: (error: Error) => {
@@ -203,9 +237,7 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
       apiPost(`/api/finance/ledger/${id}/approve-edit`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ledger-entry', id] })
-      setApproveDialogOpen(false)
-      setApprovalReason('')
-      toast.success('Edit request approved')
+      toast.success('Edit request approved and applied')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to approve edit request')
@@ -223,17 +255,6 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to reject edit request')
-    },
-  })
-
-  const applyEditMutation = useMutation({
-    mutationFn: () => apiPatch(`/api/finance/ledger/${id}`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['ledger-entry', id] })
-      toast.success('Changes applied successfully')
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to apply changes')
     },
   })
 
@@ -296,20 +317,66 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
     }
 
     const changes: Record<string, unknown> = {}
-    if (editFormData.description && editFormData.description !== entry?.description) {
+    
+    // Basic fields
+    if (editFormData.description !== entry?.description) {
       changes.description = editFormData.description
     }
-    if (editFormData.transactionDate && editFormData.transactionDate !== entry?.transactionDate) {
+    
+    // Compare dates properly (entry has full datetime, form has date only)
+    const entryDateStr = entry?.transactionDate ? entry.transactionDate.split('T')[0] : ''
+    if (editFormData.transactionDate && editFormData.transactionDate !== entryDateStr) {
       changes.transactionDate = editFormData.transactionDate
     }
-    if (editFormData.partyId && editFormData.partyId !== entry?.party?.id) {
-      changes.partyId = editFormData.partyId
+    
+    if (editFormData.partyId !== entry?.party?.id) {
+      changes.partyId = editFormData.partyId || null
     }
-    if (editFormData.headId && editFormData.headId !== entry?.head?.id) {
-      changes.headId = editFormData.headId
+    
+    if (editFormData.headId !== entry?.head?.id) {
+      changes.headId = editFormData.headId || null
     }
-    if (editFormData.paymentTypeId && editFormData.paymentTypeId !== entry?.paymentType?.id) {
-      changes.paymentTypeId = editFormData.paymentTypeId
+    
+    if (editFormData.paymentTypeId !== entry?.paymentType?.id) {
+      changes.paymentTypeId = editFormData.paymentTypeId || null
+    }
+    
+    // Transaction type
+    if (editFormData.transactionType !== entry?.transactionType) {
+      changes.transactionType = editFormData.transactionType
+    }
+    
+    // Amount fields based on transaction type
+    if (editFormData.transactionType === 'DEBIT') {
+      if (editFormData.paymentAmount !== (entry?.paymentAmount || 0)) {
+        changes.paymentAmount = editFormData.paymentAmount
+      }
+      if (editFormData.componentA !== (entry?.componentA || 0)) {
+        changes.componentA = editFormData.componentA
+      }
+      if (editFormData.componentB !== (entry?.componentB || 0)) {
+        changes.componentB = editFormData.componentB
+      }
+      if (editFormData.paymentModeId !== entry?.paymentMode?.id) {
+        changes.paymentModeId = editFormData.paymentModeId || null
+      }
+    } else if (editFormData.transactionType === 'CREDIT') {
+      if (editFormData.receivedAmount !== (entry?.receivedAmount || 0)) {
+        changes.receivedAmount = editFormData.receivedAmount
+      }
+      if (editFormData.paymentModeId !== entry?.paymentMode?.id) {
+        changes.paymentModeId = editFormData.paymentModeId || null
+      }
+    } else if (editFormData.transactionType === 'SELF_TRANSFER') {
+      if (editFormData.transferAmount !== (entry?.transferAmount || 0)) {
+        changes.transferAmount = editFormData.transferAmount
+      }
+      if (editFormData.fromPaymentModeId !== entry?.fromPaymentMode?.id) {
+        changes.fromPaymentModeId = editFormData.fromPaymentModeId || null
+      }
+      if (editFormData.toPaymentModeId !== entry?.toPaymentMode?.id) {
+        changes.toPaymentModeId = editFormData.toPaymentModeId || null
+      }
     }
 
     if (Object.keys(changes).length === 0) {
@@ -324,11 +391,7 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
   }
 
   const handleApproveEdit = () => {
-    if (!approvalReason.trim()) {
-      toast.error('Please provide an approval reason')
-      return
-    }
-    approveEditMutation.mutate({ reason: approvalReason })
+    approveEditMutation.mutate({ reason: '' })
   }
 
   const handleRejectEdit = () => {
@@ -395,9 +458,8 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
   const isCredit = entry.transactionType === 'CREDIT'
   const isSelfTransfer = entry.transactionType === 'SELF_TRANSFER'
   const amount = isCredit ? entry.receivedAmount || 0 : isSelfTransfer ? entry.transferAmount || 0 : entry.paymentAmount || 0
-  const canRequestEdit = isFinance && entry.status === 'APPROVED' && !entry.editRequestStatus
+  const canRequestEdit = isFinance && entry.status === 'APPROVED' && entry.editRequestStatus !== 'PENDING' && entry.editCount < 5
   const canApproveEdit = isAdmin && entry.editRequestStatus === 'PENDING'
-  const canApplyEdit = isFinance && entry.editRequestStatus === 'APPROVED'
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto px-4 sm:px-0 pb-24 sm:pb-6">
@@ -417,6 +479,11 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                   Edit {entry.editRequestStatus}
                 </Badge>
               )}
+              {entry.editCount > 0 && (
+                <Badge variant="secondary">
+                  Edited {entry.editCount}/5
+                </Badge>
+              )}
             </div>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">Ledger Entry Details</p>
           </div>
@@ -433,6 +500,15 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                     partyId: entry.party?.id || '',
                     headId: entry.head?.id || '',
                     paymentTypeId: entry.paymentType?.id || '',
+                    transactionType: entry.transactionType,
+                    paymentAmount: entry.paymentAmount || 0,
+                    componentA: entry.componentA || 0,
+                    componentB: entry.componentB || 0,
+                    receivedAmount: entry.receivedAmount || 0,
+                    transferAmount: entry.transferAmount || 0,
+                    paymentModeId: entry.paymentMode?.id || '',
+                    fromPaymentModeId: entry.fromPaymentMode?.id || '',
+                    toPaymentModeId: entry.toPaymentMode?.id || '',
                     reason: '',
                   })
                 }}>
@@ -509,6 +585,143 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                     </Select>
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="transactionType">Transaction Type</Label>
+                    <Select value={editFormData.transactionType} onValueChange={(value: 'CREDIT' | 'DEBIT' | 'SELF_TRANSFER') => setEditFormData({ ...editFormData, transactionType: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CREDIT">Credit</SelectItem>
+                        <SelectItem value="DEBIT">Debit</SelectItem>
+                        <SelectItem value="SELF_TRANSFER">Self Transfer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {editFormData.transactionType === 'DEBIT' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentAmount">Payment Amount</Label>
+                        <Input
+                          id="paymentAmount"
+                          type="number"
+                          step="0.01"
+                          value={editFormData.paymentAmount}
+                          onChange={(e) => setEditFormData({ ...editFormData, paymentAmount: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="componentA">Component A</Label>
+                          <Input
+                            id="componentA"
+                            type="number"
+                            step="0.01"
+                            value={editFormData.componentA}
+                            onChange={(e) => setEditFormData({ ...editFormData, componentA: parseFloat(e.target.value) || 0 })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="componentB">Component B</Label>
+                          <Input
+                            id="componentB"
+                            type="number"
+                            step="0.01"
+                            value={editFormData.componentB}
+                            onChange={(e) => setEditFormData({ ...editFormData, componentB: parseFloat(e.target.value) || 0 })}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentModeId">Payment Mode</Label>
+                        <Select value={editFormData.paymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, paymentModeId: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentModesData?.data.map((mode) => (
+                              <SelectItem key={mode.id} value={mode.id}>
+                                {mode.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+                  {editFormData.transactionType === 'CREDIT' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="receivedAmount">Received Amount</Label>
+                        <Input
+                          id="receivedAmount"
+                          type="number"
+                          step="0.01"
+                          value={editFormData.receivedAmount}
+                          onChange={(e) => setEditFormData({ ...editFormData, receivedAmount: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="paymentModeId">Payment Mode</Label>
+                        <Select value={editFormData.paymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, paymentModeId: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentModesData?.data.map((mode) => (
+                              <SelectItem key={mode.id} value={mode.id}>
+                                {mode.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+                  {editFormData.transactionType === 'SELF_TRANSFER' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="transferAmount">Transfer Amount</Label>
+                        <Input
+                          id="transferAmount"
+                          type="number"
+                          step="0.01"
+                          value={editFormData.transferAmount}
+                          onChange={(e) => setEditFormData({ ...editFormData, transferAmount: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="fromPaymentModeId">From Payment Mode</Label>
+                        <Select value={editFormData.fromPaymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, fromPaymentModeId: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentModesData?.data.map((mode) => (
+                              <SelectItem key={mode.id} value={mode.id}>
+                                {mode.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="toPaymentModeId">To Payment Mode</Label>
+                        <Select value={editFormData.toPaymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, toPaymentModeId: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentModesData?.data.map((mode) => (
+                              <SelectItem key={mode.id} value={mode.id}>
+                                {mode.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
+                  <div className="space-y-2">
                     <Label htmlFor="reason">Reason for Edit *</Label>
                     <Textarea
                       id="reason"
@@ -533,53 +746,15 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
           )}
           {canApproveEdit && (
             <>
-              <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="default" className="bg-green-600 hover:bg-green-700">
-                    <Check className="h-4 w-4 mr-2" />
-                    Approve Edit
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Approve Edit Request</DialogTitle>
-                    <DialogDescription>Provide a reason for approving this edit request</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    {entry.editRequestData && (
-                      <div className="p-3 bg-muted rounded-lg">
-                        <p className="text-sm font-medium mb-2">Requested Changes:</p>
-                        <pre className="text-xs overflow-auto">{JSON.stringify(entry.editRequestData, null, 2)}</pre>
-                      </div>
-                    )}
-                    {entry.editRequestReason && (
-                      <div className="p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm font-medium mb-1">Request Reason:</p>
-                        <p className="text-sm">{entry.editRequestReason}</p>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <Label htmlFor="approvalReason">Approval Reason *</Label>
-                      <Textarea
-                        id="approvalReason"
-                        value={approvalReason}
-                        onChange={(e) => setApprovalReason(e.target.value)}
-                        placeholder="Explain why you are approving this edit..."
-                        rows={3}
-                        required
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleApproveEdit} disabled={approveEditMutation.isPending} className="bg-green-600 hover:bg-green-700">
-                        Approve
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button 
+                variant="default" 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleApproveEdit}
+                disabled={approveEditMutation.isPending}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Approve Edit
+              </Button>
               <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="destructive" size="sm">
@@ -623,13 +798,6 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                 </DialogContent>
               </Dialog>
             </>
-          )}
-          {canApplyEdit && (
-            <Button onClick={() => applyEditMutation.mutate()} disabled={applyEditMutation.isPending} size="sm" className="bg-green-600 hover:bg-green-700">
-              <Check className="h-4 w-4 mr-2" />
-              <span className="hidden md:inline">Apply Approved Edit</span>
-              <span className="md:hidden">Apply</span>
-            </Button>
           )}
           {isAdmin && !entry.isDeleted && (
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -683,6 +851,15 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                   partyId: entry.party?.id || '',
                   headId: entry.head?.id || '',
                   paymentTypeId: entry.paymentType?.id || '',
+                  transactionType: entry.transactionType,
+                  paymentAmount: entry.paymentAmount || 0,
+                  componentA: entry.componentA || 0,
+                  componentB: entry.componentB || 0,
+                  receivedAmount: entry.receivedAmount || 0,
+                  transferAmount: entry.transferAmount || 0,
+                  paymentModeId: entry.paymentMode?.id || '',
+                  fromPaymentModeId: entry.fromPaymentMode?.id || '',
+                  toPaymentModeId: entry.toPaymentMode?.id || '',
                   reason: '',
                 })
               }}>
@@ -759,6 +936,143 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="transactionType-mobile">Transaction Type</Label>
+                  <Select value={editFormData.transactionType} onValueChange={(value: 'CREDIT' | 'DEBIT' | 'SELF_TRANSFER') => setEditFormData({ ...editFormData, transactionType: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CREDIT">Credit</SelectItem>
+                      <SelectItem value="DEBIT">Debit</SelectItem>
+                      <SelectItem value="SELF_TRANSFER">Self Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editFormData.transactionType === 'DEBIT' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentAmount-mobile">Payment Amount</Label>
+                      <Input
+                        id="paymentAmount-mobile"
+                        type="number"
+                        step="0.01"
+                        value={editFormData.paymentAmount}
+                        onChange={(e) => setEditFormData({ ...editFormData, paymentAmount: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="componentA-mobile">Component A</Label>
+                        <Input
+                          id="componentA-mobile"
+                          type="number"
+                          step="0.01"
+                          value={editFormData.componentA}
+                          onChange={(e) => setEditFormData({ ...editFormData, componentA: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="componentB-mobile">Component B</Label>
+                        <Input
+                          id="componentB-mobile"
+                          type="number"
+                          step="0.01"
+                          value={editFormData.componentB}
+                          onChange={(e) => setEditFormData({ ...editFormData, componentB: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentModeId-mobile">Payment Mode</Label>
+                      <Select value={editFormData.paymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, paymentModeId: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentModesData?.data.map((mode) => (
+                            <SelectItem key={mode.id} value={mode.id}>
+                              {mode.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+                {editFormData.transactionType === 'CREDIT' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="receivedAmount-mobile">Received Amount</Label>
+                      <Input
+                        id="receivedAmount-mobile"
+                        type="number"
+                        step="0.01"
+                        value={editFormData.receivedAmount}
+                        onChange={(e) => setEditFormData({ ...editFormData, receivedAmount: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="paymentModeId-mobile">Payment Mode</Label>
+                      <Select value={editFormData.paymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, paymentModeId: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentModesData?.data.map((mode) => (
+                            <SelectItem key={mode.id} value={mode.id}>
+                              {mode.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+                {editFormData.transactionType === 'SELF_TRANSFER' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="transferAmount-mobile">Transfer Amount</Label>
+                      <Input
+                        id="transferAmount-mobile"
+                        type="number"
+                        step="0.01"
+                        value={editFormData.transferAmount}
+                        onChange={(e) => setEditFormData({ ...editFormData, transferAmount: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="fromPaymentModeId-mobile">From Payment Mode</Label>
+                      <Select value={editFormData.fromPaymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, fromPaymentModeId: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentModesData?.data.map((mode) => (
+                            <SelectItem key={mode.id} value={mode.id}>
+                              {mode.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="toPaymentModeId-mobile">To Payment Mode</Label>
+                      <Select value={editFormData.toPaymentModeId} onValueChange={(value) => setEditFormData({ ...editFormData, toPaymentModeId: value })}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentModesData?.data.map((mode) => (
+                            <SelectItem key={mode.id} value={mode.id}>
+                              {mode.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
+                <div className="space-y-2">
                   <Label htmlFor="reason-mobile">Reason for Edit *</Label>
                   <Textarea
                     id="reason-mobile"
@@ -783,53 +1097,15 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
         )}
         {canApproveEdit && (
           <>
-            <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="default" className="w-full bg-green-600 hover:bg-green-700">
-                  <Check className="h-4 w-4 mr-2" />
-                  Approve Edit
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Approve Edit Request</DialogTitle>
-                  <DialogDescription>Provide a reason for approving this edit request</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {entry.editRequestData && (
-                    <div className="p-3 bg-muted rounded-lg">
-                      <p className="text-sm font-medium mb-2">Requested Changes:</p>
-                      <pre className="text-xs overflow-auto">{JSON.stringify(entry.editRequestData, null, 2)}</pre>
-                    </div>
-                  )}
-                  {entry.editRequestReason && (
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm font-medium mb-1">Request Reason:</p>
-                      <p className="text-sm">{entry.editRequestReason}</p>
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="approvalReason-mobile">Approval Reason *</Label>
-                    <Textarea
-                      id="approvalReason-mobile"
-                      value={approvalReason}
-                      onChange={(e) => setApprovalReason(e.target.value)}
-                      placeholder="Explain why you are approving this edit..."
-                      rows={3}
-                      required
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleApproveEdit} disabled={approveEditMutation.isPending} className="bg-green-600 hover:bg-green-700">
-                      Approve
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              variant="default" 
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={handleApproveEdit}
+              disabled={approveEditMutation.isPending}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Approve Edit
+            </Button>
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="destructive" className="w-full">
@@ -872,12 +1148,6 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
               </DialogContent>
             </Dialog>
           </>
-        )}
-        {canApplyEdit && (
-          <Button onClick={() => applyEditMutation.mutate()} disabled={applyEditMutation.isPending} className="w-full bg-green-600 hover:bg-green-700">
-            <Check className="h-4 w-4 mr-2" />
-            Apply Approved Edit
-          </Button>
         )}
         {isAdmin && !entry.isDeleted && (
           <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

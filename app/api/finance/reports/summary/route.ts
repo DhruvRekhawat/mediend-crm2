@@ -227,6 +227,7 @@ export async function GET(request: NextRequest) {
           },
           _sum: {
             paymentAmount: true,
+            componentA: true,
             receivedAmount: true,
           },
           _count: true,
@@ -248,7 +249,7 @@ export async function GET(request: NextRequest) {
             headName: string
             department: string | null
             totalCredits: number
-            totalDebits: number
+            totalExpenses: number
             entriesCount: number
           }
         >()
@@ -264,14 +265,14 @@ export async function GET(request: NextRequest) {
             headName: head.name,
             department: head.department,
             totalCredits: 0,
-            totalDebits: 0,
+            totalExpenses: 0,
             entriesCount: 0,
           }
 
           if (entry.transactionType === TransactionType.CREDIT) {
             existing.totalCredits += entry._sum.receivedAmount || 0
           } else if (entry.transactionType === TransactionType.DEBIT) {
-            existing.totalDebits += entry._sum.paymentAmount || 0
+            existing.totalExpenses += entry._sum.componentA || 0
           }
           existing.entriesCount += entry._count
 
@@ -280,7 +281,7 @@ export async function GET(request: NextRequest) {
 
         const summary = Array.from(headData.values()).map((h) => ({
           ...h,
-          netAmount: h.totalCredits - h.totalDebits,
+          netAmount: h.totalCredits - h.totalExpenses,
         }))
 
         return successResponse({
@@ -288,7 +289,58 @@ export async function GET(request: NextRequest) {
           data: summary,
           totals: {
             totalCredits: summary.reduce((sum, s) => sum + s.totalCredits, 0),
-            totalDebits: summary.reduce((sum, s) => sum + s.totalDebits, 0),
+            totalExpenses: summary.reduce((sum, s) => sum + s.totalExpenses, 0),
+            entriesCount: summary.reduce((sum, s) => sum + s.entriesCount, 0),
+          },
+        })
+      }
+
+      case 'expense-report': {
+        // Expense report - Only DEBIT entries with componentA > 0, no credits
+        const entries = await prisma.ledgerEntry.groupBy({
+          by: ['headId'],
+          where: {
+            status: LedgerStatus.APPROVED,
+            transactionType: TransactionType.DEBIT,
+            componentA: { gt: 0 },
+            ...(Object.keys(dateFilter).length > 0 && {
+              transactionDate: dateFilter,
+            }),
+          },
+          _sum: {
+            componentA: true,
+          },
+          _count: true,
+        })
+
+        // Get head names
+        const headIds = [...new Set(entries.map((e) => e.headId).filter((id): id is string => id !== null))]
+        const heads = await prisma.headMaster.findMany({
+          where: { id: { in: headIds } },
+          select: { id: true, name: true, department: true },
+        })
+        const headMap = new Map(heads.map((h) => [h.id, h]))
+
+        // Aggregate by head
+        const summary = entries
+          .filter((entry) => entry.headId !== null)
+          .map((entry) => {
+            const head = headMap.get(entry.headId!)
+            return {
+              headId: entry.headId!,
+              headName: head?.name || 'Unknown',
+              department: head?.department || null,
+              totalExpenses: entry._sum.componentA || 0,
+              entriesCount: entry._count,
+            }
+          })
+          .sort((a, b) => b.totalExpenses - a.totalExpenses)
+
+        return successResponse({
+          type: 'expense-report',
+          data: summary,
+          totals: {
+            totalExpenses: summary.reduce((sum, s) => sum + s.totalExpenses, 0),
             entriesCount: summary.reduce((sum, s) => sum + s.entriesCount, 0),
           },
         })

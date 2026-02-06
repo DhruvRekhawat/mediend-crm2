@@ -50,6 +50,7 @@ export async function POST(
       return errorResponse('Cannot request edit for deleted entry', 400)
     }
 
+    // Only block if there's a pending edit request - allow new requests if previous was rejected
     if (entry.editRequestStatus === LedgerStatus.PENDING) {
       return errorResponse('An edit request is already pending for this entry', 400)
     }
@@ -59,8 +60,18 @@ export async function POST(
       return errorResponse('Can only request edits for approved entries', 400)
     }
 
-    // Validate changes - only allow editing certain fields
-    const allowedFields = ['description', 'transactionDate', 'partyId', 'headId', 'paymentTypeId']
+    // Check edit count limit
+    if (entry.editCount >= 5) {
+      return errorResponse('Maximum of 5 edits reached for this entry', 400)
+    }
+
+    // Validate changes - allow editing most fields except ID
+    const allowedFields = [
+      'description', 'transactionDate', 'partyId', 'headId', 'paymentTypeId',
+      'transactionType', 'paymentAmount', 'componentA', 'componentB',
+      'receivedAmount', 'transferAmount', 'paymentModeId',
+      'fromPaymentModeId', 'toPaymentModeId'
+    ]
     const changeKeys = Object.keys(changes)
     const invalidFields = changeKeys.filter(key => !allowedFields.includes(key))
     
@@ -95,6 +106,36 @@ export async function POST(
       })
       if (!paymentType || !paymentType.isActive) {
         return errorResponse('Invalid or inactive payment type', 400)
+      }
+    }
+
+    // Validate payment mode if changed
+    if (changes.paymentModeId && changes.paymentModeId !== entry.paymentModeId) {
+      const paymentMode = await prisma.paymentModeMaster.findUnique({
+        where: { id: changes.paymentModeId },
+      })
+      if (!paymentMode || !paymentMode.isActive) {
+        return errorResponse('Invalid or inactive payment mode', 400)
+      }
+    }
+
+    // Validate from payment mode if changed (for SELF_TRANSFER)
+    if (changes.fromPaymentModeId && changes.fromPaymentModeId !== entry.fromPaymentModeId) {
+      const fromPaymentMode = await prisma.paymentModeMaster.findUnique({
+        where: { id: changes.fromPaymentModeId },
+      })
+      if (!fromPaymentMode || !fromPaymentMode.isActive) {
+        return errorResponse('Invalid or inactive from payment mode', 400)
+      }
+    }
+
+    // Validate to payment mode if changed (for SELF_TRANSFER)
+    if (changes.toPaymentModeId && changes.toPaymentModeId !== entry.toPaymentModeId) {
+      const toPaymentMode = await prisma.paymentModeMaster.findUnique({
+        where: { id: changes.toPaymentModeId },
+      })
+      if (!toPaymentMode || !toPaymentMode.isActive) {
+        return errorResponse('Invalid or inactive to payment mode', 400)
       }
     }
 

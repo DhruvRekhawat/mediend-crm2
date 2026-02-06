@@ -20,7 +20,7 @@ import {
   ArrowDownCircle,
   Download
 } from 'lucide-react'
-import { format, subDays } from 'date-fns'
+import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -49,8 +49,16 @@ interface HeadWiseSummary {
   headName: string
   department: string | null
   totalCredits: number
-  totalDebits: number
+  totalExpenses: number
   netAmount: number
+  entriesCount: number
+}
+
+interface ExpenseReportSummary {
+  headId: string
+  headName: string
+  department: string | null
+  totalExpenses: number
   entriesCount: number
 }
 
@@ -66,8 +74,9 @@ interface ReportResponse<T> {
   type: string
   data: T[]
   totals: {
-    totalCredits: number
-    totalDebits: number
+    totalCredits?: number
+    totalDebits?: number
+    totalExpenses?: number
     totalBalance?: number
     entriesCount?: number
   }
@@ -109,8 +118,8 @@ export default function ReportsPage() {
 
   const handleDownloadPDF = () => {
     const reportTitle =
-      { 'payment-mode': 'Payment Mode Balance Summary', 'party-wise': 'Party-wise Summary', 'head-wise': 'Head-wise Summary', 'day-wise': 'Day-wise Summary' }[
-        activeTab as 'payment-mode' | 'party-wise' | 'head-wise' | 'day-wise'
+      { 'payment-mode': 'Payment Mode Balance Summary', 'party-wise': 'Party-wise Summary', 'head-wise': 'Head-wise Summary', 'expense-report': 'Expense Report', 'day-wise': 'Day-wise Summary' }[
+        activeTab as 'payment-mode' | 'party-wise' | 'head-wise' | 'expense-report' | 'day-wise'
       ] ?? 'Finance Report'
 
     const doc = new jsPDF()
@@ -149,13 +158,24 @@ export default function ReportsPage() {
       })
     } else if (activeTab === 'head-wise' && headWiseData) {
       autoTable(doc, {
-        head: [['Head', 'Department', 'Total Credits', 'Total Debits', 'Net Amount', 'Entries']],
+        head: [['Head', 'Department', 'Total Credits', 'Total Expenses', 'Net Amount', 'Entries']],
         body: headWiseData.data.map((h) => [
           h.headName,
           h.department || '-',
           formatCurrencyForPDF(h.totalCredits),
-          formatCurrencyForPDF(h.totalDebits),
+          formatCurrencyForPDF(h.totalExpenses),
           formatCurrencyForPDF(h.netAmount),
+          String(h.entriesCount),
+        ]),
+        startY,
+      })
+    } else if (activeTab === 'expense-report' && expenseReportData) {
+      autoTable(doc, {
+        head: [['Head', 'Department', 'Total Expenses', 'Entries']],
+        body: expenseReportData.data.map((h) => [
+          h.headName,
+          h.department || '-',
+          formatCurrencyForPDF(h.totalExpenses),
           String(h.entriesCount),
         ]),
         startY,
@@ -195,6 +215,13 @@ export default function ReportsPage() {
     queryKey: ['report-head-wise', startDate, endDate],
     queryFn: () => apiGet<ReportResponse<HeadWiseSummary>>(`/api/finance/reports/summary?type=head-wise&${dateParams.toString()}`),
     enabled: activeTab === 'head-wise',
+  })
+
+  // Fetch expense report summary
+  const { data: expenseReportData, isLoading: loadingExpenseReport } = useQuery<ReportResponse<ExpenseReportSummary>>({
+    queryKey: ['report-expense-report', startDate, endDate],
+    queryFn: () => apiGet<ReportResponse<ExpenseReportSummary>>(`/api/finance/reports/summary?type=expense-report&${dateParams.toString()}`),
+    enabled: activeTab === 'expense-report',
   })
 
   // Fetch day-wise summary
@@ -263,6 +290,30 @@ export default function ReportsPage() {
                 </DialogContent>
               </Dialog>
             </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const now = new Date()
+                  setStartDate(startOfMonth(now))
+                  setEndDate(endOfMonth(now))
+                }}
+              >
+                This Month
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const lastMonth = subMonths(new Date(), 1)
+                  setStartDate(startOfMonth(lastMonth))
+                  setEndDate(endOfMonth(lastMonth))
+                }}
+              >
+                Last Month
+              </Button>
+            </div>
             <Button
               variant="ghost"
               onClick={() => {
@@ -287,7 +338,7 @@ export default function ReportsPage() {
 
       {/* Report Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="payment-mode" className="flex items-center gap-2">
             <Wallet className="h-4 w-4" />
             Payment Mode
@@ -299,6 +350,10 @@ export default function ReportsPage() {
           <TabsTrigger value="head-wise" className="flex items-center gap-2">
             <FolderTree className="h-4 w-4" />
             Head-wise
+          </TabsTrigger>
+          <TabsTrigger value="expense-report" className="flex items-center gap-2">
+            <ArrowDownCircle className="h-4 w-4" />
+            Expense Report
           </TabsTrigger>
           <TabsTrigger value="day-wise" className="flex items-center gap-2">
             <CalendarIcon className="h-4 w-4" />
@@ -335,7 +390,7 @@ export default function ReportsPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-green-600">Total Credits</p>
-                          <p className="text-2xl font-bold">{formatCurrency(paymentModeData.totals.totalCredits)}</p>
+                          <p className="text-2xl font-bold">{formatCurrency(paymentModeData.totals.totalCredits || 0)}</p>
                         </div>
                         <ArrowUpCircle className="h-8 w-8 text-green-400" />
                       </div>
@@ -346,7 +401,7 @@ export default function ReportsPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-red-600">Total Debits</p>
-                          <p className="text-2xl font-bold">{formatCurrency(paymentModeData.totals.totalDebits)}</p>
+                          <p className="text-2xl font-bold">{formatCurrency(paymentModeData.totals.totalDebits || 0)}</p>
                         </div>
                         <ArrowDownCircle className="h-8 w-8 text-red-400" />
                       </div>
@@ -498,7 +553,7 @@ export default function ReportsPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-green-600">Total Credits</p>
-                          <p className="text-2xl font-bold">{formatCurrency(headWiseData.totals.totalCredits)}</p>
+                          <p className="text-2xl font-bold">{formatCurrency(headWiseData.totals.totalCredits || 0)}</p>
                         </div>
                         <ArrowUpCircle className="h-8 w-8 text-green-400" />
                       </div>
@@ -508,8 +563,8 @@ export default function ReportsPage() {
                     <CardContent className="pt-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-red-600">Total Debits</p>
-                          <p className="text-2xl font-bold">{formatCurrency(headWiseData.totals.totalDebits)}</p>
+                          <p className="text-sm text-red-600">Expenses</p>
+                          <p className="text-2xl font-bold">{formatCurrency(headWiseData.totals.totalExpenses || 0)}</p>
                         </div>
                         <ArrowDownCircle className="h-8 w-8 text-red-400" />
                       </div>
@@ -521,7 +576,7 @@ export default function ReportsPage() {
                         <div>
                           <p className="text-sm text-blue-600">Net Amount</p>
                           <p className="text-2xl font-bold">
-                            {formatCurrency(headWiseData.totals.totalCredits - headWiseData.totals.totalDebits)}
+                            {formatCurrency((headWiseData.totals.totalCredits || 0) - (headWiseData.totals.totalExpenses || 0))}
                           </p>
                         </div>
                         <FolderTree className="h-8 w-8 text-blue-400" />
@@ -540,7 +595,7 @@ export default function ReportsPage() {
                       <TableHead>Head</TableHead>
                       <TableHead>Department</TableHead>
                       <TableHead className="text-right">Total Credits</TableHead>
-                      <TableHead className="text-right">Total Debits</TableHead>
+                      <TableHead className="text-right">Expenses</TableHead>
                       <TableHead className="text-right">Net Amount</TableHead>
                       <TableHead className="text-center">Entries</TableHead>
                     </TableRow>
@@ -551,7 +606,7 @@ export default function ReportsPage() {
                         <TableCell className="font-medium">{head.headName}</TableCell>
                         <TableCell>{head.department || '-'}</TableCell>
                         <TableCell className="text-right font-mono text-green-600">{formatCurrency(head.totalCredits)}</TableCell>
-                        <TableCell className="text-right font-mono text-red-600">{formatCurrency(head.totalDebits)}</TableCell>
+                        <TableCell className="text-right font-mono text-red-600">{formatCurrency(head.totalExpenses)}</TableCell>
                         <TableCell className="text-right font-mono">
                           <span className={head.netAmount >= 0 ? 'text-green-600' : 'text-red-600'}>
                             {formatCurrency(head.netAmount)}
@@ -564,6 +619,90 @@ export default function ReportsPage() {
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                           No data available for selected period
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Expense Report */}
+        <TabsContent value="expense-report">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Expense Report</CardTitle>
+                  <CardDescription>Expenses (Component A) by head/category - No credits</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPDF}
+                  disabled={loadingExpenseReport || !expenseReportData?.data?.length}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Totals for expense report */}
+              {expenseReportData && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <Card className="bg-red-50 dark:bg-red-900/10">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-red-600">Total Expenses</p>
+                          <p className="text-2xl font-bold">{formatCurrency(expenseReportData.totals.totalExpenses || 0)}</p>
+                        </div>
+                        <ArrowDownCircle className="h-8 w-8 text-red-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-blue-50 dark:bg-blue-900/10">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-blue-600">Total Entries</p>
+                          <p className="text-2xl font-bold">{expenseReportData.totals.entriesCount || 0}</p>
+                        </div>
+                        <FolderTree className="h-8 w-8 text-blue-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {loadingExpenseReport ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Head</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead className="text-right">Total Expenses</TableHead>
+                      <TableHead className="text-center">Entries</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenseReportData?.data.map((head) => (
+                      <TableRow key={head.headId}>
+                        <TableCell className="font-medium">{head.headName}</TableCell>
+                        <TableCell>{head.department || '-'}</TableCell>
+                        <TableCell className="text-right font-mono text-red-600">{formatCurrency(head.totalExpenses)}</TableCell>
+                        <TableCell className="text-center">{head.entriesCount}</TableCell>
+                      </TableRow>
+                    ))}
+                    {(!expenseReportData?.data || expenseReportData.data.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                          No expense data available for selected period
                         </TableCell>
                       </TableRow>
                     )}
