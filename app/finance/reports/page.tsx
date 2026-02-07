@@ -84,6 +84,33 @@ interface ProfitLossSummary {
   profitLoss: number
 }
 
+interface ProfitLossRevenueRow {
+  projectId: string
+  projectName: string
+  totalRevenue: number
+  entriesCount: number
+}
+
+interface ProfitLossExpenseRow {
+  headId: string
+  headName: string
+  department: string | null
+  totalExpenses: number
+  entriesCount: number
+}
+
+interface ProfitLossReportResponse {
+  type: 'profit-loss'
+  data: ProfitLossSummary[]
+  revenueByProject: ProfitLossRevenueRow[]
+  expensesByHead: ProfitLossExpenseRow[]
+  totals: {
+    totalRevenue?: number
+    totalExpenses?: number
+    netProfitLoss?: number
+  }
+}
+
 interface ReportResponse<T> {
   type: string
   data: T[]
@@ -219,15 +246,59 @@ export default function ReportsPage() {
         startY,
       })
     } else if (activeTab === 'profit-loss' && profitLossData) {
-      // P/L report shows totals only
-      doc.setFontSize(12)
-      doc.text('Total Revenue:', 14, startY)
-      doc.text(formatCurrencyForPDF(profitLossData.totals.totalRevenue || 0), 80, startY)
-      doc.text('Total Expenses:', 14, startY + 8)
-      doc.text(formatCurrencyForPDF(profitLossData.totals.totalExpenses || 0), 80, startY + 8)
-      doc.text('Net Profit/Loss:', 14, startY + 16)
-      doc.setTextColor(profitLossData.totals.netProfitLoss && profitLossData.totals.netProfitLoss >= 0 ? 0 : 255, 0, 0)
-      doc.text(formatCurrencyForPDF(profitLossData.totals.netProfitLoss || 0), 80, startY + 16)
+      let y = startY
+      // Revenue by Project table
+      doc.setFontSize(11)
+      doc.setTextColor(0, 100, 0)
+      doc.text('Revenue by Project', 14, y)
+      y += 6
+      const revenueBody = (profitLossData.revenueByProject ?? []).length === 0
+        ? [['No revenue in period', '', '']]
+        : profitLossData.revenueByProject.map((r) => [r.projectName, formatCurrencyForPDF(r.totalRevenue), String(r.entriesCount)])
+      autoTable(doc, {
+        head: [['Project', 'Total Revenue', 'Entries']],
+        body: revenueBody,
+        startY: y,
+        theme: 'grid',
+        headStyles: { fillColor: [220, 245, 220], textColor: [0, 80, 0] },
+      })
+      y = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y
+      y += 10
+      // Expenses by Head table
+      doc.setTextColor(180, 100, 0)
+      doc.text('Expenses by Head', 14, y)
+      y += 6
+      const expenseBody = (profitLossData.expensesByHead ?? []).length === 0
+        ? [['No expenses in period', '', '', '']]
+        : profitLossData.expensesByHead.map((e) => [e.headName, e.department ?? '—', formatCurrencyForPDF(e.totalExpenses), String(e.entriesCount)])
+      autoTable(doc, {
+        head: [['Head', 'Department', 'Total Expenses', 'Entries']],
+        body: expenseBody,
+        startY: y,
+        theme: 'grid',
+        headStyles: { fillColor: [255, 243, 224], textColor: [140, 80, 0] },
+      })
+      y = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y
+      y += 10
+      // Summary totals
+      doc.setTextColor(0, 0, 0)
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Total Revenue:', 14, y)
+      doc.setFont('helvetica', 'normal')
+      doc.text(formatCurrencyForPDF(profitLossData.totals.totalRevenue || 0), 80, y)
+      y += 7
+      doc.setFont('helvetica', 'bold')
+      doc.text('Total Expenses:', 14, y)
+      doc.setFont('helvetica', 'normal')
+      doc.text(formatCurrencyForPDF(profitLossData.totals.totalExpenses || 0), 80, y)
+      y += 7
+      doc.setFont('helvetica', 'bold')
+      doc.text('Net P/L:', 14, y)
+      doc.setFont('helvetica', 'normal')
+      const net = profitLossData.totals.netProfitLoss ?? 0
+      doc.setTextColor(net >= 0 ? 0 : 255, 0, 0)
+      doc.text(formatCurrencyForPDF(net), 80, y)
       doc.setTextColor(0, 0, 0)
     }
     doc.save(`finance-${activeTab}-${format(new Date(), 'yyyy-MM-dd')}.pdf`)
@@ -276,9 +347,9 @@ export default function ReportsPage() {
   })
 
   // Fetch profit-loss summary
-  const { data: profitLossData, isLoading: loadingProfitLoss } = useQuery<ReportResponse<ProfitLossSummary>>({
+  const { data: profitLossData, isLoading: loadingProfitLoss } = useQuery<ProfitLossReportResponse>({
     queryKey: ['report-profit-loss', startDate, endDate],
-    queryFn: () => apiGet<ReportResponse<ProfitLossSummary>>(`/api/finance/reports/summary?type=profit-loss&${dateParams.toString()}`),
+    queryFn: () => apiGet<ProfitLossReportResponse>(`/api/finance/reports/summary?type=profit-loss&${dateParams.toString()}`),
     enabled: activeTab === 'profit-loss',
   })
 
@@ -987,13 +1058,76 @@ export default function ReportsPage() {
 
               {loadingProfitLoss ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="mb-2">P/L Report shows totals only.</p>
-                  <p className="text-sm">Revenue is categorized by Project, while Expenses are categorized by Head.</p>
-                  <p className="text-sm mt-2">See Revenue Report for project-wise breakdown and Expense Report for head-wise breakdown.</p>
+              ) : profitLossData ? (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Revenue by Project</h4>
+                    <div className="rounded-lg border border-green-200 dark:border-green-800/60 overflow-hidden overflow-x-auto bg-green-50/30 dark:bg-green-950/20">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-green-200 dark:border-green-800/60 hover:bg-transparent">
+                            <TableHead className="bg-green-100/80 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-medium">Project</TableHead>
+                            <TableHead className="bg-green-100/80 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-medium text-right">Total Revenue</TableHead>
+                            <TableHead className="bg-green-100/80 dark:bg-green-900/40 text-green-800 dark:text-green-200 font-medium text-right">Entries</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(profitLossData.revenueByProject ?? []).length === 0 ? (
+                            <TableRow className="border-green-200/50 dark:border-green-800/40">
+                              <TableCell colSpan={3} className="text-center text-muted-foreground">No revenue in period</TableCell>
+                            </TableRow>
+                          ) : (
+                            (profitLossData.revenueByProject ?? []).map((row, i) => (
+                              <TableRow
+                                key={row.projectId}
+                                className={`border-green-200/50 dark:border-green-800/40 ${i % 2 === 0 ? 'bg-white/60 dark:bg-green-950/10' : 'bg-green-50/50 dark:bg-green-900/10'} hover:bg-green-100/50 dark:hover:bg-green-800/20`}
+                              >
+                                <TableCell className="font-medium">{row.projectName}</TableCell>
+                                <TableCell className="text-right font-semibold text-green-700 dark:text-green-400">{formatCurrency(row.totalRevenue)}</TableCell>
+                                <TableCell className="text-right text-muted-foreground">{row.entriesCount}</TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Expenses by Head</h4>
+                    <div className="rounded-lg border border-amber-200 dark:border-amber-800/60 overflow-hidden overflow-x-auto bg-amber-50/30 dark:bg-amber-950/20">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-amber-200 dark:border-amber-800/60 hover:bg-transparent">
+                            <TableHead className="bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-medium">Head</TableHead>
+                            <TableHead className="bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-medium">Department</TableHead>
+                            <TableHead className="bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-medium text-right">Total Expenses</TableHead>
+                            <TableHead className="bg-amber-100/80 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 font-medium text-right">Entries</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(profitLossData.expensesByHead ?? []).length === 0 ? (
+                            <TableRow className="border-amber-200/50 dark:border-amber-800/40">
+                              <TableCell colSpan={4} className="text-center text-muted-foreground">No expenses in period</TableCell>
+                            </TableRow>
+                          ) : (
+                            (profitLossData.expensesByHead ?? []).map((row, i) => (
+                              <TableRow
+                                key={row.headId}
+                                className={`border-amber-200/50 dark:border-amber-800/40 ${i % 2 === 0 ? 'bg-white/60 dark:bg-amber-950/10' : 'bg-amber-50/50 dark:bg-amber-900/10'} hover:bg-amber-100/50 dark:hover:bg-amber-800/20`}
+                              >
+                                <TableCell className="font-medium">{row.headName}</TableCell>
+                                <TableCell className="text-muted-foreground">{row.department ?? '—'}</TableCell>
+                                <TableCell className="text-right font-semibold text-amber-700 dark:text-amber-400">{formatCurrency(row.totalExpenses)}</TableCell>
+                                <TableCell className="text-right text-muted-foreground">{row.entriesCount}</TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>

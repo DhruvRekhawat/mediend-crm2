@@ -60,8 +60,6 @@ export async function GET(request: NextRequest) {
                 transactionType: true,
                 paymentAmount: true,
                 receivedAmount: true,
-              },
-              include: {
                 paymentType: {
                   select: {
                     paymentType: true,
@@ -478,45 +476,72 @@ export async function GET(request: NextRequest) {
       }
 
       case 'profit-loss': {
-        // P/L Report - Revenue (from SalesEntry by Project) minus Expenses (from LedgerEntry componentA by Head)
-        // Note: Revenue uses Project categorization, expenses use Head categorization
-        // So we compare totals only, not per-item
-        
-        // Get total revenue from SalesEntry (all projects)
-        const revenueEntries = await prisma.salesEntry.aggregate({
+        // P/L Report - Revenue (from SalesEntry by Project) and Expenses (from LedgerEntry componentA by Head)
+        const dateWhere = Object.keys(dateFilter).length > 0 ? { transactionDate: dateFilter } : {}
+
+        // Revenue by project (SalesEntry)
+        const revenueByProjectEntries = await prisma.salesEntry.groupBy({
+          by: ['projectId'],
           where: {
             isDeleted: false,
-            ...(Object.keys(dateFilter).length > 0 && {
-              transactionDate: dateFilter,
-            }),
+            ...dateWhere,
           },
-          _sum: {
-            amount: true,
-          },
+          _sum: { amount: true },
           _count: true,
         })
+        const revenueProjectIds = [...new Set(revenueByProjectEntries.map((e) => e.projectId).filter((id): id is string => id !== null))]
+        const revenueProjects = await prisma.projectMaster.findMany({
+          where: { id: { in: revenueProjectIds } },
+          select: { id: true, name: true },
+        })
+        const revenueProjectMap = new Map(revenueProjects.map((p) => [p.id, p]))
+        const revenueByProject = revenueByProjectEntries
+          .filter((e) => e.projectId !== null)
+          .map((e) => ({
+            projectId: e.projectId!,
+            projectName: revenueProjectMap.get(e.projectId!)?.name || 'Unknown',
+            totalRevenue: e._sum.amount || 0,
+            entriesCount: e._count,
+          }))
+          .sort((a, b) => b.totalRevenue - a.totalRevenue)
 
-        // Get total expenses from LedgerEntry (approved DEBIT entries, componentA, all heads)
-        const expenseEntries = await prisma.ledgerEntry.aggregate({
+        // Expenses by head (LedgerEntry DEBIT, componentA)
+        const expensesByHeadEntries = await prisma.ledgerEntry.groupBy({
+          by: ['headId'],
           where: {
             status: LedgerStatus.APPROVED,
             transactionType: TransactionType.DEBIT,
             componentA: { gt: 0 },
-            ...(Object.keys(dateFilter).length > 0 && {
-              transactionDate: dateFilter,
-            }),
+            ...dateWhere,
           },
-          _sum: {
-            componentA: true,
-          },
+          _sum: { componentA: true },
+          _count: true,
         })
+        const expenseHeadIds = [...new Set(expensesByHeadEntries.map((e) => e.headId).filter((id): id is string => id !== null))]
+        const expenseHeads = await prisma.headMaster.findMany({
+          where: { id: { in: expenseHeadIds } },
+          select: { id: true, name: true, department: true },
+        })
+        const expenseHeadMap = new Map(expenseHeads.map((h) => [h.id, h]))
+        const expensesByHead = expensesByHeadEntries
+          .filter((e) => e.headId !== null)
+          .map((e) => ({
+            headId: e.headId!,
+            headName: expenseHeadMap.get(e.headId!)?.name || 'Unknown',
+            department: expenseHeadMap.get(e.headId!)?.department || null,
+            totalExpenses: e._sum.componentA || 0,
+            entriesCount: e._count,
+          }))
+          .sort((a, b) => b.totalExpenses - a.totalExpenses)
 
-        const totalRevenue = revenueEntries._sum.amount || 0
-        const totalExpenses = expenseEntries._sum.componentA || 0
+        const totalRevenue = revenueByProject.reduce((sum, s) => sum + s.totalRevenue, 0)
+        const totalExpenses = expensesByHead.reduce((sum, s) => sum + s.totalExpenses, 0)
 
         return successResponse({
           type: 'profit-loss',
-          data: [], // Empty array since we're showing totals only
+          data: [],
+          revenueByProject,
+          expensesByHead,
           totals: {
             totalRevenue,
             totalExpenses,

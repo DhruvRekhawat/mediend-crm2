@@ -1809,3 +1809,35 @@ model WorkLog {
   @@index([employeeId])
   @@index([logDate])
 }
+
+// Observability: Cron job execution logs
+model CronJobLog {
+  id               String   @id @default(cuid())
+  jobName          String   // "attendance_sync" | "leads_sync" | "db_backup" | "log_cleanup"
+  status           String   // "success" | "error"
+  durationMs       Int
+  recordsProcessed Int?
+  message          String?
+  error            String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  @@index([jobName, createdAt])
+  @@index([createdAt])
+}
+
+// Observability: API request logs
+model RequestLog {
+  id         String   @id @default(cuid())
+  method     String
+  path       String
+  status     Int
+  durationMs Int
+  userId     String?
+  ip         String?
+  error      String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([path, createdAt])
+}
