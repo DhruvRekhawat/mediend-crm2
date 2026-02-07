@@ -16,7 +16,6 @@ ARG DEPLOY_COMMIT=unknown
 ARG DEPLOY_TIME=unknown
 ENV DEPLOY_COMMIT=$DEPLOY_COMMIT
 ENV DEPLOY_TIME=$DEPLOY_TIME
-RUN bunx prisma generate
 RUN bun run build
 
 FROM base AS runner
