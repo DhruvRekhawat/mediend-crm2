@@ -16,6 +16,8 @@ ARG DEPLOY_COMMIT=unknown
 ARG DEPLOY_TIME=unknown
 ENV DEPLOY_COMMIT=$DEPLOY_COMMIT
 ENV DEPLOY_TIME=$DEPLOY_TIME
+ENV DIRECT_URL=postgresql://dummy:dummy@localhost:5432/dummy
+ENV DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 RUN bun run build
 
 FROM base AS runner
