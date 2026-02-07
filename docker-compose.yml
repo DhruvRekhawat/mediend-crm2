@@ -23,6 +23,7 @@ services:
       args:
         DEPLOY_COMMIT: ${DEPLOY_COMMIT:-unknown}
         DEPLOY_TIME: ${DEPLOY_TIME:-unknown}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://workspace.mediend.com}
     restart: always
     ports:
       - "127.0.0.1:3000:3000"

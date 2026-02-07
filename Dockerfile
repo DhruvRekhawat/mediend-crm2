@@ -14,8 +14,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG DEPLOY_COMMIT=unknown
 ARG DEPLOY_TIME=unknown
+ARG NEXT_PUBLIC_APP_URL=https://workspace.mediend.com
 ENV DEPLOY_COMMIT=$DEPLOY_COMMIT
 ENV DEPLOY_TIME=$DEPLOY_TIME
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV DIRECT_URL=postgresql://dummy:dummy@localhost:5432/dummy
 ENV DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
 RUN bun run build
