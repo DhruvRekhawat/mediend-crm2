@@ -11,9 +11,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   Activity,
   Database,
-  AlertCircle,
-  Users,
-  Clock,
   Server,
   GitCommit,
   RefreshCw,
@@ -23,6 +20,108 @@ import {
 import { format } from "date-fns";
 import { apiGet } from "@/lib/api-client";
 
+// API response types
+interface SystemHealth {
+  status: string;
+  uptimeFormatted?: string;
+}
+
+interface SystemMetrics {
+  cpu?: { count: number; usagePercent: number };
+  memory?: {
+    usagePercent: number;
+    usedFormatted: string;
+    totalFormatted: string;
+  };
+  disk?: {
+    usagePercent: number;
+    used: string;
+    total: string;
+  } | null;
+}
+
+interface DeployInfo {
+  commit?: string;
+  time?: string;
+  environment?: string;
+}
+
+interface ApiLog {
+  id: string;
+  createdAt: string;
+  method: string;
+  path: string;
+  status: number;
+  durationMs: number;
+}
+
+interface LogsResponse {
+  logs?: ApiLog[];
+}
+
+interface CronJobLastRun {
+  jobName: string;
+  lastRun?: {
+    status: string;
+    createdAt: string;
+    durationMs: number;
+    recordsProcessed: number | null;
+  };
+}
+
+interface CronLog {
+  id: string;
+  createdAt: string;
+  jobName: string;
+  status: string;
+  durationMs: number;
+  recordsProcessed?: number | null;
+  message?: string;
+}
+
+interface CronLogsResponse {
+  lastRuns?: CronJobLastRun[];
+  logs?: CronLog[];
+}
+
+interface TableSize {
+  table_name: string;
+  size: string;
+  row_count: number;
+}
+
+interface DbInfo {
+  dbSize?: string;
+  activeConnections?: number;
+  tableSizes?: TableSize[];
+}
+
+interface ErrorGroup {
+  path: string;
+  count: number;
+  lastError: { createdAt: string };
+}
+
+interface ErrorsResponse {
+  totalErrors?: number;
+  grouped?: ErrorGroup[];
+}
+
+interface ActiveUser {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  lastPath?: string;
+  lastActive?: string;
+  requestCount?: number;
+}
+
+interface ActiveUsersResponse {
+  totalActive?: number;
+  activeUsers?: ActiveUser[];
+}
+
 export default function SystemObservabilityPage() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const refreshInterval = autoRefresh ? 5000 : false;
@@ -30,48 +129,48 @@ export default function SystemObservabilityPage() {
   // Fetch all data
   const { data: health, refetch: refetchHealth } = useQuery({
     queryKey: ["system-health"],
-    queryFn: () => apiGet("/api/admin/system/health"),
+    queryFn: () => apiGet<SystemHealth>("/api/admin/system/health"),
     refetchInterval: refreshInterval,
   });
 
   const { data: metrics, refetch: refetchMetrics } = useQuery({
     queryKey: ["system-metrics"],
-    queryFn: () => apiGet("/api/admin/system/metrics"),
+    queryFn: () => apiGet<SystemMetrics>("/api/admin/system/metrics"),
     refetchInterval: refreshInterval,
   });
 
   const { data: deploy } = useQuery({
     queryKey: ["system-deploy"],
-    queryFn: () => apiGet("/api/admin/system/deploy"),
+    queryFn: () => apiGet<DeployInfo>("/api/admin/system/deploy"),
   });
 
   const { data: logs } = useQuery({
     queryKey: ["system-logs"],
-    queryFn: () => apiGet("/api/admin/system/logs?limit=50"),
+    queryFn: () => apiGet<LogsResponse>("/api/admin/system/logs?limit=50"),
     refetchInterval: refreshInterval,
   });
 
   const { data: cronLogs } = useQuery({
     queryKey: ["system-cron-logs"],
-    queryFn: () => apiGet("/api/admin/system/cron-logs"),
+    queryFn: () => apiGet<CronLogsResponse>("/api/admin/system/cron-logs"),
     refetchInterval: refreshInterval,
   });
 
   const { data: dbInfo } = useQuery({
     queryKey: ["system-db"],
-    queryFn: () => apiGet("/api/admin/system/db"),
+    queryFn: () => apiGet<DbInfo>("/api/admin/system/db"),
     refetchInterval: refreshInterval,
   });
 
   const { data: errors } = useQuery({
     queryKey: ["system-errors"],
-    queryFn: () => apiGet("/api/admin/system/errors"),
+    queryFn: () => apiGet<ErrorsResponse>("/api/admin/system/errors"),
     refetchInterval: refreshInterval,
   });
 
   const { data: activeUsers } = useQuery({
     queryKey: ["system-active-users"],
-    queryFn: () => apiGet("/api/admin/system/active-users"),
+    queryFn: () => apiGet<ActiveUsersResponse>("/api/admin/system/active-users"),
     refetchInterval: refreshInterval,
   });
 
@@ -283,7 +382,7 @@ export default function SystemObservabilityPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {logs?.logs?.map((log: any) => (
+                      {logs?.logs?.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="text-sm">
                             {format(new Date(log.createdAt), "HH:mm:ss")}
@@ -321,7 +420,7 @@ export default function SystemObservabilityPage() {
           <TabsContent value="cron" className="space-y-4">
             {/* Last Runs */}
             <div className="grid gap-4 md:grid-cols-3">
-              {cronLogs?.lastRuns?.map((job: any) => (
+              {cronLogs?.lastRuns?.map((job) => (
                 <Card key={job.jobName}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm font-medium flex items-center justify-between">
@@ -383,7 +482,7 @@ export default function SystemObservabilityPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {cronLogs?.logs?.map((log: any) => (
+                      {cronLogs?.logs?.map((log) => (
                         <TableRow key={log.id}>
                           <TableCell className="text-sm">
                             {format(new Date(log.createdAt), "MMM d, HH:mm")}
@@ -434,7 +533,7 @@ export default function SystemObservabilityPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {dbInfo?.tableSizes?.slice(0, 5).map((table: any) => (
+                    {dbInfo?.tableSizes?.slice(0, 5).map((table) => (
                       <div key={table.table_name} className="flex justify-between items-center">
                         <span className="text-sm font-mono">{table.table_name}</span>
                         <Badge variant="outline">{table.size}</Badge>
@@ -460,7 +559,7 @@ export default function SystemObservabilityPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {dbInfo?.tableSizes?.map((table: any) => (
+                      {dbInfo?.tableSizes?.map((table) => (
                         <TableRow key={table.table_name}>
                           <TableCell className="font-mono">{table.table_name}</TableCell>
                           <TableCell className="text-right">{table.size}</TableCell>
@@ -494,7 +593,7 @@ export default function SystemObservabilityPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {errors?.grouped?.map((group: any) => (
+                      {errors?.grouped?.map((group) => (
                         <TableRow key={group.path}>
                           <TableCell className="font-mono">{group.path}</TableCell>
                           <TableCell className="text-right">
@@ -540,7 +639,7 @@ export default function SystemObservabilityPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {activeUsers?.activeUsers?.map((user: any) => (
+                      {activeUsers?.activeUsers?.map((user) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">{user.name}</TableCell>
                           <TableCell>{user.email}</TableCell>
@@ -549,7 +648,9 @@ export default function SystemObservabilityPage() {
                           </TableCell>
                           <TableCell className="font-mono text-sm">{user.lastPath}</TableCell>
                           <TableCell className="text-sm">
-                            {format(new Date(user.lastActive), "HH:mm:ss")}
+                            {user.lastActive
+                              ? format(new Date(user.lastActive), "HH:mm:ss")
+                              : "-"}
                           </TableCell>
                           <TableCell className="text-right">{user.requestCount}</TableCell>
                         </TableRow>
