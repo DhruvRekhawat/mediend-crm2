@@ -1,12 +1,12 @@
-FROM node:22-alpine AS base
+FROM oven/bun:1-alpine AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
-COPY package.json package-lock.json* ./
+COPY package.json bun.lock* ./
 COPY prisma ./prisma
-RUN npm ci
-RUN npx prisma generate
+RUN bun install --frozen-lockfile
+RUN bunx prisma generate
 
 FROM base AS builder
 WORKDIR /app
@@ -16,8 +16,8 @@ ARG DEPLOY_COMMIT=unknown
 ARG DEPLOY_TIME=unknown
 ENV DEPLOY_COMMIT=$DEPLOY_COMMIT
 ENV DEPLOY_TIME=$DEPLOY_TIME
-RUN npx prisma generate
-RUN npm run build
+RUN bunx prisma generate
+RUN bun run build
 
 FROM base AS runner
 WORKDIR /app
@@ -37,4 +37,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "bunx prisma migrate deploy && node server.js"]
