@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest } from "@/lib/session";
 import { UserRole } from "@prisma/client";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/api-utils";
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication and authorization
     const user = getSessionFromRequest(request);
     if (!user || (user.role !== UserRole.MD && user.role !== UserRole.ADMIN)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse("Unauthorized");
     }
 
     const minutes = 15;
@@ -76,15 +76,15 @@ export async function GET(request: NextRequest) {
       ...userActivity[user.id],
     }));
 
-    return NextResponse.json({
+    return successResponse({
       activeUsers,
       totalActive: activeUsers.length,
       timeRange: `Last ${minutes} minutes`,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : "Unknown error",
+      500
     );
   }
 }

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/session";
 import { UserRole } from "@prisma/client";
+import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/api-utils";
 import os from "os";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -9,10 +10,9 @@ const execAsync = promisify(exec);
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication and authorization
     const user = getSessionFromRequest(request);
     if (!user || (user.role !== UserRole.MD && user.role !== UserRole.ADMIN)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedResponse("Unauthorized");
     }
 
     // CPU usage
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       // Disk usage not available
     }
 
-    return NextResponse.json({
+    return successResponse({
       cpu: {
         count: cpus.length,
         usagePercent: Math.round(cpuUsage * 10) / 10,
@@ -65,9 +65,9 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 }
+    return errorResponse(
+      error instanceof Error ? error.message : "Unknown error",
+      500
     );
   }
 }
