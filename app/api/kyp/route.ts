@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
         },
         preAuthData: {
           include: {
+            suggestedHospitals: true,
             handledBy: {
               select: {
                 id: true,

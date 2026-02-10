@@ -102,6 +102,10 @@ export default function BDDashboardPage() {
     }
     const variants: Record<CaseStage, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       [CaseStage.NEW_LEAD]: 'secondary',
+      [CaseStage.KYP_BASIC_PENDING]: 'secondary',
+      [CaseStage.KYP_BASIC_COMPLETE]: 'default',
+      [CaseStage.KYP_DETAILED_PENDING]: 'secondary',
+      [CaseStage.KYP_DETAILED_COMPLETE]: 'default',
       [CaseStage.KYP_PENDING]: 'secondary',
       [CaseStage.KYP_COMPLETE]: 'default',
       [CaseStage.PREAUTH_RAISED]: 'default',

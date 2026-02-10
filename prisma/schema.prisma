@@ -149,6 +149,7 @@ enum NotificationType {
   PREAUTH_RAISED
   INITIATED
   DISCHARGED
+  CASE_CHAT_MESSAGE
   TASK_ASSIGNED
   TASK_DUE_SOON
   DUE_DATE_CHANGE_REQUESTED
@@ -184,16 +185,28 @@ enum QueryStatus {
 
 enum CaseStage {
   NEW_LEAD
-  KYP_PENDING
-  KYP_COMPLETE
+  // New two-stage KYP (use these after migration)
+  KYP_BASIC_PENDING
+  KYP_BASIC_COMPLETE
+  KYP_DETAILED_PENDING
+  KYP_DETAILED_COMPLETE
   PREAUTH_RAISED
   PREAUTH_COMPLETE
   INITIATED
-  ADMITTED
   DISCHARGED
-  IPD_DONE
   PL_PENDING
   OUTSTANDING
+  // Legacy (deprecated - migrate to new stages via scripts/migrate-case-stages-v2.ts)
+  KYP_PENDING
+  KYP_COMPLETE
+  ADMITTED
+  IPD_DONE
+}
+
+enum ChatMessageType {
+  TEXT
+  FILE
+  SYSTEM
 }
 
 enum PreAuthStatus {
@@ -264,6 +277,7 @@ model User {
   pdfsCreated        PreAuthPDF[]       @relation("PDFCreator")
   admissionsInitiated AdmissionRecord[]  @relation("AdmissionInitiator")
   caseStageChanges   CaseStageHistory[]  @relation("CaseStageChanger")
+  caseChatMessagesSent CaseChatMessage[] @relation("CaseChatSender")
 
   // Task Management Relations
   tasksAssigned       Task[]               @relation("TaskAssignee")
@@ -401,6 +415,10 @@ model Lead {
   remarksId          String?
 
   // Relations
+  // Mark Lost (when pipelineStage = LOST)
+  lostReason String?   @db.Text
+  lostAt     DateTime?
+
   stageEvents     LeadStageEvent[]
   insuranceCase   InsuranceCase?
   plRecord        PLRecord?
@@ -409,6 +427,7 @@ model Lead {
   outstandingCase OutstandingCase?
   admissionRecord AdmissionRecord?
   caseStageHistory CaseStageHistory[]
+  caseChatMessages CaseChatMessage[]
 
   @@index([bdId])
   @@index([status])
@@ -1358,13 +1377,19 @@ model KYPSubmission {
   insuranceCard String?
   disease       String?
   location      String? // City name
+  area          String? // Area within city (Call 1 - Basic)
   remark        String?
 
   // File URLs (stored in S3)
   aadharFileUrl        String?
   panFileUrl           String?
   insuranceCardFileUrl String?
-  otherFiles           Json? // Array of {name, url} objects
+  prescriptionFileUrl  String?
+  diseasePhotos        Json?   // Array of {name, url}
+  otherFiles           Json?   // Array of {name, url} objects
+
+  // Call 2 - Detailed: patient consent
+  patientConsent Boolean @default(false)
 
   // Status tracking
   status        KYPStatus @default(PENDING)
@@ -1417,6 +1442,10 @@ model PreAuthorization {
   preAuthRaisedById     String?
   preAuthRaisedBy       User?   @relation("PreAuthRaiser", fields: [preAuthRaisedById], references: [id])
 
+  // New hospital request flow (BD requested a hospital not in suggestions)
+  isNewHospitalRequest      Boolean @default(false)
+  newHospitalPreAuthRaised  Boolean @default(false) // Insurance marks they raised pre-auth for new hospital
+
   handledById String?
   handledBy   User?    @relation("PreAuthHandler", fields: [handledById], references: [id])
   handledAt   DateTime?
@@ -1427,8 +1456,11 @@ model PreAuthorization {
   approvedAt      DateTime?
   rejectedAt      DateTime?
 
-  // Q&A Queries
+  // Q&A Queries (kept for backward compat; chat is primary)
   queries InsuranceQuery[]
+
+  // Hospital suggestions (replaces flat JSON; use suggestedHospitals relation)
+  suggestedHospitals HospitalSuggestion[]
 
   // PDF generation
   pdfVersions PreAuthPDF[]
@@ -1438,6 +1470,25 @@ model PreAuthorization {
 
   @@index([kypSubmissionId])
   @@index([preAuthRaisedById])
+}
+
+// ==========================================
+// Hospital Suggestion (Insurance suggests hospitals with tentative bills/room rents)
+// ==========================================
+
+model HospitalSuggestion {
+  id               String            @id @default(cuid())
+  preAuthId        String
+  preAuth          PreAuthorization  @relation(fields: [preAuthId], references: [id], onDelete: Cascade)
+  hospitalName     String
+  tentativeBill    Float?
+  roomRentGeneral  Float?
+  roomRentPrivate  Float?
+  roomRentICU      Float?
+  notes            String?          @db.Text
+  createdAt        DateTime         @default(now())
+
+  @@index([preAuthId])
 }
 
 model PatientFollowUp {
@@ -1578,6 +1629,25 @@ model CaseStageHistory {
 }
 
 // ==========================================
+// Case Chat (BD <-> Insurance 2-way chat on patient page)
+// ==========================================
+
+model CaseChatMessage {
+  id        String          @id @default(cuid())
+  leadId    String
+  lead      Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  senderId  String?         // null for system messages
+  sender    User?           @relation("CaseChatSender", fields: [senderId], references: [id])
+  type      ChatMessageType  // TEXT, FILE, SYSTEM
+  content   String          @db.Text
+  fileUrl   String?
+  fileName  String?
+  createdAt DateTime        @default(now())
+
+  @@index([leadId, createdAt])
+}
+
+// ==========================================
 // Discharge Sheet
 // ==========================================
 
@@ -1612,7 +1682,36 @@ model DischargeSheet {
   circle     String? // City / region
   leadSource String? // Source of lead
 
-  // Financials (Raw)
+  // A. Patient & Policy (additions)
+  tentativeAmount Float?
+  copayPct        Float?
+
+  // B. Documents (upload URLs)
+  dischargeSummaryUrl  String?
+  otNotesUrl           String? // OT notes upload
+  codesCount           Int?
+  finalBillUrl         String?
+  settlementLetterUrl  String?
+
+  // C. Bill Breakup
+  roomRentAmount       Float @default(0)
+  pharmacyAmount       Float @default(0)
+  investigationAmount  Float @default(0)
+  consumablesAmount    Float @default(0)
+  implantsAmount       Float @default(0)
+  totalFinalBill       Float @default(0)
+
+  // D. Approval & Deductions
+  finalApprovedAmount  Float @default(0)
+  deductionAmount      Float @default(0)
+  discountAmount       Float @default(0)
+  waivedOffAmount      Float @default(0)
+  settlementPart       Float @default(0)
+  tdsAmount            Float @default(0)
+  otherDeduction       Float @default(0)
+  netSettlementAmount  Float @default(0)
+
+  // Financials (Raw) — legacy
   totalAmount       Float @default(0) // Total case value
   billAmount        Float @default(0) // Hospital bill
   cashPaidByPatient Float @default(0) // Direct patient cash

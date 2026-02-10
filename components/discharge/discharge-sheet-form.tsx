@@ -67,6 +67,27 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
       treatment: '',
       circle: '',
       leadSource: '',
+      tentativeAmount: '',
+      copayPct: '',
+      dischargeSummaryUrl: '',
+      otNotesUrl: '',
+      codesCount: '',
+      finalBillUrl: '',
+      settlementLetterUrl: '',
+      roomRentAmount: '',
+      pharmacyAmount: '',
+      investigationAmount: '',
+      consumablesAmount: '',
+      implantsAmount: '',
+      totalFinalBill: '',
+      finalApprovedAmount: '',
+      deductionAmount: '',
+      discountAmount: '',
+      waivedOffAmount: '',
+      settlementPart: '',
+      tdsAmount: '',
+      otherDeduction: '',
+      netSettlementAmount: '',
       // Financials
       totalAmount: '',
       billAmount: '',
@@ -135,6 +156,27 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
           month: initialData.month ? new Date(initialData.month).toISOString().split('T')[0] : (updated.month as string) ?? '',
           dischargeDate: initialData.dischargeDate ? new Date(initialData.dischargeDate).toISOString().split('T')[0] : (updated.dischargeDate as string) ?? '',
           surgeryDate: initialData.surgeryDate ? new Date(initialData.surgeryDate).toISOString().split('T')[0] : (updated.surgeryDate as string) ?? '',
+          tentativeAmount: (initialData.tentativeAmount != null ? String(initialData.tentativeAmount) : updated.tentativeAmount) ?? '',
+          copayPct: (initialData.copayPct != null ? String(initialData.copayPct) : updated.copayPct) ?? '',
+          dischargeSummaryUrl: initialData.dischargeSummaryUrl ?? updated.dischargeSummaryUrl ?? '',
+          otNotesUrl: initialData.otNotesUrl ?? updated.otNotesUrl ?? '',
+          codesCount: (initialData.codesCount != null ? String(initialData.codesCount) : updated.codesCount) ?? '',
+          finalBillUrl: initialData.finalBillUrl ?? updated.finalBillUrl ?? '',
+          settlementLetterUrl: initialData.settlementLetterUrl ?? updated.settlementLetterUrl ?? '',
+          roomRentAmount: (initialData.roomRentAmount != null ? String(initialData.roomRentAmount) : updated.roomRentAmount) ?? '',
+          pharmacyAmount: (initialData.pharmacyAmount != null ? String(initialData.pharmacyAmount) : updated.pharmacyAmount) ?? '',
+          investigationAmount: (initialData.investigationAmount != null ? String(initialData.investigationAmount) : updated.investigationAmount) ?? '',
+          consumablesAmount: (initialData.consumablesAmount != null ? String(initialData.consumablesAmount) : updated.consumablesAmount) ?? '',
+          implantsAmount: (initialData.implantsAmount != null ? String(initialData.implantsAmount) : updated.implantsAmount) ?? '',
+          totalFinalBill: (initialData.totalFinalBill != null ? String(initialData.totalFinalBill) : updated.totalFinalBill) ?? '',
+          finalApprovedAmount: (initialData.finalApprovedAmount != null ? String(initialData.finalApprovedAmount) : updated.finalApprovedAmount) ?? '',
+          deductionAmount: (initialData.deductionAmount != null ? String(initialData.deductionAmount) : updated.deductionAmount) ?? '',
+          discountAmount: (initialData.discountAmount != null ? String(initialData.discountAmount) : updated.discountAmount) ?? '',
+          waivedOffAmount: (initialData.waivedOffAmount != null ? String(initialData.waivedOffAmount) : updated.waivedOffAmount) ?? '',
+          settlementPart: (initialData.settlementPart != null ? String(initialData.settlementPart) : updated.settlementPart) ?? '',
+          tdsAmount: (initialData.tdsAmount != null ? String(initialData.tdsAmount) : updated.tdsAmount) ?? '',
+          otherDeduction: (initialData.otherDeduction != null ? String(initialData.otherDeduction) : updated.otherDeduction) ?? '',
+          netSettlementAmount: (initialData.netSettlementAmount != null ? String(initialData.netSettlementAmount) : updated.netSettlementAmount) ?? '',
         }
       }
 
@@ -184,6 +226,27 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
         mediendShareAmount: parseFloat(finalData.mediendShareAmount as string) || 0,
         mediendNetProfit: parseFloat(finalData.mediendNetProfit as string) || 0,
         remarks: finalData.remarks || '',
+        tentativeAmount: finalData.tentativeAmount ? parseFloat(finalData.tentativeAmount as string) : undefined,
+        copayPct: finalData.copayPct ? parseFloat(finalData.copayPct as string) : undefined,
+        dischargeSummaryUrl: (finalData.dischargeSummaryUrl as string) || undefined,
+        otNotesUrl: (finalData.otNotesUrl as string) || undefined,
+        codesCount: finalData.codesCount ? parseInt(finalData.codesCount as string, 10) : undefined,
+        finalBillUrl: (finalData.finalBillUrl as string) || undefined,
+        settlementLetterUrl: (finalData.settlementLetterUrl as string) || undefined,
+        roomRentAmount: parseFloat(finalData.roomRentAmount as string) || 0,
+        pharmacyAmount: parseFloat(finalData.pharmacyAmount as string) || 0,
+        investigationAmount: parseFloat(finalData.investigationAmount as string) || 0,
+        consumablesAmount: parseFloat(finalData.consumablesAmount as string) || 0,
+        implantsAmount: parseFloat(finalData.implantsAmount as string) || 0,
+        totalFinalBill: parseFloat(finalData.totalFinalBill as string) || 0,
+        finalApprovedAmount: parseFloat(finalData.finalApprovedAmount as string) || 0,
+        deductionAmount: parseFloat(finalData.deductionAmount as string) || 0,
+        discountAmount: parseFloat(finalData.discountAmount as string) || 0,
+        waivedOffAmount: parseFloat(finalData.waivedOffAmount as string) || 0,
+        settlementPart: parseFloat(finalData.settlementPart as string) || 0,
+        tdsAmount: parseFloat(finalData.tdsAmount as string) || 0,
+        otherDeduction: parseFloat(finalData.otherDeduction as string) || 0,
+        netSettlementAmount: parseFloat(finalData.netSettlementAmount as string) || 0,
       }
 
       if (initialData) {
@@ -316,6 +379,28 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
                 onChange={(e) => updateBoth({ approvedOrCash: e.target.value })}
               />
             </div>
+            <div>
+              <Label htmlFor="tentativeAmount">Tentative Amount</Label>
+              <Input
+                id="tentativeAmount"
+                type="number"
+                step="0.01"
+                value={(currentData.tentativeAmount as string) || ''}
+                onChange={(e) => updateBoth({ tentativeAmount: e.target.value })}
+                placeholder="From pre-auth"
+              />
+            </div>
+            <div>
+              <Label htmlFor="copayPct">Copay %</Label>
+              <Input
+                id="copayPct"
+                type="number"
+                step="0.01"
+                value={(currentData.copayPct as string) || ''}
+                onChange={(e) => updateBoth({ copayPct: e.target.value })}
+                placeholder="Optional"
+              />
+            </div>
           </div>
         </div>
         )
@@ -324,6 +409,65 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
         const dischargeDate = (formData.dischargeDate as string) || ''
         return dischargeDate.length > 0
       },
+    },
+    {
+      id: 'documents',
+      title: 'Documents',
+      description: 'Upload discharge summary, OT notes, final bill, settlement letter',
+      component: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Discharge Summary</Label>
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const result = await uploadFile(file)
+                  if (result) setFormData(prev => ({ ...prev, dischargeSummaryUrl: result.url }))
+                }
+              }} disabled={isUploading} />
+              {(formData.dischargeSummaryUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
+            </div>
+            <div>
+              <Label>OT Notes</Label>
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const result = await uploadFile(file)
+                  if (result) setFormData(prev => ({ ...prev, otNotesUrl: result.url }))
+                }
+              }} disabled={isUploading} />
+              {(formData.otNotesUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
+            </div>
+            <div>
+              <Label>Final Bill</Label>
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const result = await uploadFile(file)
+                  if (result) setFormData(prev => ({ ...prev, finalBillUrl: result.url }))
+                }
+              }} disabled={isUploading} />
+              {(formData.finalBillUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
+            </div>
+            <div>
+              <Label>Settlement Letter</Label>
+              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const result = await uploadFile(file)
+                  if (result) setFormData(prev => ({ ...prev, settlementLetterUrl: result.url }))
+                }
+              }} disabled={isUploading} />
+              {(formData.settlementLetterUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
+            </div>
+            <div>
+              <Label htmlFor="codesCount">Codes Count</Label>
+              <Input id="codesCount" type="number" value={formData.codesCount as string} onChange={(e) => setFormData(prev => ({ ...prev, codesCount: e.target.value }))} placeholder="Optional" />
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
       id: 'financials',
@@ -378,6 +522,84 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
         </div>
       ),
       validate: () => (formData.billAmount as string)?.length > 0,
+    },
+    {
+      id: 'billbreakup',
+      title: 'Bill Breakup & Deductions',
+      description: 'Bill breakup and approval/deductions; net settlement is auto-calculated',
+      component: (
+        <div className="space-y-6">
+          <div>
+            <Label className="text-sm font-semibold">Bill Breakup</Label>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              {[
+                { key: 'roomRentAmount', label: 'Room Rent' },
+                { key: 'pharmacyAmount', label: 'Pharmacy' },
+                { key: 'investigationAmount', label: 'Investigation' },
+                { key: 'consumablesAmount', label: 'Consumables' },
+                { key: 'implantsAmount', label: 'Implants' },
+                { key: 'totalFinalBill', label: 'Total Final Bill' },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <Label htmlFor={key} className="text-xs">{label}</Label>
+                  <Input
+                    id={key}
+                    type="number"
+                    step="0.01"
+                    value={(formData[key as keyof typeof formData] as string) || ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setFormData(prev => {
+                        const next = { ...prev, [key]: val }
+                        const total = (parseFloat(next.roomRentAmount as string) || 0) + (parseFloat(next.pharmacyAmount as string) || 0) + (parseFloat(next.investigationAmount as string) || 0) + (parseFloat(next.consumablesAmount as string) || 0) + (parseFloat(next.implantsAmount as string) || 0)
+                        next.totalFinalBill = total > 0 ? String(total) : next.totalFinalBill
+                        return next
+                      })
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label className="text-sm font-semibold">Approval & Deductions</Label>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              {[
+                { key: 'finalApprovedAmount', label: 'Final Approved Amount' },
+                { key: 'deductionAmount', label: 'Deduction' },
+                { key: 'discountAmount', label: 'Discount' },
+                { key: 'waivedOffAmount', label: 'Waived Off' },
+                { key: 'settlementPart', label: 'Settlement Part' },
+                { key: 'tdsAmount', label: 'TDS' },
+                { key: 'otherDeduction', label: 'Other Deduction' },
+                { key: 'netSettlementAmount', label: 'Net Settlement Amount' },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <Label htmlFor={key} className="text-xs">{label}</Label>
+                  <Input
+                    id={key}
+                    type="number"
+                    step="0.01"
+                    value={(formData[key as keyof typeof formData] as string) || ''}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setFormData(prev => {
+                        const next = { ...prev, [key]: val }
+                        const approved = parseFloat(next.finalApprovedAmount as string) || 0
+                        const ded = (parseFloat(next.deductionAmount as string) || 0) + (parseFloat(next.discountAmount as string) || 0) + (parseFloat(next.waivedOffAmount as string) || 0) + (parseFloat(next.settlementPart as string) || 0) + (parseFloat(next.tdsAmount as string) || 0) + (parseFloat(next.otherDeduction as string) || 0)
+                        next.netSettlementAmount = (approved - ded).toFixed(2)
+                        return next
+                      })
+                    }}
+                    readOnly={key === 'netSettlementAmount'}
+                    className={key === 'netSettlementAmount' ? 'font-semibold' : ''}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
       id: 'breakdown',

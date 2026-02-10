@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
 import { CaseStage } from '@prisma/client'
 
@@ -94,6 +95,8 @@ export async function POST(
         note: `Patient admitted at ${data.admittingHospital}`,
       },
     })
+
+    await postCaseChatSystemMessage(leadId, `BD marked patient admitted at ${data.admittingHospital}.`)
 
     // Create notifications for Insurance team
     const insuranceUsers = await prisma.user.findMany({

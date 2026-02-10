@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { hasPermission } from '@/lib/rbac'
 import { CaseStage, PreAuthStatus } from '@prisma/client'
 import { z } from 'zod'
@@ -90,6 +91,8 @@ export async function POST(
         note: `Pre-authorization rejected by Insurance. Reason: ${data.reason}`,
       },
     })
+
+    await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance rejected pre-auth — ${data.reason}`)
 
     // Notify BD
     await prisma.notification.create({

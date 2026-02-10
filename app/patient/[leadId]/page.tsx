@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, FileText, MessageSquare, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User } from 'lucide-react'
+import { ArrowLeft, FileText, MessageSquare, MessageCircle, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User, XCircle } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { KYPDetailsView } from '@/components/kyp/kyp-details-view'
 import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
@@ -16,6 +16,8 @@ import { PreAuthForm } from '@/components/kyp/pre-auth-form'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
 import { KYPForm } from '@/components/kyp/kyp-form'
+import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
+import { KYPDetailedForm } from '@/components/kyp/kyp-detailed-form'
 import { StageProgress } from '@/components/case/stage-progress'
 import { ActivityTimeline } from '@/components/case/activity-timeline'
 import { format } from 'date-fns'
@@ -39,12 +41,15 @@ import {
   canCompletePreAuth, 
   canRaisePreAuth, 
   canEditKYP,
+  canSubmitKYPDetailed,
   canInitiate,
   canMarkDischarge,
   canGeneratePDF,
-  canEditDischargeSheet
+  canEditDischargeSheet,
+  canMarkLost
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
+import { CaseChat } from '@/components/chat/case-chat'
 
 interface Lead {
   id: string
@@ -139,6 +144,15 @@ interface KYPSubmission {
     hospitalNameSuggestion: string | null
     hospitalSuggestions?: string[] | null
     roomTypes?: Array<{ name: string; rent: string }> | null
+    suggestedHospitals?: Array<{
+      id: string
+      hospitalName: string
+      tentativeBill?: number | null
+      roomRentGeneral?: number | null
+      roomRentPrivate?: number | null
+      roomRentICU?: number | null
+      notes?: string | null
+    }> | null
     insurance: string | null
     tpa: string | null
     requestedHospitalName?: string | null
@@ -203,6 +217,7 @@ export default function PatientDetailsPage() {
   })
 
   const [showKYPForm, setShowKYPForm] = useState(false)
+  const [showKYPDetailedForm, setShowKYPDetailedForm] = useState(false)
   const [showPreAuthRaiseForm, setShowPreAuthRaiseForm] = useState(false)
   const [showAdmitModal, setShowAdmitModal] = useState(false)
   const [admitSubmitting, setAdmitSubmitting] = useState(false)
@@ -215,6 +230,10 @@ export default function PatientDetailsPage() {
   })
   const [showDischargeConfirm, setShowDischargeConfirm] = useState(false)
   const [dischargeSubmitting, setDischargeSubmitting] = useState(false)
+  const [showMarkLostDialog, setShowMarkLostDialog] = useState(false)
+  const [markLostReason, setMarkLostReason] = useState<string>('')
+  const [markLostDetail, setMarkLostDetail] = useState('')
+  const [markLostSubmitting, setMarkLostSubmitting] = useState(false)
 
   if (isLoading || isLoadingKYP) {
     return (
@@ -258,6 +277,10 @@ export default function PatientDetailsPage() {
   const getStageBadgeColor = (stage: CaseStage) => {
     const colors: Record<CaseStage, string> = {
       [CaseStage.NEW_LEAD]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+      [CaseStage.KYP_BASIC_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.KYP_BASIC_COMPLETE]: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 border-emerald-300',
+      [CaseStage.KYP_DETAILED_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.KYP_DETAILED_COMPLETE]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
       [CaseStage.KYP_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
       [CaseStage.KYP_COMPLETE]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
       [CaseStage.PREAUTH_RAISED]: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300 border-teal-300',
@@ -277,10 +300,12 @@ export default function PatientDetailsPage() {
   const canAddDetails = user && canAddKYPDetails(user, lead)
   const canComplete = user && canCompletePreAuth(user, lead)
   const canEdit = user && canEditKYP(user, lead)
+  const canSubmitDetailed = user && canSubmitKYPDetailed(user, lead)
   const canInit = user && canInitiate(user, lead)
   const canDischarge = user && canMarkDischarge(user, lead)
   const canPDF = user && canGeneratePDF(user, lead)
   const canFillDischargeForm = user && canEditDischargeSheet(user, lead)
+  const showMarkLost = user && canMarkLost(user, lead)
 
   return (
     <AuthenticatedLayout>
@@ -392,6 +417,15 @@ export default function PatientDetailsPage() {
                     Start KYP
                   </Button>
                 )}
+                {canSubmitDetailed && (
+                  <Button
+                    onClick={() => setShowKYPDetailedForm(true)}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border-0"
+                  >
+                    <Stethoscope className="h-4 w-4" />
+                    Submit KYP (Detailed)
+                  </Button>
+                )}
                 {canRaise && (
                   <Button
                     onClick={() => setShowPreAuthRaiseForm(true)}
@@ -475,6 +509,16 @@ export default function PatientDetailsPage() {
                     </Link>
                   </Button>
                 )}
+                {showMarkLost && (
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30"
+                    onClick={() => setShowMarkLostDialog(true)}
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Mark Lost
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -494,6 +538,13 @@ export default function PatientDetailsPage() {
                   {getKYPStatusLabel(lead.kypSubmission.status)}
                 </Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger 
+              value="chat" 
+              className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:bg-blue-50 dark:data-[state=active]:bg-blue-950/30"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat
             </TabsTrigger>
             <TabsTrigger 
               value="pre-auth" 
@@ -525,27 +576,75 @@ export default function PatientDetailsPage() {
             )}
           </TabsList>
 
+          <TabsContent value="chat">
+            <Card>
+              <CardHeader>
+                <CardTitle>BD & Insurance Chat</CardTitle>
+                <CardDescription>Two-way conversation for this case</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CaseChat leadId={leadId} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="kyp">
-            {showKYPForm ? (
+            {showKYPDetailedForm && canSubmitDetailed ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Submit KYP</CardTitle>
-                  <CardDescription>Enter patient KYP details</CardDescription>
+                  <CardTitle>KYP (Call 2 – Detailed)</CardTitle>
+                  <CardDescription>Disease, patient consent, and optional documents. Then raise pre-auth.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <KYPForm
+                  <KYPDetailedForm
                     leadId={leadId}
+                    initialDisease={kypSubmission?.disease ?? ''}
+                    onSuccess={() => {
+                      setShowKYPDetailedForm(false)
+                      queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                      queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+                      queryClient.invalidateQueries({ queryKey: ['case-chat', leadId] })
+                    }}
+                    onCancel={() => setShowKYPDetailedForm(false)}
+                  />
+                </CardContent>
+              </Card>
+            ) : showKYPForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>KYP (Call 1 – Basic)</CardTitle>
+                  <CardDescription>Insurance card, city and area required. Insurance will then suggest hospitals.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <KYPBasicForm
+                    leadId={leadId}
+                    initialPatientName={lead.patientName}
+                    initialPhone={lead.phoneNumber}
                     onSuccess={() => {
                       setShowKYPForm(false)
                       queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
                       queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+                      queryClient.invalidateQueries({ queryKey: ['case-chat', leadId] })
                     }}
                     onCancel={() => setShowKYPForm(false)}
                   />
                 </CardContent>
               </Card>
             ) : kypSubmission ? (
-              <KYPDetailsView kypSubmission={kypSubmission} />
+              <>
+                <KYPDetailsView kypSubmission={kypSubmission} />
+                {canSubmitDetailed && (
+                  <Card className="mt-4">
+                    <CardContent className="pt-6">
+                      <p className="text-muted-foreground mb-3">Add disease, consent, and optional documents to raise pre-auth.</p>
+                      <Button onClick={() => setShowKYPDetailedForm(true)} className="bg-indigo-600 hover:bg-indigo-700">
+                        <Stethoscope className="h-4 w-4 mr-2" />
+                        Submit KYP (Detailed)
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             ) : canEdit ? (
               <Card>
                 <CardContent className="py-12 text-center">
@@ -578,10 +677,11 @@ export default function PatientDetailsPage() {
                     initialData={kypSubmission.preAuthData ? {
                       requestedHospitalName: kypSubmission.preAuthData.requestedHospitalName || undefined,
                       requestedRoomType: kypSubmission.preAuthData.requestedRoomType || undefined,
-                      diseaseDescription: kypSubmission.preAuthData.diseaseDescription || undefined,
+                      diseaseDescription: kypSubmission.preAuthData.diseaseDescription || kypSubmission.disease || undefined,
                       diseaseImages: kypSubmission.preAuthData.diseaseImages as Array<{ name: string; url: string }> | undefined,
                       hospitalSuggestions: kypSubmission.preAuthData.hospitalSuggestions ?? undefined,
                       roomTypes: kypSubmission.preAuthData.roomTypes ?? undefined,
+                      suggestedHospitals: kypSubmission.preAuthData.suggestedHospitals ?? undefined,
                     } : undefined}
                     onSuccess={() => {
                       setShowPreAuthRaiseForm(false)
@@ -836,6 +936,83 @@ export default function PatientDetailsPage() {
                   </>
                 )}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showMarkLostDialog} onOpenChange={setShowMarkLostDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Mark Case as Lost</DialogTitle>
+              <DialogDescription>
+                Provide a reason. This will move the case to the Lost pipeline stage.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="markLostReason">Reason *</Label>
+                <select
+                  id="markLostReason"
+                  value={markLostReason}
+                  onChange={(e) => setMarkLostReason(e.target.value)}
+                  className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Select reason</option>
+                  <option value="Patient Declined">Patient Declined</option>
+                  <option value="Ghosted">Ghosted</option>
+                  <option value="Financial Issue">Financial Issue</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="markLostDetail">Additional details (optional)</Label>
+                <Textarea
+                  id="markLostDetail"
+                  value={markLostDetail}
+                  onChange={(e) => setMarkLostDetail(e.target.value)}
+                  placeholder="Any additional context"
+                  className="mt-2 resize-none"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowMarkLostDialog(false)
+                    setMarkLostReason('')
+                    setMarkLostDetail('')
+                  }}
+                  disabled={markLostSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={!markLostReason || markLostSubmitting}
+                  onClick={async () => {
+                    setMarkLostSubmitting(true)
+                    try {
+                      await apiPost(`/api/leads/${leadId}/mark-lost`, {
+                        lostReason: markLostReason,
+                        lostReasonDetail: markLostDetail.trim() || undefined,
+                      })
+                      toast.success('Case marked as lost')
+                      setShowMarkLostDialog(false)
+                      setMarkLostReason('')
+                      setMarkLostDetail('')
+                      queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                      queryClient.invalidateQueries({ queryKey: ['case-chat', leadId] })
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : 'Failed to mark as lost')
+                    } finally {
+                      setMarkLostSubmitting(false)
+                    }
+                  }}
+                >
+                  {markLostSubmitting ? 'Saving...' : 'Mark Lost'}
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

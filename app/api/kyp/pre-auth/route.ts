@@ -2,12 +2,22 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
 import { CaseStage } from '@prisma/client'
 
 const roomTypeSchema = z.object({
   name: z.string().min(1),
   rent: z.string(),
+})
+
+const hospitalSuggestionSchema = z.object({
+  hospitalName: z.string().min(1),
+  tentativeBill: z.number().optional(),
+  roomRentGeneral: z.number().optional(),
+  roomRentPrivate: z.number().optional(),
+  roomRentICU: z.number().optional(),
+  notes: z.string().optional(),
 })
 
 const preAuthSchema = z.object({
@@ -22,6 +32,8 @@ const preAuthSchema = z.object({
   roomTypes: z.array(roomTypeSchema).optional(),
   insurance: z.string().optional(),
   tpa: z.string().optional(),
+  // New: hospital suggestions (for KYP_BASIC_PENDING flow)
+  hospitals: z.array(hospitalSuggestionSchema).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -59,6 +71,84 @@ export async function POST(request: NextRequest) {
     }
 
     const { caseStage } = kypSubmission.lead
+
+    // Flow 0: Insurance suggests hospitals (KYP_BASIC_PENDING) → KYP_BASIC_COMPLETE
+    if (caseStage === CaseStage.KYP_BASIC_PENDING) {
+      if (!data.sumInsured?.trim()) {
+        return errorResponse('Sum insured is required', 400)
+      }
+      if (!data.hospitals?.length) {
+        return errorResponse('At least one hospital suggestion is required', 400)
+      }
+
+      const preAuth = await prisma.preAuthorization.upsert({
+        where: { kypSubmissionId: data.kypSubmissionId },
+        create: {
+          kypSubmissionId: data.kypSubmissionId,
+          sumInsured: data.sumInsured,
+          handledById: user.id,
+          handledAt: new Date(),
+        },
+        update: {
+          sumInsured: data.sumInsured,
+          handledById: user.id,
+          handledAt: new Date(),
+        },
+      })
+
+      await prisma.hospitalSuggestion.deleteMany({ where: { preAuthId: preAuth.id } })
+      for (const h of data.hospitals) {
+        await prisma.hospitalSuggestion.create({
+          data: {
+            preAuthId: preAuth.id,
+            hospitalName: h.hospitalName.trim(),
+            tentativeBill: h.tentativeBill ?? undefined,
+            roomRentGeneral: h.roomRentGeneral ?? undefined,
+            roomRentPrivate: h.roomRentPrivate ?? undefined,
+            roomRentICU: h.roomRentICU ?? undefined,
+            notes: h.notes ?? undefined,
+          },
+        })
+      }
+
+      await prisma.kYPSubmission.update({
+        where: { id: data.kypSubmissionId },
+        data: { status: 'KYP_DETAILS_ADDED' },
+      })
+
+      await prisma.lead.update({
+        where: { id: kypSubmission.lead.id },
+        data: {
+          caseStage: CaseStage.KYP_BASIC_COMPLETE,
+          pipelineStage: 'INSURANCE',
+        },
+      })
+
+      await prisma.caseStageHistory.create({
+        data: {
+          leadId: kypSubmission.lead.id,
+          fromStage: CaseStage.KYP_BASIC_PENDING,
+          toStage: CaseStage.KYP_BASIC_COMPLETE,
+          changedById: user.id,
+          note: `Insurance suggested ${data.hospitals.length} hospital(s)`,
+        },
+      })
+
+      await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance suggested ${data.hospitals.length} hospital(s). BD can now choose and raise pre-auth.`)
+
+      await prisma.notification.create({
+        data: {
+          userId: kypSubmission.submittedById,
+          type: 'KYP_SUBMITTED',
+          title: 'Hospital suggestions added',
+          message: `Insurance has suggested hospitals for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now submit KYP (Detailed) and raise pre-auth.`,
+          link: `/patient/${kypSubmission.lead.id}/pre-auth`,
+          relatedId: kypSubmission.id,
+        },
+      })
+
+      return successResponse(preAuth, 'Hospital suggestions saved. BD can now submit KYP (Detailed) and raise pre-auth.')
+    }
 
     // Flow 1: Insurance adds KYP details first (KYP_PENDING) → KYP_COMPLETE
     if (caseStage === CaseStage.KYP_PENDING) {
@@ -103,6 +193,9 @@ export async function POST(request: NextRequest) {
           note: 'KYP details added by Insurance (hospitals, room types, TPA, etc.)',
         },
       })
+
+      const hospitalCount = Array.isArray(data.hospitalSuggestions) ? data.hospitalSuggestions.length : 0
+      await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance suggested ${hospitalCount} hospital(s). BD can now raise pre-auth.`)
 
       await prisma.notification.create({
         data: {
@@ -163,6 +256,8 @@ export async function POST(request: NextRequest) {
           note: 'Pre-authorization completed by Insurance',
         },
       })
+
+      await postCaseChatSystemMessage(kypSubmission.lead.id, 'Insurance completed pre-auth. BD can now mark patient admitted.')
 
       await prisma.notification.create({
         data: {

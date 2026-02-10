@@ -2,12 +2,13 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
 import { CaseStage } from '@prisma/client'
 
 const raisePreAuthSchema = z.object({
-  requestedHospitalName: z.string().min(1, 'Hospital selection is required'),
-  requestedRoomType: z.string().min(1, 'Room type selection is required'),
+  requestedHospitalName: z.string().min(1, 'Hospital name is required'),
+  requestedRoomType: z.string().optional(), // required only when not new hospital in UI
   diseaseDescription: z.string().min(1, 'Disease description is required'),
   diseaseImages: z.array(z.object({
     name: z.string(),
@@ -15,6 +16,7 @@ const raisePreAuthSchema = z.object({
   })).optional(),
   expectedAdmissionDate: z.string().optional(),
   expectedSurgeryDate: z.string().optional(),
+  isNewHospitalRequest: z.boolean().optional().default(false),
 })
 
 export async function POST(
@@ -51,42 +53,51 @@ export async function POST(
       return errorResponse('KYP submission not found. Please submit KYP first.', 400)
     }
 
-    if (lead.caseStage !== CaseStage.KYP_COMPLETE) {
-      return errorResponse(`Cannot raise pre-auth. Current stage: ${lead.caseStage}. Insurance must add KYP details first.`, 400)
+    const allowedStages: CaseStage[] = [
+      CaseStage.KYP_DETAILED_PENDING,
+      CaseStage.KYP_DETAILED_COMPLETE,
+      CaseStage.KYP_COMPLETE,
+    ]
+    if (!allowedStages.includes(lead.caseStage)) {
+      return errorResponse(`Cannot raise pre-auth. Current stage: ${lead.caseStage}. Submit KYP (Detailed) first or wait for Insurance to add details.`, 400)
     }
 
-    // Pre-auth must exist (created by Insurance with hospitals + room types)
-    const existingPreAuth = await prisma.preAuthorization.findUnique({
+    const existingPreAuth = await prisma.preAuthorization.findFirst({
       where: { kypSubmissionId: lead.kypSubmission.id },
+      include: { suggestedHospitals: true },
     })
 
     if (!existingPreAuth) {
-      return errorResponse('Insurance must add KYP details (hospitals, room types) before BD can raise pre-auth.', 400)
+      return errorResponse('Insurance must suggest hospitals before BD can raise pre-auth.', 400)
     }
 
     if (existingPreAuth.preAuthRaisedAt) {
       return errorResponse('Pre-auth already raised for this case', 400)
     }
 
-    const hospitals = (existingPreAuth.hospitalSuggestions as string[] | null) ?? []
-    const roomTypes = (existingPreAuth.roomTypes as Array<{ name: string; rent: string }> | null) ?? []
-    if (hospitals.length && !hospitals.includes(data.requestedHospitalName)) {
-      return errorResponse('Selected hospital must be one of Insurance\'s suggested hospitals.', 400)
-    }
-    const roomNames = roomTypes.map((r) => r.name)
-    if (roomNames.length && !roomNames.includes(data.requestedRoomType)) {
-      return errorResponse('Selected room type must be one of Insurance\'s suggested room types.', 400)
+    const isNewHospital = data.isNewHospitalRequest === true
+    if (!isNewHospital) {
+      const suggestedNames = existingPreAuth.suggestedHospitals.map((h) => h.hospitalName)
+      const legacyHospitals = (existingPreAuth.hospitalSuggestions as string[] | null) ?? []
+      const allHospitals = suggestedNames.length > 0 ? suggestedNames : legacyHospitals
+      if (allHospitals.length > 0 && !allHospitals.includes(data.requestedHospitalName)) {
+        return errorResponse('Selected hospital must be one of Insurance\'s suggested hospitals, or use Request New Hospital.', 400)
+      }
+      if (!data.requestedRoomType?.trim()) {
+        return errorResponse('Room type is required when selecting a suggested hospital.', 400)
+      }
     }
 
     const preAuth = await prisma.preAuthorization.update({
       where: { kypSubmissionId: lead.kypSubmission.id },
       data: {
         requestedHospitalName: data.requestedHospitalName,
-        requestedRoomType: data.requestedRoomType,
+        requestedRoomType: data.requestedRoomType ?? null,
         diseaseDescription: data.diseaseDescription,
         diseaseImages: data.diseaseImages ?? [],
         preAuthRaisedAt: new Date(),
         preAuthRaisedById: user.id,
+        isNewHospitalRequest: isNewHospital,
       },
     })
 
@@ -109,6 +120,8 @@ export async function POST(
         note: `Pre-auth raised by BD. Hospital: ${data.requestedHospitalName}`,
       },
     })
+
+    await postCaseChatSystemMessage(leadId, `BD raised pre-auth for ${data.requestedHospitalName}.`)
 
     // Create notifications for Insurance team
     const insuranceUsers = await prisma.user.findMany({

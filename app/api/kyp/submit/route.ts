@@ -3,21 +3,26 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { uploadFileToS3 } from '@/lib/s3-client'
+import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
 import { UserRole, CaseStage } from '@prisma/client'
 
 const submitKYPSchema = z.object({
   leadId: z.string(),
+  type: z.enum(['basic', 'detailed']).optional(), // default: legacy single-step
   aadhar: z.string().optional(),
   pan: z.string().optional(),
   insuranceCard: z.string().optional(),
   disease: z.string().optional(),
   location: z.string().optional(),
+  area: z.string().optional(),
   remark: z.string().optional(),
   aadharFileUrl: z.string().optional(),
   panFileUrl: z.string().optional(),
   insuranceCardFileUrl: z.string().optional(),
+  prescriptionFileUrl: z.string().optional(),
+  diseasePhotos: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
+  patientConsent: z.boolean().optional(),
   otherFiles: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
 })
 
@@ -35,21 +40,42 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = submitKYPSchema.parse(body)
 
-    // Validate that at least one field is filled
-    const hasData =
-      data.aadhar ||
-      data.pan ||
-      data.insuranceCard ||
-      data.disease ||
-      data.location ||
-      data.remark ||
-      data.aadharFileUrl ||
-      data.panFileUrl ||
-      data.insuranceCardFileUrl ||
-      (data.otherFiles && data.otherFiles.length > 0)
+    const isBasic = data.type === 'basic'
+    const isDetailed = data.type === 'detailed'
 
-    if (!hasData) {
-      return errorResponse('At least one field must be filled', 400)
+    if (isBasic) {
+      if (!data.insuranceCardFileUrl?.trim()) {
+        return errorResponse('Insurance card upload is required for KYP Basic', 400)
+      }
+      if (!data.location?.trim()) {
+        return errorResponse('City is required for KYP Basic', 400)
+      }
+      if (!data.area?.trim()) {
+        return errorResponse('Area is required for KYP Basic', 400)
+      }
+    } else if (isDetailed) {
+      if (!data.disease?.trim()) {
+        return errorResponse('Disease/Diagnosis is required for KYP Detailed', 400)
+      }
+      if (!data.patientConsent) {
+        return errorResponse('Patient consent is required for KYP Detailed', 400)
+      }
+    } else {
+      // Legacy: at least one field
+      const hasData =
+        data.aadhar ||
+        data.pan ||
+        data.insuranceCard ||
+        data.disease ||
+        data.location ||
+        data.remark ||
+        data.aadharFileUrl ||
+        data.panFileUrl ||
+        data.insuranceCardFileUrl ||
+        (data.otherFiles && data.otherFiles.length > 0)
+      if (!hasData) {
+        return errorResponse('At least one field must be filled', 400)
+      }
     }
 
     // Check if lead exists and user has access
@@ -67,16 +93,65 @@ export async function POST(request: NextRequest) {
       return errorResponse('You do not have permission to submit KYP for this lead', 403)
     }
 
-    // Check if KYP already exists
     const existingKYP = await prisma.kYPSubmission.findUnique({
       where: { leadId: data.leadId },
+      include: { lead: { select: { caseStage: true } } },
     })
+
+    // Detailed: update existing KYP and move to KYP_DETAILED_PENDING
+    if (isDetailed) {
+      if (!existingKYP) {
+        return errorResponse('KYP submission not found. Submit KYP (Basic) first.', 400)
+      }
+      if (existingKYP.lead.caseStage !== CaseStage.KYP_BASIC_COMPLETE) {
+        return errorResponse('Case must be in KYP Basic Complete stage. Insurance must suggest hospitals first.', 400)
+      }
+
+      const kypSubmission = await prisma.kYPSubmission.update({
+        where: { leadId: data.leadId },
+        data: {
+          disease: data.disease ?? undefined,
+          patientConsent: data.patientConsent ?? false,
+          aadhar: data.aadhar,
+          pan: data.pan,
+          aadharFileUrl: data.aadharFileUrl,
+          panFileUrl: data.panFileUrl,
+          prescriptionFileUrl: data.prescriptionFileUrl,
+          diseasePhotos: data.diseasePhotos ?? undefined,
+          otherFiles: data.otherFiles ?? undefined,
+        },
+        include: {
+          lead: { select: { id: true, leadRef: true, patientName: true, caseStage: true } },
+          submittedBy: { select: { id: true, name: true } },
+        },
+      })
+
+      const previousStage = lead.caseStage
+      await prisma.lead.update({
+        where: { id: data.leadId },
+        data: { caseStage: CaseStage.KYP_DETAILED_PENDING },
+      })
+
+      await prisma.caseStageHistory.create({
+        data: {
+          leadId: data.leadId,
+          fromStage: previousStage,
+          toStage: CaseStage.KYP_DETAILED_PENDING,
+          changedById: user.id,
+          note: 'KYP (Detailed) submitted',
+        },
+      })
+
+      await postCaseChatSystemMessage(data.leadId, 'BD submitted KYP (Detailed). You can now raise pre-auth.')
+
+      return successResponse(kypSubmission, 'KYP (Detailed) submitted. You can now raise pre-auth.')
+    }
 
     if (existingKYP) {
       return errorResponse('KYP submission already exists for this lead', 400)
     }
 
-    // Create KYP submission
+    // Create KYP submission (basic or legacy)
     const kypSubmission = await prisma.kYPSubmission.create({
       data: {
         leadId: data.leadId,
@@ -84,11 +159,15 @@ export async function POST(request: NextRequest) {
         pan: data.pan,
         insuranceCard: data.insuranceCard,
         disease: data.disease,
-        location: data.location,
+        location: data.location ?? undefined,
+        area: data.area ?? undefined,
         remark: data.remark,
         aadharFileUrl: data.aadharFileUrl,
         panFileUrl: data.panFileUrl,
-        insuranceCardFileUrl: data.insuranceCardFileUrl,
+        insuranceCardFileUrl: data.insuranceCardFileUrl ?? undefined,
+        prescriptionFileUrl: data.prescriptionFileUrl,
+        diseasePhotos: data.diseasePhotos ?? undefined,
+        patientConsent: data.patientConsent ?? false,
         otherFiles: data.otherFiles || [],
         submittedById: user.id,
         status: 'PENDING',
@@ -111,27 +190,27 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update lead case stage
+    const targetStage = isBasic ? CaseStage.KYP_BASIC_PENDING : CaseStage.KYP_PENDING
     const previousStage = lead.caseStage
     await prisma.lead.update({
       where: { id: data.leadId },
       data: {
-        caseStage: CaseStage.KYP_PENDING,
+        caseStage: targetStage,
       },
     })
 
-    // Create stage history entry
     await prisma.caseStageHistory.create({
       data: {
         leadId: data.leadId,
         fromStage: previousStage,
-        toStage: CaseStage.KYP_PENDING,
+        toStage: targetStage,
         changedById: user.id,
-        note: 'KYP submitted',
+        note: isBasic ? 'KYP (Basic) submitted' : 'KYP submitted',
       },
     })
 
-    // Create notifications for Insurance team
+    await postCaseChatSystemMessage(data.leadId, isBasic ? 'BD submitted KYP (Basic).' : 'BD submitted KYP.')
+
     const insuranceUsers = await prisma.user.findMany({
       where: {
         role: 'INSURANCE_HEAD',

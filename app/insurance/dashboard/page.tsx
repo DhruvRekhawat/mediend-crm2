@@ -141,6 +141,10 @@ export default function InsuranceDashboardPage() {
   const getStageBadge = (stage: CaseStage) => {
     const badgeConfig: Record<CaseStage, { variant: 'default' | 'secondary' | 'destructive' | 'outline', className: string }> = {
       [CaseStage.NEW_LEAD]: { variant: 'secondary', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
+      [CaseStage.KYP_BASIC_PENDING]: { variant: 'secondary', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
+      [CaseStage.KYP_BASIC_COMPLETE]: { variant: 'default', className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' },
+      [CaseStage.KYP_DETAILED_PENDING]: { variant: 'secondary', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' },
+      [CaseStage.KYP_DETAILED_COMPLETE]: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
       [CaseStage.KYP_PENDING]: { variant: 'secondary', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
       [CaseStage.KYP_COMPLETE]: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
       [CaseStage.PREAUTH_RAISED]: { variant: 'default', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },

@@ -10,17 +10,30 @@ const STAGES: Array<{
   shortLabel: string
 }> = [
   { stage: CaseStage.NEW_LEAD, label: 'New Lead', shortLabel: 'New' },
-  { stage: CaseStage.KYP_PENDING, label: 'KYP Pending', shortLabel: 'KYP' },
-  { stage: CaseStage.KYP_COMPLETE, label: 'KYP Complete', shortLabel: 'KYP ✓' },
+  { stage: CaseStage.KYP_BASIC_PENDING, label: 'KYP Basic', shortLabel: 'KYP 1' },
+  { stage: CaseStage.KYP_BASIC_COMPLETE, label: 'Hospitals Suggested', shortLabel: 'Hosp' },
+  { stage: CaseStage.KYP_DETAILED_PENDING, label: 'KYP Detailed', shortLabel: 'KYP 2' },
+  { stage: CaseStage.KYP_DETAILED_COMPLETE, label: 'KYP Complete', shortLabel: 'KYP ✓' },
   { stage: CaseStage.PREAUTH_RAISED, label: 'Pre-Auth Raised', shortLabel: 'Pre-Auth' },
   { stage: CaseStage.PREAUTH_COMPLETE, label: 'Pre-Auth Complete', shortLabel: 'Pre-Auth ✓' },
   { stage: CaseStage.INITIATED, label: 'Admitted', shortLabel: 'Admitted' },
   { stage: CaseStage.DISCHARGED, label: 'Discharged', shortLabel: 'Discharged' },
-  { stage: CaseStage.IPD_DONE, label: 'IPD Done', shortLabel: 'Done' },
 ]
 
 function getStageIndex(stage: CaseStage): number {
-  return STAGES.findIndex(s => s.stage === stage)
+  const inStages = STAGES.findIndex(s => s.stage === stage)
+  if (inStages >= 0) return inStages
+  // Legacy or extra stages: map to nearest visible stage
+  const legacyToNew: Partial<Record<CaseStage, CaseStage>> = {
+    [CaseStage.KYP_PENDING]: CaseStage.KYP_BASIC_PENDING,
+    [CaseStage.KYP_COMPLETE]: CaseStage.KYP_DETAILED_COMPLETE,
+    [CaseStage.ADMITTED]: CaseStage.INITIATED,
+    [CaseStage.IPD_DONE]: CaseStage.DISCHARGED,
+    [CaseStage.PL_PENDING]: CaseStage.DISCHARGED,
+    [CaseStage.OUTSTANDING]: CaseStage.DISCHARGED,
+  }
+  const mapped = legacyToNew[stage] ?? stage
+  return STAGES.findIndex(s => s.stage === mapped)
 }
 
 function getStageStatus(currentStage: CaseStage, stage: CaseStage): 'completed' | 'current' | 'pending' {
@@ -39,6 +52,30 @@ function getStageColor(stage: CaseStage): { bg: string; border: string; text: st
       border: 'border-blue-300 dark:border-blue-700',
       text: 'text-blue-700 dark:text-blue-300',
       connector: 'bg-blue-300 dark:bg-blue-700',
+    },
+    [CaseStage.KYP_BASIC_PENDING]: {
+      bg: 'bg-amber-100 dark:bg-amber-900',
+      border: 'border-amber-300 dark:border-amber-700',
+      text: 'text-amber-700 dark:text-amber-300',
+      connector: 'bg-amber-300 dark:bg-amber-700',
+    },
+    [CaseStage.KYP_BASIC_COMPLETE]: {
+      bg: 'bg-emerald-100 dark:bg-emerald-900',
+      border: 'border-emerald-300 dark:border-emerald-700',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      connector: 'bg-emerald-300 dark:bg-emerald-700',
+    },
+    [CaseStage.KYP_DETAILED_PENDING]: {
+      bg: 'bg-amber-100 dark:bg-amber-900',
+      border: 'border-amber-300 dark:border-amber-700',
+      text: 'text-amber-700 dark:text-amber-300',
+      connector: 'bg-amber-300 dark:bg-amber-700',
+    },
+    [CaseStage.KYP_DETAILED_COMPLETE]: {
+      bg: 'bg-green-100 dark:bg-green-900',
+      border: 'border-green-300 dark:border-green-700',
+      text: 'text-green-700 dark:text-green-300',
+      connector: 'bg-green-300 dark:bg-green-700',
     },
     [CaseStage.KYP_PENDING]: {
       bg: 'bg-amber-100 dark:bg-amber-900',
@@ -116,6 +153,30 @@ function getStageColors(stage: CaseStage): { gradient: string, bgGradient: strin
       bgGradient: 'from-blue-400 to-cyan-400',
       textColor: 'text-blue-600 dark:text-blue-400',
       connectorColor: 'bg-gradient-to-r from-blue-500 to-cyan-500',
+    },
+    [CaseStage.KYP_BASIC_PENDING]: {
+      gradient: 'from-yellow-500 to-amber-500',
+      bgGradient: 'from-yellow-400 to-amber-400',
+      textColor: 'text-yellow-600 dark:text-yellow-400',
+      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
+    },
+    [CaseStage.KYP_BASIC_COMPLETE]: {
+      gradient: 'from-emerald-500 to-teal-500',
+      bgGradient: 'from-emerald-400 to-teal-400',
+      textColor: 'text-emerald-600 dark:text-emerald-400',
+      connectorColor: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+    },
+    [CaseStage.KYP_DETAILED_PENDING]: {
+      gradient: 'from-yellow-500 to-amber-500',
+      bgGradient: 'from-yellow-400 to-amber-400',
+      textColor: 'text-yellow-600 dark:text-yellow-400',
+      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
+    },
+    [CaseStage.KYP_DETAILED_COMPLETE]: {
+      gradient: 'from-green-500 to-emerald-500',
+      bgGradient: 'from-green-400 to-emerald-400',
+      textColor: 'text-green-600 dark:text-green-400',
+      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
     },
     [CaseStage.KYP_PENDING]: {
       gradient: 'from-yellow-500 to-amber-500',

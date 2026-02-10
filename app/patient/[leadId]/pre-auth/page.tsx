@@ -9,10 +9,9 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { PreAuthForm } from '@/components/kyp/pre-auth-form'
+import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
-import { QueryList } from '@/components/kyp/query-list'
-import { QueryForm } from '@/components/kyp/query-form'
 import { PreAuthApprovalModal } from '@/components/kyp/pre-auth-approval-modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CaseStage, PreAuthStatus } from '@prisma/client'
@@ -38,6 +37,14 @@ interface KYPSubmission {
     icu: string | null
     hospitalNameSuggestion: string | null
     hospitalSuggestions?: string[] | null
+    suggestedHospitals?: Array<{
+      hospitalName: string
+      tentativeBill: number | null
+      roomRentGeneral: number | null
+      roomRentPrivate: number | null
+      roomRentICU: number | null
+      notes: string | null
+    }>
     roomTypes?: Array<{ name: string; rent: string }> | null
     insurance: string | null
     tpa: string | null
@@ -154,15 +161,40 @@ export default function PreAuthPage() {
         <Tabs defaultValue="pre-auth" className="space-y-4">
           <TabsList>
             <TabsTrigger value="pre-auth">Pre-Authorization</TabsTrigger>
-            <TabsTrigger value="queries">
-              Q&A
-              {kypSubmission?.preAuthData && (
-                <span className="ml-2 text-xs">({kypSubmission.preAuthData.id ? 'Active' : ''})</span>
-              )}
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pre-auth" className="space-y-4">
+            {/* Insurance: Hospital suggestions (KYP_BASIC_PENDING) */}
+            {isInsurance && lead?.caseStage === CaseStage.KYP_BASIC_PENDING && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Suggest hospitals</CardTitle>
+                  <CardDescription>
+                    Add sum insured and suggest hospitals with tentative bills and room rents. BD will then choose and raise pre-auth.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <HospitalSuggestionForm
+                    kypSubmissionId={kypSubmission!.id}
+                    initialSumInsured={kypSubmission?.preAuthData?.sumInsured ?? undefined}
+                    initialHospitals={kypSubmission?.preAuthData?.suggestedHospitals?.map((h) => ({
+                      hospitalName: h.hospitalName,
+                      tentativeBill: h.tentativeBill,
+                      roomRentGeneral: h.roomRentGeneral,
+                      roomRentPrivate: h.roomRentPrivate,
+                      roomRentICU: h.roomRentICU,
+                      notes: h.notes,
+                    }))}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+                      queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                    }}
+                    onCancel={() => router.push(`/patient/${leadId}`)}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
             {/* BD: Show form to raise pre-auth */}
             {isBD && canRaise && !preAuthRaised && (
               <PreAuthRaiseForm
@@ -314,37 +346,6 @@ export default function PreAuthPage() {
                   <Button variant="outline" className="mt-4" onClick={() => router.push(`/patient/${leadId}`)}>
                     Back to patient
                   </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="queries" className="space-y-4">
-            {kypSubmission.preAuthData && (
-              <>
-                <QueryList preAuthorizationId={kypSubmission.preAuthData.id} />
-                {isInsurance && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Raise New Query</CardTitle>
-                      <CardDescription>Ask a question to the BD team</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <QueryForm
-                        preAuthorizationId={kypSubmission.preAuthData.id}
-                        onSuccess={() => {
-                          queryClient.invalidateQueries({ queryKey: ['queries', kypSubmission.preAuthData!.id] })
-                        }}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-              </>
-            )}
-            {!kypSubmission.preAuthData && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Please complete pre-authorization first to enable Q&A
                 </CardContent>
               </Card>
             )}

@@ -47,6 +47,8 @@ interface PreAuthApprovalModalProps {
     } | null
     approvalStatus?: PreAuthStatus
     rejectionReason?: string | null
+    isNewHospitalRequest?: boolean
+    newHospitalPreAuthRaised?: boolean
   }
 }
 
@@ -64,6 +66,10 @@ export function PreAuthApprovalModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
 
+  const isNewHospital = preAuthData.isNewHospitalRequest === true
+  const newHospitalMarked = preAuthData.newHospitalPreAuthRaised === true
+  const showMarkNewHospitalFirst = isNewHospital && !newHospitalMarked
+
   const handleApprove = async () => {
     setIsSubmitting(true)
     try {
@@ -76,6 +82,23 @@ export function PreAuthApprovalModal({
       setAction(null)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to approve pre-auth')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleMarkNewHospitalRaised = async () => {
+    setIsSubmitting(true)
+    try {
+      await apiPost(`/api/pre-auth/${kypSubmissionId}/mark-new-hospital-raised`, {})
+      toast.success('Marked pre-auth raised for new hospital')
+      queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
+      queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+      queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+      queryClient.invalidateQueries({ queryKey: ['case-chat', leadId] })
+      setAction(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update')
     } finally {
       setIsSubmitting(false)
     }
@@ -154,7 +177,29 @@ export function PreAuthApprovalModal({
           {/* Action Buttons */}
           {!isAlreadyProcessed && (
             <div className="space-y-4 border-t pt-4">
-              {action === null && (
+              {showMarkNewHospitalFirst && action === null && (
+                <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4">
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                    This is a new hospital request. Mark that pre-auth has been raised for the new hospital, then approve or reject.
+                  </p>
+                  <Button
+                    onClick={handleMarkNewHospitalRaised}
+                    disabled={isSubmitting}
+                    className="mt-3"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Mark pre-auth raised for new hospital'
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {(!showMarkNewHospitalFirst || newHospitalMarked) && action === null && (
                 <div className="flex gap-3">
                   <Button
                     onClick={() => setAction('approve')}

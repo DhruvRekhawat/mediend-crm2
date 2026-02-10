@@ -26,6 +26,27 @@ const updateDischargeSheetSchema = z.object({
   treatment: z.string().optional(),
   circle: z.string().optional(),
   leadSource: z.string().optional(),
+  tentativeAmount: z.number().optional(),
+  copayPct: z.number().optional(),
+  dischargeSummaryUrl: z.string().optional(),
+  otNotesUrl: z.string().optional(),
+  codesCount: z.number().optional(),
+  finalBillUrl: z.string().optional(),
+  settlementLetterUrl: z.string().optional(),
+  roomRentAmount: z.number().optional(),
+  pharmacyAmount: z.number().optional(),
+  investigationAmount: z.number().optional(),
+  consumablesAmount: z.number().optional(),
+  implantsAmount: z.number().optional(),
+  totalFinalBill: z.number().optional(),
+  finalApprovedAmount: z.number().optional(),
+  deductionAmount: z.number().optional(),
+  discountAmount: z.number().optional(),
+  waivedOffAmount: z.number().optional(),
+  settlementPart: z.number().optional(),
+  tdsAmount: z.number().optional(),
+  otherDeduction: z.number().optional(),
+  netSettlementAmount: z.number().optional(),
   // Financials
   totalAmount: z.number().optional(),
   billAmount: z.number().optional(),
@@ -174,6 +195,27 @@ export async function PATCH(
     if (data.mediendShareAmount !== undefined) updateData.mediendShareAmount = data.mediendShareAmount
     if (data.mediendNetProfit !== undefined) updateData.mediendNetProfit = data.mediendNetProfit
     if (data.remarks !== undefined) updateData.remarks = data.remarks
+    if (data.tentativeAmount !== undefined) updateData.tentativeAmount = data.tentativeAmount
+    if (data.copayPct !== undefined) updateData.copayPct = data.copayPct
+    if (data.dischargeSummaryUrl !== undefined) updateData.dischargeSummaryUrl = data.dischargeSummaryUrl
+    if (data.otNotesUrl !== undefined) updateData.otNotesUrl = data.otNotesUrl
+    if (data.codesCount !== undefined) updateData.codesCount = data.codesCount
+    if (data.finalBillUrl !== undefined) updateData.finalBillUrl = data.finalBillUrl
+    if (data.settlementLetterUrl !== undefined) updateData.settlementLetterUrl = data.settlementLetterUrl
+    if (data.roomRentAmount !== undefined) updateData.roomRentAmount = data.roomRentAmount
+    if (data.pharmacyAmount !== undefined) updateData.pharmacyAmount = data.pharmacyAmount
+    if (data.investigationAmount !== undefined) updateData.investigationAmount = data.investigationAmount
+    if (data.consumablesAmount !== undefined) updateData.consumablesAmount = data.consumablesAmount
+    if (data.implantsAmount !== undefined) updateData.implantsAmount = data.implantsAmount
+    if (data.totalFinalBill !== undefined) updateData.totalFinalBill = data.totalFinalBill
+    if (data.finalApprovedAmount !== undefined) updateData.finalApprovedAmount = data.finalApprovedAmount
+    if (data.deductionAmount !== undefined) updateData.deductionAmount = data.deductionAmount
+    if (data.discountAmount !== undefined) updateData.discountAmount = data.discountAmount
+    if (data.waivedOffAmount !== undefined) updateData.waivedOffAmount = data.waivedOffAmount
+    if (data.settlementPart !== undefined) updateData.settlementPart = data.settlementPart
+    if (data.tdsAmount !== undefined) updateData.tdsAmount = data.tdsAmount
+    if (data.otherDeduction !== undefined) updateData.otherDeduction = data.otherDeduction
+    if (data.netSettlementAmount !== undefined) updateData.netSettlementAmount = data.netSettlementAmount
 
     // Update discharge sheet
     const updated = await prisma.dischargeSheet.update({

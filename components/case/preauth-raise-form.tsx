@@ -23,6 +23,16 @@ interface RoomTypeOption {
   rent: string
 }
 
+export interface HospitalSuggestionItem {
+  id: string
+  hospitalName: string
+  tentativeBill?: number | null
+  roomRentGeneral?: number | null
+  roomRentPrivate?: number | null
+  roomRentICU?: number | null
+  notes?: string | null
+}
+
 interface PreAuthRaiseFormProps {
   leadId: string
   initialData?: {
@@ -32,6 +42,7 @@ interface PreAuthRaiseFormProps {
     diseaseImages?: Array<{ name: string; url: string }>
     hospitalSuggestions?: string[]
     roomTypes?: RoomTypeOption[]
+    suggestedHospitals?: HospitalSuggestionItem[]
   }
   onSuccess?: () => void
   onCancel?: () => void
@@ -50,8 +61,10 @@ export function PreAuthRaiseForm({
 }: PreAuthRaiseFormProps) {
   const router = useRouter()
   const { uploadFile, uploading: isUploading } = useFileUpload({ folder: 'preauth' })
-  const hospitals = initialData?.hospitalSuggestions ?? []
-  const roomTypes = initialData?.roomTypes ?? []
+  const suggestedHospitals = initialData?.suggestedHospitals ?? []
+  const legacyHospitals = initialData?.hospitalSuggestions ?? []
+  const legacyRoomTypes = initialData?.roomTypes ?? []
+  const hasSuggestedCards = suggestedHospitals.length > 0
 
   const [formData, setFormData] = useState({
     requestedHospitalName: initialData?.requestedHospitalName || '',
@@ -60,6 +73,8 @@ export function PreAuthRaiseForm({
     diseaseImages: (initialData?.diseaseImages || []) as FilePreview[],
     expectedAdmissionDate: '',
     expectedSurgeryDate: '',
+    isNewHospitalRequest: false,
+    newHospitalName: '',
   })
 
   const handleFileUpload = async (file: File) => {
@@ -85,18 +100,35 @@ export function PreAuthRaiseForm({
     }))
   }
 
+  const hospitalNameForSubmit = formData.isNewHospitalRequest
+    ? formData.newHospitalName.trim()
+    : formData.requestedHospitalName
+
   const handleSubmit = async () => {
+    if (!hospitalNameForSubmit) {
+      toast.error('Hospital name is required')
+      return
+    }
+    if (!formData.isNewHospitalRequest && !formData.requestedRoomType?.trim()) {
+      toast.error('Room type is required')
+      return
+    }
+    if (!formData.diseaseDescription.trim()) {
+      toast.error('Disease description is required')
+      return
+    }
     try {
       const response = await fetch(`/api/leads/${leadId}/raise-preauth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requestedHospitalName: formData.requestedHospitalName,
-          requestedRoomType: formData.requestedRoomType,
+          requestedHospitalName: hospitalNameForSubmit,
+          requestedRoomType: formData.requestedRoomType || undefined,
           diseaseDescription: formData.diseaseDescription,
           diseaseImages: formData.diseaseImages,
           expectedAdmissionDate: formData.expectedAdmissionDate,
           expectedSurgeryDate: formData.expectedSurgeryDate,
+          isNewHospitalRequest: formData.isNewHospitalRequest,
         }),
       })
 
@@ -116,6 +148,18 @@ export function PreAuthRaiseForm({
     }
   }
 
+  const selectedHospitalCard = hasSuggestedCards && formData.requestedHospitalName && !formData.isNewHospitalRequest
+    ? suggestedHospitals.find((h) => h.hospitalName === formData.requestedHospitalName)
+    : null
+
+  const roomOptionsFromCard = selectedHospitalCard
+    ? [
+        ...(selectedHospitalCard.roomRentGeneral != null ? [{ name: 'General', rent: String(selectedHospitalCard.roomRentGeneral) }] : []),
+        ...(selectedHospitalCard.roomRentPrivate != null ? [{ name: 'Private', rent: String(selectedHospitalCard.roomRentPrivate) }] : []),
+        ...(selectedHospitalCard.roomRentICU != null ? [{ name: 'ICU', rent: String(selectedHospitalCard.roomRentICU) }] : []),
+      ]
+    : []
+
   const steps = [
     {
       id: 'hospital',
@@ -123,7 +167,111 @@ export function PreAuthRaiseForm({
       description: 'Select from Insurance’s suggested hospitals and room types',
       component: (
         <div className="space-y-4">
-          {hospitals.length > 0 ? (
+          {hasSuggestedCards ? (
+            <>
+              <div className="space-y-2">
+                <Label>Hospital *</Label>
+                <div className="grid gap-2">
+                  {suggestedHospitals.map((h) => (
+                    <div
+                      key={h.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isNewHospitalRequest: false,
+                          requestedHospitalName: h.hospitalName,
+                          requestedRoomType: '',
+                          newHospitalName: '',
+                        }))
+                      }
+                      onKeyDown={(e) => e.key === 'Enter' && setFormData((prev) => ({ ...prev, isNewHospitalRequest: false, requestedHospitalName: h.hospitalName, requestedRoomType: '', newHospitalName: '' }))}
+                      className={`rounded-lg border-2 p-4 text-left transition-colors cursor-pointer ${
+                        formData.requestedHospitalName === h.hospitalName && !formData.isNewHospitalRequest
+                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30'
+                          : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="font-medium">{h.hospitalName}</div>
+                      {(h.tentativeBill != null || h.roomRentGeneral != null || h.roomRentPrivate != null || h.roomRentICU != null) && (
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {h.tentativeBill != null && <span>Tentative bill: ₹{h.tentativeBill}</span>}
+                          {(h.roomRentGeneral != null || h.roomRentPrivate != null || h.roomRentICU != null) && (
+                            <span className="ml-2">
+                              Room: {[h.roomRentGeneral != null && `General ₹${h.roomRentGeneral}`, h.roomRentPrivate != null && `Private ₹${h.roomRentPrivate}`, h.roomRentICU != null && `ICU ₹${h.roomRentICU}`].filter(Boolean).join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {h.notes && <div className="mt-1 text-sm text-muted-foreground">{h.notes}</div>}
+                    </div>
+                  ))}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isNewHospitalRequest: true,
+                        requestedHospitalName: '',
+                        requestedRoomType: '',
+                        newHospitalName: prev.newHospitalName || '',
+                      }))
+                    }
+                    onKeyDown={(e) => e.key === 'Enter' && setFormData((prev) => ({ ...prev, isNewHospitalRequest: true, requestedHospitalName: '', requestedRoomType: '', newHospitalName: prev.newHospitalName || '' }))}
+                    className={`rounded-lg border-2 border-dashed p-4 text-left transition-colors cursor-pointer ${
+                      formData.isNewHospitalRequest ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30' : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'
+                    }`}
+                  >
+                    <span className="font-medium">Request New Hospital</span>
+                    <p className="text-sm text-muted-foreground mt-1">Enter a hospital name not in the list</p>
+                  </div>
+                </div>
+              </div>
+              {formData.isNewHospitalRequest ? (
+                <div>
+                  <Label htmlFor="newHospitalName">New Hospital Name *</Label>
+                  <Input
+                    id="newHospitalName"
+                    value={formData.newHospitalName}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, newHospitalName: e.target.value }))}
+                    placeholder="Enter hospital name"
+                  />
+                </div>
+              ) : selectedHospitalCard && (roomOptionsFromCard.length > 0 ? (
+                <div>
+                  <Label htmlFor="roomType">Room Type *</Label>
+                  <Select
+                    value={formData.requestedRoomType}
+                    onValueChange={(v) => setFormData((prev) => ({ ...prev, requestedRoomType: v }))}
+                  >
+                    <SelectTrigger id="roomType">
+                      <SelectValue placeholder="Select room type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roomOptionsFromCard.map((r) => (
+                        <SelectItem key={r.name} value={r.name}>
+                          {r.name}
+                          {r.rent ? ` – ₹${r.rent}` : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="roomType">Room Type *</Label>
+                  <Input
+                    id="roomType"
+                    value={formData.requestedRoomType}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, requestedRoomType: e.target.value }))}
+                    placeholder="e.g. General, Private, ICU"
+                  />
+                </div>
+              ))}
+            </>
+          ) : legacyHospitals.length > 0 ? (
             <div>
               <Label htmlFor="hospital">Hospital *</Label>
               <Select
@@ -136,7 +284,7 @@ export function PreAuthRaiseForm({
                   <SelectValue placeholder="Select hospital" />
                 </SelectTrigger>
                 <SelectContent>
-                  {hospitals.map((h) => (
+                  {legacyHospitals.map((h) => (
                     <SelectItem key={h} value={h}>
                       {h}
                     </SelectItem>
@@ -162,7 +310,7 @@ export function PreAuthRaiseForm({
             </div>
           )}
 
-          {roomTypes.length > 0 ? (
+          {legacyRoomTypes.length > 0 ? (
             <div>
               <Label htmlFor="roomType">Room Type *</Label>
               <Select
@@ -175,7 +323,7 @@ export function PreAuthRaiseForm({
                   <SelectValue placeholder="Select room type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {roomTypes.map((r) => (
+                  {legacyRoomTypes.map((r) => (
                     <SelectItem key={r.name} value={r.name}>
                       {r.name}
                       {r.rent ? ` – ₹${r.rent}` : ''}
@@ -235,8 +383,8 @@ export function PreAuthRaiseForm({
         </div>
       ),
       validate: () =>
-        formData.requestedHospitalName.length > 0 &&
-        formData.requestedRoomType.length > 0,
+        (formData.isNewHospitalRequest ? formData.newHospitalName.trim().length > 0 : formData.requestedHospitalName.length > 0) &&
+        (formData.isNewHospitalRequest || roomOptionsFromCard.length === 0 || formData.requestedRoomType.length > 0),
     },
     {
       id: 'disease',
@@ -331,11 +479,12 @@ export function PreAuthRaiseForm({
         <div className="space-y-4">
           <div>
             <Label>Hospital</Label>
-            <p className="text-sm">{formData.requestedHospitalName}</p>
+            <p className="text-sm">{hospitalNameForSubmit || formData.requestedHospitalName || formData.newHospitalName}</p>
+            {formData.isNewHospitalRequest && <p className="text-xs text-muted-foreground">(New hospital request)</p>}
           </div>
           <div>
             <Label>Room Type</Label>
-            <p className="text-sm">{formData.requestedRoomType}</p>
+            <p className="text-sm">{formData.requestedRoomType || '—'}</p>
           </div>
           {formData.expectedAdmissionDate && (
             <div>
