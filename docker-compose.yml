@@ -20,6 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
       args:
         DEPLOY_COMMIT: ${DEPLOY_COMMIT:-unknown}
         DEPLOY_TIME: ${DEPLOY_TIME:-unknown}
