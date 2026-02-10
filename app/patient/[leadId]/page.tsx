@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, FileText, MessageSquare, MessageCircle, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User, XCircle } from 'lucide-react'
+import { ArrowLeft, FileText, MessageSquare, MessageCircle, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User, XCircle, File, ExternalLink } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { KYPDetailsView } from '@/components/kyp/kyp-details-view'
 import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
-import { PreAuthForm } from '@/components/kyp/pre-auth-form'
+
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
-import { KYPForm } from '@/components/kyp/kyp-form'
+
 import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
 import { KYPDetailedForm } from '@/components/kyp/kyp-detailed-form'
 import { StageProgress } from '@/components/case/stage-progress'
@@ -67,6 +67,12 @@ interface Lead {
     id: string
     status: string
     submittedAt: string
+    aadharFileUrl?: string | null
+    panFileUrl?: string | null
+    insuranceCardFileUrl?: string | null
+    prescriptionFileUrl?: string | null
+    diseasePhotos?: Array<{ name: string; url: string }> | null
+    otherFiles?: Array<{ name: string; url: string }> | null
     submittedBy: {
       id: string
       name: string
@@ -307,6 +313,29 @@ export default function PatientDetailsPage() {
   const canFillDischargeForm = user && canEditDischargeSheet(user, lead)
   const showMarkLost = user && canMarkLost(user, lead)
 
+  // Collect all uploaded documents for grid (KYP + PreAuth)
+  const uploadedDocuments = (() => {
+    const items: { title: string; url: string; isImage: boolean }[] = []
+    const kyp = lead?.kypSubmission
+    if (!kyp) return items
+    const add = (title: string, url: string) => {
+      const u = url?.toLowerCase() || ''
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(u) || u.includes('jpg') || u.includes('png')
+      items.push({ title, url, isImage })
+    }
+    if (kyp.insuranceCardFileUrl) add('Insurance Card', kyp.insuranceCardFileUrl)
+    if (kyp.aadharFileUrl) add('Aadhar', kyp.aadharFileUrl)
+    if (kyp.panFileUrl) add('PAN', kyp.panFileUrl)
+    if (kyp.prescriptionFileUrl) add('Prescription', kyp.prescriptionFileUrl)
+    const diseasePhotos = (kyp.diseasePhotos as Array<{ name: string; url: string }>) || []
+    diseasePhotos.forEach((p) => add(p.name || 'Disease photo', p.url))
+    const otherFiles = (kyp.otherFiles as Array<{ name: string; url: string }>) || []
+    otherFiles.forEach((f) => add(f.name || 'Document', f.url))
+    const diseaseImages = (kyp.preAuthData?.diseaseImages as Array<{ name: string; url: string }>) || []
+    diseaseImages.forEach((p) => add(p.name || 'Disease image', p.url))
+    return items
+  })()
+
   return (
     <AuthenticatedLayout>
       <div className="space-y-6">
@@ -397,6 +426,41 @@ export default function PatientDetailsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Uploaded Documents Grid */}
+        {uploadedDocuments.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {uploadedDocuments.map((doc, index) => (
+                  <div
+                    key={`${doc.url}-${index}`}
+                    className="flex flex-col rounded-lg border-2 border-gray-200 dark:border-gray-800 overflow-hidden hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all"
+                  >
+                    <div className="w-full h-[200px] shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-900">
+                      <iframe
+                        src={doc.url}
+                        title={doc.title}
+                        className="w-full h-full border-0 pointer-events-none select-none"
+                        style={{ overflow: 'hidden' }}
+                      />
+                    </div>
+                    <div className="p-2 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shrink-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" title={doc.title}>
+                        {doc.title}
+                      </p>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 mt-0.5"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Open in new tab
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+        )}
 
         {/* Action Buttons Section */}
         {user && (

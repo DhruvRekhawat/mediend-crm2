@@ -33,7 +33,7 @@ import { getStatusColor } from '@/lib/lead-status-colors'
 import { mapStatusCode } from '@/lib/mysql-code-mappings'
 import { Progress } from '@/components/ui/progress'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { KYPForm } from '@/components/kyp/kyp-form'
+import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
 import { UserPlus, Eye, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -737,25 +737,31 @@ export default function BDPipelinePage() {
         <Dialog open={showKYPForm} onOpenChange={setShowKYPForm}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Know Your Patient (KYP)</DialogTitle>
+              <DialogTitle>KYP (Call 1 – Basic)</DialogTitle>
               <DialogDescription>
-                Submit patient information for insurance pre-authorization
+                Insurance card, city and area required. Insurance will then suggest hospitals.
               </DialogDescription>
             </DialogHeader>
-            {selectedLeadId && (
-              <KYPForm
-                leadId={selectedLeadId}
-                onSuccess={() => {
-                  setShowKYPForm(false)
-                  setSelectedLeadId(null)
-                  queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
-                  if (selectedLeadId) {
-                    router.push(`/patient/${selectedLeadId}`)
-                  }
-                }}
-                onCancel={() => setShowKYPForm(false)}
-              />
-            )}
+            {selectedLeadId && (() => {
+              const selectedLead = filteredLeads.find((l) => l.id === selectedLeadId)
+              return (
+                <KYPBasicForm
+                  leadId={selectedLeadId}
+                  initialPatientName={selectedLead?.patientName}
+                  initialPhone={selectedLead?.phoneNumber}
+                  onSuccess={() => {
+                    setShowKYPForm(false)
+                    setSelectedLeadId(null)
+                    queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
+                    queryClient.invalidateQueries({ queryKey: ['leads', filters] })
+                    if (selectedLeadId) {
+                      router.push(`/patient/${selectedLeadId}`)
+                    }
+                  }}
+                  onCancel={() => setShowKYPForm(false)}
+                />
+              )
+            })()}
           </DialogContent>
         </Dialog>
       </div>

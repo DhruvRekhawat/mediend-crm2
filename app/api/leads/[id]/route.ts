@@ -55,6 +55,12 @@ export async function GET(
             id: true,
             status: true,
             submittedAt: true,
+            aadharFileUrl: true,
+            panFileUrl: true,
+            insuranceCardFileUrl: true,
+            prescriptionFileUrl: true,
+            diseasePhotos: true,
+            otherFiles: true,
             submittedBy: {
               select: {
                 id: true,

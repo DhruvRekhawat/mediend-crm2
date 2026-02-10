@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
-import { PreAuthForm } from '@/components/kyp/pre-auth-form'
+
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
@@ -164,8 +164,8 @@ export default function PreAuthPage() {
           </TabsList>
 
           <TabsContent value="pre-auth" className="space-y-4">
-            {/* Insurance: Hospital suggestions (KYP_BASIC_PENDING) */}
-            {isInsurance && lead?.caseStage === CaseStage.KYP_BASIC_PENDING && (
+            {/* Insurance: Hospital suggestions (New Flow) */}
+            {isInsurance && (lead?.caseStage === CaseStage.KYP_BASIC_PENDING || (canAddDetails && !showEditForm && !canComplete)) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Suggest hospitals</CardTitle>
@@ -227,23 +227,7 @@ export default function PreAuthPage() {
               </>
             )}
 
-            {/* Insurance: Show form to add details (first time) - only when NOT completing pre-auth */}
-            {isInsurance && canAddDetails && !showEditForm && !canComplete && (
-              <PreAuthForm
-                kypSubmissionId={kypSubmission!.id}
-                initialData={{
-                  ...kypSubmission?.preAuthData,
-                  hospitalSuggestions: kypSubmission?.preAuthData?.hospitalSuggestions ?? undefined,
-                  roomTypes: kypSubmission?.preAuthData?.roomTypes ?? undefined,
-                }}
-                isReadOnly={false}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
-                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                }}
-                onCancel={() => router.push(`/patient/${leadId}`)}
-              />
-            )}
+
 
             {/* Insurance: Show approval/rejection interface when pre-auth is raised */}
             {isInsurance && canComplete && !showEditForm && kypSubmission?.preAuthData && (

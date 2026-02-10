@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { KYPForm } from '@/components/kyp/kyp-form'
+import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
 import { format } from 'date-fns'
 import { Eye, Plus } from 'lucide-react'
 import { useLeads } from '@/hooks/use-leads'
@@ -174,8 +174,8 @@ export default function KYPPage() {
           <Dialog open={showKYPForm} onOpenChange={setShowKYPForm}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>New KYP Submission</DialogTitle>
-                <DialogDescription>Select a lead to submit KYP</DialogDescription>
+                <DialogTitle>KYP (Call 1 – Basic)</DialogTitle>
+                <DialogDescription>Select a lead, then submit insurance card, city and area. Insurance will suggest hospitals.</DialogDescription>
               </DialogHeader>
               {!selectedLeadId ? (
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
@@ -190,19 +190,26 @@ export default function KYPPage() {
                     </Button>
                   ))}
                 </div>
-              ) : (
-                <KYPForm
-                  leadId={selectedLeadId}
-                  onSuccess={() => {
-                    setShowKYPForm(false)
-                    setSelectedLeadId(null)
-                  }}
-                  onCancel={() => {
-                    setShowKYPForm(false)
-                    setSelectedLeadId(null)
-                  }}
-                />
-              )}
+              ) : (() => {
+                const selectedLead = leads.find((l) => l.id === selectedLeadId)
+                return (
+                  <KYPBasicForm
+                    leadId={selectedLeadId}
+                    initialPatientName={selectedLead?.patientName}
+                    initialPhone={selectedLead?.phoneNumber}
+                    onSuccess={() => {
+                      setShowKYPForm(false)
+                      setSelectedLeadId(null)
+                      queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
+                      queryClient.invalidateQueries({ queryKey: ['leads'] })
+                    }}
+                    onCancel={() => {
+                      setShowKYPForm(false)
+                      setSelectedLeadId(null)
+                    }}
+                  />
+                )
+              })()}
             </DialogContent>
           </Dialog>
 
