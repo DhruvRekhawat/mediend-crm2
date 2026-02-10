@@ -1,7 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import fs from "fs";
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma'
 
 type EmployeeRow = {
   "EMP ID": string | number;
@@ -273,4 +271,4 @@ main()
     console.error("❌ Error during seed:", error);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  
