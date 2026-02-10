@@ -602,7 +602,7 @@ model IncomingLead {
 
 model Department {
   id          String   @id @default(cuid())
-  name        String
+  name        String   @unique
   description String?
   headId      String?
   head        User?    @relation("DepartmentHead", fields: [headId], references: [id])
@@ -613,7 +613,6 @@ model Department {
   teams          DepartmentTeam[]
   supportTickets SupportTicket[]
 
-  @@index([name])
   @@index([headId])
 }
 
@@ -630,6 +629,7 @@ model DepartmentTeam {
 
   @@index([departmentId])
   @@index([teamLeadId])
+  @@unique([name, departmentId], name: "name_departmentId")
 }
 
 model Employee {
@@ -733,9 +733,9 @@ model LeaveBalance {
   employee    Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   leaveTypeId String
   leaveType   LeaveTypeMaster @relation(fields: [leaveTypeId], references: [id])
-  allocated   Int             @default(0)
-  used        Int             @default(0)
-  remaining   Int             @default(0)
+  allocated   Float           @default(0)
+  used        Float           @default(0)
+  remaining   Float           @default(0)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
