@@ -75,6 +75,16 @@ export default function InsuranceDashboardPage() {
   const [selectedLead, setSelectedLead] = useState<LeadWithStage | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
+  const KYP_STAGES: CaseStage[] = [
+    CaseStage.KYP_BASIC_PENDING,
+    CaseStage.KYP_BASIC_COMPLETE,
+    CaseStage.KYP_DETAILED_PENDING,
+    CaseStage.KYP_DETAILED_COMPLETE,
+    CaseStage.KYP_PENDING,
+    CaseStage.KYP_COMPLETE,
+  ]
+  
+
   const { data: leads, isLoading, error } = useQuery<LeadWithStage[]>({
     queryKey: ['leads', 'insurance', activeTab],
     queryFn: async () => {
@@ -102,10 +112,8 @@ export default function InsuranceDashboardPage() {
     
     switch (activeTab) {
       case 'kyp-review':
-        // Include leads with KYP_PENDING or KYP_COMPLETE, or leads with KYP submission but caseStage not set
-        return lead.caseStage === CaseStage.KYP_COMPLETE || 
-               lead.caseStage === CaseStage.KYP_PENDING ||
-               (lead.kypSubmission && (!lead.caseStage || lead.caseStage === CaseStage.NEW_LEAD))
+        return KYP_STAGES.includes(lead.caseStage) || (lead.kypSubmission && lead.caseStage === CaseStage.NEW_LEAD)
+
       case 'preauth-raised':
         return lead.caseStage === CaseStage.PREAUTH_RAISED
       case 'preauth-complete':
@@ -122,11 +130,11 @@ export default function InsuranceDashboardPage() {
   }) || []
 
   const getTabStats = () => {
-    const kypReview = leads?.filter(l => 
-      l.caseStage === CaseStage.KYP_COMPLETE || 
-      l.caseStage === CaseStage.KYP_PENDING ||
-      (l.kypSubmission && (!l.caseStage || l.caseStage === CaseStage.NEW_LEAD))
+    const kypReview = leads?.filter(l =>
+      KYP_STAGES.includes(l.caseStage) ||
+      (l.kypSubmission && l.caseStage === CaseStage.NEW_LEAD)
     ).length || 0
+    
     const preAuthRaised = leads?.filter(l => l.caseStage === CaseStage.PREAUTH_RAISED).length || 0
     const preAuthComplete = leads?.filter(l => l.caseStage === CaseStage.PREAUTH_COMPLETE).length || 0
     const admitted = leads?.filter(l => l.caseStage === CaseStage.INITIATED || l.caseStage === CaseStage.ADMITTED).length || 0
