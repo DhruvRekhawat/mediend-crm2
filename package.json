@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "db:seed:hrms": "tsx prisma/seed-hrms.ts",
+    "db:seed:hrms": "bunx prisma/seed-hrms.ts",
     "sync:historic": "tsx scripts/sync-historic-attendance.ts",
     "attendance:list": "tsx scripts/list-attendance-employees.ts",
     "sync:leads": "tsx scripts/sync-mysql-leads.ts",
