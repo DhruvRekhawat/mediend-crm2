@@ -41,4 +41,4 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-CMD ["sh", "-c", "bunx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "bunx prisma db push && node server.js"]

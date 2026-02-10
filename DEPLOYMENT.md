@@ -235,14 +235,41 @@ Access at: `https://workspace.mediend.com/admin/system` (MD/ADMIN only)
 
 Auto-refresh available (5-second interval).
 
-## Database Migrations
+## Database: What to run on the server
 
-Migrations run automatically on deployment via the Dockerfile CMD.
+The app uses **Prisma `db push`** (no migration history in this repo). Schema is applied automatically when the container starts.
 
-Manual migration:
+### On each deploy
+
+- **Schema**: Applied automatically by the Dockerfile (`prisma db push` then start the app). No manual step.
+- **Optional first-time or after schema changes**: If you ever run the app without the Docker CMD (e.g. manual start), run once:
+  ```bash
+  docker compose exec app bunx prisma db push
+  ```
+
+### One-time data migration (case stages v2)
+
+If the server DB has existing leads with **old** case stages (`KYP_PENDING`, `KYP_COMPLETE`, `ADMITTED`, `IPD_DONE`), run the data migration **once** after schema is in place:
+
 ```bash
-docker compose exec app npx prisma migrate deploy
+docker compose exec app bun run migrate:case-stages
+# If you use the v2 script (old enum → new enum + HospitalSuggestion backfill):
+docker compose exec app bun run migrate:case-stages-v2
 ```
+
+Use `migrate-case-stages.ts` for initial stage assignment; use `migrate-case-stages-v2.ts` when migrating from the old enum values to the new workflow (KYP_BASIC_*, KYP_DETAILED_*, etc.).
+
+### First-time only: seed
+
+```bash
+docker compose exec app npx prisma db seed
+```
+
+### If you switch to Prisma Migrate later
+
+1. Locally: `bunx prisma migrate dev --name init` (creates `prisma/migrations/`), then commit it.
+2. Change Dockerfile CMD to: `bunx prisma migrate deploy && node server.js`.
+3. On server: future deploys will apply new migrations on startup.
 
 ## Database Backups
 

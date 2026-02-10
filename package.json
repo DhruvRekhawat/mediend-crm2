@@ -18,6 +18,7 @@
     "sync:historic:leads": "tsx scripts/sync-historic-mysql-leads.ts",
     "verify:mysql": "tsx scripts/verify-mysql-connection.ts",
     "migrate:case-stages": "prisma generate && tsx scripts/migrate-case-stages.ts",
+    "migrate:case-stages-v2": "prisma generate && tsx scripts/migrate-case-stages-v2.ts",
     "fix:lead-mappings": "tsx scripts/fix-existing-lead-mappings.ts"
   },
   "prisma": {
