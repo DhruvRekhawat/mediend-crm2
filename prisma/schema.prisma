@@ -602,7 +602,7 @@ model IncomingLead {
 
 model Department {
   id          String   @id @default(cuid())
-  name        String   @unique
+  name        String   
   description String?
   headId      String?
   head        User?    @relation("DepartmentHead", fields: [headId], references: [id])
@@ -614,6 +614,7 @@ model Department {
   supportTickets SupportTicket[]
 
   @@index([headId])
+  @@index([name])
 }
 
 model DepartmentTeam {
