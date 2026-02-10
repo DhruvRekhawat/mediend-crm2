@@ -249,15 +249,27 @@ The app uses **Prisma `db push`** (no migration history in this repo). Schema is
 
 ### One-time data migration (case stages v2)
 
-If the server DB has existing leads with **old** case stages (`KYP_PENDING`, `KYP_COMPLETE`, `ADMITTED`, `IPD_DONE`), run the data migration **once** after schema is in place:
+If the server DB has existing leads with **old** case stages (`KYP_PENDING`, `KYP_COMPLETE`, `ADMITTED`, `IPD_DONE`), run the data migration **once** after schema is in place.
+
+**Option A – Run in a one-off container (recommended on server):**
+
+From the repo root (where `docker-compose.yml` and `.env` with `DATABASE_URL` are):
 
 ```bash
-docker compose exec app bun run migrate:case-stages
-# If you use the v2 script (old enum → new enum + HospitalSuggestion backfill):
-docker compose exec app bun run migrate:case-stages-v2
+docker compose --profile tools run --rm migrate
 ```
 
-Use `migrate-case-stages.ts` for initial stage assignment; use `migrate-case-stages-v2.ts` when migrating from the old enum values to the new workflow (KYP_BASIC_*, KYP_DETAILED_*, etc.).
+This builds a `migrate` image with the full app context and runs `migrate:case-stages-v2`, then exits.
+
+**Option B – Run on your machine against the server DB:**
+
+Use an SSH tunnel or temporary DB access, then:
+
+```bash
+DATABASE_URL="postgresql://user:pass@localhost:5432/mediend_crm" bun run migrate:case-stages-v2
+```
+
+Use `migrate:case-stages` for initial stage assignment; use `migrate:case-stages-v2` when migrating from the old enum values to the new workflow (KYP_BASIC_*, KYP_DETAILED_*, etc.).
 
 ### First-time only: seed
 

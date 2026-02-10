@@ -41,6 +41,21 @@ services:
     volumes:
       - uptime-kuma-data:/app/data
 
+  # One-off: run case-stages migration (same env as app, then exit)
+  # Usage: docker compose run --rm migrate
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+
 volumes:
   pgdata:
   uptime-kuma-data:

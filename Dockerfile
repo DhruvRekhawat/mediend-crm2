@@ -42,3 +42,8 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 CMD ["sh", "-c", "bunx prisma db push && node server.js"]
+
+# Stage for running one-off migrations (has full source + deps)
+FROM builder AS migrate
+WORKDIR /app
+CMD ["bun", "run", "migrate:case-stages-v2"]
