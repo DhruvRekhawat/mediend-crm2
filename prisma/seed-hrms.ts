@@ -22,7 +22,10 @@ async function main() {
     fs.readFileSync("prisma/employee-json.json", "utf-8")
   );
 
+  console.log(`📊 Processing ${rawData.length} rows...`);
+
   /* ---------------- LEAVE TYPES ---------------- */
+  console.log("\n📋 Setting up leave types...");
   const leaveTypes = [
     { name: "CL", maxDays: 12 },
     { name: "SL", maxDays: 12 },
@@ -38,6 +41,9 @@ async function main() {
       await prisma.leaveTypeMaster.create({
         data: lt
       });
+      console.log(`  ✓ Created leave type: ${lt.name}`);
+    } else {
+      console.log(`  → Leave type exists: ${lt.name}`);
     }
   }
 
@@ -45,15 +51,28 @@ async function main() {
     (await prisma.leaveTypeMaster.findMany()).map(l => [l.name, l.id])
   );
 
+  /* ---------------- CACHE FOR DEPARTMENTS AND TEAMS ---------------- */
+  // Build in-memory cache to avoid duplicate lookups
+  const departmentCache = new Map<string, string>(); // name -> id
+  const teamCache = new Map<string, string>(); // "name|departmentId" -> id
+
+  console.log("\n👥 Processing employees...");
+  let processedCount = 0;
+  let skippedCount = 0;
+
   /* ---------------- EMPLOYEES ---------------- */
   for (const row of rawData) {
     // Skip header row
     if (row["EMP ID"] === "EMP ID") {
+      console.log("  → Skipping header row");
       continue;
     }
 
     const employeeCode = String(row["EMP ID"] || "").trim();
-    if (!employeeCode) continue;
+    if (!employeeCode) {
+      skippedCount++;
+      continue;
+    }
 
     const departmentName = String(row["DEPT"] || "").trim();
     const teamName = String(row["TEAM"] || "").trim();
@@ -64,43 +83,64 @@ async function main() {
 
     // Skip rows without email
     if (!email) {
-      console.warn(
-        `⚠️ No email for Employee: ${name}, ID: ${employeeCode} - skipping`
-      );
+      console.log(`  ⚠️  No email for ${name} (${employeeCode}) - skipping`);
+      skippedCount++;
       continue;
     }
 
-    /* Department - find or create */
-    let department = null;
+    /* Department - find or create with cache */
+    let departmentId: string | null = null;
     if (departmentName) {
-      department = await prisma.department.findFirst({
-        where: { name: departmentName }
-      });
-
-      if (!department) {
-        department = await prisma.department.create({
-          data: { name: departmentName }
+      // Check cache first
+      if (departmentCache.has(departmentName)) {
+        departmentId = departmentCache.get(departmentName)!;
+      } else {
+        // Look up in database
+        let department = await prisma.department.findFirst({
+          where: { name: departmentName }
         });
+
+        if (!department) {
+          department = await prisma.department.create({
+            data: { name: departmentName }
+          });
+          console.log(`  ✓ Created department: ${departmentName}`);
+        }
+
+        departmentId = department.id;
+        departmentCache.set(departmentName, departmentId);
       }
     }
 
-    /* Team - find or create */
-    let team = null;
-    if (teamName && department) {
-      team = await prisma.departmentTeam.findFirst({
-        where: {
-          name: teamName,
-          departmentId: department.id
-        }
-      });
-
-      if (!team) {
-        team = await prisma.departmentTeam.create({
-          data: {
+    /* Team - find or create with cache */
+    let teamId: string | null = null;
+    if (teamName && departmentId) {
+      const cacheKey = `${teamName}|${departmentId}`;
+      
+      // Check cache first
+      if (teamCache.has(cacheKey)) {
+        teamId = teamCache.get(cacheKey)!;
+      } else {
+        // Look up in database
+        let team = await prisma.departmentTeam.findFirst({
+          where: {
             name: teamName,
-            departmentId: department.id
+            departmentId: departmentId
           }
         });
+
+        if (!team) {
+          team = await prisma.departmentTeam.create({
+            data: {
+              name: teamName,
+              departmentId: departmentId
+            }
+          });
+          console.log(`  ✓ Created team: ${teamName} in ${departmentName}`);
+        }
+
+        teamId = team.id;
+        teamCache.set(cacheKey, teamId);
       }
     }
 
@@ -110,9 +150,8 @@ async function main() {
     });
 
     if (!user) {
-      console.warn(
-        `⚠️ No user found for email: ${email} (Employee: ${name}, ID: ${employeeCode})`
-      );
+      console.log(`  ⚠️  No user found for email: ${email} (${name}, ${employeeCode})`);
+      skippedCount++;
       continue;
     }
 
@@ -134,7 +173,7 @@ async function main() {
           parsedJoinDate = null;
         }
       } catch (e) {
-        console.warn(`⚠️ Invalid join date for ${employeeCode}: ${joinDate}`);
+        console.log(`  ⚠️  Invalid join date for ${employeeCode}: ${joinDate}`);
         parsedJoinDate = null;
       }
     }
@@ -148,8 +187,8 @@ async function main() {
       ? await prisma.employee.update({
           where: { employeeCode },
           data: {
-            departmentId: department?.id || null,
-            teamId: team?.id || null
+            departmentId: departmentId,
+            teamId: teamId
           }
         })
       : await prisma.employee.create({
@@ -157,8 +196,8 @@ async function main() {
             employeeCode,
             userId: user.id,
             joinDate: parsedJoinDate,
-            departmentId: department?.id || null,
-            teamId: team?.id || null
+            departmentId: departmentId,
+            teamId: teamId
           }
         });
 
@@ -215,12 +254,23 @@ async function main() {
       }
     }
 
-    console.log(`✓ Processed employee: ${name} (${employeeCode})`);
+    processedCount++;
+    if (processedCount % 10 === 0) {
+      console.log(`  → Processed ${processedCount} employees...`);
+    }
   }
 
-  console.log("✅ HRMS JSON seed completed successfully");
+  console.log("\n✅ HRMS JSON seed completed successfully");
+  console.log(`📊 Summary:`);
+  console.log(`   - Processed: ${processedCount} employees`);
+  console.log(`   - Skipped: ${skippedCount} rows`);
+  console.log(`   - Departments created/found: ${departmentCache.size}`);
+  console.log(`   - Teams created/found: ${teamCache.size}`);
 }
 
 main()
-  .catch(console.error)
+  .catch((error) => {
+    console.error("❌ Error during seed:", error);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());
