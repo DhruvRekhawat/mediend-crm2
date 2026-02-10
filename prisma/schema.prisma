@@ -629,7 +629,6 @@ model DepartmentTeam {
 
   @@index([departmentId])
   @@index([teamLeadId])
-  @@unique([name, departmentId], name: "name_departmentId")
 }
 
 model Employee {
