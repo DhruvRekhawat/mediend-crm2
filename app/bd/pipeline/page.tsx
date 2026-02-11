@@ -36,6 +36,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
 import { UserPlus, Eye, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { CaseStage } from '@prisma/client'
+import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 
 interface Target {
   id: string
@@ -60,6 +62,38 @@ export default function BDPipelinePage() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
   const [isStartCalendarOpen, setIsStartCalendarOpen] = useState(false)
   const [isEndCalendarOpen, setIsEndCalendarOpen] = useState(false)
+
+  const getStatusBadgeColor = (status: string) => {
+    const badgeConfig: Record<string, string> = {
+      PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+      KYP_DETAILS_ADDED: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+      PRE_AUTH_COMPLETE: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+      FOLLOW_UP_COMPLETE: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300',
+      COMPLETED: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+    }
+    return badgeConfig[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300'
+  }
+
+  const getStageBadgeColor = (stage: CaseStage) => {
+    const colors: Record<CaseStage, string> = {
+      [CaseStage.NEW_LEAD]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+      [CaseStage.KYP_BASIC_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.KYP_BASIC_COMPLETE]: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 border-emerald-300',
+      [CaseStage.KYP_DETAILED_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.KYP_DETAILED_COMPLETE]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.KYP_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.KYP_COMPLETE]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.PREAUTH_RAISED]: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300 border-teal-300',
+      [CaseStage.PREAUTH_COMPLETE]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+      [CaseStage.INITIATED]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.ADMITTED]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.DISCHARGED]: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 border-orange-300',
+      [CaseStage.IPD_DONE]: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300 border-teal-300',
+      [CaseStage.PL_PENDING]: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300',
+      [CaseStage.OUTSTANDING]: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300',
+    }
+    return colors[stage] || 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300'
+  }
 
   const filters = useMemo(() => {
     const baseFilters: any = { bdId: user?.id }
@@ -576,8 +610,6 @@ export default function BDPipelinePage() {
                     <TableRow>
                       <TableHead>Lead Ref</TableHead>
                       <TableHead>Patient Name</TableHead>
-                      <TableHead>City</TableHead>
-                      <TableHead>Hospital</TableHead>
                       <TableHead>Treatment</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Stage</TableHead>
@@ -589,15 +621,15 @@ export default function BDPipelinePage() {
                       filteredLeads.map((lead) => {
                         const mappedStatus = mapStatusCode(lead.status)
                         const statusColor = getStatusColor(mappedStatus)
+                        const kypSubmission = kypStatusMap.get(lead.id)
                         return (
                           <TableRow
                             key={lead.id}
-                            className={`hover:opacity-80 transition-opacity ${statusColor.bg} ${statusColor.border} border-l-4`}
+                            onClick={() => router.push(`/patient/${lead.id}`)}
+                            className={`cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/40 transition-all duration-200 ${statusColor.bg} ${statusColor.border} border-l-4`}
                           >
                           <TableCell className="font-medium">{lead.leadRef}</TableCell>
                           <TableCell>{lead.patientName}</TableCell>
-                          <TableCell>{lead.city}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{lead.hospitalName}</TableCell>
                           <TableCell>{lead.treatment}</TableCell>
                           <TableCell>
                             <Badge
@@ -621,99 +653,17 @@ export default function BDPipelinePage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              {(() => {
-                                const kypSubmission = kypStatusMap.get(lead.id)
-                                
-                                // No KYP submission - show +KYP button
-                                if (!kypSubmission) {
-                                  return (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        setSelectedLeadId(lead.id)
-                                        setShowKYPForm(true)
-                                      }}
-                                    >
-                                      <Plus className="h-3 w-3 mr-1" />
-                                      KYP
-                                    </Button>
-                                  )
-                                }
-
-                                const hasPreAuth = !!((kypSubmission as any).preAuthData)
-                                const hasFollowUp = !!((kypSubmission as any).followUpData)
-
-                                // Follow-up done - show tag and "Follow-Up Done" badge
-                                if (hasFollowUp) {
-                                  return (
-                                    <>
-                                      <Badge
-                                        variant="outline"
-                                        className="bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-300"
-                                      >
-                                        Follow-Up Done
-                                      </Badge>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          router.push(`/patient/${lead.id}/follow-up`)
-                                        }}
-                                      >
-                                        <Eye className="h-3 w-3 mr-1" />
-                                        View
-                                      </Button>
-                                    </>
-                                  )
-                                }
-
-                                // Pre-auth done but no follow-up - show tag and Follow-Up button
-                                if (hasPreAuth) {
-                                  return (
-                                    <>
-                                      <Badge
-                                        variant="outline"
-                                        className="bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 border-green-300"
-                                      >
-                                        Pre-Auth Done
-                                      </Badge>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          router.push(`/patient/${lead.id}/follow-up`)
-                                        }}
-                                      >
-                                        <Plus className="h-3 w-3 mr-1" />
-                                        Follow-Up
-                                      </Button>
-                                    </>
-                                  )
-                                }
-
-                                // KYP done but no pre-auth - show tag and "Pre-Auth Pending" badge
-                                return (
-                                  <>
-                                    <Badge
-                                      variant="outline"
-                                      className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border-blue-300"
-                                    >
-                                      KYP Done
-                                    </Badge>
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      Pre-Auth Pending
-                                    </Badge>
-                                  </>
-                                )
-                              })()}
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              {kypSubmission?.status && (
+                                <Badge className={`border-0 ${getStatusBadgeColor(kypSubmission.status)}`}>
+                                  {getKYPStatusLabel(kypSubmission.status)}
+                                </Badge>
+                              )}
+                              {lead.caseStage && (
+                                <Badge className={`border-2 ${getStageBadgeColor(lead.caseStage)}`}>
+                                  {lead.caseStage.replace(/_/g, ' ')}
+                                </Badge>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -721,7 +671,7 @@ export default function BDPipelinePage() {
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                           {searchQuery ? 'No leads found matching your search' : 'No leads found'}
                         </TableCell>
                       </TableRow>

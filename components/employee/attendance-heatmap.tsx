@@ -114,48 +114,62 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
     )
   }
 
+  // Split heatmap cells into rows of max 10 entries
+  const MAX_ENTRIES_PER_ROW = 10
+  const rows = useMemo(() => {
+    const result: typeof heatmapCells[] = []
+    for (let i = 0; i < heatmapCells.length; i += MAX_ENTRIES_PER_ROW) {
+      result.push(heatmapCells.slice(i, i + MAX_ENTRIES_PER_ROW))
+    }
+    return result
+  }, [heatmapCells])
+
   return (
     <div className="space-y-4">
-      {/* Header row with full dates */}
-      <div className="overflow-x-auto -mx-6 px-6">
-        <div className="inline-flex gap-1 min-w-fit">
-          {heatmapCells.map((cell) => (
-            <div
-              key={cell.dateKey}
-              className="w-12 text-center text-xs text-muted-foreground font-medium shrink-0"
-            >
-              {format(cell.date, 'MMM d')}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Heatmap row */}
-      <div className="overflow-x-auto -mx-6 px-6">
-        <div className="inline-flex gap-1 min-w-fit">
-          <TooltipProvider>
-            {heatmapCells.map((cell) => (
-              <Tooltip key={cell.dateKey}>
-                <TooltipTrigger asChild>
-                  <div
-                    className={cn(
-                      'w-12 h-12 rounded-md flex flex-col items-center justify-center text-xs font-medium transition-colors cursor-pointer hover:opacity-80 shrink-0',
-                      cell.bgColor,
-                      cell.textColor
-                    )}
-                  >
-                    <span className="text-[10px] opacity-80">{cell.dayAbbr}</span>
-                    <span className="font-semibold text-sm">{cell.dateNum}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="whitespace-pre-line text-sm">{cell.tooltipText}</div>
-                </TooltipContent>
-              </Tooltip>
+      {/* Header rows with full dates */}
+      {rows.map((row, rowIndex) => (
+        <div key={`header-${rowIndex}`} className="overflow-x-auto -mx-6 px-6">
+          <div className="inline-flex gap-1 min-w-fit">
+            {row.map((cell) => (
+              <div
+                key={cell.dateKey}
+                className="w-12 text-center text-xs text-muted-foreground font-medium shrink-0"
+              >
+                {format(cell.date, 'MMM d')}
+              </div>
             ))}
-          </TooltipProvider>
+          </div>
         </div>
-      </div>
+      ))}
+
+      {/* Heatmap rows */}
+      {rows.map((row, rowIndex) => (
+        <div key={`heatmap-${rowIndex}`} className="overflow-x-auto -mx-6 px-6">
+          <div className="inline-flex gap-1 min-w-fit">
+            <TooltipProvider>
+              {row.map((cell) => (
+                <Tooltip key={cell.dateKey}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={cn(
+                        'w-12 h-12 rounded-md flex flex-col items-center justify-center text-xs font-medium transition-colors cursor-pointer hover:opacity-80 shrink-0',
+                        cell.bgColor,
+                        cell.textColor
+                      )}
+                    >
+                      <span className="text-[10px] opacity-80">{cell.dayAbbr}</span>
+                      <span className="font-semibold text-sm">{cell.dateNum}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="whitespace-pre-line text-sm">{cell.tooltipText}</div>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </div>
+        </div>
+      ))}
 
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">

@@ -340,8 +340,7 @@ export default function PatientDetailsPage() {
     <AuthenticatedLayout>
       <div className="space-y-6">
         {/* Professional Header Section */}
-        <Card className="border-2 shadow-sm">
-          <CardContent className="p-6">
+
             <div className="space-y-6">
               {/* Top Row: Back Button and Patient Name */}
               <div className="flex items-start justify-between">
@@ -361,7 +360,7 @@ export default function PatientDetailsPage() {
                     <div>
                       <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{lead.patientName}</h1>
                       <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                        {lead.leadRef} • {lead.hospitalName}
+                        {lead.leadRef}
                       </p>
                     </div>
                   </div>
@@ -424,8 +423,7 @@ export default function PatientDetailsPage() {
                 <StageProgress currentStage={lead.caseStage} />
               </div>
             </div>
-          </CardContent>
-        </Card>
+
 
         {/* Uploaded Documents Grid */}
         {uploadedDocuments.length > 0 && (
