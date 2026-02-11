@@ -20,6 +20,8 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
+import { useSwipeable } from 'react-swipeable'
+import confetti from 'canvas-confetti'
 
 interface LedgerEntry {
   id: string

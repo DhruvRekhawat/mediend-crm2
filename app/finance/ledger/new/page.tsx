@@ -48,6 +48,10 @@ interface PaymentType {
 
 interface PaymentMode {
   id: string
+  name: string
+  openingBalance: number
+  currentBalance: number
+  projectedBalance: number
   isActive: boolean
 }
 

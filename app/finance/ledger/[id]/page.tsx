@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock, CheckCircle2, XCircle, Trash2, Edit, Save, X, Eye, FileText, ImageIcon, ExternalLink, Paperclip } from 'lucide-react'
+import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock, CheckCircle2, XCircle, Trash2, Edit, Save, X, Eye, FileText, ImageIcon, ExternalLink, Paperclip, Check, Calendar, User } from 'lucide-react'
 import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
 import { format } from 'date-fns'
 import Link from 'next/link'
