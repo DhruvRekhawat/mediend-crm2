@@ -248,6 +248,7 @@ export async function POST(request: NextRequest) {
       fromPaymentModeId,
       toPaymentModeId,
       transferAmount,
+      attachments,
     } = body
 
     if (!transactionType || !description) {
@@ -439,6 +440,7 @@ export async function POST(request: NextRequest) {
         fromPaymentModeId: isSelfTransfer ? fromPaymentModeId : null,
         toPaymentModeId: isSelfTransfer ? toPaymentModeId : null,
         transferAmount: isSelfTransfer ? transferAmount : null,
+        attachments: attachments || null,
         openingBalance,
         currentBalance,
         status,

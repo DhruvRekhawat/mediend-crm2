@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
-import { ArrowLeft, ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, Calendar, User, Clock, Edit, Trash2, Check, X } from 'lucide-react'
+import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock, CheckCircle2, XCircle, Trash2, Edit, Save, X, Eye, FileText, ImageIcon, ExternalLink, Paperclip } from 'lucide-react'
+import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -114,6 +115,11 @@ interface LedgerEntry {
     name: string
     email: string
   } | null
+  attachments?: {
+    name: string
+    url: string
+    type: string
+  }[] | null
   auditLogs: AuditLog[]
 }
 
@@ -488,6 +494,8 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">Ledger Entry Details</p>
           </div>
         </div>
+
+
         {/* Desktop Action Buttons */}
         <div className="hidden sm:flex items-center gap-2 flex-wrap">
           {canRequestEdit && (
@@ -1332,6 +1340,23 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
           </div>
         </CardContent>
       </Card>
+
+      {/* Attachments Section */}
+      {entry.attachments && entry.attachments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Paperclip className="h-5 w-5 text-blue-500" />
+              <CardTitle>Attachments ({entry.attachments.length})</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="max-w-2xl mx-auto">
+              <AttachmentCarousel attachments={entry.attachments} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Balance Information */}
       <Card>

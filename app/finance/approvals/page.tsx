@@ -14,13 +14,12 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, Search, RotateCcw } from 'lucide-react'
+import { Check, X, ArrowDownCircle, AlertTriangle, Clock, Edit, LayoutGrid, LayoutList, ChevronLeft, ChevronRight, Search, RotateCcw, FileText, Image as ImageIcon, Maximize2, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { useSwipeable } from 'react-swipeable'
-import confetti from 'canvas-confetti'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
 
 interface LedgerEntry {
   id: string
@@ -71,6 +70,11 @@ interface LedgerEntry {
     name: string
     email: string
   }
+  attachments?: {
+    name: string
+    url: string
+    type: string
+  }[] | null
 }
 
 interface LedgerResponse {
@@ -117,6 +121,7 @@ interface EditRequestCardProps {
   onReject: () => void
 }
 
+
 function EditRequestCard({ entry, onApprove, onReject }: EditRequestCardProps) {
   return (
     <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10 dark:border-yellow-800">
@@ -140,6 +145,10 @@ function EditRequestCard({ entry, onApprove, onReject }: EditRequestCardProps) {
           <div className="font-semibold text-lg">{entry.party.name}</div>
           <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
         </div>
+
+        {entry.attachments && entry.attachments.length > 0 && (
+          <AttachmentCarousel attachments={entry.attachments} />
+        )}
 
         <div>
           <div className="text-xs text-muted-foreground mb-1">Description</div>
@@ -265,6 +274,10 @@ function HistoryCard({ entry, onUndo }: HistoryCardProps) {
           <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
         </div>
 
+        {entry.attachments && entry.attachments.length > 0 && (
+          <AttachmentCarousel attachments={entry.attachments} />
+        )}
+
         <div>
           <div className="text-xs text-muted-foreground mb-1">Description</div>
           <div className="text-sm wrap-break-word">{entry.description}</div>
@@ -387,6 +400,10 @@ function SwipeCard({ entry, onApprove, onReject }: SwipeCardProps) {
               <div className="font-semibold text-lg">{entry.party.name}</div>
               <div className="text-xs text-muted-foreground">{entry.party.partyType}</div>
             </div>
+
+            {entry.attachments && entry.attachments.length > 0 && (
+              <AttachmentCarousel attachments={entry.attachments} />
+            )}
 
             <div>
               <div className="text-xs text-muted-foreground mb-1">Description</div>

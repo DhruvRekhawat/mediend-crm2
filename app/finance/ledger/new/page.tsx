@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, ArrowLeftRight } from 'lucide-react'
+import { ArrowLeft, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, AlertCircle, ArrowLeftRight, Upload, X, FileText, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -48,9 +48,13 @@ interface PaymentType {
 
 interface PaymentMode {
   id: string
-  name: string
-  currentBalance: number
   isActive: boolean
+}
+
+interface Attachment {
+  name: string
+  url: string
+  type: string
 }
 
 function formatCurrency(amount: number) {
@@ -74,6 +78,8 @@ export default function NewLedgerEntryPage() {
   const [newPartyType, setNewPartyType] = useState<'BUYER' | 'SELLER' | 'VENDOR' | 'CLIENT' | 'SUPPLIER' | 'OTHER'>('OTHER')
   const [partySearch, setPartySearch] = useState('')
   const [headSearch, setHeadSearch] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [attachments, setAttachments] = useState<Attachment[]>([])
   const [formData, setFormData] = useState({
     partyId: '',
     description: '',
@@ -163,6 +169,7 @@ export default function NewLedgerEntryPage() {
       fromPaymentModeId?: string
       toPaymentModeId?: string
       transferAmount?: number
+      attachments?: Attachment[]
     }) => apiPost<{
       id: string
       serialNumber: string
@@ -239,6 +246,7 @@ export default function NewLedgerEntryPage() {
       })
       setPartySearch('')
       setHeadSearch('')
+      setAttachments([])
       
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
@@ -268,6 +276,7 @@ export default function NewLedgerEntryPage() {
         paymentTypeId: formData.paymentTypeId,
         paymentModeId: formData.paymentModeId,
         receivedAmount: amount,
+        attachments: attachments.length > 0 ? attachments : undefined,
       }
 
       createMutation.mutate(data)
@@ -296,6 +305,7 @@ export default function NewLedgerEntryPage() {
         fromPaymentModeId: formData.fromPaymentModeId,
         toPaymentModeId: formData.toPaymentModeId,
         transferAmount,
+        attachments: attachments.length > 0 ? attachments : undefined,
       }
 
       createMutation.mutate(data)
@@ -325,6 +335,7 @@ export default function NewLedgerEntryPage() {
         paymentModeId: formData.paymentModeId,
         componentA: isNonExpense ? 0 : componentA,
         componentB: componentB > 0 ? componentB : undefined,
+        attachments: attachments.length > 0 ? attachments : undefined,
       }
 
       createMutation.mutate(data)
@@ -766,6 +777,104 @@ export default function NewLedgerEntryPage() {
                 </Select>
               </div>
             )}
+
+            {/* Attachments Section */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Attachments (Images/PDFs)</Label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    className="hidden"
+                    multiple
+                    accept="image/*,application/pdf"
+                    onChange={async (e) => {
+                      const files = e.target.files
+                      if (!files || files.length === 0) return
+
+                      setIsUploading(true)
+                      try {
+                        const newAttachments: Attachment[] = []
+                        for (let i = 0; i < files.length; i++) {
+                          const file = files[i]
+                          const formDataUpload = new FormData()
+                          formDataUpload.append('file', file)
+                          formDataUpload.append('folder', 'finance/ledger')
+
+                          const response = await apiPost<{ url: string; name: string }>('/api/finance/upload', formDataUpload)
+                          newAttachments.push({
+                            name: file.name,
+                            url: response.url,
+                            type: file.type
+                          })
+                        }
+                        setAttachments([...attachments, ...newAttachments])
+                        toast.success(`${files.length} file(s) uploaded successfully`)
+                      } catch (error) {
+                        toast.error('Failed to upload files')
+                        console.error(error)
+                      } finally {
+                        setIsUploading(false)
+                        // Reset input value to allow re-uploading the same file
+                        e.target.value = ''
+                      }
+                    }}
+                    disabled={isUploading}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    Upload Files
+                  </Button>
+                </div>
+              </div>
+
+              {attachments.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {attachments.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-muted/30 group"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {file.type.startsWith('image/') ? (
+                          <ImageIcon className="h-5 w-5 text-blue-500 shrink-0" />
+                        ) : (
+                          <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                        )}
+                        <span className="text-sm font-medium truncate">{file.name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => {
+                          setAttachments(attachments.filter((_, i) => i !== index))
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border-2 border-dashed rounded-lg text-muted-foreground text-sm">
+                  No files attached yet. Upload images or PDFs for documentation.
+                </div>
+              )}
+            </div>
 
             {/* Balance Impact Preview */}
             {transactionType === 'SELF_TRANSFER' && formData.fromPaymentModeId && formData.toPaymentModeId && formData.transferAmount && (

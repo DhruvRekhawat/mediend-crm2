@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
-import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Eye, CalendarIcon, X, ArrowLeftRight } from 'lucide-react'
+import { ArrowLeft, Plus, Search, Calendar as CalendarIcon, ArrowUpCircle, ArrowDownCircle, ArrowLeftRight, X, Eye, FileText, Paperclip } from 'lucide-react'
 import {
   Combobox,
   ComboboxContent,
@@ -76,6 +76,11 @@ interface LedgerEntry {
     name: string
     email: string
   } | null
+  attachments?: {
+    name: string
+    url: string
+    type: string
+  }[] | null
 }
 
 interface LedgerResponse {
@@ -889,7 +894,17 @@ export default function LedgerPage() {
                         <span className="text-muted-foreground text-sm">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-xs truncate">{entry.description}</TableCell>
+                    <TableCell className="max-w-xs truncate">
+                      <div className="flex items-center gap-2">
+                        {entry.description}
+                        {entry.attachments && entry.attachments.length > 0 && (
+                          <Badge variant="secondary" className="px-1.5 py-0 h-5 flex items-center gap-1 text-[10px] font-medium bg-blue-50 text-blue-700 border-blue-200">
+                            <Paperclip className="h-3 w-3" />
+                            {entry.attachments.length}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {entry.transactionType === 'SELF_TRANSFER' ? (
                         <span className="text-muted-foreground text-sm">N/A</span>
