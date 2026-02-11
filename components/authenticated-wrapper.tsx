@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
 import { Button } from '@/components/ui/button'
-import { CalendarIcon, CheckSquare, ListTodo, MessageSquare, Calendar, Sparkles, Search } from 'lucide-react'
+import { CalendarIcon, CheckSquare, ListTodo, MessageSquare, Calendar, Sparkles, Search, UserCircle, Wallet } from 'lucide-react'
 import { useAI } from '@/components/ai/ai-provider'
 import { CommandPalette } from '@/components/command-palette'
 import { useState } from 'react'
@@ -45,10 +45,14 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
   const isPayslipPage = pathname?.includes('/payroll/') && pathname?.includes('/slip')
   const isDocumentViewPage = pathname?.includes('/documents/') && pathname?.includes('/view')
   const isMdOrAdmin = user?.role === 'MD' || user?.role === 'ADMIN'
+  // Show bottom nav for USER and BD roles
+  const isUserOrBd = user?.role === 'USER' || user?.role === 'BD'
   // Show sidebar if user is authenticated and not on special pages
   const shouldShowSidebar = !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage
   // Show MD bottom nav on all pages for MD/ADMIN users (except special pages)
   const showMdBottomNav = isMdOrAdmin && shouldShowSidebar
+  // Show USER bottom nav on all pages for USER and BD roles (except special pages)
+  const showUserBottomNav = isUserOrBd && shouldShowSidebar
 
   if (isLoginPage || isPayslipPage || isDocumentViewPage) {
     return <>{children}</>
@@ -83,7 +87,7 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
                 <NotificationBell />
               </div>
             </header>
-            <main className={`flex flex-1 flex-col gap-4 p-4 md:p-6 bg-background ${showMdBottomNav ? 'pb-20 md:pb-6' : ''}`}>
+            <main className={`flex flex-1 flex-col gap-4 p-4 md:p-6 bg-background ${showMdBottomNav || showUserBottomNav ? 'pb-20 md:pb-6' : ''}`}>
               {children}
             </main>
             {showMdBottomNav && (
@@ -116,6 +120,33 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
                   >
                     <Calendar className="h-5 w-5" />
                     <span className="text-xs">Appointments</span>
+                  </Link>
+                </div>
+              </nav>
+            )}
+            {showUserBottomNav && (
+              <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t bg-background shadow-lg">
+                <div className="flex items-center justify-around h-16">
+                  <Link
+                    href="/employee/dashboard/core-hr"
+                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/employee/dashboard/core-hr') ? 'text-primary' : 'text-muted-foreground'}`}
+                  >
+                    <UserCircle className="h-5 w-5" />
+                    <span className="text-xs font-medium">Core HR</span>
+                  </Link>
+                  <Link
+                    href="/employee/dashboard/financial"
+                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/employee/dashboard/financial') ? 'text-primary' : 'text-muted-foreground'}`}
+                  >
+                    <Wallet className="h-5 w-5" />
+                    <span className="text-xs font-medium">Financial</span>
+                  </Link>
+                  <Link
+                    href="/employee/dashboard/support-services"
+                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/employee/dashboard/support-services') ? 'text-primary' : 'text-muted-foreground'}`}
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    <span className="text-xs font-medium">Support</span>
                   </Link>
                 </div>
               </nav>

@@ -1,23 +1,20 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { useQuery } from '@tanstack/react-query'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { apiGet } from '@/lib/api-client'
-import { useState, useMemo } from 'react'
-import { Calendar, Clock, AlertCircle } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { AlertCircle, Calendar, Clock } from 'lucide-react'
+import { useState } from 'react'
 
 interface AttendanceDay {
   date: Date
   inTime: Date | null
   outTime: Date | null
-  workHours: number | null
   isLate: boolean
   logs: Array<{
     id: string
@@ -55,24 +52,6 @@ export default function EmployeeAttendancePage() {
     return format(new Date(date), 'PPP')
   }
 
-  // Work hours trend data for the chart
-  const workHoursTrendData = useMemo(() => {
-    if (!attendance) return []
-
-    return attendance
-      .filter(day => day.workHours !== null && day.workHours > 0)
-      .map(day => {
-        const dateStr = format(day.date, 'yyyy-MM-dd')
-        const [y, m, d] = dateStr.split('-').map(Number)
-        const dateObj = new Date(y, m - 1, d)
-        return {
-          date: format(dateObj, 'dd'),
-          fullDate: format(dateObj, 'MMM dd'),
-          workHours: Number(day.workHours!.toFixed(2)),
-        }
-      })
-      .sort((a, b) => a.date.localeCompare(b.date))
-  }, [attendance])
 
   return (
     <div className="space-y-6">
@@ -108,66 +87,6 @@ export default function EmployeeAttendancePage() {
         </CardContent>
       </Card>
 
-      {/* Work Hours Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Work Hours Trend</CardTitle>
-          <CardDescription>Your work hours over the selected period</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[280px]">
-            {workHoursTrendData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={workHoursTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={{ stroke: '#e5e7eb' }}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 12 }} 
-                    tickLine={false}
-                    axisLine={{ stroke: '#e5e7eb' }}
-                    label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        const raw = payload[0]?.value
-                        const hours = typeof raw === 'number' ? raw : Number(raw)
-                        return (
-                          <div className="bg-white border rounded-lg shadow-lg p-3">
-                            <p className="font-medium mb-1">{payload[0]?.payload?.fullDate}</p>
-                            <p className="text-sm text-blue-600">
-                              Work Hours: {Number.isFinite(hours) ? hours.toFixed(2) : 'N/A'}h
-                            </p>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="workHours" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', r: 4 }}
-                    activeDot={{ r: 6 }}
-                    name="Work Hours"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                No work hours data available for this period
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
@@ -184,7 +103,6 @@ export default function EmployeeAttendancePage() {
                   <TableHead>Date</TableHead>
                   <TableHead>Entry Time</TableHead>
                   <TableHead>Exit Time</TableHead>
-                  <TableHead>Work Hours</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -210,11 +128,6 @@ export default function EmployeeAttendancePage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {day.workHours !== null
-                        ? `${day.workHours.toFixed(2)} hours`
-                        : 'N/A'}
-                    </TableCell>
-                    <TableCell>
                       {day.isLate ? (
                         <Badge variant="destructive" className="flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
@@ -228,7 +141,7 @@ export default function EmployeeAttendancePage() {
                 ))}
                 {(!attendance || attendance.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       No attendance records found
                     </TableCell>
                   </TableRow>

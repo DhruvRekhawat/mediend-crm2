@@ -181,7 +181,7 @@ export function AppSidebar() {
             </div>
           </SidebarGroup>
         )}
-        {user.role !== 'ADMIN' && (
+        {user.role !== 'ADMIN' && itemsWithUrls.some((item) => item.title.startsWith('Svc ')) && (
           <SidebarGroup className="pb-1">
             <button
               onClick={() => toggleSection('services')}
@@ -226,7 +226,7 @@ export function AppSidebar() {
                 )}
               </div>
             </SidebarGroup>
-          )}
+        )}
         {user.role !== 'ADMIN' && itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
           <SidebarGroup className="pb-1">
             <button
