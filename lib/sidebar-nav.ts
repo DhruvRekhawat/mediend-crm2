@@ -309,6 +309,10 @@ function filterNavItems(user: SessionUser | null): NavItem[] {
         item.title.startsWith('MD ')
       )
     }
+    // USER role can only see "My " prefixed pages (MyHRMS)
+    if (user.role === 'USER') {
+      return item.title.startsWith('My ')
+    }
     if (item.title.startsWith('My ') || item.title.startsWith('Svc ')) {
       return true
     }
