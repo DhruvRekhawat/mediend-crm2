@@ -20,8 +20,10 @@ import { CommandPalette } from '@/components/command-palette'
 import { useState } from 'react'
 
 function AIHeaderButton() {
+  const { user } = useAuth()
   const ai = useAI()
-  if (!ai) return null
+  // Only show for ADMIN role
+  if (!ai || user?.role !== 'ADMIN') return null
   return (
     <Button
       variant="ghost"

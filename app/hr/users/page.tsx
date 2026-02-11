@@ -476,11 +476,33 @@ function EditUserDialog({
   onSuccess: () => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const { user: currentUser } = useAuth()
+  
+  // Get available roles based on current user's permissions
+  const getAvailableRoles = (): UserRole[] => {
+    if (!currentUser) return []
+    
+    // MD and ADMIN can assign all roles except MD
+    if (currentUser.role === 'MD' || currentUser.role === 'ADMIN') {
+      return ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER']
+    }
+    
+    // Department heads can assign TL and USER/BD
+    const deptHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']
+    if (deptHeadRoles.includes(currentUser.role)) {
+      return ['TEAM_LEAD', 'USER', 'BD']
+    }
+    
+    return []
+  }
+
+  const availableRoles = getAvailableRoles()
   
   // Initialize form data based on user prop
   const getInitialFormData = () => ({
     name: user.name,
     email: user.email,
+    role: user.role,
   })
   const [formData, setFormData] = useState(getInitialFormData)
 
@@ -493,7 +515,7 @@ function EditUserDialog({
   }
 
   const updateUserMutation = useMutation({
-    mutationFn: (data: { name: string; email: string }) =>
+    mutationFn: (data: { name: string; email: string; role: UserRole }) =>
       apiPatch<User>(`/api/users/${user.id}`, data),
     onSuccess: () => {
       toast.success('User updated successfully')
@@ -522,7 +544,7 @@ function EditUserDialog({
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user name and email for {user.name}
+            Update user information for {user.name}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -544,6 +566,50 @@ function EditUserDialog({
               required
               placeholder="user@example.com"
             />
+          </div>
+          <div>
+            <Label>Role</Label>
+            <Select
+              value={formData.role}
+              onValueChange={(value) => setFormData({ ...formData, role: value as UserRole })}
+              disabled={availableRoles.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableRoles.length === 0 ? (
+                  <SelectItem value={user.role} disabled>
+                    {user.role === 'TEAM_LEAD' ? 'Team Lead' : 
+                     user.role === 'SALES_HEAD' ? 'Sales Head' :
+                     user.role === 'INSURANCE_HEAD' ? 'Insurance Head' :
+                     user.role === 'PL_HEAD' ? 'P/L Head' :
+                     user.role === 'HR_HEAD' ? 'HR Head' :
+                     user.role === 'FINANCE_HEAD' ? 'Finance Head' :
+                     user.role === 'USER' ? 'User (HRMS Only)' :
+                     user.role}
+                  </SelectItem>
+                ) : (
+                  availableRoles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role === 'TEAM_LEAD' ? 'Team Lead' : 
+                       role === 'SALES_HEAD' ? 'Sales Head' :
+                       role === 'INSURANCE_HEAD' ? 'Insurance Head' :
+                       role === 'PL_HEAD' ? 'P/L Head' :
+                       role === 'HR_HEAD' ? 'HR Head' :
+                       role === 'FINANCE_HEAD' ? 'Finance Head' :
+                       role === 'USER' ? 'User (HRMS Only)' :
+                       role}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {availableRoles.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                You do not have permission to change user roles
+              </p>
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button
