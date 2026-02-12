@@ -5,6 +5,7 @@ import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
 import { Prisma, PipelineStage } from '@prisma/client'
+import { maskPhoneNumber } from '@/lib/phone-utils'
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
@@ -177,10 +178,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Map status and source codes to text values for display
+    // Mask phone numbers if user is not INSURANCE_HEAD or ADMIN
+    const canViewPhone = user.role === 'INSURANCE_HEAD' || user.role === 'ADMIN'
     const mappedLeads = accessibleLeads.map((lead) => ({
       ...lead,
       status: mapStatusCode(lead.status),
       source: lead.source ? mapSourceCode(lead.source) : lead.source,
+      phoneNumber: canViewPhone ? lead.phoneNumber : (lead.phoneNumber ? maskPhoneNumber(lead.phoneNumber) : null),
     }))
 
     return successResponse(mappedLeads)

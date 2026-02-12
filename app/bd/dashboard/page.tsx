@@ -14,6 +14,8 @@ import { useRouter } from 'next/navigation'
 import { CaseStage } from '@prisma/client'
 import { Eye, FileText, AlertCircle, CheckCircle2, Clock, ArrowRight } from 'lucide-react'
 import { format } from 'date-fns'
+import { canViewPhoneNumber } from '@/lib/case-permissions'
+import { getPhoneDisplay } from '@/lib/phone-utils'
 
 interface LeadWithStage {
   id: string
@@ -301,7 +303,7 @@ export default function BDDashboardPage() {
                           <TableCell>
                             <div>
                               <div className="font-medium">{lead.patientName}</div>
-                              <div className="text-sm text-muted-foreground">{lead.phoneNumber}</div>
+                              <div className="text-sm text-muted-foreground">{getPhoneDisplay(lead.phoneNumber, canViewPhoneNumber(user ? { role: user.role } : null))}</div>
                             </div>
                           </TableCell>
                           <TableCell>{lead.hospitalName}</TableCell>

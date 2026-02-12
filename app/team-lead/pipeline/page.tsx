@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { toast } from 'sonner'
+import { canViewPhoneNumber } from '@/lib/case-permissions'
+import { getPhoneDisplay } from '@/lib/phone-utils'
 
 export default function TeamLeadPipelinePage() {
   const { user } = useAuth()
@@ -73,7 +75,7 @@ export default function TeamLeadPipelinePage() {
                     </div>
                     <div>
                       <Label>Phone Number</Label>
-                      <Input value={lead.phoneNumber || ''} readOnly />
+                      <Input value={getPhoneDisplay(lead.phoneNumber, canViewPhoneNumber(user))} readOnly />
                     </div>
                     <div>
                       <Label>City</Label>

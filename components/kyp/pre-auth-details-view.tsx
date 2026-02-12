@@ -8,6 +8,16 @@ import { File, ExternalLink, CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CaseStage, PreAuthStatus } from '@prisma/client'
 
+interface SuggestedHospital {
+  id: string
+  hospitalName: string
+  tentativeBill?: number | null
+  roomRentGeneral?: number | null
+  roomRentPrivate?: number | null
+  roomRentICU?: number | null
+  notes?: string | null
+}
+
 interface PreAuthDetailsViewProps {
   preAuthData: {
     id: string
@@ -18,6 +28,7 @@ interface PreAuthDetailsViewProps {
     icu?: string | null
     hospitalNameSuggestion?: string | null
     hospitalSuggestions?: string[] | null
+    suggestedHospitals?: SuggestedHospital[] | null
     roomTypes?: Array<{ name: string; rent: string }> | null
     insurance?: string | null
     tpa?: string | null
@@ -49,11 +60,17 @@ export function PreAuthDetailsView({
   leadRef,
   patientName 
 }: PreAuthDetailsViewProps) {
-  const hospitals = Array.isArray(preAuthData.hospitalSuggestions)
+  // Prefer Insurance's suggested hospitals (with details); fallback to legacy JSON
+  const suggestedList = Array.isArray(preAuthData.suggestedHospitals) && preAuthData.suggestedHospitals.length > 0
+    ? preAuthData.suggestedHospitals
+    : null
+  const legacyHospitals = Array.isArray(preAuthData.hospitalSuggestions)
     ? preAuthData.hospitalSuggestions.filter(Boolean)
     : preAuthData.hospitalNameSuggestion
       ? [preAuthData.hospitalNameSuggestion]
       : []
+  const hasSuggestedHospitals = suggestedList && suggestedList.length > 0
+  const hasLegacyHospitals = legacyHospitals.length > 0
 
   const roomTypes = Array.isArray(preAuthData.roomTypes)
     ? preAuthData.roomTypes.filter((r) => r.name && r.name.trim())
@@ -71,7 +88,8 @@ export function PreAuthDetailsView({
     preAuthData.icu ||
     preAuthData.insurance ||
     preAuthData.tpa ||
-    hospitals.length > 0 ||
+    hasSuggestedHospitals ||
+    hasLegacyHospitals ||
     roomTypes.length > 0
   )
 
@@ -194,14 +212,31 @@ export function PreAuthDetailsView({
               )}
             </div>
 
-            {hospitals.length > 0 && (
+            {(hasSuggestedHospitals || hasLegacyHospitals) && (
               <div className="mt-4">
-                <Label>Suggested Hospitals</Label>
-                <ul className="list-disc list-inside text-sm mt-1 space-y-1">
-                  {hospitals.map((hospital, index) => (
-                    <li key={index} className="font-medium">{hospital}</li>
-                  ))}
-                </ul>
+                <Label>Suggested Hospitals (by Insurance)</Label>
+                {hasSuggestedHospitals ? (
+                  <ul className="mt-2 space-y-3">
+                    {suggestedList!.map((h) => (
+                      <li key={h.id} className="rounded-lg border border-gray-200 dark:border-gray-800 p-3 text-sm">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{h.hospitalName}</p>
+                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-muted-foreground">
+                          {h.tentativeBill != null && <span>Tentative bill: ₹{h.tentativeBill.toLocaleString()}</span>}
+                          {h.roomRentGeneral != null && <span>General: ₹{h.roomRentGeneral.toLocaleString()}</span>}
+                          {h.roomRentPrivate != null && <span>Private: ₹{h.roomRentPrivate.toLocaleString()}</span>}
+                          {h.roomRentICU != null && <span>ICU: ₹{h.roomRentICU.toLocaleString()}</span>}
+                        </div>
+                        {h.notes?.trim() && <p className="mt-1 text-muted-foreground">{h.notes}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="list-disc list-inside text-sm mt-1 space-y-1">
+                    {legacyHospitals.map((hospital, index) => (
+                      <li key={index} className="font-medium">{hospital}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
 

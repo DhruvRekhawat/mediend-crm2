@@ -86,11 +86,15 @@ export async function POST(request: NextRequest) {
         create: {
           kypSubmissionId: data.kypSubmissionId,
           sumInsured: data.sumInsured,
+          copay: data.copay?.trim() || undefined,
+          tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
         },
         update: {
           sumInsured: data.sumInsured,
+          copay: data.copay?.trim() || undefined,
+          tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
         },

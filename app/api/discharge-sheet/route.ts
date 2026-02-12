@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
+import { maskPhoneNumber } from '@/lib/phone-utils'
 
 const createDischargeSheetSchema = z.object({
   leadId: z.string(),
@@ -102,6 +103,16 @@ export async function GET(request: NextRequest) {
             patientName: true,
             phoneNumber: true,
             hospitalName: true,
+            kypSubmission: {
+              select: {
+                preAuthData: {
+                  select: {
+                    sumInsured: true,
+                    roomRent: true,
+                  },
+                },
+              },
+            },
           },
         },
         kypSubmission: {
@@ -130,7 +141,14 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    return successResponse(dischargeSheets)
+    // Mask patientPhone if user is not INSURANCE_HEAD or ADMIN
+    const canViewPhone = user.role === 'INSURANCE_HEAD' || user.role === 'ADMIN'
+    const maskedSheets = dischargeSheets.map((sheet) => ({
+      ...sheet,
+      patientPhone: canViewPhone ? sheet.patientPhone : (sheet.patientPhone ? maskPhoneNumber(sheet.patientPhone) : null),
+    }))
+
+    return successResponse(maskedSheets)
   } catch (error) {
     console.error('Error fetching discharge sheets:', error)
     return errorResponse('Failed to fetch discharge sheets', 500)

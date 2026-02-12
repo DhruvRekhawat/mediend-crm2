@@ -310,7 +310,7 @@ export function PreAuthRaiseForm({
             </div>
           )}
 
-          {legacyRoomTypes.length > 0 ? (
+          {!hasSuggestedCards && (legacyRoomTypes.length > 0 ? (
             <div>
               <Label htmlFor="roomType">Room Type *</Label>
               <Select
@@ -332,7 +332,7 @@ export function PreAuthRaiseForm({
                 </SelectContent>
               </Select>
             </div>
-          ) : (
+          ) : !hasSuggestedCards ? (
             <div>
               <Label htmlFor="roomType">Room Type *</Label>
               <Input
@@ -348,7 +348,7 @@ export function PreAuthRaiseForm({
                 required
               />
             </div>
-          )}
+          ) : null)}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -388,10 +388,10 @@ export function PreAuthRaiseForm({
     },
     {
       id: 'disease',
-      title: 'Disease Details',
-      description: 'Describe the disease and treatment required',
+      title: 'Disease Details & Documents',
+      description: 'Describe the disease and upload any related images',
       component: (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <Label htmlFor="diseaseDescription">Disease Description *</Label>
             <Textarea
@@ -404,22 +404,13 @@ export function PreAuthRaiseForm({
                 }))
               }
               placeholder="Describe the disease, symptoms, and treatment required"
-              rows={6}
+              rows={5}
               required
+              className="mt-2"
             />
           </div>
-        </div>
-      ),
-      validate: () => formData.diseaseDescription.length > 0,
-    },
-    {
-      id: 'documents',
-      title: 'Documents',
-      description: 'Upload disease images and related documents',
-      component: (
-        <div className="space-y-4">
           <div>
-            <Label>Disease Images</Label>
+            <Label>Disease Images (optional)</Label>
             <div className="mt-2">
               <input
                 type="file"
@@ -470,6 +461,7 @@ export function PreAuthRaiseForm({
           )}
         </div>
       ),
+      validate: () => formData.diseaseDescription.trim().length > 0,
     },
     {
       id: 'review',

@@ -96,10 +96,22 @@ export const navItems: NavItem[] = [
     permission: 'insurance:read',
   },
   {
+    title: 'Chat',
+    url: '/chat',
+    icon: MessageSquare,
+    roles: ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN'],
+  },
+  {
     title: 'P/L',
     url: '/pl/dashboard',
     icon: DollarSign,
     permission: 'pl:read',
+  },
+  {
+    title: 'Outstanding',
+    url: '/outstanding/dashboard',
+    icon: CreditCard,
+    roles: ['OUTSTANDING_HEAD', 'ADMIN'],
   },
   {
     title: 'Users',
@@ -291,6 +303,7 @@ export function getDashboardUrl(role: string): string {
     BD: '/bd/pipeline',
     INSURANCE_HEAD: '/insurance/dashboard',
     PL_HEAD: '/pl/dashboard',
+    OUTSTANDING_HEAD: '/outstanding/dashboard',
     HR_HEAD: '/hr/users',
     FINANCE_HEAD: '/finance/ledger',
     ADMIN: '/md/sales',

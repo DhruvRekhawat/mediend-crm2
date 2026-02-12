@@ -69,17 +69,13 @@ export function KYPDetailedForm({
       toast.error('Disease/Diagnosis is required')
       return
     }
-    if (!formData.patientConsent) {
-      toast.error('Please confirm patient consent')
-      return
-    }
 
     try {
       await apiPost('/api/kyp/submit', {
         leadId,
         type: 'detailed',
         disease: formData.disease.trim(),
-        patientConsent: true,
+        patientConsent: formData.patientConsent,
         aadhar: formData.aadhar.trim() || undefined,
         pan: formData.pan.trim() || undefined,
         aadharFileUrl: aadharFileUrl || undefined,
@@ -117,7 +113,7 @@ export function KYPDetailedForm({
           }
         />
         <Label htmlFor="patientConsent" className="font-normal cursor-pointer">
-          Patient consent obtained *
+          Patient consent obtained (optional)
         </Label>
       </div>
 

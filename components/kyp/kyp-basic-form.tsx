@@ -9,6 +9,8 @@ import { useFileUpload } from '@/hooks/use-file-upload'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { File } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { canViewPhoneNumber } from '@/lib/case-permissions'
 
 interface KYPBasicFormProps {
   leadId: string
@@ -25,6 +27,8 @@ export function KYPBasicForm({
   onSuccess,
   onCancel,
 }: KYPBasicFormProps) {
+  const { user } = useAuth()
+  const canViewPhone = canViewPhoneNumber(user)
   const [formData, setFormData] = useState({
     location: '',
     area: '',
@@ -126,15 +130,17 @@ export function KYPBasicForm({
             placeholder="Optional"
           />
         </div>
-        <div>
-          <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="Optional"
-          />
-        </div>
+        {canViewPhone && (
+          <div>
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="Optional"
+            />
+          </div>
+        )}
       </div>
 
       <div>

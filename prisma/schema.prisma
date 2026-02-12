@@ -16,6 +16,7 @@ enum UserRole {
   BD
   INSURANCE_HEAD
   PL_HEAD
+  OUTSTANDING_HEAD
   HR_HEAD
   FINANCE_HEAD
   ADMIN
@@ -567,6 +568,10 @@ model PLRecord {
   hospitalPayoutStatus String? // e.g., "PENDING", "PAID", "PARTIAL"
   doctorPayoutStatus   String? // e.g., "PENDING", "PAID", "PARTIAL"
   mediendInvoiceStatus String? // e.g., "PENDING", "SENT", "PAID"
+  
+  // Pending amounts
+  hospitalAmountPending Float @default(0) // Amount pending for hospital payout
+  doctorAmountPending    Float @default(0) // Amount pending for doctor payout
 
   // Meta
   remarks     String?   @db.Text // Free text

@@ -5,6 +5,7 @@ import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
 import { Prisma, PipelineStage } from '@prisma/client'
+import { maskPhoneNumber } from '@/lib/phone-utils'
 
 export async function GET(
   request: NextRequest,
@@ -55,6 +56,14 @@ export async function GET(
             id: true,
             status: true,
             submittedAt: true,
+            location: true,
+            area: true,
+            aadhar: true,
+            pan: true,
+            insuranceCard: true,
+            disease: true,
+            remark: true,
+            patientConsent: true,
             aadharFileUrl: true,
             panFileUrl: true,
             insuranceCardFileUrl: true,
@@ -100,6 +109,17 @@ export async function GET(
                     name: true,
                   },
                 },
+                suggestedHospitals: {
+                  select: {
+                    id: true,
+                    hospitalName: true,
+                    tentativeBill: true,
+                    roomRentGeneral: true,
+                    roomRentPrivate: true,
+                    roomRentICU: true,
+                    notes: true,
+                  },
+                },
               },
             },
             followUpData: {
@@ -111,6 +131,11 @@ export async function GET(
         },
         insuranceCase: true,
         plRecord: true,
+        dischargeSheet: {
+          select: {
+            id: true,
+          },
+        },
       },
     })
 
@@ -123,10 +148,13 @@ export async function GET(
     }
 
     // Map status and source codes to text values for display
+    // Mask phone number if user is not INSURANCE_HEAD or ADMIN
+    const canViewPhone = user.role === 'INSURANCE_HEAD' || user.role === 'ADMIN'
     const mappedLead = {
       ...lead,
       status: mapStatusCode(lead.status),
       source: lead.source ? mapSourceCode(lead.source) : lead.source,
+      phoneNumber: canViewPhone ? lead.phoneNumber : (lead.phoneNumber ? maskPhoneNumber(lead.phoneNumber) : null),
     }
 
     return successResponse(mappedLead)
@@ -275,10 +303,55 @@ export async function PATCH(
             team: true,
           },
         },
+        plRecord: true,
       },
     })
 
-    return successResponse(updatedLead, 'Lead updated successfully')
+    if (body.plRecord && typeof body.plRecord === 'object') {
+      const raw = body.plRecord as Record<string, unknown>
+      const plData = (raw.update && typeof raw.update === 'object' ? raw.update : raw) as Record<string, unknown>
+      const plAllowed = [
+        'month', 'surgeryDate', 'status', 'paymentType', 'approvedOrCash', 'paymentCollectedAt',
+        'managerRole', 'managerName', 'bdmName', 'patientName', 'patientPhone', 'doctorName', 'hospitalName',
+        'category', 'treatment', 'circle', 'leadSource',
+        'totalAmount', 'billAmount', 'cashPaidByPatient', 'cashOrDedPaid', 'referralAmount', 'cabCharges',
+        'implantCost', 'dcCharges', 'doctorCharges',
+        'hospitalSharePct', 'hospitalShareAmount', 'mediendSharePct', 'mediendShareAmount', 'mediendNetProfit',
+        'finalProfit', 'hospitalPayoutStatus', 'doctorPayoutStatus', 'mediendInvoiceStatus',
+        'remarks', 'closedAt',
+      ]
+      const plUpdate: Record<string, unknown> = {}
+      for (const key of plAllowed) {
+        if (plData[key] !== undefined) {
+          const v = plData[key]
+          if (key === 'month' || key === 'surgeryDate' || key === 'closedAt') {
+            plUpdate[key] = v ? new Date(v as string) : null
+          } else {
+            plUpdate[key] = v
+          }
+        }
+      }
+      if (Object.keys(plUpdate).length > 0) {
+        await prisma.pLRecord.upsert({
+          where: { leadId: id },
+          create: {
+            leadId: id,
+            ...(plUpdate as any),
+          },
+          update: plUpdate as any,
+        })
+      }
+    }
+
+    const leadWithPl = await prisma.lead.findUnique({
+      where: { id },
+      include: {
+        bd: { include: { team: true } },
+        plRecord: true,
+      },
+    })
+
+    return successResponse(leadWithPl || updatedLead, 'Lead updated successfully')
   } catch (error) {
     console.error('Error updating lead:', error)
     return errorResponse('Failed to update lead', 500)

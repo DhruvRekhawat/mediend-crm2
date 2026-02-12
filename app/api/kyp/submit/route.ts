@@ -57,9 +57,6 @@ export async function POST(request: NextRequest) {
       if (!data.disease?.trim()) {
         return errorResponse('Disease/Diagnosis is required for KYP Detailed', 400)
       }
-      if (!data.patientConsent) {
-        return errorResponse('Patient consent is required for KYP Detailed', 400)
-      }
     } else {
       // Legacy: at least one field
       const hasData =
@@ -98,7 +95,7 @@ export async function POST(request: NextRequest) {
       include: { lead: { select: { caseStage: true } } },
     })
 
-    // Detailed: update existing KYP and move to KYP_DETAILED_PENDING
+    // Detailed: update existing KYP and move to KYP_DETAILED_COMPLETE (BD can then raise pre-auth)
     if (isDetailed) {
       if (!existingKYP) {
         return errorResponse('KYP submission not found. Submit KYP (Basic) first.', 400)
@@ -129,14 +126,14 @@ export async function POST(request: NextRequest) {
       const previousStage = lead.caseStage
       await prisma.lead.update({
         where: { id: data.leadId },
-        data: { caseStage: CaseStage.KYP_DETAILED_PENDING },
+        data: { caseStage: CaseStage.KYP_DETAILED_COMPLETE },
       })
 
       await prisma.caseStageHistory.create({
         data: {
           leadId: data.leadId,
           fromStage: previousStage,
-          toStage: CaseStage.KYP_DETAILED_PENDING,
+          toStage: CaseStage.KYP_DETAILED_COMPLETE,
           changedById: user.id,
           note: 'KYP (Detailed) submitted',
         },
@@ -196,6 +193,7 @@ export async function POST(request: NextRequest) {
       where: { id: data.leadId },
       data: {
         caseStage: targetStage,
+        ...(isBasic && data.location?.trim() ? { city: data.location.trim() } : {}),
       },
     })
 

@@ -7,6 +7,9 @@ import { format } from 'date-fns'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { File, ExternalLink, User, Phone, MapPin, Building2, CreditCard, FileText, Stethoscope, MessageSquare, Calendar, UserCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/use-auth'
+import { canViewPhoneNumber } from '@/lib/case-permissions'
+import { getPhoneDisplay } from '@/lib/phone-utils'
 
 interface KYPSubmission {
   id: string
@@ -42,6 +45,7 @@ interface KYPDetailsViewProps {
 }
 
 export function KYPDetailsView({ kypSubmission }: KYPDetailsViewProps) {
+  const { user } = useAuth()
   const otherFiles = (kypSubmission.otherFiles as Array<{ name: string; url: string }>) || []
 
   const getStatusBadgeColor = (status: string) => {
@@ -98,7 +102,7 @@ export function KYPDetailsView({ kypSubmission }: KYPDetailsViewProps) {
                   </div>
                   <div className="flex-1">
                     <Label className="text-xs text-gray-500 dark:text-gray-400">Phone Number</Label>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">{kypSubmission.lead.phoneNumber}</p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{getPhoneDisplay(kypSubmission.lead.phoneNumber, canViewPhoneNumber(user))}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

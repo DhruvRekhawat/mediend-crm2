@@ -2,7 +2,7 @@
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { useAuth } from '@/hooks/use-auth'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -51,13 +51,21 @@ interface DischargeSheet {
     id: string
     leadRef: string
     patientName: string
+    kypSubmission?: {
+      preAuthData?: {
+        sumInsured?: string | null
+        roomRent?: string | null
+      } | null
+    } | null
   }
+  [key: string]: unknown
 }
 
 export default function DischargeSheetPage() {
   const { user } = useAuth()
   const router = useRouter()
   const params = useParams()
+  const queryClient = useQueryClient()
   const leadId = params.leadId as string
 
   const { data: dischargeSheet, isLoading } = useQuery<DischargeSheet | null>({
@@ -106,7 +114,13 @@ export default function DischargeSheetPage() {
         {dischargeSheet ? (
           <DischargeSheetView dischargeSheet={dischargeSheet} />
         ) : isInsurance ? (
-          <DischargeSheetForm leadId={leadId} onSuccess={() => router.push(`/patient/${leadId}`)} />
+          <DischargeSheetForm
+            leadId={leadId}
+            onSuccess={async () => {
+              await queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+              router.push(`/patient/${leadId}`)
+            }}
+          />
         ) : (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">

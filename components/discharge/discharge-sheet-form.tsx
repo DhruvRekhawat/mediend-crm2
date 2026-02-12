@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MultiStepForm } from '@/components/forms/multi-step-form'
 import { toast } from 'sonner'
 import { useFileUpload } from '@/hooks/use-file-upload'
-import { Upload } from 'lucide-react'
 
 interface DischargeSheetFormProps {
   leadId: string
@@ -31,6 +30,18 @@ interface Lead {
   billAmount?: number
   implantAmount?: number
   surgeryDate?: string | Date
+  kypSubmission?: {
+    preAuthData?: {
+      sumInsured?: string | null
+      roomRent?: string | null
+      copay?: string | null
+      requestedHospitalName?: string | null
+      suggestedHospitals?: Array<{
+        hospitalName?: string | null
+        tentativeBill?: number | null
+      }> | null
+    } | null
+  } | null
 }
 
 export function DischargeSheetForm({ leadId, onSuccess, initialData }: DischargeSheetFormProps) {
@@ -41,7 +52,6 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
   })
 
   const { uploadFile, uploading: isUploading } = useFileUpload({ folder: 'discharge' })
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{ name: string; url: string }>>([])
 
   // Use lazy initializer to compute initial state from lead and initialData
   const [formData, setFormData] = useState(() => {
@@ -67,6 +77,8 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
       treatment: '',
       circle: '',
       leadSource: '',
+      sumInsured: '',
+      roomRentCap: '',
       tentativeAmount: '',
       copayPct: '',
       dischargeSummaryUrl: '',
@@ -132,12 +144,25 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
       let updated = { ...prev }
 
       if (lead) {
+        const preAuth = lead.kypSubmission?.preAuthData
+        const requestedName = (preAuth?.requestedHospitalName as string)?.trim() || ''
+        const suggested = preAuth?.suggestedHospitals || []
+        const selectedHospital = requestedName
+          ? suggested.find(
+              (h) => (h.hospitalName || '').trim().toLowerCase() === requestedName.toLowerCase()
+            )
+          : suggested[0]
+        const tentativeFromPreAuth =
+          selectedHospital?.tentativeBill != null ? String(selectedHospital.tentativeBill) : ''
+        const copayFromPreAuth =
+          preAuth?.copay != null && preAuth.copay !== '' ? String(preAuth.copay).replace(/%/g, '').trim() : ''
+
         updated = {
           ...updated,
           patientName: lead.patientName || '',
           patientPhone: lead.phoneNumber || '',
           doctorName: lead.surgeonName || '',
-          hospitalName: lead.hospitalName || '',
+          hospitalName: requestedName || lead.hospitalName || '',
           category: lead.category || '',
           treatment: lead.treatment || '',
           circle: lead.circle || '',
@@ -145,7 +170,11 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
           billAmount: lead.billAmount?.toString() || '',
           implantCost: lead.implantAmount?.toString() || '',
           surgeryDate: lead.surgeryDate ? new Date(lead.surgeryDate).toISOString().split('T')[0] : '',
-          status: 'Discharged', // Case is already discharged when Insurance fills this form
+          status: 'Discharged',
+          sumInsured: (preAuth?.sumInsured as string) ?? updated.sumInsured ?? '',
+          roomRentCap: (preAuth?.roomRent as string) ?? updated.roomRentCap ?? '',
+          tentativeAmount: tentativeFromPreAuth || updated.tentativeAmount,
+          copayPct: copayFromPreAuth || updated.copayPct,
         }
       }
 
@@ -211,8 +240,8 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
         treatment: finalData.treatment || '',
         circle: finalData.circle || '',
         leadSource: finalData.leadSource || '',
-        totalAmount: parseFloat(finalData.totalAmount as string) || 0,
-        billAmount: parseFloat(finalData.billAmount as string) || 0,
+        totalAmount: parseFloat(finalData.totalAmount as string) || parseFloat(finalData.totalFinalBill as string) || 0,
+        billAmount: parseFloat(finalData.billAmount as string) || parseFloat(finalData.totalFinalBill as string) || 0,
         cashPaidByPatient: parseFloat(finalData.cashPaidByPatient as string) || 0,
         cashOrDedPaid: parseFloat(finalData.cashOrDedPaid as string) || 0,
         referralAmount: parseFloat(finalData.referralAmount as string) || 0,
@@ -296,435 +325,260 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
     })
   }
 
-  const handleFileUpload = async (file: File) => {
-    try {
-      const result = await uploadFile(file)
-      if (!result) return
-      const url = result.url
-      setUploadedFiles(prev => [...prev, { name: file.name, url }])
-      toast.success('File uploaded successfully')
-    } catch {
-      toast.error('Failed to upload file')
-    }
-  }
-
-  // Revenue split calculations are now handled in updateField function
-
   const steps = [
     {
-      id: 'dates',
-      title: 'Dates & Basic Info',
-      description: 'Enter discharge dates and basic information',
-      component: ({ formData: stepData, updateFormData }: { formData: Record<string, unknown>, updateFormData: (data: Partial<Record<string, unknown>>) => void }) => {
-        // Merge component's formData with stepData
+      id: 'policy',
+      title: 'A. Patient & Policy Details',
+      description: 'Policy and patient information',
+      component: ({ formData: stepData, updateFormData }: { formData: Record<string, unknown>; updateFormData: (data: Partial<Record<string, unknown>>) => void }) => {
         const currentData = { ...formData, ...stepData }
         const updateBoth = (data: Partial<Record<string, unknown>>) => {
           updateFormData(data)
           setFormData(prev => ({ ...prev, ...data }))
         }
         return (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="dischargeDate">Discharge Date *</Label>
-              <Input
-                id="dischargeDate"
-                type="date"
-                value={(currentData.dischargeDate as string) || ''}
-                onChange={(e) => updateBoth({ dischargeDate: e.target.value })}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="surgeryDate">Surgery Date</Label>
-              <Input
-                id="surgeryDate"
-                type="date"
-                value={(currentData.surgeryDate as string) || ''}
-                onChange={(e) => updateBoth({ surgeryDate: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="hospitalName">Hospital Name</Label>
-              <Input
-                id="hospitalName"
-                value={(currentData.hospitalName as string) || ''}
-                onChange={(e) => updateBoth({ hospitalName: e.target.value })}
-                placeholder="Admitting / discharge hospital"
-              />
-            </div>
-            <div>
-              <Label htmlFor="status">Case Status</Label>
-              <Input
-                id="status"
-                value={(currentData.status as string) || ''}
-                onChange={(e) => updateBoth({ status: e.target.value })}
-                placeholder="e.g. Discharged"
-              />
-            </div>
-            <div>
-              <Label htmlFor="paymentType">Payment Type</Label>
-              <Input
-                id="paymentType"
-                value={(currentData.paymentType as string) || ''}
-                onChange={(e) => updateBoth({ paymentType: e.target.value })}
-                placeholder="Payment mode"
-              />
-            </div>
-            <div>
-              <Label htmlFor="approvedOrCash">Approved / Cash</Label>
-              <Input
-                id="approvedOrCash"
-                value={(currentData.approvedOrCash as string) || ''}
-                onChange={(e) => updateBoth({ approvedOrCash: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="tentativeAmount">Tentative Amount</Label>
-              <Input
-                id="tentativeAmount"
-                type="number"
-                step="0.01"
-                value={(currentData.tentativeAmount as string) || ''}
-                onChange={(e) => updateBoth({ tentativeAmount: e.target.value })}
-                placeholder="From pre-auth"
-              />
-            </div>
-            <div>
-              <Label htmlFor="copayPct">Copay %</Label>
-              <Input
-                id="copayPct"
-                type="number"
-                step="0.01"
-                value={(currentData.copayPct as string) || ''}
-                onChange={(e) => updateBoth({ copayPct: e.target.value })}
-                placeholder="Optional"
-              />
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="sumInsured">Sum Insured</Label>
+                <Input
+                  id="sumInsured"
+                  value={(currentData.sumInsured as string) || ''}
+                  onChange={(e) => updateBoth({ sumInsured: e.target.value })}
+                  placeholder="From pre-auth"
+                />
+              </div>
+              <div>
+                <Label htmlFor="hospitalName">Hospital Name</Label>
+                <Input
+                  id="hospitalName"
+                  value={(currentData.hospitalName as string) || ''}
+                  onChange={(e) => updateBoth({ hospitalName: e.target.value })}
+                  placeholder="Admitting / discharge hospital"
+                />
+              </div>
+              <div>
+                <Label htmlFor="roomRentCap">Room Rent (Cap)</Label>
+                <Input
+                  id="roomRentCap"
+                  value={(currentData.roomRentCap as string) || ''}
+                  onChange={(e) => updateBoth({ roomRentCap: e.target.value })}
+                  placeholder="From pre-auth"
+                />
+              </div>
+              <div>
+                <Label htmlFor="copayPct">Copay %</Label>
+                <Input
+                  id="copayPct"
+                  type="number"
+                  step="0.01"
+                  value={(currentData.copayPct as string) || ''}
+                  onChange={(e) => updateBoth({ copayPct: e.target.value })}
+                  placeholder="Optional"
+                />
+              </div>
+              <div>
+                <Label htmlFor="doctorName">Doctor Name</Label>
+                <Input
+                  id="doctorName"
+                  value={(currentData.doctorName as string) || ''}
+                  onChange={(e) => updateBoth({ doctorName: e.target.value })}
+                  placeholder="Treating doctor"
+                />
+              </div>
+              <div>
+                <Label htmlFor="tentativeAmount">Tentative Amount</Label>
+                <Input
+                  id="tentativeAmount"
+                  type="number"
+                  step="0.01"
+                  value={(currentData.tentativeAmount as string) || ''}
+                  onChange={(e) => updateBoth({ tentativeAmount: e.target.value })}
+                  placeholder="From pre-auth"
+                />
+              </div>
+              <div>
+                <Label htmlFor="dischargeDate">Discharge Date *</Label>
+                <Input
+                  id="dischargeDate"
+                  type="date"
+                  value={(currentData.dischargeDate as string) || ''}
+                  onChange={(e) => updateBoth({ dischargeDate: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="surgeryDate">Surgery Date</Label>
+                <Input
+                  id="surgeryDate"
+                  type="date"
+                  value={(currentData.surgeryDate as string) || ''}
+                  onChange={(e) => updateBoth({ surgeryDate: e.target.value })}
+                />
+              </div>
             </div>
           </div>
-        </div>
         )
       },
-      validate: () => {
-        const dischargeDate = (formData.dischargeDate as string) || ''
-        return dischargeDate.length > 0
-      },
+      validate: () => (formData.dischargeDate as string)?.length > 0,
     },
     {
       id: 'documents',
-      title: 'Documents',
-      description: 'Upload discharge summary, OT notes, final bill, settlement letter',
+      title: 'B. Documents Section',
+      description: 'Discharge Summary, OT Notes, Codes Count, Final Bill, Settlement Letter',
       component: (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Discharge Summary</Label>
-              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const result = await uploadFile(file)
-                  if (result) setFormData(prev => ({ ...prev, dischargeSummaryUrl: result.url }))
-                }
-              }} disabled={isUploading} />
-              {(formData.dischargeSummaryUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
-            </div>
-            <div>
-              <Label>OT Notes</Label>
-              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const result = await uploadFile(file)
-                  if (result) setFormData(prev => ({ ...prev, otNotesUrl: result.url }))
-                }
-              }} disabled={isUploading} />
-              {(formData.otNotesUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
-            </div>
-            <div>
-              <Label>Final Bill</Label>
-              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const result = await uploadFile(file)
-                  if (result) setFormData(prev => ({ ...prev, finalBillUrl: result.url }))
-                }
-              }} disabled={isUploading} />
-              {(formData.finalBillUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
-            </div>
-            <div>
-              <Label>Settlement Letter</Label>
-              <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="mt-1" onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const result = await uploadFile(file)
-                  if (result) setFormData(prev => ({ ...prev, settlementLetterUrl: result.url }))
-                }
-              }} disabled={isUploading} />
-              {(formData.settlementLetterUrl as string) && <p className="text-xs text-muted-foreground mt-1">Uploaded</p>}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { key: 'dischargeSummaryUrl', label: 'Discharge Summary' },
+              { key: 'otNotesUrl', label: 'OT Notes' },
+              { key: 'finalBillUrl', label: 'Final Bill' },
+              { key: 'settlementLetterUrl', label: 'Settlement Letter' },
+            ].map(({ key, label }) => (
+              <div key={key}>
+                <Label>{label}</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    className="flex-1"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const result = await uploadFile(file)
+                        if (result) setFormData(prev => ({ ...prev, [key]: result.url }))
+                      }
+                    }}
+                    disabled={isUploading}
+                  />
+                  {(formData[key as keyof typeof formData] as string) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(formData[key as keyof typeof formData] as string, '_blank')}
+                    >
+                      View
+                    </Button>
+                  )}
+                </div>
+                {(formData[key as keyof typeof formData] as string) && (
+                  <p className="text-xs text-muted-foreground mt-1">Uploaded</p>
+                )}
+              </div>
+            ))}
             <div>
               <Label htmlFor="codesCount">Codes Count</Label>
-              <Input id="codesCount" type="number" value={formData.codesCount as string} onChange={(e) => setFormData(prev => ({ ...prev, codesCount: e.target.value }))} placeholder="Optional" />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'financials',
-      title: 'Financial Details',
-      description: 'Enter bill amounts and payments',
-      component: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="billAmount">Hospital Bill Amount *</Label>
               <Input
-                id="billAmount"
+                id="codesCount"
                 type="number"
-                step="0.01"
-                value={formData.billAmount as string}
-                onChange={(e) => updateField('billAmount', e.target.value)}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="totalAmount">Total Amount</Label>
-              <Input
-                id="totalAmount"
-                type="number"
-                step="0.01"
-                value={formData.totalAmount as string}
-                onChange={(e) => updateField('totalAmount', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="cashPaidByPatient">Cash Paid by Patient</Label>
-              <Input
-                id="cashPaidByPatient"
-                type="number"
-                step="0.01"
-                value={formData.cashPaidByPatient as string}
-                onChange={(e) => updateField('cashPaidByPatient', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="cashOrDedPaid">Settled Amount</Label>
-              <Input
-                id="cashOrDedPaid"
-                type="number"
-                step="0.01"
-                value={formData.cashOrDedPaid}
-                onChange={(e) => updateField('cashOrDedPaid', e.target.value)}
-                placeholder="Cash / Deduction paid"
+                value={formData.codesCount as string}
+                onChange={(e) => setFormData(prev => ({ ...prev, codesCount: e.target.value }))}
+                placeholder="Optional"
+                className="mt-1"
               />
             </div>
           </div>
         </div>
       ),
-      validate: () => (formData.billAmount as string)?.length > 0,
     },
     {
       id: 'billbreakup',
-      title: 'Bill Breakup & Deductions',
-      description: 'Bill breakup and approval/deductions; net settlement is auto-calculated',
+      title: 'C. Bill Breakup Table',
+      description: 'Head | Amount',
       component: (
-        <div className="space-y-6">
-          <div>
-            <Label className="text-sm font-semibold">Bill Breakup</Label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              {[
-                { key: 'roomRentAmount', label: 'Room Rent' },
-                { key: 'pharmacyAmount', label: 'Pharmacy' },
-                { key: 'investigationAmount', label: 'Investigation' },
-                { key: 'consumablesAmount', label: 'Consumables' },
-                { key: 'implantsAmount', label: 'Implants' },
-                { key: 'totalFinalBill', label: 'Total Final Bill' },
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <Label htmlFor={key} className="text-xs">{label}</Label>
-                  <Input
-                    id={key}
-                    type="number"
-                    step="0.01"
-                    value={(formData[key as keyof typeof formData] as string) || ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setFormData(prev => {
-                        const next = { ...prev, [key]: val }
-                        const total = (parseFloat(next.roomRentAmount as string) || 0) + (parseFloat(next.pharmacyAmount as string) || 0) + (parseFloat(next.investigationAmount as string) || 0) + (parseFloat(next.consumablesAmount as string) || 0) + (parseFloat(next.implantsAmount as string) || 0)
-                        next.totalFinalBill = total > 0 ? String(total) : next.totalFinalBill
-                        return next
-                      })
-                    }}
-                  />
-                </div>
-              ))}
+        <div className="space-y-4">
+          <div className="rounded-md border">
+            <div className="grid grid-cols-2 gap-2 p-3 bg-muted/50 font-medium text-sm">
+              <span>Head</span>
+              <span>Amount</span>
             </div>
+            {[
+              { key: 'roomRentAmount', label: 'Room Rent' },
+              { key: 'pharmacyAmount', label: 'Pharmacy' },
+              { key: 'investigationAmount', label: 'Investigation' },
+              { key: 'consumablesAmount', label: 'Consumables' },
+              { key: 'implantsAmount', label: 'Implants' },
+              { key: 'totalFinalBill', label: 'Total Final Bill' },
+            ].map(({ key, label }) => (
+              <div key={key} className="grid grid-cols-2 gap-2 p-3 border-t">
+                <Label htmlFor={key} className="text-sm flex items-center">{label}</Label>
+                <Input
+                  id={key}
+                  type="number"
+                  step="0.01"
+                  value={(formData[key as keyof typeof formData] as string) || ''}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setFormData(prev => {
+                      const next = { ...prev, [key]: val }
+                      const total =
+                        (parseFloat(next.roomRentAmount as string) || 0) +
+                        (parseFloat(next.pharmacyAmount as string) || 0) +
+                        (parseFloat(next.investigationAmount as string) || 0) +
+                        (parseFloat(next.consumablesAmount as string) || 0) +
+                        (parseFloat(next.implantsAmount as string) || 0)
+                      next.totalFinalBill = total > 0 ? String(total) : next.totalFinalBill
+                      return next
+                    })
+                  }}
+                />
+              </div>
+            ))}
           </div>
-          <div>
-            <Label className="text-sm font-semibold">Approval & Deductions</Label>
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              {[
-                { key: 'finalApprovedAmount', label: 'Final Approved Amount' },
-                { key: 'deductionAmount', label: 'Deduction' },
-                { key: 'discountAmount', label: 'Discount' },
-                { key: 'waivedOffAmount', label: 'Waived Off' },
-                { key: 'settlementPart', label: 'Settlement Part' },
-                { key: 'tdsAmount', label: 'TDS' },
-                { key: 'otherDeduction', label: 'Other Deduction' },
-                { key: 'netSettlementAmount', label: 'Net Settlement Amount' },
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <Label htmlFor={key} className="text-xs">{label}</Label>
-                  <Input
-                    id={key}
-                    type="number"
-                    step="0.01"
-                    value={(formData[key as keyof typeof formData] as string) || ''}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      setFormData(prev => {
-                        const next = { ...prev, [key]: val }
+        </div>
+      ),
+    },
+    {
+      id: 'approval',
+      title: 'D. Approval & Deductions Table',
+      description: 'Item | Amount',
+      component: (
+        <div className="space-y-4">
+          <div className="rounded-md border">
+            <div className="grid grid-cols-2 gap-2 p-3 bg-muted/50 font-medium text-sm">
+              <span>Item</span>
+              <span>Amount</span>
+            </div>
+            {[
+              { key: 'finalApprovedAmount', label: 'Final Approved Amount' },
+              { key: 'deductionAmount', label: 'Deduction Amount' },
+              { key: 'discountAmount', label: 'Discount' },
+              { key: 'waivedOffAmount', label: 'Waived Off Amount' },
+              { key: 'settlementPart', label: 'Settlement Part' },
+              { key: 'tdsAmount', label: 'TDS' },
+              { key: 'otherDeduction', label: 'Other Deduction' },
+              { key: 'netSettlementAmount', label: 'Net Settlement Amount' },
+            ].map(({ key, label }) => (
+              <div key={key} className="grid grid-cols-2 gap-2 p-3 border-t">
+                <Label htmlFor={key} className="text-sm flex items-center">{label}</Label>
+                <Input
+                  id={key}
+                  type="number"
+                  step="0.01"
+                  value={(formData[key as keyof typeof formData] as string) || ''}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setFormData(prev => {
+                      const next = { ...prev, [key]: val }
+                      if (key !== 'netSettlementAmount') {
                         const approved = parseFloat(next.finalApprovedAmount as string) || 0
-                        const ded = (parseFloat(next.deductionAmount as string) || 0) + (parseFloat(next.discountAmount as string) || 0) + (parseFloat(next.waivedOffAmount as string) || 0) + (parseFloat(next.settlementPart as string) || 0) + (parseFloat(next.tdsAmount as string) || 0) + (parseFloat(next.otherDeduction as string) || 0)
+                        const ded =
+                          (parseFloat(next.deductionAmount as string) || 0) +
+                          (parseFloat(next.discountAmount as string) || 0) +
+                          (parseFloat(next.waivedOffAmount as string) || 0) +
+                          (parseFloat(next.settlementPart as string) || 0) +
+                          (parseFloat(next.tdsAmount as string) || 0) +
+                          (parseFloat(next.otherDeduction as string) || 0)
                         next.netSettlementAmount = (approved - ded).toFixed(2)
-                        return next
-                      })
-                    }}
-                    readOnly={key === 'netSettlementAmount'}
-                    className={key === 'netSettlementAmount' ? 'font-semibold' : ''}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'breakdown',
-      title: 'Cost Breakdown',
-      description: 'Enter cost breakdown details',
-      component: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="referralAmount">Referral Amount</Label>
-              <Input
-                id="referralAmount"
-                type="number"
-                step="0.01"
-                value={formData.referralAmount as string}
-                onChange={(e) => updateField('referralAmount', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="cabCharges">CAB Charges</Label>
-              <Input
-                id="cabCharges"
-                type="number"
-                step="0.01"
-                value={formData.cabCharges as string}
-                onChange={(e) => updateField('cabCharges', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="implantCost">Implant Cost</Label>
-              <Input
-                id="implantCost"
-                type="number"
-                step="0.01"
-                value={formData.implantCost as string}
-                onChange={(e) => updateField('implantCost', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="dcCharges">D&C Charges</Label>
-              <Input
-                id="dcCharges"
-                type="number"
-                step="0.01"
-                value={formData.dcCharges as string}
-                onChange={(e) => updateField('dcCharges', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="doctorCharges">Doctor Charges</Label>
-              <Input
-                id="doctorCharges"
-                type="number"
-                step="0.01"
-                value={formData.doctorCharges}
-                onChange={(e) => updateField('doctorCharges', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: 'revenue',
-      title: 'Revenue Split',
-      description: 'Calculate revenue split between hospital and Mediend',
-      component: (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="hospitalSharePct">Hospital Share %</Label>
-              <Input
-                id="hospitalSharePct"
-                type="number"
-                step="0.01"
-                value={formData.hospitalSharePct as string}
-                onChange={(e) => updateField('hospitalSharePct', e.target.value)}
-                placeholder="Percentage"
-              />
-            </div>
-            <div>
-              <Label htmlFor="hospitalShareAmount">Hospital Share Amount</Label>
-              <Input
-                id="hospitalShareAmount"
-                type="number"
-                step="0.01"
-                value={formData.hospitalShareAmount as string}
-                onChange={(e) => updateField('hospitalShareAmount', e.target.value)}
-                readOnly
-              />
-            </div>
-            <div>
-              <Label htmlFor="mediendSharePct">Mediend Share %</Label>
-              <Input
-                id="mediendSharePct"
-                type="number"
-                step="0.01"
-                value={formData.mediendSharePct as string}
-                onChange={(e) => updateField('mediendSharePct', e.target.value)}
-                placeholder="Percentage"
-              />
-            </div>
-            <div>
-              <Label htmlFor="mediendShareAmount">Mediend Share Amount</Label>
-              <Input
-                id="mediendShareAmount"
-                type="number"
-                step="0.01"
-                value={formData.mediendShareAmount as string}
-                onChange={(e) => updateField('mediendShareAmount', e.target.value)}
-                readOnly
-              />
-            </div>
-            <div>
-              <Label htmlFor="mediendNetProfit">Net Profit</Label>
-              <Input
-                id="mediendNetProfit"
-                type="number"
-                step="0.01"
-                value={formData.mediendNetProfit as string}
-                onChange={(e) => updateField('mediendNetProfit', e.target.value)}
-                readOnly
-                className="font-semibold"
-              />
-            </div>
+                      }
+                      return next
+                    })
+                  }}
+                  className={key === 'netSettlementAmount' ? 'font-semibold' : ''}
+                />
+              </div>
+            ))}
           </div>
           <div>
             <Label htmlFor="remarks">Remarks</Label>
@@ -732,56 +586,11 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
               id="remarks"
               value={formData.remarks as string}
               onChange={(e) => updateField('remarks', e.target.value)}
-              rows={3}
-              placeholder="Any additional notes"
+              rows={2}
+              placeholder="Optional notes"
+              className="mt-1"
             />
           </div>
-        </div>
-      ),
-    },
-    {
-      id: 'bills',
-      title: 'Upload Bills',
-      description: 'Upload hospital bills and settlement documents',
-      component: (
-        <div className="space-y-4">
-          <div>
-            <Label>Upload Documents</Label>
-            <div className="mt-2">
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleFileUpload(file)
-                }}
-                className="hidden"
-                id="file-upload"
-                disabled={isUploading}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById('file-upload')?.click()}
-                disabled={isUploading}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? 'Uploading...' : 'Upload Document'}
-              </Button>
-            </div>
-          </div>
-          {uploadedFiles.length > 0 && (
-            <div className="space-y-2">
-              <Label>Uploaded Files</Label>
-              <div className="space-y-1">
-                {uploadedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 border rounded">
-                    <span className="text-sm">{file.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       ),
     },

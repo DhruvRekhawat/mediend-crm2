@@ -9,6 +9,7 @@ export interface Notification {
     | 'PRE_AUTH_COMPLETE'
     | 'FOLLOW_UP_COMPLETE'
     | 'KYP_COMPLETED'
+    | 'CASE_CHAT_MESSAGE'
     | 'TASK_ASSIGNED'
     | 'TASK_DUE_SOON'
     | 'DUE_DATE_CHANGE_REQUESTED'

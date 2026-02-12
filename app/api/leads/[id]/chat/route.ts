@@ -95,6 +95,48 @@ export async function POST(
       },
     })
 
+    // Create notifications for the other party
+    // If BD sent message, notify Insurance users
+    // If Insurance sent message, notify BD
+    const leadWithBD = await prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { bdId: true, patientName: true, leadRef: true },
+    })
+
+    if (leadWithBD) {
+      const notificationUsers: string[] = []
+      
+      if (user.role === 'BD' || user.role === 'TEAM_LEAD') {
+        // BD sent message, notify Insurance users
+        const insuranceUsers = await prisma.user.findMany({
+          where: {
+            role: { in: ['INSURANCE_HEAD'] },
+          },
+          select: { id: true },
+        })
+        notificationUsers.push(...insuranceUsers.map(u => u.id))
+      } else if (user.role === 'INSURANCE_HEAD') {
+        // Insurance sent message, notify BD
+        if (leadWithBD.bdId && leadWithBD.bdId !== user.id) {
+          notificationUsers.push(leadWithBD.bdId)
+        }
+      }
+
+      // Create notifications
+      if (notificationUsers.length > 0) {
+        await prisma.notification.createMany({
+          data: notificationUsers.map((userId) => ({
+            userId,
+            type: 'CASE_CHAT_MESSAGE',
+            title: 'New Chat Message',
+            message: `${user.name} sent a message in ${leadWithBD.patientName} (${leadWithBD.leadRef})`,
+            link: `/chat/${leadId}`,
+            relatedId: leadId,
+          })),
+        })
+      }
+    }
+
     return successResponse(message)
   } catch (e) {
     if (e instanceof z.ZodError) {

@@ -20,6 +20,8 @@ interface HospitalRow {
 interface HospitalSuggestionFormProps {
   kypSubmissionId: string
   initialSumInsured?: string
+  initialCopayPercentage?: string
+  initialTpa?: string
   initialHospitals?: Array<{
     hospitalName: string
     tentativeBill?: number | null
@@ -44,11 +46,15 @@ const emptyHospital = (): HospitalRow => ({
 export function HospitalSuggestionForm({
   kypSubmissionId,
   initialSumInsured = '',
+  initialCopayPercentage = '',
+  initialTpa = '',
   initialHospitals,
   onSuccess,
   onCancel,
 }: HospitalSuggestionFormProps) {
   const [sumInsured, setSumInsured] = useState(initialSumInsured)
+  const [copayPercentage, setCopayPercentage] = useState(initialCopayPercentage)
+  const [tpa, setTpa] = useState(initialTpa)
   const [hospitals, setHospitals] = useState<HospitalRow[]>(() => {
     if (initialHospitals?.length) {
       return initialHospitals.map((h) => ({
@@ -96,6 +102,8 @@ export function HospitalSuggestionForm({
       await apiPost('/api/kyp/pre-auth', {
         kypSubmissionId,
         sumInsured: sumInsured.trim(),
+        copay: copayPercentage.trim() || undefined,
+        tpa: tpa.trim() || undefined,
         hospitals: list,
       })
       toast.success('Hospital suggestions saved. BD can now raise pre-auth.')
@@ -107,15 +115,35 @@ export function HospitalSuggestionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <Label htmlFor="sumInsured">Sum Insured *</Label>
-        <Input
-          id="sumInsured"
-          value={sumInsured}
-          onChange={(e) => setSumInsured(e.target.value)}
-          placeholder="e.g. 500000"
-          required
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="sumInsured">Sum Insured *</Label>
+          <Input
+            id="sumInsured"
+            value={sumInsured}
+            onChange={(e) => setSumInsured(e.target.value)}
+            placeholder="e.g. 500000"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="copayPercentage">Copay Percentage</Label>
+          <Input
+            id="copayPercentage"
+            value={copayPercentage}
+            onChange={(e) => setCopayPercentage(e.target.value)}
+            placeholder="e.g. 10%"
+          />
+        </div>
+        <div>
+          <Label htmlFor="tpa">TPA</Label>
+          <Input
+            id="tpa"
+            value={tpa}
+            onChange={(e) => setTpa(e.target.value)}
+            placeholder="e.g. TPA Name"
+          />
+        </div>
       </div>
 
       <div>

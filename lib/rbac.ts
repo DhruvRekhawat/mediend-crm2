@@ -123,6 +123,16 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'users:create_tl',
     'users:create_user',
   ],
+  OUTSTANDING_HEAD: [
+    'leads:read',
+    'pl:read',
+    'pl:write',
+    'analytics:read',
+    'reports:export',
+    'departments:create',
+    'users:create_tl',
+    'users:create_user',
+  ],
   ADMIN: [
     'leads:read',
     'leads:write',

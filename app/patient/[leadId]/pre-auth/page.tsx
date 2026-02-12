@@ -6,8 +6,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { Label } from '@/components/ui/label'
+import { ArrowLeft, Phone, MapPin, Stethoscope, Tag, User } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { PreAuthDetailsView } from '@/components/kyp/pre-auth-details-view'
@@ -15,7 +17,8 @@ import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { PreAuthApprovalModal } from '@/components/kyp/pre-auth-approval-modal'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CaseStage, PreAuthStatus } from '@prisma/client'
-import { canRaisePreAuth, canCompletePreAuth, canAddKYPDetails, canGeneratePDF } from '@/lib/case-permissions'
+import { canRaisePreAuth, canCompletePreAuth, canAddKYPDetails, canGeneratePDF, canViewPhoneNumber } from '@/lib/case-permissions'
+import { getPhoneDisplay } from '@/lib/phone-utils'
 import { useState } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
 
@@ -28,6 +31,8 @@ interface KYPSubmission {
     leadRef: string
     patientName: string
   }
+  location?: string | null
+  area?: string | null
   preAuthData?: {
     id: string
     sumInsured: string | null
@@ -127,10 +132,10 @@ export default function PreAuthPage() {
   const isInsurance = user?.role === 'INSURANCE_HEAD' || user?.role === 'ADMIN'
   const isBD = user?.role === 'BD' || user?.role === 'TEAM_LEAD'
 
-  const canRaise = lead && user && canRaisePreAuth(user, lead)
-  const canComplete = lead && user && canCompletePreAuth(user, lead)
-  const canAddDetails = lead && user && canAddKYPDetails(user, lead)
-  const canPDF = lead && user && canGeneratePDF(user, lead)
+  const canRaise = lead && user && canRaisePreAuth({ role: user.role } as any, lead)
+  const canComplete = lead && user && canCompletePreAuth({ role: user.role } as any, lead)
+  const canAddDetails = lead && user && canAddKYPDetails({ role: user.role } as any, lead)
+  const canPDF = lead && user && canGeneratePDF({ role: user.role } as any, lead)
   const preAuthRaised = lead?.caseStage === CaseStage.PREAUTH_RAISED || lead?.caseStage === CaseStage.PREAUTH_COMPLETE
   const preAuthComplete = lead?.caseStage === CaseStage.PREAUTH_COMPLETE
   
@@ -158,6 +163,79 @@ export default function PreAuthPage() {
           </div>
         </div>
 
+        {/* Patient overview - easy reference while filling the form */}
+        {lead && (
+          <Card className="border-2 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Patient overview
+              </CardTitle>
+              <CardDescription>Quick reference while filling the form</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Phone</Label>
+                    <p className="text-sm font-medium">{getPhoneDisplay(lead.phoneNumber, canViewPhoneNumber(user ? { role: user.role } : null))}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-teal-50 dark:bg-teal-950/30 rounded-lg border border-teal-200 dark:border-teal-800">
+                    <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">City</Label>
+                    <p className="text-sm font-medium">{(lead.kypSubmission?.location?.trim() || lead.city) ?? '-'}</p>
+                  </div>
+                </div>
+                {lead.kypSubmission?.area?.trim() && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Area</Label>
+                      <p className="text-sm font-medium">{lead.kypSubmission.area}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                    <Stethoscope className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Treatment</Label>
+                    <p className="text-sm font-medium">{lead.treatment ?? '-'}</p>
+                  </div>
+                </div>
+                {lead.category && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
+                      <Tag className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Category</Label>
+                      <p className="text-sm font-medium">{lead.category}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={`/patient/${leadId}`}>
+                    View full patient details →
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs defaultValue="pre-auth" className="space-y-4">
           <TabsList>
             <TabsTrigger value="pre-auth">Pre-Authorization</TabsTrigger>
@@ -177,6 +255,8 @@ export default function PreAuthPage() {
                   <HospitalSuggestionForm
                     kypSubmissionId={kypSubmission!.id}
                     initialSumInsured={kypSubmission?.preAuthData?.sumInsured ?? undefined}
+                    initialCopayPercentage={kypSubmission?.preAuthData?.copay ?? undefined}
+                    initialTpa={kypSubmission?.preAuthData?.tpa ?? undefined}
                     initialHospitals={kypSubmission?.preAuthData?.suggestedHospitals?.map((h) => ({
                       hospitalName: h.hospitalName,
                       tentativeBill: h.tentativeBill,
@@ -219,7 +299,7 @@ export default function PreAuthPage() {
             {isBD && preAuthRaised && kypSubmission?.preAuthData && (
               <>
                 <PreAuthDetailsView
-                  preAuthData={kypSubmission.preAuthData}
+                  preAuthData={kypSubmission.preAuthData as any}
                   caseStage={lead?.caseStage || CaseStage.PREAUTH_RAISED}
                   leadRef={kypSubmission.lead.leadRef}
                   patientName={kypSubmission.lead.patientName}
@@ -233,7 +313,7 @@ export default function PreAuthPage() {
             {isInsurance && canComplete && !showEditForm && kypSubmission?.preAuthData && (
               <>
                 <PreAuthDetailsView
-                  preAuthData={kypSubmission.preAuthData}
+                  preAuthData={kypSubmission.preAuthData as any}
                   caseStage={lead?.caseStage || CaseStage.PREAUTH_RAISED}
                   leadRef={kypSubmission.lead.leadRef}
                   patientName={kypSubmission.lead.patientName}
@@ -272,7 +352,7 @@ export default function PreAuthPage() {
             {shouldShowDetails && kypSubmission?.preAuthData && (
               <>
                 <PreAuthDetailsView
-                  preAuthData={kypSubmission.preAuthData}
+                  preAuthData={kypSubmission.preAuthData as any}
                   caseStage={lead?.caseStage || CaseStage.NEW_LEAD}
                   leadRef={kypSubmission.lead.leadRef}
                   patientName={kypSubmission.lead.patientName}
@@ -292,17 +372,20 @@ export default function PreAuthPage() {
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ recipients: [] }),
                             })
-                            if (response.ok) {
-                              alert('PDF generation initiated')
+                            const data = await response.json().catch(() => ({}))
+                            if (response.ok && data?.data?.pdfUrl) {
+                              window.open(data.data.pdfUrl, '_blank', 'noopener,noreferrer')
+                              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                              queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
                             } else {
-                              alert('Failed to generate PDF')
+                              alert(data?.error || 'Failed to generate PDF')
                             }
                           } catch (error) {
                             alert('Error generating PDF')
                           }
                         }}
                       >
-                        Generate PDF
+                        Download PDF
                       </Button>
                     </CardContent>
                   </Card>

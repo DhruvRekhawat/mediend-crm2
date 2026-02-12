@@ -55,9 +55,18 @@ export interface Lead {
   }
   plRecord?: {
     finalProfit?: number
+    mediendNetProfit?: number
     hospitalPayoutStatus?: string
     doctorPayoutStatus?: string
     mediendInvoiceStatus?: string
+    hospitalAmountPending?: number
+    doctorAmountPending?: number
+    billAmount?: number
+    totalAmount?: number
+    month?: string | Date | null
+    surgeryDate?: string | Date | null
+    managerName?: string
+    bdmName?: string
     closedAt?: string | null
   }
   [key: string]: unknown

@@ -14,6 +14,9 @@ import { useState } from 'react'
 import { FileText, AlertCircle, CheckCircle2, Clock, ArrowRight, Receipt, Shield, Activity, TrendingUp } from 'lucide-react'
 import { PreAuthApprovalModal } from '@/components/kyp/pre-auth-approval-modal'
 import { PreAuthStatus } from '@prisma/client'
+import { useAuth } from '@/hooks/use-auth'
+import { canViewPhoneNumber } from '@/lib/case-permissions'
+import { getPhoneDisplay } from '@/lib/phone-utils'
 
 interface LeadWithStage {
   id: string
@@ -70,6 +73,7 @@ interface LeadWithStage {
 }
 
 export default function InsuranceDashboardPage() {
+  const { user } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'kyp-review' | 'preauth-raised' | 'preauth-complete' | 'admitted' | 'discharge-pending' | 'ipd-done'>('kyp-review')
   const [selectedLead, setSelectedLead] = useState<LeadWithStage | null>(null)
@@ -413,7 +417,7 @@ export default function InsuranceDashboardPage() {
                           <TableCell>
                             <div>
                               <div className="font-semibold text-gray-900 dark:text-gray-100">{lead.patientName}</div>
-                              <div className="text-sm text-gray-600 dark:text-gray-400">{lead.phoneNumber}</div>
+                              <div className="text-sm text-gray-600 dark:text-gray-400">{getPhoneDisplay(lead.phoneNumber, canViewPhoneNumber(user))}</div>
                             </div>
                           </TableCell>
                           <TableCell className="text-gray-700 dark:text-gray-300">{lead.hospitalName}</TableCell>

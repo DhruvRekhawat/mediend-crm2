@@ -5,19 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPatch } from '@/lib/api-client'
+import { useQuery } from '@tanstack/react-query'
+import { apiGet } from '@/lib/api-client'
 import { Lead } from '@/hooks/use-leads'
 import { useState, useEffect } from 'react'
 import { DollarSign, TrendingUp, FileText, CheckCircle } from 'lucide-react'
-import { toast } from 'sonner'
+import Link from 'next/link'
+import { useAuth } from '@/hooks/use-auth'
+import { canViewPhoneNumber } from '@/lib/case-permissions'
+import { getPhoneDisplay } from '@/lib/phone-utils'
 // format import removed
 
 export default function PLDashboardPage() {
+  const { user } = useAuth()
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
@@ -30,9 +30,6 @@ export default function PLDashboardPage() {
       endDate: new Date().toISOString().split('T')[0],
     })
   }, [])
-  const [selectedRecord, setSelectedRecord] = useState<Lead | null>(null)
-  const queryClient = useQueryClient()
-
   const { data: records, isLoading } = useQuery<Lead[]>({
     queryKey: ['pl', 'records', dateRange],
     queryFn: async () => {
@@ -51,25 +48,6 @@ export default function PLDashboardPage() {
           mediendInvoiceStatus: 'PENDING',
         },
       }))
-    },
-  })
-
-  const updateRecordMutation = useMutation({
-    mutationFn: async ({ leadId, data }: { leadId: string; data: Partial<Lead> }) => {
-      return apiPatch<Lead>(`/api/leads/${leadId}`, {
-        ...data,
-        plRecord: {
-          update: data.plRecord,
-        },
-      })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pl'] })
-      setSelectedRecord(null)
-      toast.success('P/L record updated successfully')
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update record')
     },
   })
 
@@ -159,85 +137,124 @@ export default function PLDashboardPage() {
               <CardTitle>P/L Records</CardTitle>
               <CardDescription>Profit & Loss records for completed surgeries</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Loading...</div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Lead Ref</TableHead>
-                      <TableHead>Patient</TableHead>
-                      <TableHead>Hospital</TableHead>
+                      <TableHead>Month</TableHead>
+                      <TableHead>Manager</TableHead>
+                      <TableHead>BDM</TableHead>
+                      <TableHead>P. Number</TableHead>
+                      <TableHead>P. Name</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Treatment</TableHead>
-                      <TableHead>Net Profit</TableHead>
+                      <TableHead>Circle</TableHead>
+                      <TableHead>Doctors</TableHead>
+                      <TableHead>Hospitals</TableHead>
+                      <TableHead>Surgery Date</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Approved/Cash</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Bill Amount</TableHead>
+                      <TableHead>Payment Collected At</TableHead>
+                      <TableHead>Lead Source</TableHead>
+                      <TableHead>Hospital Share %</TableHead>
+                      <TableHead>Hospital Share</TableHead>
+                      <TableHead>Doctor Charges</TableHead>
+                      <TableHead>D&C</TableHead>
+                      <TableHead>Implant</TableHead>
+                      <TableHead>Cab Charges</TableHead>
+                      <TableHead>Referral</TableHead>
+                      <TableHead>Mediend Share %</TableHead>
+                      <TableHead>Mediend Share</TableHead>
+                      <TableHead>Mediend Net Profit</TableHead>
+                      <TableHead>Remarks</TableHead>
                       <TableHead>Hospital Payout</TableHead>
                       <TableHead>Doctor Payout</TableHead>
-                      <TableHead>Invoice Status</TableHead>
+                      <TableHead>Invoice</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {records?.map((record) => (
-                      <TableRow key={record.id}>
-                        <TableCell className="font-medium">{record.leadRef}</TableCell>
-                        <TableCell>{record.patientName}</TableCell>
-                        <TableCell>{record.hospitalName}</TableCell>
-                        <TableCell>{record.treatment}</TableCell>
-                        <TableCell>₹{(record.plRecord?.finalProfit || record.netProfit || 0).toLocaleString('en-IN')}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              record.plRecord?.hospitalPayoutStatus === 'PAID'
-                                ? 'default'
-                                : record.plRecord?.hospitalPayoutStatus === 'PARTIAL'
-                                ? 'secondary'
-                                : 'outline'
-                            }
-                          >
-                            {record.plRecord?.hospitalPayoutStatus || 'PENDING'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              record.plRecord?.doctorPayoutStatus === 'PAID'
-                                ? 'default'
-                                : record.plRecord?.doctorPayoutStatus === 'PARTIAL'
-                                ? 'secondary'
-                                : 'outline'
-                            }
-                          >
-                            {record.plRecord?.doctorPayoutStatus || 'PENDING'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              record.plRecord?.mediendInvoiceStatus === 'PAID'
-                                ? 'default'
-                                : record.plRecord?.mediendInvoiceStatus === 'SENT'
-                                ? 'secondary'
-                                : 'outline'
-                            }
-                          >
-                            {record.plRecord?.mediendInvoiceStatus || 'PENDING'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedRecord(record)}
-                          >
-                            Update
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {records?.map((record) => {
+                      const pl = record.plRecord as Record<string, unknown> | undefined
+                      const month = pl?.month ? new Date(pl.month as string).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }) : '—'
+                      const surgeryDate = pl?.surgeryDate || record.surgeryDate
+                      const surgeryStr = surgeryDate ? new Date(surgeryDate as string).toLocaleDateString('en-IN') : '—'
+                      const getStringValue = (value: unknown): string => {
+                        if (typeof value === 'string' && value.length > 0) return value
+                        if (value == null) return ''
+                        if (typeof value === 'object' && Object.keys(value).length === 0) return ''
+                        const str = String(value)
+                        return str === '[object Object]' ? '' : str
+                      }
+                      // const categoryVal = record.category || getStringValue(pl?.category) || '—'
+                      // const treatmentVal = record.treatment || getStringValue(pl?.treatment) || '—'
+                      // const circleVal = record.circle || getStringValue(pl?.circle) || '—'
+                      return (
+                        <TableRow key={record.id}>
+                          <TableCell className="whitespace-nowrap">{month}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.managerName as string) || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{((pl?.bdmName as string) || record.bd?.name || '—') as string}</TableCell>
+                          <TableCell className="whitespace-nowrap">{getPhoneDisplay(record.phoneNumber, canViewPhoneNumber(user ? { role: user.role } : null))}</TableCell>
+                          <TableCell className="whitespace-nowrap">{record.patientName || '—'}</TableCell>
+                          {/* <TableCell className="whitespace-nowrap">{categoryVal}</TableCell> */}
+                          {/* <TableCell className="whitespace-nowrap">{treatmentVal}</TableCell> */}
+                          {/* <TableCell className="whitespace-nowrap">{circleVal}</TableCell> */}
+                          <TableCell className="whitespace-nowrap">{String(record.category || '') || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{String(record.treatment || '') || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{String(record.circle || '') || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{String((pl?.doctorName as string) || record.surgeonName || '') || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{record.hospitalName || (pl?.hospitalName as string) || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{surgeryStr as string}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.paymentType as string) || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.status as string) || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{pl?.approvedOrCash != null ? String(pl.approvedOrCash) : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{((pl?.totalAmount != null && Number(pl.totalAmount) !== 0) ? `₹${Number(pl.totalAmount).toLocaleString('en-IN')}` : '—') as string}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.billAmount != null && Number(pl.billAmount) !== 0) ? `₹${Number(pl.billAmount).toLocaleString('en-IN')}` : (record.billAmount != null ? `₹${Number(record.billAmount).toLocaleString('en-IN')}` : '—')}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.paymentCollectedAt as string) || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.leadSource as string) || record.source || '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{pl?.hospitalSharePct != null ? `${pl.hospitalSharePct}%` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.hospitalShareAmount != null && Number(pl.hospitalShareAmount) !== 0) ? `₹${Number(pl.hospitalShareAmount).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.doctorCharges != null && Number(pl.doctorCharges) !== 0) ? `₹${Number(pl.doctorCharges).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.dcCharges != null && Number(pl.dcCharges) !== 0) ? `₹${Number(pl.dcCharges).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.implantCost != null && Number(pl.implantCost) !== 0) ? `₹${Number(pl.implantCost).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.cabCharges != null && Number(pl.cabCharges) !== 0) ? `₹${Number(pl.cabCharges).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.referralAmount != null && Number(pl.referralAmount) !== 0) ? `₹${Number(pl.referralAmount).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{pl?.mediendSharePct != null ? `${pl.mediendSharePct}%` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap">{(pl?.mediendShareAmount != null && Number(pl.mediendShareAmount) !== 0) ? `₹${Number(pl.mediendShareAmount).toLocaleString('en-IN')}` : '—'}</TableCell>
+                          <TableCell className="whitespace-nowrap font-medium">₹{(record.plRecord?.finalProfit ?? record.plRecord?.mediendNetProfit ?? record.netProfit ?? 0).toLocaleString('en-IN')}</TableCell>
+                          <TableCell className="whitespace-nowrap max-w-[120px] truncate" title={(pl?.remarks as string) || ''}>{(pl?.remarks as string) || '—'}</TableCell>
+                          <TableCell>
+                            <Badge variant={record.plRecord?.hospitalPayoutStatus === 'PAID' ? 'default' : record.plRecord?.hospitalPayoutStatus === 'PARTIAL' ? 'secondary' : 'outline'}>
+                              {record.plRecord?.hospitalPayoutStatus || 'PENDING'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={record.plRecord?.doctorPayoutStatus === 'PAID' ? 'default' : record.plRecord?.doctorPayoutStatus === 'PARTIAL' ? 'secondary' : 'outline'}>
+                              {record.plRecord?.doctorPayoutStatus || 'PENDING'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={record.plRecord?.mediendInvoiceStatus === 'PAID' ? 'default' : record.plRecord?.mediendInvoiceStatus === 'SENT' ? 'secondary' : 'outline'}>
+                              {record.plRecord?.mediendInvoiceStatus || 'PENDING'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/pl/record/${record.id}`}>Update</Link>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
                     {(!records || records.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={33} className="text-center text-muted-foreground py-8">
                           No P/L records found
                         </TableCell>
                       </TableRow>
@@ -248,151 +265,8 @@ export default function PLDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Record Detail Dialog */}
-          <Dialog open={!!selectedRecord} onOpenChange={(open) => !open && setSelectedRecord(null)}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>P/L Record Details</DialogTitle>
-                <DialogDescription>Update payout and invoice status</DialogDescription>
-              </DialogHeader>
-              {selectedRecord && (
-                <PLRecordForm
-                  record={selectedRecord}
-                  onUpdate={(data) =>
-                    updateRecordMutation.mutate({ leadId: selectedRecord.id, data })
-                  }
-                  isLoading={updateRecordMutation.isPending}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
     </ProtectedRoute>
   )
 }
-
-function PLRecordForm({
-  record,
-  onUpdate,
-  isLoading,
-}: {
-  record: Lead
-  onUpdate: (data: Partial<Lead>) => void
-  isLoading: boolean
-}) {
-  const [formData, setFormData] = useState({
-    finalProfit: record.plRecord?.finalProfit || record.netProfit || 0,
-    hospitalPayoutStatus: record.plRecord?.hospitalPayoutStatus || 'PENDING',
-    doctorPayoutStatus: record.plRecord?.doctorPayoutStatus || 'PENDING',
-    mediendInvoiceStatus: record.plRecord?.mediendInvoiceStatus || 'PENDING',
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onUpdate({
-      netProfit: formData.finalProfit,
-      plRecord: {
-        finalProfit: formData.finalProfit,
-        hospitalPayoutStatus: formData.hospitalPayoutStatus,
-        doctorPayoutStatus: formData.doctorPayoutStatus,
-        mediendInvoiceStatus: formData.mediendInvoiceStatus,
-        closedAt: formData.hospitalPayoutStatus === 'PAID' && formData.doctorPayoutStatus === 'PAID' 
-          ? new Date().toISOString() 
-          : null,
-      },
-    })
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Lead Reference</Label>
-          <Input value={record.leadRef} readOnly />
-        </div>
-        <div>
-          <Label>Patient Name</Label>
-          <Input value={record.patientName} readOnly />
-        </div>
-        <div>
-          <Label>Hospital</Label>
-          <Input value={record.hospitalName} readOnly />
-        </div>
-        <div>
-          <Label>Treatment</Label>
-          <Input value={record.treatment} readOnly />
-        </div>
-      </div>
-
-      <div>
-        <Label>Final Profit</Label>
-        <Input
-          type="number"
-          value={formData.finalProfit}
-          onChange={(e) => setFormData({ ...formData, finalProfit: parseFloat(e.target.value) || 0 })}
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <Label>Hospital Payout Status</Label>
-          <Select
-            value={formData.hospitalPayoutStatus}
-            onValueChange={(value) => setFormData({ ...formData, hospitalPayoutStatus: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="PARTIAL">Partial</SelectItem>
-              <SelectItem value="PAID">Paid</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Doctor Payout Status</Label>
-          <Select
-            value={formData.doctorPayoutStatus}
-            onValueChange={(value) => setFormData({ ...formData, doctorPayoutStatus: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="PARTIAL">Partial</SelectItem>
-              <SelectItem value="PAID">Paid</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label>Mediend Invoice Status</Label>
-          <Select
-            value={formData.mediendInvoiceStatus}
-            onValueChange={(value) => setFormData({ ...formData, mediendInvoiceStatus: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PENDING">Pending</SelectItem>
-              <SelectItem value="SENT">Sent</SelectItem>
-              <SelectItem value="PAID">Paid</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Updating...' : 'Update Record'}
-        </Button>
-      </div>
-    </form>
-  )
-}
-
