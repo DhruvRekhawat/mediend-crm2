@@ -195,3 +195,13 @@ export function canViewPhoneNumber(user: { role: string } | null | undefined): b
   if (!user) return false
   return ['INSURANCE_HEAD', 'ADMIN'].includes(user.role)
 }
+
+// Insurance can fill initiate form when pre-auth is complete
+export function canFillInitiateForm(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isPreAuthComplete = lead.caseStage === CaseStage.PREAUTH_COMPLETE
+  
+  return isInsurance && isPreAuthComplete
+}

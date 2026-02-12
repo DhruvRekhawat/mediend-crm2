@@ -267,6 +267,9 @@ model User {
   // Discharge Sheet Relations
   dischargeSheetsCreated DischargeSheet[] @relation("DischargeSheetCreator")
 
+  // Insurance Initiate Form Relations
+  insuranceInitiateFormsCreated InsuranceInitiateForm[] @relation("InsuranceInitiateFormCreator")
+
   // Outstanding Relations
   outstandingCasesHandled OutstandingCase[] @relation("OutstandingHandler")
 
@@ -427,6 +430,7 @@ model Lead {
   dischargeSheet  DischargeSheet?
   outstandingCase OutstandingCase?
   admissionRecord AdmissionRecord?
+  insuranceInitiateForm InsuranceInitiateForm?
   caseStageHistory CaseStageHistory[]
   caseChatMessages CaseChatMessage[]
 
@@ -1610,6 +1614,37 @@ model AdmissionRecord {
   initiatedById String
   initiatedBy   User   @relation("AdmissionInitiator", fields: [initiatedById], references: [id])
   initiatedAt   DateTime @default(now())
+  
+  @@index([leadId])
+}
+
+// ==========================================
+// Insurance Initiate Form (Pre-discharge form filled by Insurance)
+// ==========================================
+
+model InsuranceInitiateForm {
+  id       String @id @default(cuid())
+  leadId   String @unique
+  lead     Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  // Financial fields
+  totalBillAmount        Float @default(0)
+  discount               Float @default(0)
+  otherReductions        Float @default(0)
+  copay                  Float? // Autofilled from pre-auth
+  copayBuffer            Float @default(0)
+  deductible             Float @default(0)
+  exceedsPolicyLimit     String? // String field
+  policyDeductibleAmount Float @default(0)
+  totalAuthorizedAmount  Float @default(0)
+  amountToBePaidByInsurance Float @default(0)
+  roomCategory           String? // From pre-auth requestedRoomType
+  
+  // Relations
+  createdById String
+  createdBy   User   @relation("InsuranceInitiateFormCreator", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   
   @@index([leadId])
 }

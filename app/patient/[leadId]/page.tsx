@@ -11,6 +11,7 @@ import { ArrowLeft, FileText, MessageSquare, MessageCircle, ClipboardList, Recei
 import { useRouter, useParams } from 'next/navigation'
 import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
 import { PatientCard } from '@/components/patient/patient-card'
+import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 
 import { StageProgress } from '@/components/case/stage-progress'
 import { ActivityTimeline } from '@/components/case/activity-timeline'
@@ -42,7 +43,8 @@ import {
   canEditDischargeSheet,
   canMarkLost,
   canSuggestHospitals,
-  canViewPhoneNumber
+  canViewPhoneNumber,
+  canFillInitiateForm
 } from '@/lib/case-permissions'
 import { getPhoneDisplay } from '@/lib/phone-utils'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
@@ -113,6 +115,9 @@ interface Lead {
     } | null
   } | null
   dischargeSheet?: {
+    id: string
+  } | null
+  insuranceInitiateForm?: {
     id: string
   } | null
 }
@@ -226,6 +231,12 @@ export default function PatientDetailsPage() {
     enabled: !!leadId,
   })
 
+  const { data: initiateFormData } = useQuery<any>({
+    queryKey: ['insurance-initiate-form', leadId],
+    queryFn: () => apiGet<any>(`/api/insurance-initiate-form?leadId=${leadId}`),
+    enabled: !!leadId && (lead?.caseStage === CaseStage.PREAUTH_COMPLETE || lead?.caseStage === CaseStage.INITIATED),
+  })
+
   const [showAdmitModal, setShowAdmitModal] = useState(false)
   const [admitSubmitting, setAdmitSubmitting] = useState(false)
   const [admitForm, setAdmitForm] = useState({
@@ -315,6 +326,7 @@ export default function PatientDetailsPage() {
   const canFillDischargeForm = user && canEditDischargeSheet(user as any, lead)
   const showMarkLost = user && canMarkLost(user as any, lead)
   const showSuggestHospitals = user && canSuggestHospitals(user as any, lead)
+  const canFillInitiate = user && canFillInitiateForm(user as any, lead)
 
   // Collect all uploaded documents for grid (KYP + PreAuth)
   const uploadedDocuments = (() => {
@@ -647,6 +659,18 @@ export default function PatientDetailsPage() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Insurance Initiate Form - Show when PREAUTH_COMPLETE */}
+        {canFillInitiate && (
+          <InsuranceInitiateForm
+            leadId={leadId}
+            initialData={initiateFormData?.data?.initiateForm}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+            }}
+          />
         )}
 
         {/* Patient Card - Unified View */}
