@@ -191,21 +191,7 @@ export function PreAuthInlineApproval({
                 }}
               />
               
-              {/* Debug info - remove this after testing */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-xs">
-                  <p><strong>Debug Info:</strong></p>
-                  <p>Form exists: {initiateForm ? 'YES' : 'NO'}</p>
-                  {initiateForm && (
-                    <>
-                      <p>totalBillAmount: {initiateForm.totalBillAmount} (type: {typeof initiateForm.totalBillAmount})</p>
-                      <p>copay: {initiateForm.copay} (type: {typeof initiateForm.copay})</p>
-                      <p>isInitiateFormFilled: {isInitiateFormFilled ? 'YES' : 'NO'}</p>
-                    </>
-                  )}
-                  {!initiateForm && <p>No form data found</p>}
-                </div>
-              )}
+
           </div>
         )}
 
