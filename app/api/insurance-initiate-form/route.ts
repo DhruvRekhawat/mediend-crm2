@@ -19,6 +19,7 @@ const createInsuranceInitiateFormSchema = z.object({
   totalAuthorizedAmount: z.number().default(0),
   amountToBePaidByInsurance: z.number().default(0),
   roomCategory: z.string().optional(),
+  initialApprovalByHospitalUrl: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -50,10 +51,10 @@ export async function POST(request: NextRequest) {
       return errorResponse('Lead not found', 404)
     }
 
-    // Check if case stage is PREAUTH_COMPLETE
-    if (lead.caseStage !== CaseStage.PREAUTH_COMPLETE) {
+    // Check if case stage is PREAUTH_RAISED (during approval)
+    if (lead.caseStage !== CaseStage.PREAUTH_RAISED) {
       return errorResponse(
-        `Cannot create initiate form. Current stage: ${lead.caseStage}. Form can only be created when pre-auth is complete.`,
+        `Cannot create initiate form. Current stage: ${lead.caseStage}. Form can only be created when pre-auth is raised (during approval).`,
         400
       )
     }
@@ -78,6 +79,7 @@ export async function POST(request: NextRequest) {
         totalAuthorizedAmount: data.totalAuthorizedAmount,
         amountToBePaidByInsurance: data.amountToBePaidByInsurance,
         roomCategory: data.roomCategory,
+        initialApprovalByHospitalUrl: data.initialApprovalByHospitalUrl,
         createdById: user.id,
       },
     })

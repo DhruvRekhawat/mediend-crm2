@@ -7,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { PreAuthDetailsView } from './pre-auth-details-view'
 import { CaseStage, PreAuthStatus } from '@prisma/client'
-import { apiPost } from '@/lib/api-client'
-import { useQueryClient } from '@tanstack/react-query'
+import { apiPost, apiGet } from '@/lib/api-client'
+import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 
 interface PreAuthApprovalModalProps {
   open: boolean
@@ -64,7 +65,15 @@ export function PreAuthApprovalModal({
   const [action, setAction] = useState<'approve' | 'reject' | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showInitiateForm, setShowInitiateForm] = useState(false)
   const queryClient = useQueryClient()
+
+  // Fetch initiate form data if it exists
+  const { data: initiateFormData } = useQuery<any>({
+    queryKey: ['insurance-initiate-form', leadId],
+    queryFn: () => apiGet<any>(`/api/insurance-initiate-form?leadId=${leadId}`),
+    enabled: !!leadId && open,
+  })
 
   const isNewHospital = preAuthData.isNewHospitalRequest === true
   const newHospitalMarked = preAuthData.newHospitalPreAuthRaised === true
@@ -222,6 +231,43 @@ export function PreAuthApprovalModal({
 
               {action === 'approve' && (
                 <div className="space-y-4">
+                  {/* Initiate Form Section */}
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900">
+                      <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                        Insurance Initiate Form
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        Please fill in the financial details before approving the pre-authorization. This form is a predecessor of the discharge form.
+                      </p>
+                    </div>
+                    
+                    {!showInitiateForm && (
+                      <Button
+                        onClick={() => setShowInitiateForm(true)}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        {initiateFormData?.data?.initiateForm ? 'Edit Initiate Form' : 'Fill Initiate Form'}
+                      </Button>
+                    )}
+
+                    {showInitiateForm && (
+                      <div className="border rounded-lg p-4 bg-white dark:bg-gray-950 max-h-[60vh] overflow-y-auto">
+                        <InsuranceInitiateForm
+                          leadId={leadId}
+                          initialData={initiateFormData?.data?.initiateForm}
+                          onSuccess={() => {
+                            queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                            setShowInitiateForm(false)
+                            toast.success('Initiate form saved successfully')
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Approval Confirmation */}
                   <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
                     <p className="text-sm font-medium text-green-900 dark:text-green-100">
                       Are you sure you want to approve this pre-authorization?
@@ -249,13 +295,24 @@ export function PreAuthApprovalModal({
                         </>
                       )}
                     </Button>
-                    <Button
-                      onClick={() => setAction(null)}
-                      disabled={isSubmitting}
-                      variant="outline"
-                    >
-                      Cancel
-                    </Button>
+                    {showInitiateForm && (
+                      <Button
+                        onClick={() => setShowInitiateForm(false)}
+                        disabled={isSubmitting}
+                        variant="outline"
+                      >
+                        Hide Form
+                      </Button>
+                    )}
+                    {!showInitiateForm && (
+                      <Button
+                        onClick={() => setAction(null)}
+                        disabled={isSubmitting}
+                        variant="outline"
+                      >
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}

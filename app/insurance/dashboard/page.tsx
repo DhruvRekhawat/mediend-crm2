@@ -12,7 +12,6 @@ import { useRouter } from 'next/navigation'
 import { CaseStage } from '@prisma/client'
 import { useState } from 'react'
 import { FileText, AlertCircle, CheckCircle2, Clock, ArrowRight, Receipt, Shield, Activity, TrendingUp } from 'lucide-react'
-import { PreAuthApprovalModal } from '@/components/kyp/pre-auth-approval-modal'
 import { PreAuthStatus } from '@prisma/client'
 import { useAuth } from '@/hooks/use-auth'
 import { canViewPhoneNumber } from '@/lib/case-permissions'
@@ -76,8 +75,6 @@ export default function InsuranceDashboardPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'kyp-review' | 'preauth-raised' | 'preauth-complete' | 'admitted' | 'discharge-pending' | 'ipd-done'>('kyp-review')
-  const [selectedLead, setSelectedLead] = useState<LeadWithStage | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const KYP_STAGES: CaseStage[] = [
     CaseStage.KYP_BASIC_PENDING,
@@ -435,8 +432,7 @@ export default function InsuranceDashboardPage() {
                                   variant="default"
                                   size="sm"
                                   onClick={() => {
-                                    setSelectedLead(lead)
-                                    setIsModalOpen(true)
+                                    router.push(`/patient/${lead.id}/pre-auth`)
                                   }}
                                   className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md"
                                 >
@@ -464,24 +460,6 @@ export default function InsuranceDashboardPage() {
           </Card>
         </div>
       </div>
-
-      {/* Pre-Auth Approval Modal */}
-      {selectedLead && selectedLead.kypSubmission && selectedLead.kypSubmission.preAuthData && (
-        <PreAuthApprovalModal
-          open={isModalOpen}
-          onOpenChange={(open) => {
-            setIsModalOpen(open)
-            if (!open) {
-              setSelectedLead(null)
-            }
-          }}
-          leadId={selectedLead.id}
-          leadRef={selectedLead.leadRef}
-          patientName={selectedLead.patientName}
-          kypSubmissionId={selectedLead.kypSubmission.id}
-          preAuthData={selectedLead.kypSubmission.preAuthData}
-        />
-      )}
     </ProtectedRoute>
   )
 }

@@ -1,10 +1,10 @@
-import { CaseStage } from '@prisma/client'
+import { CaseStage, UserRole } from '@prisma/client'
 
 interface User {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'BD' | 'INSURANCE' | 'INSURANCE_HEAD' | 'PL_HEAD' | 'OUTSTANDING_HEAD' | 'PL_ENTRY' | 'PL_VIEWER' | 'ACCOUNTS' | 'HR' | 'MD' | 'TRAINEE' | 'TEAM_LEAD'
+  role: UserRole
 }
 
 interface Lead {
@@ -196,12 +196,12 @@ export function canViewPhoneNumber(user: { role: string } | null | undefined): b
   return ['INSURANCE_HEAD', 'ADMIN'].includes(user.role)
 }
 
-// Insurance can fill initiate form when pre-auth is complete
+// Insurance can fill initiate form when pre-auth is raised (during approval)
 export function canFillInitiateForm(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
   const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
-  const isPreAuthComplete = lead.caseStage === CaseStage.PREAUTH_COMPLETE
+  const isPreAuthRaised = lead.caseStage === CaseStage.PREAUTH_RAISED
   
-  return isInsurance && isPreAuthComplete
+  return isInsurance && isPreAuthRaised
 }

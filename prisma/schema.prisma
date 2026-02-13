@@ -1640,6 +1640,9 @@ model InsuranceInitiateForm {
   amountToBePaidByInsurance Float @default(0)
   roomCategory           String? // From pre-auth requestedRoomType
   
+  // File upload
+  initialApprovalByHospitalUrl String? // Optional file upload for initial approval by hospital
+  
   // Relations
   createdById String
   createdBy   User   @relation("InsuranceInitiateFormCreator", fields: [createdById], references: [id])

@@ -1,129 +1,95 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
-import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { hasPermission } from '@/lib/rbac'
 import { z } from 'zod'
+import { canFillInitiateForm } from '@/lib/case-permissions'
 
 const updateInsuranceInitiateFormSchema = z.object({
-  totalBillAmount: z.number().optional(),
-  discount: z.number().optional(),
-  otherReductions: z.number().optional(),
+  totalBillAmount: z.number().min(0),
+  discount: z.number().min(0),
+  otherReductions: z.number().min(0),
   copay: z.number().nullable().optional(),
-  copayBuffer: z.number().optional(),
-  deductible: z.number().optional(),
-  exceedsPolicyLimit: z.string().optional(),
-  policyDeductibleAmount: z.number().optional(),
-  totalAuthorizedAmount: z.number().optional(),
-  amountToBePaidByInsurance: z.number().optional(),
-  roomCategory: z.string().optional(),
+  copayBuffer: z.number().min(0),
+  deductible: z.number().min(0),
+  exceedsPolicyLimit: z.string().nullable().optional(),
+  policyDeductibleAmount: z.number().min(0),
+  totalAuthorizedAmount: z.number().min(0),
+  amountToBePaidByInsurance: z.number().min(0),
+  roomCategory: z.string().nullable().optional(),
+  initialApprovalByHospitalUrl: z.string().nullable().optional(),
 })
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = getSessionFromRequest(request)
     if (!user) {
-      return unauthorizedResponse()
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Only Insurance team can update initiate form
-    if (!hasPermission(user, 'insurance:write')) {
-      return errorResponse('Forbidden: Only Insurance team can update initiate form', 403)
+    const resolvedParams = await params
+    const form = await prisma.insuranceInitiateForm.findUnique({
+      where: { id: resolvedParams.id },
+      include: {
+        createdBy: true,
+        lead: true,
+      },
+    })
+
+    if (!form) {
+      return NextResponse.json({ error: 'Form not found' }, { status: 404 })
     }
 
-    const { id } = await params
+    return NextResponse.json({ form })
+  } catch (error) {
+    console.error('Error fetching initiate form:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const resolvedParams = await params
     const body = await request.json()
     const data = updateInsuranceInitiateFormSchema.parse(body)
 
-    // Check if form exists
     const existingForm = await prisma.insuranceInitiateForm.findUnique({
-      where: { id },
+      where: { id: resolvedParams.id },
       include: {
-        lead: {
-          select: {
-            caseStage: true,
-          },
-        },
+        lead: true,
       },
     })
 
     if (!existingForm) {
-      return errorResponse('Initiate form not found', 404)
+      return NextResponse.json({ error: 'Form not found' }, { status: 404 })
     }
 
-    // Update the form
+    // Check permissions
+    if (!canFillInitiateForm(user, existingForm.lead)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const updatedForm = await prisma.insuranceInitiateForm.update({
-      where: { id },
+      where: { id: resolvedParams.id },
       data: {
-        ...(data.totalBillAmount !== undefined && { totalBillAmount: data.totalBillAmount }),
-        ...(data.discount !== undefined && { discount: data.discount }),
-        ...(data.otherReductions !== undefined && { otherReductions: data.otherReductions }),
-        ...(data.copay !== undefined && { copay: data.copay }),
-        ...(data.copayBuffer !== undefined && { copayBuffer: data.copayBuffer }),
-        ...(data.deductible !== undefined && { deductible: data.deductible }),
-        ...(data.exceedsPolicyLimit !== undefined && { exceedsPolicyLimit: data.exceedsPolicyLimit }),
-        ...(data.policyDeductibleAmount !== undefined && { policyDeductibleAmount: data.policyDeductibleAmount }),
-        ...(data.totalAuthorizedAmount !== undefined && { totalAuthorizedAmount: data.totalAuthorizedAmount }),
-        ...(data.amountToBePaidByInsurance !== undefined && { amountToBePaidByInsurance: data.amountToBePaidByInsurance }),
-        ...(data.roomCategory !== undefined && { roomCategory: data.roomCategory }),
+        ...data,
       },
-    })
-
-    return successResponse(
-      { initiateForm: updatedForm },
-      'Insurance initiate form updated successfully'
-    )
-  } catch (error) {
-    console.error('Error updating insurance initiate form:', error)
-    if (error instanceof z.ZodError) {
-      return errorResponse(`Validation error: ${error.errors.map((e) => e.message).join(', ')}`, 400)
-    }
-    return errorResponse('Failed to update insurance initiate form', 500)
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const user = getSessionFromRequest(request)
-    if (!user) {
-      return unauthorizedResponse()
-    }
-
-    const { id } = await params
-
-    const initiateForm = await prisma.insuranceInitiateForm.findUnique({
-      where: { id },
       include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        lead: {
-          select: {
-            id: true,
-            leadRef: true,
-            patientName: true,
-          },
-        },
+        createdBy: true,
+        lead: true,
       },
     })
 
-    if (!initiateForm) {
-      return errorResponse('Initiate form not found', 404)
-    }
-
-    return successResponse({ initiateForm }, 'Initiate form retrieved successfully')
+    return NextResponse.json({ initiateForm: updatedForm })
   } catch (error) {
-    console.error('Error fetching insurance initiate form:', error)
-    return errorResponse('Failed to fetch insurance initiate form', 500)
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid data', details: error.errors }, { status: 400 })
+    }
+    console.error('Error updating initiate form:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

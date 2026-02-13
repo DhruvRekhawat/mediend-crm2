@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
+import { Loader2, File, X } from 'lucide-react'
+import { useFileUpload } from '@/hooks/use-file-upload'
 
 interface InsuranceInitiateFormProps {
   leadId: string
@@ -33,6 +34,8 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
     enabled: !!leadId,
   })
 
+  const { uploadFile, uploading: isUploading } = useFileUpload({ folder: 'initiate-form' })
+
   // Initialize form data with autofilled values from pre-auth
   const [formData, setFormData] = useState(() => {
     const base = {
@@ -47,6 +50,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
       totalAuthorizedAmount: '',
       amountToBePaidByInsurance: '',
       roomCategory: '',
+      initialApprovalByHospitalUrl: '',
     }
 
     // Autofill copay from pre-auth if available
@@ -100,6 +104,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
         totalAuthorizedAmount: initialData.totalAuthorizedAmount != null ? String(initialData.totalAuthorizedAmount) : '',
         amountToBePaidByInsurance: initialData.amountToBePaidByInsurance != null ? String(initialData.amountToBePaidByInsurance) : '',
         roomCategory: initialData.roomCategory || '',
+        initialApprovalByHospitalUrl: initialData.initialApprovalByHospitalUrl || '',
       })
       initializedRef.current = true
     }
@@ -123,6 +128,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
         totalAuthorizedAmount: parseFloat(formData.totalAuthorizedAmount) || 0,
         amountToBePaidByInsurance: parseFloat(formData.amountToBePaidByInsurance) || 0,
         roomCategory: formData.roomCategory || undefined,
+        initialApprovalByHospitalUrl: formData.initialApprovalByHospitalUrl || undefined,
       }
 
       if (initialData) {
@@ -291,6 +297,56 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
               />
               <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
             </div>
+          </div>
+
+          {/* File Upload Section */}
+          <div className="space-y-2">
+            <Label htmlFor="initialApprovalByHospital">Initial Approval by Hospital (Optional)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="initialApprovalByHospital"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const result = await uploadFile(file)
+                  if (result) {
+                    updateField('initialApprovalByHospitalUrl', result.url)
+                  }
+                }}
+                disabled={isUploading}
+                className="flex-1"
+              />
+              {formData.initialApprovalByHospitalUrl && (
+                <div className="flex items-center gap-2">
+                  <a
+                    href={formData.initialApprovalByHospitalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    <File className="h-4 w-4" />
+                    View
+                  </a>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => updateField('initialApprovalByHospitalUrl', '')}
+                    disabled={isUploading}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+            {isUploading && (
+              <p className="text-xs text-muted-foreground">Uploading file...</p>
+            )}
+            {formData.initialApprovalByHospitalUrl && !isUploading && (
+              <p className="text-xs text-green-600 dark:text-green-400">File uploaded successfully</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

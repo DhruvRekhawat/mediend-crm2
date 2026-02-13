@@ -5,6 +5,6 @@ module.exports = {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL || "postgresql://placeholder:placeholder@localhost:5432/placeholder",
+    url: process.env.DATABASE_URL || "postgresql://postgres.bcxbiqrsiraypzptplow:o7KdQrDcfu5Nso7n@aws-1-ap-south-1.pooler.supabase.com:5432/postgres",
   },
 };

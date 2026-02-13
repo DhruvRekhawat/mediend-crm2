@@ -234,7 +234,7 @@ export default function PatientDetailsPage() {
   const { data: initiateFormData } = useQuery<any>({
     queryKey: ['insurance-initiate-form', leadId],
     queryFn: () => apiGet<any>(`/api/insurance-initiate-form?leadId=${leadId}`),
-    enabled: !!leadId && (lead?.caseStage === CaseStage.PREAUTH_COMPLETE || lead?.caseStage === CaseStage.INITIATED),
+    enabled: !!leadId && (lead?.caseStage === CaseStage.PREAUTH_RAISED || lead?.caseStage === CaseStage.PREAUTH_COMPLETE || lead?.caseStage === CaseStage.INITIATED),
   })
 
   const [showAdmitModal, setShowAdmitModal] = useState(false)
@@ -661,16 +661,24 @@ export default function PatientDetailsPage() {
           </Card>
         )}
 
-        {/* Insurance Initiate Form - Show when PREAUTH_COMPLETE */}
-        {canFillInitiate && (
-          <InsuranceInitiateForm
-            leadId={leadId}
-            initialData={initiateFormData?.data?.initiateForm}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-            }}
-          />
+        {/* Insurance Initiate Form - Only show for viewing/editing after approval, not during PREAUTH_RAISED */}
+        {canFillInitiate && lead?.caseStage !== CaseStage.PREAUTH_RAISED && initiateFormData?.data?.initiateForm && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Insurance Initiate Form</CardTitle>
+              <CardDescription>View or edit the initiate form details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InsuranceInitiateForm
+                leadId={leadId}
+                initialData={initiateFormData?.data?.initiateForm}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                }}
+              />
+            </CardContent>
+          </Card>
         )}
 
         {/* Patient Card - Unified View */}
