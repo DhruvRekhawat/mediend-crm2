@@ -11,6 +11,7 @@ import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
+import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 
 interface PreAuthInlineApprovalProps {
   leadId: string
@@ -301,6 +302,21 @@ export function PreAuthInlineApproval({
               >
                 Mark pre-auth raised for new hospital
               </Button>
+            )}
+
+            {/* Insurance Initiate Form Integration */}
+            {lead?.caseStage === 'PREAUTH_RAISED' && (
+              <div className="mb-6 space-y-4">
+                <InsuranceInitiateForm 
+                  leadId={leadId} 
+                  initialData={initiateFormData?.data?.initiateForm}
+                  onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                    queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                  }}
+                  embedded
+                />
+              </div>
             )}
 
             <div className="flex gap-3">

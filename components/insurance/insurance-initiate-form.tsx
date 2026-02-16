@@ -15,6 +15,7 @@ interface InsuranceInitiateFormProps {
   leadId: string
   onSuccess?: () => void
   initialData?: any
+  embedded?: boolean
 }
 
 interface Lead {
@@ -27,7 +28,7 @@ interface Lead {
   } | null
 }
 
-export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: InsuranceInitiateFormProps) {
+export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded }: InsuranceInitiateFormProps) {
   const { data: lead } = useQuery<Lead>({
     queryKey: ['lead', leadId],
     queryFn: () => apiGet<Lead>(`/api/leads/${leadId}`),
@@ -151,6 +152,233 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const content = (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="totalBillAmount">Total Bill Amount *</Label>
+          <Input
+            id="totalBillAmount"
+            type="number"
+            step="0.01"
+            value={formData.totalBillAmount}
+            onChange={(e) => updateField('totalBillAmount', e.target.value)}
+            placeholder="0.00"
+            required
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="discount">Discount</Label>
+          <Input
+            id="discount"
+            type="number"
+            step="0.01"
+            value={formData.discount}
+            onChange={(e) => updateField('discount', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="otherReductions">Other Reductions</Label>
+          <Input
+            id="otherReductions"
+            type="number"
+            step="0.01"
+            value={formData.otherReductions}
+            onChange={(e) => updateField('otherReductions', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="copay">Co-pay *</Label>
+          <Input
+            id="copay"
+            type="number"
+            step="0.01"
+            value={formData.copay}
+            onChange={(e) => updateField('copay', e.target.value)}
+            placeholder="Autofilled from pre-auth"
+            required
+            className="bg-muted"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
+        </div>
+
+        <div>
+          <Label htmlFor="copayBuffer">Co-pay Buffer</Label>
+          <Input
+            id="copayBuffer"
+            type="number"
+            step="0.01"
+            value={formData.copayBuffer}
+            onChange={(e) => updateField('copayBuffer', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="deductible">Deductible</Label>
+          <Input
+            id="deductible"
+            type="number"
+            step="0.01"
+            value={formData.deductible}
+            onChange={(e) => updateField('deductible', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="exceedsPolicyLimit">Exceeds Policy Limit</Label>
+          <Input
+            id="exceedsPolicyLimit"
+            type="text"
+            value={formData.exceedsPolicyLimit}
+            onChange={(e) => updateField('exceedsPolicyLimit', e.target.value)}
+            placeholder="Enter text"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="policyDeductibleAmount">Policy Deductible Amount</Label>
+          <Input
+            id="policyDeductibleAmount"
+            type="number"
+            step="0.01"
+            value={formData.policyDeductibleAmount}
+            onChange={(e) => updateField('policyDeductibleAmount', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="totalAuthorizedAmount">Total Authorized Amount</Label>
+          <Input
+            id="totalAuthorizedAmount"
+            type="number"
+            step="0.01"
+            value={formData.totalAuthorizedAmount}
+            onChange={(e) => updateField('totalAuthorizedAmount', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="amountToBePaidByInsurance">Amount to be Paid by Insurance</Label>
+          <Input
+            id="amountToBePaidByInsurance"
+            type="number"
+            step="0.01"
+            value={formData.amountToBePaidByInsurance}
+            onChange={(e) => updateField('amountToBePaidByInsurance', e.target.value)}
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="roomCategory">Room Category</Label>
+          <Input
+            id="roomCategory"
+            type="text"
+            value={formData.roomCategory}
+            onChange={(e) => updateField('roomCategory', e.target.value)}
+            placeholder="Autofilled from pre-auth"
+            className="bg-muted"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
+        </div>
+      </div>
+
+      {/* File Upload Section */}
+      <div className="space-y-2">
+        <Label htmlFor="initialApprovalByHospital">Initial Approval by Hospital (Optional)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="initialApprovalByHospital"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              const result = await uploadFile(file)
+              if (result) {
+                updateField('initialApprovalByHospitalUrl', result.url)
+              }
+            }}
+            disabled={isUploading}
+            className="flex-1"
+          />
+          {formData.initialApprovalByHospitalUrl && (
+            <div className="flex items-center gap-2">
+              <a
+                href={formData.initialApprovalByHospitalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                <File className="h-4 w-4" />
+                View
+              </a>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => updateField('initialApprovalByHospitalUrl', '')}
+                disabled={isUploading}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+        {isUploading && (
+          <p className="text-xs text-muted-foreground">Uploading file...</p>
+        )}
+        {formData.initialApprovalByHospitalUrl && !isUploading && (
+          <p className="text-xs text-green-600 dark:text-green-400">File uploaded successfully</p>
+        )}
+      </div>
+
+      <div className="flex justify-end gap-2 pt-4">
+        {(!embedded && onSuccess) && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onSuccess?.()}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" disabled={submitting}>
+          {submitting ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            initialData ? 'Update Form' : 'Save Form'
+          )}
+        </Button>
+      </div>
+    </form>
+  )
+
+  if (embedded) {
+    return (
+      <div className="border rounded-lg p-4 bg-muted/30">
+        <div className="mb-4">
+          <h3 className="font-semibold text-lg">Insurance Initiate Form</h3>
+          <p className="text-sm text-muted-foreground">Fill in the financial details for this case.</p>
+        </div>
+        {content}
+      </div>
+    )
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -160,216 +388,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData }: Insura
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="totalBillAmount">Total Bill Amount *</Label>
-              <Input
-                id="totalBillAmount"
-                type="number"
-                step="0.01"
-                value={formData.totalBillAmount}
-                onChange={(e) => updateField('totalBillAmount', e.target.value)}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="discount">Discount</Label>
-              <Input
-                id="discount"
-                type="number"
-                step="0.01"
-                value={formData.discount}
-                onChange={(e) => updateField('discount', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="otherReductions">Other Reductions</Label>
-              <Input
-                id="otherReductions"
-                type="number"
-                step="0.01"
-                value={formData.otherReductions}
-                onChange={(e) => updateField('otherReductions', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="copay">Co-pay *</Label>
-              <Input
-                id="copay"
-                type="number"
-                step="0.01"
-                value={formData.copay}
-                onChange={(e) => updateField('copay', e.target.value)}
-                placeholder="Autofilled from pre-auth"
-                required
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
-            </div>
-
-            <div>
-              <Label htmlFor="copayBuffer">Co-pay Buffer</Label>
-              <Input
-                id="copayBuffer"
-                type="number"
-                step="0.01"
-                value={formData.copayBuffer}
-                onChange={(e) => updateField('copayBuffer', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="deductible">Deductible</Label>
-              <Input
-                id="deductible"
-                type="number"
-                step="0.01"
-                value={formData.deductible}
-                onChange={(e) => updateField('deductible', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="exceedsPolicyLimit">Exceeds Policy Limit</Label>
-              <Input
-                id="exceedsPolicyLimit"
-                type="text"
-                value={formData.exceedsPolicyLimit}
-                onChange={(e) => updateField('exceedsPolicyLimit', e.target.value)}
-                placeholder="Enter text"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="policyDeductibleAmount">Policy Deductible Amount</Label>
-              <Input
-                id="policyDeductibleAmount"
-                type="number"
-                step="0.01"
-                value={formData.policyDeductibleAmount}
-                onChange={(e) => updateField('policyDeductibleAmount', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="totalAuthorizedAmount">Total Authorized Amount</Label>
-              <Input
-                id="totalAuthorizedAmount"
-                type="number"
-                step="0.01"
-                value={formData.totalAuthorizedAmount}
-                onChange={(e) => updateField('totalAuthorizedAmount', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="amountToBePaidByInsurance">Amount to be Paid by Insurance</Label>
-              <Input
-                id="amountToBePaidByInsurance"
-                type="number"
-                step="0.01"
-                value={formData.amountToBePaidByInsurance}
-                onChange={(e) => updateField('amountToBePaidByInsurance', e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="roomCategory">Room Category</Label>
-              <Input
-                id="roomCategory"
-                type="text"
-                value={formData.roomCategory}
-                onChange={(e) => updateField('roomCategory', e.target.value)}
-                placeholder="Autofilled from pre-auth"
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
-            </div>
-          </div>
-
-          {/* File Upload Section */}
-          <div className="space-y-2">
-            <Label htmlFor="initialApprovalByHospital">Initial Approval by Hospital (Optional)</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="initialApprovalByHospital"
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  const result = await uploadFile(file)
-                  if (result) {
-                    updateField('initialApprovalByHospitalUrl', result.url)
-                  }
-                }}
-                disabled={isUploading}
-                className="flex-1"
-              />
-              {formData.initialApprovalByHospitalUrl && (
-                <div className="flex items-center gap-2">
-                  <a
-                    href={formData.initialApprovalByHospitalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    <File className="h-4 w-4" />
-                    View
-                  </a>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => updateField('initialApprovalByHospitalUrl', '')}
-                    disabled={isUploading}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-            {isUploading && (
-              <p className="text-xs text-muted-foreground">Uploading file...</p>
-            )}
-            {formData.initialApprovalByHospitalUrl && !isUploading && (
-              <p className="text-xs text-green-600 dark:text-green-400">File uploaded successfully</p>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onSuccess?.()}
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                initialData ? 'Update Form' : 'Save Form'
-              )}
-            </Button>
-          </div>
-        </form>
+        {content}
       </CardContent>
     </Card>
   )
