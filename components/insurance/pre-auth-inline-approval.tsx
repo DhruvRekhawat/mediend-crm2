@@ -10,60 +10,116 @@ import { apiPost, apiGet } from '@/lib/api-client'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
+import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 
 interface PreAuthInlineApprovalProps {
   leadId: string
   kypSubmissionId: string
-  preAuthData: {
+  lead?: {
+    caseStage?: string
+  }
+  preAuthData?: {
     id: string
     approvalStatus?: PreAuthStatus
     rejectionReason?: string | null
     isNewHospitalRequest?: boolean
     newHospitalPreAuthRaised?: boolean
-  }
+    sumInsured?: string | null
+    copay?: string | null
+    tpa?: string | null
+    hospitalNameSuggestion?: string | null
+    hospitalSuggestions?: string[] | null
+    suggestedHospitals?: Array<{
+      hospitalName: string
+      tentativeBill?: number | null
+      roomRentGeneral?: number | null
+      roomRentPrivate?: number | null
+      roomRentICU?: number | null
+      notes?: string | null
+    }>
+  } | null
   onSuccess?: () => void
 }
 
 export function PreAuthInlineApproval({
   leadId,
   kypSubmissionId,
+  lead,
   preAuthData,
   onSuccess,
 }: PreAuthInlineApprovalProps) {
   const [action, setAction] = useState<'approve' | 'reject' | null>(null)
   const [rejectionReason, setRejectionReason] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showHospitalForm, setShowHospitalForm] = useState(false)
+
   const queryClient = useQueryClient()
 
-  // Fetch initiate form data
   const { data: initiateFormData } = useQuery<any>({
     queryKey: ['insurance-initiate-form', leadId],
     queryFn: () => apiGet<any>(`/api/insurance-initiate-form?leadId=${leadId}`),
     enabled: !!leadId,
   })
 
-  const isNewHospital = preAuthData.isNewHospitalRequest === true
-  const newHospitalMarked = preAuthData.newHospitalPreAuthRaised === true
+  const isNewHospital = preAuthData?.isNewHospitalRequest === true
+  const newHospitalMarked = preAuthData?.newHospitalPreAuthRaised === true
   const showMarkNewHospitalFirst = isNewHospital && !newHospitalMarked
 
   const isAlreadyProcessed =
-    preAuthData.approvalStatus === PreAuthStatus.APPROVED ||
-    preAuthData.approvalStatus === PreAuthStatus.REJECTED
+    preAuthData?.approvalStatus === PreAuthStatus.APPROVED ||
+    preAuthData?.approvalStatus === PreAuthStatus.REJECTED
 
-  // Check if initiate form has been filled (required: totalBillAmount and copay)
   const initiateForm = initiateFormData?.data?.initiateForm
-  const isInitiateFormFilled = initiateForm && 
-    initiateForm.totalBillAmount != null && 
+  const isInitiateFormFilled =
+    initiateForm &&
+    initiateForm.totalBillAmount != null &&
     initiateForm.totalBillAmount > 0 &&
-    initiateForm.copay !== null && 
+    initiateForm.copay !== null &&
     typeof initiateForm.copay === 'number'
 
+  const hasHospitalSuggestions =
+    (preAuthData?.suggestedHospitals &&
+    preAuthData.suggestedHospitals.length > 0) || false
+
+  const hasLegacyHospitals =
+    (preAuthData?.hospitalSuggestions &&
+      (preAuthData.hospitalSuggestions as string[]).length > 0) ||
+    preAuthData?.hospitalNameSuggestion
+
+  const hasAnyHospitalData = hasHospitalSuggestions || !!hasLegacyHospitals
+
+  // Debug logging
+  console.log('=== PRE-AUTH DEBUG ===')
+  console.log('lead?.caseStage:', lead?.caseStage)
+  console.log('hasAnyHospitalData:', hasAnyHospitalData)
+  console.log('preAuthData?.approvalStatus:', preAuthData?.approvalStatus)
+  console.log('hasHospitalSuggestions:', hasHospitalSuggestions)
+  console.log('hasLegacyHospitals:', hasLegacyHospitals)
+
+  // Updated logic - show hospital form for more stages
+  const isHospitalSuggestionStage =
+    lead?.caseStage === 'KYP_BASIC_COMPLETE' ||
+    lead?.caseStage === 'KYP_BASIC_PENDING' ||
+    lead?.caseStage === 'KYP_PENDING' ||
+    lead?.caseStage === 'KYP_DETAILED_PENDING' ||
+    lead?.caseStage === 'KYP_DETAILED_COMPLETE' ||
+    lead?.caseStage === 'PREAUTH_RAISED'
+
+  // Data-driven logic as recommended
+  const shouldAlwaysShowHospitalForm = 
+    preAuthData?.approvalStatus !== PreAuthStatus.APPROVED && 
+    preAuthData?.approvalStatus !== PreAuthStatus.REJECTED
+    
+  const shouldForceHospitalForm = !hasAnyHospitalData
+
   const handleApprove = async () => {
-    // Double check that form is filled before approving
+    if (!hasAnyHospitalData) {
+      toast.error('Please suggest hospitals before approving')
+      return
+    }
+
     if (!isInitiateFormFilled) {
       toast.error('Please fill the initiate form before approving')
-      setAction(null)
       return
     }
 
@@ -77,24 +133,9 @@ export function PreAuthInlineApproval({
       setAction(null)
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to approve pre-auth')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleMarkNewHospitalRaised = async () => {
-    setIsSubmitting(true)
-    try {
-      await apiPost(`/api/pre-auth/${kypSubmissionId}/mark-new-hospital-raised`, {})
-      toast.success('Marked pre-auth raised for new hospital')
-      queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
-      queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-      queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
-      queryClient.invalidateQueries({ queryKey: ['case-chat', leadId] })
-      setAction(null)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to approve pre-auth'
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -105,6 +146,7 @@ export function PreAuthInlineApproval({
       toast.error('Please provide a reason for rejection')
       return
     }
+
     setIsSubmitting(true)
     try {
       await apiPost(`/api/pre-auth/${kypSubmissionId}/reject`, {
@@ -118,7 +160,27 @@ export function PreAuthInlineApproval({
       setRejectionReason('')
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject pre-auth')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to reject pre-auth'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleMarkNewHospitalRaised = async () => {
+    setIsSubmitting(true)
+    try {
+      await apiPost(
+        `/api/pre-auth/${kypSubmissionId}/mark-new-hospital-raised`,
+        {}
+      )
+      toast.success('Marked pre-auth raised for new hospital')
+      queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update'
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -130,21 +192,29 @@ export function PreAuthInlineApproval({
         <CardContent className="pt-6">
           <div className="p-4 rounded-lg bg-muted">
             <div className="flex items-center gap-2">
-              {preAuthData.approvalStatus === PreAuthStatus.APPROVED ? (
+              {preAuthData?.approvalStatus === PreAuthStatus.APPROVED ? (
                 <>
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-green-600">Pre-authorization has been approved</span>
+                  <span className="font-medium text-green-600">
+                    Pre-authorization has been approved
+                  </span>
                 </>
               ) : (
                 <>
                   <XCircle className="h-5 w-5 text-red-600" />
-                  <span className="font-medium text-red-600">Pre-authorization has been rejected</span>
+                  <span className="font-medium text-red-600">
+                    Pre-authorization has been rejected
+                  </span>
                 </>
               )}
             </div>
-            {preAuthData.approvalStatus === PreAuthStatus.REJECTED && preAuthData.rejectionReason && (
-              <p className="mt-2 text-sm text-muted-foreground">Reason: {preAuthData.rejectionReason}</p>
-            )}
+
+            {preAuthData?.approvalStatus === PreAuthStatus.REJECTED &&
+              preAuthData?.rejectionReason && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Reason: {preAuthData.rejectionReason}
+                </p>
+              )}
           </div>
         </CardContent>
       </Card>
@@ -153,172 +223,132 @@ export function PreAuthInlineApproval({
 
   return (
     <Card>
+      {/* Debug Panel */}
+      <CardContent className="pt-6">
+        <div className="p-3 mb-4 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+          <strong>Debug Info:</strong><br />
+          Case Stage: {lead?.caseStage}<br />
+          Has Hospital Data: {hasAnyHospitalData ? 'Yes' : 'No'}<br />
+          Approval Status: {preAuthData?.approvalStatus || 'None'}<br />
+          Should Show Hospital Form: {shouldAlwaysShowHospitalForm ? 'Yes' : 'No'}<br />
+          Should Force Hospital Form: {shouldForceHospitalForm ? 'Yes' : 'No'}
+        </div>
+      </CardContent>
+
       <CardHeader>
-        <CardTitle>Complete Pre-Authorization</CardTitle>
+        <CardTitle>
+          {shouldForceHospitalForm
+            ? 'Suggest Hospitals'
+            : 'Complete Pre-Authorization'}
+        </CardTitle>
         <CardDescription>
-          Fill the initiate form and approve or reject the pre-authorization request
+          {shouldForceHospitalForm
+            ? 'Hospital suggestions are required before proceeding with pre-authorization'
+            : 'Review hospital suggestions and approve or reject the pre-authorization request'}
         </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-6">
-        {/* New Hospital Flow */}
-        {showMarkNewHospitalFirst && action === null && (
-          <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4">
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-              This is a new hospital request. Mark that pre-auth has been raised for the new hospital, then approve or reject.
+        {/* Always show hospital suggestion form when data allows it */}
+        {shouldAlwaysShowHospitalForm && shouldForceHospitalForm && (
+          <div className="p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
+            <p className="text-sm font-medium text-red-900 dark:text-red-100 mb-3">
+              Hospital suggestions are required before proceeding with pre-authorization.
             </p>
-            <Button onClick={handleMarkNewHospitalRaised} disabled={isSubmitting} className="mt-3">
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Mark pre-auth raised for new hospital'
-              )}
+            <Button onClick={() => setShowHospitalForm(true)} variant="default">
+              Add Hospital Suggestions
             </Button>
           </div>
         )}
 
-        {/* Initiate Form Section */}
-        {(!showMarkNewHospitalFirst || newHospitalMarked) && action === null && (
-          <div>
-              <InsuranceInitiateForm
-                leadId={leadId}
-                initialData={initiateFormData?.data?.initiateForm}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-                  toast.success('Initiate form saved successfully. You can now approve the pre-auth.')
-                }}
-              />
-              
+        {/* Show hospital form when user clicks to add/modify */}
+        {shouldAlwaysShowHospitalForm && showHospitalForm && (
+          <HospitalSuggestionForm
+            kypSubmissionId={kypSubmissionId}
+            initialSumInsured={preAuthData?.sumInsured || ''}
+            initialCopayPercentage={preAuthData?.copay || ''}
+            initialTpa={preAuthData?.tpa || ''}
+            initialHospitals={preAuthData?.suggestedHospitals}
+            onSuccess={() => {
+              setShowHospitalForm(false)
+              queryClient.invalidateQueries({
+                queryKey: ['kyp-submission', leadId],
+              })
+            }}
+            onCancel={() => setShowHospitalForm(false)}
+          />
+        )}
 
+        {/* Show modify button if hospitals exist and form is not forced */}
+        {shouldAlwaysShowHospitalForm && hasAnyHospitalData && !shouldForceHospitalForm && !showHospitalForm && (
+          <div className="p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
+            <p className="text-sm text-green-900 dark:text-green-100 mb-3">
+              Hospital suggestions have been provided.
+            </p>
+            <Button onClick={() => setShowHospitalForm(true)} variant="outline">
+              Modify Hospital Suggestions
+            </Button>
           </div>
         )}
 
-        {/* Approve/Reject Actions */}
-        {(!showMarkNewHospitalFirst || newHospitalMarked) && (
+        {/* Pre-auth approval section - only show when hospitals are provided */}
+        {shouldAlwaysShowHospitalForm && hasAnyHospitalData && !showHospitalForm && (
           <div className="space-y-4 border-t pt-4">
-            {action === null && (
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => {
-                    if (!isInitiateFormFilled) {
-                      toast.error('Please fill the initiate form before approving')
-                      return
-                    }
-                    setAction('approve')
-                  }}
-                  className="flex-1"
-                  variant="default"
-                  size="lg"
-                  disabled={!isInitiateFormFilled}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Approve Pre-Auth
-                </Button>
-                <Button
-                  onClick={() => setAction('reject')}
-                  className="flex-1"
-                  variant="destructive"
-                  size="lg"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Reject Pre-Auth
-                </Button>
-              </div>
+            {showMarkNewHospitalFirst && (
+              <Button
+                onClick={handleMarkNewHospitalRaised}
+                disabled={isSubmitting}
+              >
+                Mark pre-auth raised for new hospital
+              </Button>
             )}
 
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setAction('approve')}
+                disabled={!hasAnyHospitalData || !isInitiateFormFilled}
+                className="flex-1"
+              >
+                Approve Pre-Auth
+              </Button>
+
+              <Button
+                variant="destructive"
+                onClick={() => setAction('reject')}
+                className="flex-1"
+              >
+                Reject Pre-Auth
+              </Button>
+            </div>
+
             {action === 'approve' && (
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
-                  <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                    Confirm approval of this pre-authorization?
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    This will move the case to the next stage and notify the BD team.
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleApprove}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                    variant="default"
-                    size="lg"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Approving...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Confirm Approval
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setAction(null)}
-                    disabled={isSubmitting}
-                    variant="outline"
-                    size="lg"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+              <Button
+                onClick={handleApprove}
+                disabled={isSubmitting}
+                className="w-full"
+              >
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Confirm Approval
+              </Button>
             )}
 
             {action === 'reject' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="rejectionReason">Rejection Reason *</Label>
-                  <Textarea
-                    id="rejectionReason"
-                    placeholder="Please provide a reason for rejecting this pre-authorization..."
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    rows={4}
-                    className="resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    This reason will be communicated to the BD team.
-                  </p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleReject}
-                    disabled={isSubmitting || !rejectionReason.trim()}
-                    className="flex-1"
-                    variant="destructive"
-                    size="lg"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Rejecting...
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Confirm Rejection
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setAction(null)
-                      setRejectionReason('')
-                    }}
-                    disabled={isSubmitting}
-                    variant="outline"
-                    size="lg"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
+              <>
+                <Textarea
+                  placeholder="Reason for rejection"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                />
+                <Button
+                  variant="destructive"
+                  onClick={handleReject}
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Confirm Rejection
+                </Button>
+              </>
             )}
           </div>
         )}

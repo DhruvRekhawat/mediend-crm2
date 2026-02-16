@@ -215,6 +215,50 @@ export async function POST(request: NextRequest) {
       return successResponse(preAuth, 'KYP details saved. BD can now raise pre-auth with hospital and room selection.')
     }
 
+    // Flow 1.5: Insurance suggests/modifies hospitals on pre-auth page
+    if (data.hospitals && data.hospitals.length > 0) {
+      if (!data.sumInsured?.trim()) {
+        return errorResponse('Sum insured is required when suggesting hospitals', 400)
+      }
+
+      const preAuth = await prisma.preAuthorization.upsert({
+        where: { kypSubmissionId: data.kypSubmissionId },
+        create: {
+          kypSubmissionId: data.kypSubmissionId,
+          sumInsured: data.sumInsured,
+          copay: data.copay?.trim() || undefined,
+          tpa: data.tpa?.trim() || undefined,
+          handledById: user.id,
+          handledAt: new Date(),
+        },
+        update: {
+          sumInsured: data.sumInsured,
+          copay: data.copay?.trim() || undefined,
+          tpa: data.tpa?.trim() || undefined,
+          handledById: user.id,
+          handledAt: new Date(),
+        },
+      })
+
+      // Delete existing hospital suggestions and create new ones
+      await prisma.hospitalSuggestion.deleteMany({ where: { preAuthId: preAuth.id } })
+      for (const h of data.hospitals) {
+        await prisma.hospitalSuggestion.create({
+          data: {
+            preAuthId: preAuth.id,
+            hospitalName: h.hospitalName.trim(),
+            tentativeBill: h.tentativeBill ?? undefined,
+            roomRentGeneral: h.roomRentGeneral ?? undefined,
+            roomRentPrivate: h.roomRentPrivate ?? undefined,
+            roomRentICU: h.roomRentICU ?? undefined,
+            notes: h.notes ?? undefined,
+          },
+        })
+      }
+
+      return successResponse(preAuth, `Hospital suggestions ${kypSubmission.preAuthData ? 'updated' : 'saved'} successfully`)
+    }
+
     // Flow 2: Insurance completes pre-auth after BD raised (PREAUTH_RAISED) → PREAUTH_COMPLETE
     if (caseStage === CaseStage.PREAUTH_RAISED) {
       if (!kypSubmission.preAuthData) {

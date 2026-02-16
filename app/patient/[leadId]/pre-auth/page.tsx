@@ -204,23 +204,26 @@ export default function PreAuthPage() {
           </Card>
         )}
 
-        {/* Initiate Form and Approve/Reject */}
-        {canComplete && kypSubmission?.preAuthData && (
-          <>
-            {(!kypSubmission.preAuthData.approvalStatus || 
-              (kypSubmission.preAuthData.approvalStatus !== PreAuthStatus.APPROVED && 
-               kypSubmission.preAuthData.approvalStatus !== PreAuthStatus.REJECTED)) && (
-              <PreAuthInlineApproval
-                leadId={leadId}
-                kypSubmissionId={kypSubmission.id}
-                preAuthData={kypSubmission.preAuthData}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                  queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
-                }}
-              />
-            )}
-          </>
+        {/* Hospital Suggestion and Pre-auth Approval */}
+        {kypSubmission && (
+          lead?.caseStage === 'KYP_PENDING' || 
+          lead?.caseStage === 'KYP_BASIC_COMPLETE' || 
+          lead?.caseStage === 'KYP_BASIC_PENDING' ||
+          lead?.caseStage === 'KYP_DETAILED_PENDING' ||
+          lead?.caseStage === 'KYP_DETAILED_COMPLETE' ||
+          lead?.caseStage === 'PREAUTH_RAISED' ||
+          canComplete
+        ) && (
+          <PreAuthInlineApproval
+            leadId={leadId}
+            kypSubmissionId={kypSubmission.id}
+            lead={lead}
+            preAuthData={kypSubmission.preAuthData}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+              queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+            }}
+          />
         )}
       </div>
     </AuthenticatedLayout>

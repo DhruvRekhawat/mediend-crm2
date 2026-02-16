@@ -160,6 +160,7 @@ export async function GET(
       status: mapStatusCode(lead.status),
       source: lead.source ? mapSourceCode(lead.source) : lead.source,
       phoneNumber: canViewPhone ? lead.phoneNumber : (lead.phoneNumber ? maskPhoneNumber(lead.phoneNumber) : null),
+      caseStage: lead.caseStage,
     }
 
     return successResponse(mappedLead)
