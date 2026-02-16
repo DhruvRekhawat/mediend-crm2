@@ -69,9 +69,8 @@ export function usePendingTasks(assigneeId?: string) {
 
 export interface CreateTaskInput {
   title: string
-  description?: string
   dueDate?: string | null
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   assigneeId?: string
   startTime?: string | null
   endTime?: string | null
@@ -91,9 +90,8 @@ export function useCreateTask() {
 
 export interface UpdateTaskInput {
   title?: string
-  description?: string | null
   dueDate?: string | null
-  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT"
+  priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
   startTime?: string | null
   endTime?: string | null

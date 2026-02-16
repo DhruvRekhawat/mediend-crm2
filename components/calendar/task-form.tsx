@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -19,9 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
 import { useAuth } from "@/hooks/use-auth"
 import { useCreateTask, useUpdateTask, type Task } from "@/hooks/use-tasks"
-import { format } from "date-fns"
 import { toast } from "sonner"
 
 interface TaskFormProps {
@@ -41,18 +47,16 @@ function getInitialFormState(
   if (task) {
     return {
       title: task.title,
-      description: task.description ?? "",
-      dueDate: task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd'T'HH:mm") : "",
-      priority: task.priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+      dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+      priority: task.priority as "LOW" | "MEDIUM" | "HIGH" | "URGENT" | "GENERAL",
       status: task.status as "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED",
       assigneeId: task.assigneeId,
     }
   }
   return {
     title: "",
-    description: "",
-    dueDate: "",
-    priority: "MEDIUM" as const,
+    dueDate: undefined,
+    priority: "GENERAL" as const,
     status: "PENDING" as const,
     assigneeId: defaultAssigneeId ?? userId ?? "",
   }
@@ -79,9 +83,8 @@ function TaskFormFields({
 }: TaskFormFieldsProps) {
   const initial = getInitialFormState(task, defaultAssigneeId, userId)
   const [title, setTitle] = useState(initial.title)
-  const [description, setDescription] = useState(initial.description)
-  const [dueDate, setDueDate] = useState(initial.dueDate)
-  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT">(initial.priority)
+  const [dueDate, setDueDate] = useState<Date | undefined>(initial.dueDate)
+  const [priority, setPriority] = useState<"LOW" | "MEDIUM" | "HIGH" | "URGENT" | "GENERAL">(initial.priority)
   const [status, setStatus] = useState<"PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED">(initial.status)
   const [assigneeId, setAssigneeId] = useState(initial.assigneeId)
 
@@ -107,8 +110,7 @@ function TaskFormFields({
           id: task.id,
           data: {
             title: title.trim(),
-            description: description.trim() || null,
-            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+            dueDate: dueDate ? dueDate.toISOString() : null,
             priority,
             status,
           },
@@ -117,8 +119,7 @@ function TaskFormFields({
       } else {
         await createMutation.mutateAsync({
           title: title.trim(),
-          description: description.trim() || undefined,
-          dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+          dueDate: dueDate ? dueDate.toISOString() : undefined,
           priority,
           assigneeId: effectiveAssigneeId,
         })
@@ -138,34 +139,36 @@ function TaskFormFields({
       </DialogHeader>
       <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Task</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Task title"
+              placeholder="Task description"
               required
             />
           </div>
           <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Task description"
-              rows={3}
-              className="resize-none"
-            />
-          </div>
-          <div>
-            <Label htmlFor="dueDate">Due Date</Label>
-            <Input
-              id="dueDate"
-              type="datetime-local"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-            />
+            <Label>Due Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={setDueDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <Label htmlFor="priority">Priority</Label>
@@ -177,6 +180,7 @@ function TaskFormFields({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="GENERAL">General</SelectItem>
                 <SelectItem value="LOW">Low</SelectItem>
                 <SelectItem value="MEDIUM">Medium</SelectItem>
                 <SelectItem value="HIGH">High</SelectItem>
@@ -215,7 +219,7 @@ function TaskFormFields({
                 <SelectContent>
                   {employees.map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.email})
+                      {emp.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

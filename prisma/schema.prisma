@@ -159,6 +159,7 @@ enum NotificationType {
 }
 
 enum TaskPriority {
+  GENERAL
   LOW
   MEDIUM
   HIGH

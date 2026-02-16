@@ -26,6 +26,7 @@ interface TaskListProps {
 }
 
 const PRIORITY_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  GENERAL: "secondary",
   LOW: "secondary",
   MEDIUM: "default",
   HIGH: "outline",

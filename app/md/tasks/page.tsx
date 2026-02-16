@@ -18,9 +18,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
-import { Search, CheckCircle, XCircle, Clock, Plus, UserPlus } from "lucide-react"
+import { Search, CheckCircle, XCircle, Clock, Plus, UserPlus, X } from "lucide-react"
 import { TaskForm } from "@/components/calendar/task-form"
 import { EmployeeDetailSheet } from "@/components/calendar/employee-detail-sheet"
+import { MDAssignedTasks } from "@/components/calendar/md-assigned-tasks"
 import {
   useTaskApprovals,
   useApproveTaskDueDate,
@@ -132,21 +133,30 @@ export default function MDTasksPage() {
     )
   }, [watchlistEmployees, searchQuery])
 
-  // Filter employees for add dialog (exclude already in watchlist)
+  // Get employees for add dialog (show all, with watchlist employees on top in blue)
   const watchlistEmployeeIds = new Set(watchlistEmployees.map(emp => emp.id))
-  const availableEmployees = useMemo(() => {
-    const filtered = allEmployees.filter(emp => !watchlistEmployeeIds.has(emp.id))
-    
+  const dialogEmployees = useMemo(() => {
+    let employees = allEmployees
+
     // Apply search filter
-    if (!addDialogSearchQuery.trim()) return filtered
-    
-    const query = addDialogSearchQuery.toLowerCase()
-    return filtered.filter(emp =>
-      emp.user.name.toLowerCase().includes(query) ||
-      emp.user.email.toLowerCase().includes(query) ||
-      emp.employeeCode.toLowerCase().includes(query) ||
-      emp.department?.name.toLowerCase().includes(query)
-    )
+    if (addDialogSearchQuery.trim()) {
+      const query = addDialogSearchQuery.toLowerCase()
+      employees = employees.filter(emp =>
+        emp.user.name.toLowerCase().includes(query) ||
+        emp.user.email.toLowerCase().includes(query) ||
+        emp.employeeCode.toLowerCase().includes(query) ||
+        emp.department?.name.toLowerCase().includes(query)
+      )
+    }
+
+    // Sort: watchlist employees first (in blue), then others
+    return employees.sort((a, b) => {
+      const aInWatchlist = watchlistEmployeeIds.has(a.id)
+      const bInWatchlist = watchlistEmployeeIds.has(b.id)
+      if (aInWatchlist && !bInWatchlist) return -1
+      if (!aInWatchlist && bInWatchlist) return 1
+      return a.user.name.localeCompare(b.user.name)
+    })
   }, [allEmployees, watchlistEmployeeIds, addDialogSearchQuery])
 
   const employeeList = useMemo(() => {
@@ -325,12 +335,26 @@ export default function MDTasksPage() {
                 return (
                   <div
                     key={emp.id}
-                    className={`rounded-lg border-2 p-3 cursor-pointer transition-all hover:shadow-md ${getStatusColor(status)}`}
+                    className={`relative rounded-lg border-2 p-3 cursor-pointer transition-all hover:shadow-md ${getStatusColor(status)}`}
                     onClick={() => setSelectedEmployee(emp)}
                   >
+                    {/* Remove button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        if (confirm(`Remove ${emp.user.name} from your watchlist?`)) {
+                          removeFromWatchlistMutation.mutate(emp.watchlistId!)
+                        }
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white border border-gray-200 hover:border-gray-300 transition-colors shadow-sm"
+                      title={`Remove ${emp.user.name} from watchlist`}
+                    >
+                      <X className="h-3 w-3 text-gray-600 hover:text-gray-800" />
+                    </button>
+
                     <div className="space-y-2">
                       {/* Status badge */}
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-2 pr-8">
                         {getStatusBadge(status)}
                         {emp.department && (
                           <Badge variant="outline" className={`text-xs px-2 py-0.5 whitespace-nowrap ${departmentBadgeColor(emp.department.name)}`}>
@@ -445,6 +469,15 @@ export default function MDTasksPage() {
         </CardContent>
       </Card>
 
+      {/* MD Assigned Tasks */}
+      <MDAssignedTasks
+        onEditTask={(task) => {
+          setEditingTask(task)
+          setFormOpen(true)
+        }}
+        onDeleteTask={handleDeleteTask}
+      />
+
       {/* Employee Detail Sheet */}
       <EmployeeDetailSheet
         open={!!selectedEmployee}
@@ -457,6 +490,10 @@ export default function MDTasksPage() {
             setEditingTask(null)
             setFormOpen(true)
           }
+        }}
+        onEditTask={(task) => {
+          setEditingTask(task)
+          setFormOpen(true)
         }}
         onDeleteTask={handleDeleteTask}
       />
@@ -509,28 +546,36 @@ export default function MDTasksPage() {
                 <div className="p-2">
                   {employeesLoading ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">Loading employees...</p>
-                  ) : availableEmployees.length === 0 ? (
+                  ) : dialogEmployees.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4 text-center">
-                      {addDialogSearchQuery ? "No employees match your search" : "All employees are already in your watchlist"}
+                      No employees found
                     </p>
                   ) : (
                     <div className="space-y-1">
-                      {availableEmployees.map((emp) => {
+                      {dialogEmployees.map((emp) => {
                         const isSelected = selectedEmployeeIds.has(emp.id)
+                        const isInWatchlist = watchlistEmployeeIds.has(emp.id)
                         return (
                           <div
                             key={emp.id}
                             onClick={() => toggleEmployeeSelection(emp.id)}
                             className={`
                               flex items-center gap-3 rounded-md px-3 py-2.5 cursor-pointer transition-colors
-                              ${isSelected 
-                                ? 'bg-primary/10 border-2 border-primary/30' 
-                                : 'hover:bg-muted/60 border-2 border-transparent'
+                              ${isSelected
+                                ? 'bg-primary/10 border-2 border-primary/30'
+                                : isInWatchlist
+                                  ? 'bg-blue-50 dark:bg-blue-950/30 border-2 border-blue-200 dark:border-blue-800'
+                                  : 'hover:bg-muted/60 border-2 border-transparent'
                               }
                             `}
                           >
+                            {isInWatchlist && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                            )}
                             <div className="flex-1 min-w-0 overflow-hidden">
-                              <p className="text-sm font-medium truncate text-foreground">{emp.user.name}</p>
+                              <p className={`text-sm font-medium truncate ${isInWatchlist ? 'text-blue-900 dark:text-blue-100' : 'text-foreground'}`}>
+                                {emp.user.name}
+                              </p>
                               <p className="text-xs text-muted-foreground truncate">
                                 {emp.employeeCode} · {emp.user.email}
                               </p>

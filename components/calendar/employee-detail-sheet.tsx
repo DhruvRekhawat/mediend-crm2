@@ -53,6 +53,7 @@ interface EmployeeDetailSheetProps {
   onOpenChange: (open: boolean) => void
   employee: Employee | null
   onAssignTask?: () => void
+  onEditTask?: (task: Task) => void
   onDeleteTask?: (task: Task) => void
 }
 
@@ -61,6 +62,7 @@ export function EmployeeDetailSheet({
   onOpenChange,
   employee,
   onAssignTask,
+  onEditTask,
   onDeleteTask,
 }: EmployeeDetailSheetProps) {
   const [selectedWeek, setSelectedWeek] = useState(new Date())
@@ -191,6 +193,7 @@ export function EmployeeDetailSheet({
                 tasks={tasks}
                 isLoading={tasksLoading}
                 showAddButton={false}
+                onEditTask={onEditTask}
                 onDeleteTask={onDeleteTask}
               />
               {onAssignTask && (
