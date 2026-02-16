@@ -6,8 +6,6 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { LedgerStatus, TransactionType, LedgerAuditAction } from '@prisma/client'
 import { reverseBalanceUpdate } from '@/lib/finance'
 
-const UNDO_WINDOW_MS = 2 * 60 * 1000 // 2 minutes
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -42,18 +40,9 @@ export async function POST(
     }
 
     // Determine undo type and validate
-    const now = Date.now()
 
     // Debit approval undo
-    if (entry.status === LedgerStatus.APPROVED && entry.approvedById === user.id && entry.approvedAt) {
-      const approvedAtMs = new Date(entry.approvedAt).getTime()
-      if (now - approvedAtMs > UNDO_WINDOW_MS) {
-        return errorResponse('Undo window expired. You can only undo within 2 minutes.', 400)
-      }
-
-      if (entry.transactionType !== TransactionType.DEBIT) {
-        return errorResponse('Can only undo debit approvals', 400)
-      }
+    if (entry.status === LedgerStatus.APPROVED && entry.approvedById === user.id && entry.approvedAt && entry.transactionType === TransactionType.DEBIT) {
 
       const amount = entry.paymentAmount || 0
       if (!entry.paymentModeId) {
@@ -101,16 +90,63 @@ export async function POST(
       return successResponse(updatedEntry, 'Approval undone. Entry is back to pending.')
     }
 
-    // Debit rejection undo
-    if (entry.status === LedgerStatus.REJECTED && entry.approvedById === user.id && entry.approvedAt) {
-      const approvedAtMs = new Date(entry.approvedAt).getTime()
-      if (now - approvedAtMs > UNDO_WINDOW_MS) {
-        return errorResponse('Undo window expired. You can only undo within 2 minutes.', 400)
-      }
+    // Self-transfer approval undo
+    if (entry.status === LedgerStatus.APPROVED && entry.approvedById === user.id && entry.approvedAt) {
+      if (entry.transactionType !== TransactionType.SELF_TRANSFER) {
+        // Skip to next check - this is not a self-transfer
+      } else {
+        const amount = entry.transferAmount || 0
+        if (!entry.fromPaymentModeId || !entry.toPaymentModeId) {
+          return errorResponse('Payment modes not found', 400)
+        }
 
-      if (entry.transactionType !== TransactionType.DEBIT) {
-        return errorResponse('Can only undo debit rejections', 400)
+        // Reverse balance updates (reverse both sides of the transfer)
+        await reverseBalanceUpdate(entry.fromPaymentModeId, TransactionType.DEBIT, amount)
+        await reverseBalanceUpdate(entry.toPaymentModeId, TransactionType.CREDIT, amount)
+
+        const updatedEntry = await prisma.ledgerEntry.update({
+          where: { id },
+          data: {
+            status: LedgerStatus.PENDING,
+            currentBalance: entry.openingBalance,
+            rejectionReason: null,
+            approvedById: null,
+            approvedAt: null,
+          },
+          include: {
+            party: true,
+            head: true,
+            paymentType: true,
+            paymentMode: true,
+            fromPaymentMode: true,
+            toPaymentMode: true,
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        })
+
+        await prisma.ledgerAuditLog.create({
+          data: {
+            ledgerEntryId: id,
+            action: LedgerAuditAction.UPDATED,
+            previousData: { status: LedgerStatus.APPROVED },
+            newData: { status: LedgerStatus.PENDING, reason: 'Undo approval' },
+            reason: 'Undo self-transfer approval - reverted to pending',
+            performedById: user.id,
+          },
+        })
+
+        return successResponse(updatedEntry, 'Self-transfer approval undone. Entry is back to pending.')
       }
+    }
+
+    // Debit rejection undo
+    if (entry.status === LedgerStatus.REJECTED && entry.approvedById === user.id && entry.approvedAt && entry.transactionType === TransactionType.DEBIT) {
 
       const updatedEntry = await prisma.ledgerEntry.update({
         where: { id },
@@ -155,11 +191,6 @@ export async function POST(
       entry.editApprovedById === user.id &&
       entry.editApprovedAt
     ) {
-      const editApprovedAtMs = new Date(entry.editApprovedAt).getTime()
-      if (now - editApprovedAtMs > UNDO_WINDOW_MS) {
-        return errorResponse('Undo window expired. You can only undo within 2 minutes.', 400)
-      }
-
       const previousStatus = entry.editRequestStatus
 
       const updatedEntry = await prisma.ledgerEntry.update({
@@ -199,7 +230,7 @@ export async function POST(
       return successResponse(updatedEntry, 'Edit decision undone. Request is back to pending.')
     }
 
-    return errorResponse('Nothing to undo. Entry was not recently approved or rejected by you, or undo window has expired.', 400)
+    return errorResponse('Nothing to undo. Entry was not approved or rejected by you.', 400)
   } catch (error) {
     console.error('Error undoing ledger action:', error)
     return errorResponse('Failed to undo', 500)

@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerAuditAction } from '@prisma/client'
+import { LedgerAuditAction, LedgerStatus, TransactionType } from '@prisma/client'
+import { reverseBalanceUpdate } from '@/lib/finance'
 
 export async function DELETE(
   request: NextRequest,
@@ -34,6 +35,8 @@ export async function DELETE(
         party: true,
         head: true,
         paymentMode: true,
+        fromPaymentMode: true,
+        toPaymentMode: true,
       },
     })
 
@@ -68,6 +71,24 @@ export async function DELETE(
         },
       },
     })
+
+    // Reverse balance updates for approved entries
+    if (entry.status === LedgerStatus.APPROVED) {
+      if (entry.transactionType === TransactionType.CREDIT) {
+        // Reverse credit: decrease balance
+        const amount = entry.receivedAmount || 0
+        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.CREDIT, amount)
+      } else if (entry.transactionType === TransactionType.DEBIT) {
+        // Reverse debit: increase balance
+        const amount = entry.paymentAmount || 0
+        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.DEBIT, amount)
+      } else if (entry.transactionType === TransactionType.SELF_TRANSFER) {
+        // Reverse self-transfer: reverse both sides
+        const amount = entry.transferAmount || 0
+        await reverseBalanceUpdate(entry.fromPaymentModeId!, TransactionType.DEBIT, amount)
+        await reverseBalanceUpdate(entry.toPaymentModeId!, TransactionType.CREDIT, amount)
+      }
+    }
 
     // Create audit log
     await prisma.ledgerAuditLog.create({

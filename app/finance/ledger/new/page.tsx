@@ -101,22 +101,22 @@ export default function NewLedgerEntryPage() {
   // Fetch masters
   const { data: partiesData } = useQuery({
     queryKey: ['parties-active'],
-    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&limit=100'),
+    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&limit=10000'),
   })
 
   const { data: headsData } = useQuery({
     queryKey: ['heads-active'],
-    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&limit=100'),
+    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&limit=10000'),
   })
 
   const { data: paymentTypesData } = useQuery({
     queryKey: ['payment-types-active'],
-    queryFn: () => apiGet<{ data: PaymentType[] }>('/api/finance/payment-types?isActive=true&limit=100'),
+    queryFn: () => apiGet<{ data: PaymentType[] }>('/api/finance/payment-types?isActive=true&limit=10000'),
   })
 
   const { data: paymentModesData } = useQuery({
     queryKey: ['payment-modes-active'],
-    queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=100'),
+    queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=10000'),
   })
 
   const selectedPaymentMode = paymentModesData?.data.find((m) => m.id === formData.paymentModeId)

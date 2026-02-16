@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerStatus, LedgerAuditAction, Prisma } from '@prisma/client'
+import { LedgerStatus, LedgerAuditAction, Prisma, TransactionType } from '@prisma/client'
+import { reverseBalanceUpdate, updatePaymentModeBalance } from '@/lib/finance'
 
 export async function POST(
   request: NextRequest,
@@ -199,6 +200,40 @@ export async function POST(
         },
       },
     })
+
+    // Recalculate balances if the original entry was approved
+    if (entry.status === LedgerStatus.APPROVED) {
+      // Calculate new state from the updated entry
+      const newState = {
+        transactionType: updatedEntry.transactionType,
+        paymentAmount: updatedEntry.paymentAmount,
+        receivedAmount: updatedEntry.receivedAmount,
+        transferAmount: updatedEntry.transferAmount,
+        paymentModeId: updatedEntry.paymentModeId,
+        fromPaymentModeId: updatedEntry.fromPaymentModeId,
+        toPaymentModeId: updatedEntry.toPaymentModeId,
+      }
+
+      // Reverse the old balance impact
+      if (entry.transactionType === TransactionType.CREDIT) {
+        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.CREDIT, entry.receivedAmount || 0)
+      } else if (entry.transactionType === TransactionType.DEBIT) {
+        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.DEBIT, entry.paymentAmount || 0)
+      } else if (entry.transactionType === TransactionType.SELF_TRANSFER) {
+        await reverseBalanceUpdate(entry.fromPaymentModeId!, TransactionType.DEBIT, entry.transferAmount || 0)
+        await reverseBalanceUpdate(entry.toPaymentModeId!, TransactionType.CREDIT, entry.transferAmount || 0)
+      }
+
+      // Apply the new balance impact
+      if (newState.transactionType === TransactionType.CREDIT) {
+        await updatePaymentModeBalance(newState.paymentModeId!, TransactionType.CREDIT, newState.receivedAmount || 0)
+      } else if (newState.transactionType === TransactionType.DEBIT) {
+        await updatePaymentModeBalance(newState.paymentModeId!, TransactionType.DEBIT, newState.paymentAmount || 0)
+      } else if (newState.transactionType === TransactionType.SELF_TRANSFER) {
+        await updatePaymentModeBalance(newState.fromPaymentModeId!, TransactionType.DEBIT, newState.transferAmount || 0)
+        await updatePaymentModeBalance(newState.toPaymentModeId!, TransactionType.CREDIT, newState.transferAmount || 0)
+      }
+    }
 
     // Create audit log for approval
     await prisma.ledgerAuditLog.create({

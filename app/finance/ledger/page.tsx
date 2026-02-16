@@ -219,22 +219,22 @@ export default function LedgerPage() {
   // Fetch masters for filters - only show parties/heads that have entries
   const { data: partiesData } = useQuery({
     queryKey: ['parties-list-filtered'],
-    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&hasEntries=true&limit=100'),
+    queryFn: () => apiGet<{ data: Party[] }>('/api/finance/parties?isActive=true&hasEntries=true&limit=10000'),
   })
 
   const { data: headsData } = useQuery({
     queryKey: ['heads-list-filtered'],
-    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&hasEntries=true&limit=100'),
+    queryFn: () => apiGet<{ data: Head[] }>('/api/finance/heads?isActive=true&hasEntries=true&limit=10000'),
   })
 
   const { data: modesData } = useQuery({
     queryKey: ['modes-list'],
-    queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=100'),
+    queryFn: () => apiGet<{ data: PaymentMode[] }>('/api/finance/payment-modes?isActive=true&limit=10000'),
   })
 
   const { data: paymentTypesData } = useQuery({
     queryKey: ['payment-types-list'],
-    queryFn: () => apiGet<{ data: PaymentType[] }>('/api/finance/payment-types?isActive=true&limit=100'),
+    queryFn: () => apiGet<{ data: PaymentType[] }>('/api/finance/payment-types?isActive=true&limit=10000'),
   })
 
   const getStatusBadge = (status: string) => {
