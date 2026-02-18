@@ -132,10 +132,13 @@ interface KYPSubmission {
   insuranceCard: string | null
   disease: string | null
   location: string | null
+  area: string | null
   remark: string | null
   aadharFileUrl: string | null
   panFileUrl: string | null
   insuranceCardFileUrl: string | null
+  prescriptionFileUrl: string | null
+  diseasePhotos: Array<{ name: string; url: string }> | null
   otherFiles: Array<{ name: string; url: string }> | null
   status: 'PENDING' | 'KYP_DETAILS_ADDED' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
   submittedAt: string
@@ -681,6 +684,154 @@ export default function PatientDetailsPage() {
                   </Button>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* KYP Details Section */}
+        {kypSubmission && (
+          <Card className="border-2 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <CardTitle>KYP Details</CardTitle>
+                  {getStatusBadge(kypSubmission.status)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Submitted by <span className="font-semibold">{kypSubmission.submittedBy.name}</span> on {format(new Date(kypSubmission.submittedAt), 'PPp')}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Personal & ID Details */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <User className="w-4 h-4 text-blue-600" />
+                    Personal & ID Details
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Aadhar Number</Label>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm font-semibold">{kypSubmission.aadhar || '-'}</p>
+                        {kypSubmission.aadharFileUrl && (
+                          <Button asChild variant="link" size="sm" className="h-auto p-0 text-blue-600">
+                            <a href={kypSubmission.aadharFileUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-3 h-3 mr-1" /> View
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">PAN Number</Label>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm font-semibold">{kypSubmission.pan || '-'}</p>
+                        {kypSubmission.panFileUrl && (
+                          <Button asChild variant="link" size="sm" className="h-auto p-0 text-blue-600">
+                            <a href={kypSubmission.panFileUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-3 h-3 mr-1" /> View
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Insurance & Medical */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <Shield className="w-4 h-4 text-purple-600" />
+                    Insurance & Medical
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Insurance Policy</Label>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm font-semibold">{kypSubmission.insuranceCard || lead.insuranceName || '-'}</p>
+                        {kypSubmission.insuranceCardFileUrl && (
+                          <Button asChild variant="link" size="sm" className="h-auto p-0 text-blue-600">
+                            <a href={kypSubmission.insuranceCardFileUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-3 h-3 mr-1" /> View
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Treating Doctor</Label>
+                      <p className="text-sm font-semibold mt-1">{lead.ipdDrName || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location & Case */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <MapPin className="w-4 h-4 text-teal-600" />
+                    Location & Case
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Location (City/Area)</Label>
+                      <p className="text-sm font-semibold mt-1">
+                        {kypSubmission.location || lead.city}{kypSubmission.area ? `, ${kypSubmission.area}` : ''}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Treatment/Disease</Label>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm font-semibold">{kypSubmission.disease || lead.treatment || '-'}</p>
+                        {kypSubmission.prescriptionFileUrl && (
+                          <Button asChild variant="link" size="sm" className="h-auto p-0 text-blue-600">
+                            <a href={kypSubmission.prescriptionFileUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="w-3 h-3 mr-1" /> Rx
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Files & Remarks */}
+              {(kypSubmission.remark || (kypSubmission.otherFiles && kypSubmission.otherFiles.length > 0) || (kypSubmission.diseasePhotos && kypSubmission.diseasePhotos.length > 0)) && (
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {kypSubmission.remark && (
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Remarks</Label>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 bg-amber-50/30 dark:bg-amber-950/10 p-3 rounded-lg border border-amber-100/50 dark:border-amber-900/20 italic">
+                          "{kypSubmission.remark}"
+                        </p>
+                      </div>
+                    )}
+                    <div className="space-y-3">
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Additional Documents</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {kypSubmission.diseasePhotos?.map((p, i) => (
+                          <Button key={i} asChild variant="outline" size="sm" className="h-8 text-[11px] gap-1">
+                            <a href={p.url} target="_blank" rel="noopener noreferrer">
+                              <File className="w-3 h-3" /> {p.name || `Photo ${i+1}`}
+                            </a>
+                          </Button>
+                        ))}
+                        {kypSubmission.otherFiles?.map((f, i) => (
+                          <Button key={i} asChild variant="outline" size="sm" className="h-8 text-[11px] gap-1">
+                            <a href={f.url} target="_blank" rel="noopener noreferrer">
+                              <File className="w-3 h-3" /> {f.name || `Doc ${i+1}`}
+                            </a>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
