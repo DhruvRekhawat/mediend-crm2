@@ -14,6 +14,10 @@ interface KYPSubmission {
   id: string
   leadId: string
   disease: string | null
+  aadhar: string | null
+  pan: string | null
+  aadharFileUrl: string | null
+  panFileUrl: string | null
   lead: {
     id: string
     leadRef: string
@@ -95,6 +99,10 @@ export default function KYPDetailedSubmitPage() {
             <KYPDetailedForm
               leadId={leadId}
               initialDisease={kypSubmission.disease ?? ''}
+              initialAadhar={kypSubmission.aadhar ?? ''}
+              initialPan={kypSubmission.pan ?? ''}
+              initialAadharFileUrl={kypSubmission.aadharFileUrl ?? ''}
+              initialPanFileUrl={kypSubmission.panFileUrl ?? ''}
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
                 queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })

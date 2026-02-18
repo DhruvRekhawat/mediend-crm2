@@ -98,10 +98,8 @@ export function DischargeSheetView({ dischargeSheet }: DischargeSheetViewProps) 
     { label: 'Deduction Amount', value: dischargeSheet.deductionAmount ?? 0 },
     { label: 'Discount', value: dischargeSheet.discountAmount ?? 0 },
     { label: 'Waived Off Amount', value: dischargeSheet.waivedOffAmount ?? 0 },
-    { label: 'Settlement Part', value: dischargeSheet.settlementPart ?? 0 },
-    { label: 'TDS', value: dischargeSheet.tdsAmount ?? 0 },
     { label: 'Other Deduction', value: dischargeSheet.otherDeduction ?? 0 },
-    { label: 'Net Settlement Amount', value: dischargeSheet.netSettlementAmount ?? 0 },
+    { label: 'Net Amount', value: dischargeSheet.netSettlementAmount ?? 0 },
   ]
 
   return (
@@ -205,7 +203,7 @@ export function DischargeSheetView({ dischargeSheet }: DischargeSheetViewProps) 
           {approvalItems.map(({ label, value }) => (
             <div key={label} className="grid grid-cols-2 gap-2 p-3 border-b border-border last:border-0">
               <span className="text-sm">{label}</span>
-              <span className={`text-sm font-medium ${label === 'Net Settlement Amount' ? 'text-green-600' : ''}`}>
+              <span className={`text-sm font-medium ${label === 'Net Amount' ? 'text-green-600' : ''}`}>
                 ₹{Number(value).toLocaleString()}
               </span>
             </div>

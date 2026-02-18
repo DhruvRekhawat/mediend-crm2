@@ -4,7 +4,7 @@
  * PRE_AUTH_COMPLETE = BD raised pre-auth, Insurance completed (actual pre-auth done).
  */
 export const KYP_STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Pending',
+  PENDING: 'Hospital',
   KYP_DETAILS_ADDED: 'KYP Complete',
   PRE_AUTH_COMPLETE: 'Pre-Auth Complete',
   FOLLOW_UP_COMPLETE: 'Follow-Up Complete',

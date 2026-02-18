@@ -1432,6 +1432,7 @@ model PreAuthorization {
 
   // All fields as strings (per requirement)
   sumInsured             String?
+  balanceInsured         String?
   roomRent               String?
   capping                String?
   copay                  String?

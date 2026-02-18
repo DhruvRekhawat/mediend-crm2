@@ -152,11 +152,11 @@ export function canMarkLost(user: User, lead: Lead): boolean {
   return allowedStages.includes(lead.caseStage)
 }
 
-// Insurance can suggest hospitals when BD has submitted KYP Basic (KYP_BASIC_PENDING)
+// Insurance can suggest hospitals when BD has submitted KYP Basic (KYP_BASIC_COMPLETE)
 export function canSuggestHospitals(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
-  return isInsurance && lead.caseStage === CaseStage.KYP_BASIC_PENDING
+  return isInsurance && lead.caseStage === CaseStage.KYP_BASIC_COMPLETE
 }
 
 // Insurance can access insurance actions (pre-auth page) after KYP basic is submitted (pending or later)

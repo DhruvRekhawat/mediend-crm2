@@ -10,12 +10,13 @@ import { apiGet } from '@/lib/api-client'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { CaseStage } from '@prisma/client'
-import { useState } from 'react'
-import { FileText, AlertCircle, CheckCircle2, Clock, ArrowRight, Receipt, Shield, Activity, TrendingUp } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { FileText, AlertCircle, CheckCircle2, Clock, ArrowRight, Receipt, Shield, Activity, TrendingUp, Search } from 'lucide-react'
 import { PreAuthStatus } from '@prisma/client'
 import { useAuth } from '@/hooks/use-auth'
 import { canViewPhoneNumber } from '@/lib/case-permissions'
 import { getPhoneDisplay } from '@/lib/phone-utils'
+import { Input } from '@/components/ui/input'
 
 interface LeadWithStage {
   id: string
@@ -27,6 +28,7 @@ interface LeadWithStage {
   treatment?: string
   caseStage: CaseStage
   createdDate: string
+  updatedDate: string
   kypSubmission?: {
     id: string
     status: string
@@ -75,6 +77,7 @@ export default function InsuranceDashboardPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'kyp-review' | 'preauth-raised' | 'preauth-complete' | 'admitted' | 'discharge-pending' | 'ipd-done'>('kyp-review')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const KYP_STAGES: CaseStage[] = [
     CaseStage.KYP_BASIC_PENDING,
@@ -104,31 +107,49 @@ export default function InsuranceDashboardPage() {
     enabled: true,
   })
 
-  // Filter leads by stage
-  const filteredLeads = leads?.filter((lead) => {
-    // Debug: log lead details for troubleshooting
-    if (lead.kypSubmission && !lead.caseStage) {
-      console.warn('Lead has KYP submission but no caseStage:', lead.leadRef, lead)
-    }
-    
-    switch (activeTab) {
-      case 'kyp-review':
-        return KYP_STAGES.includes(lead.caseStage) || (lead.kypSubmission && lead.caseStage === CaseStage.NEW_LEAD)
+  // Filter and sort leads
+  const filteredLeads = useMemo(() => {
+    if (!leads) return []
 
-      case 'preauth-raised':
-        return lead.caseStage === CaseStage.PREAUTH_RAISED
-      case 'preauth-complete':
-        return lead.caseStage === CaseStage.PREAUTH_COMPLETE
-      case 'admitted':
-        return lead.caseStage === CaseStage.INITIATED || lead.caseStage === CaseStage.ADMITTED
-      case 'discharge-pending':
-        return lead.caseStage === CaseStage.DISCHARGED && !lead.dischargeSheet
-      case 'ipd-done':
-        return lead.caseStage === CaseStage.IPD_DONE
-      default:
-        return false
+    // 1. Filter by Tab
+    let result = leads.filter((lead) => {
+      switch (activeTab) {
+        case 'kyp-review':
+          return KYP_STAGES.includes(lead.caseStage) || (lead.kypSubmission && lead.caseStage === CaseStage.NEW_LEAD)
+        case 'preauth-raised':
+          return lead.caseStage === CaseStage.PREAUTH_RAISED
+        case 'preauth-complete':
+          return lead.caseStage === CaseStage.PREAUTH_COMPLETE
+        case 'admitted':
+          return lead.caseStage === CaseStage.INITIATED || lead.caseStage === CaseStage.ADMITTED
+        case 'discharge-pending':
+          return lead.caseStage === CaseStage.DISCHARGED && !lead.dischargeSheet
+        case 'ipd-done':
+          return lead.caseStage === CaseStage.IPD_DONE
+        default:
+          return false
+      }
+    })
+
+    // 2. Filter by Search Query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter((lead) => 
+        lead.patientName.toLowerCase().includes(query) ||
+        lead.leadRef.toLowerCase().includes(query) ||
+        lead.hospitalName.toLowerCase().includes(query) ||
+        (lead.treatment && lead.treatment.toLowerCase().includes(query)) ||
+        lead.phoneNumber.toLowerCase().includes(query)
+      )
     }
-  }) || []
+
+    // 3. Sort by last modified (updatedDate)
+    return result.sort((a, b) => {
+      const dateA = new Date(a.updatedDate || a.createdDate).getTime()
+      const dateB = new Date(b.updatedDate || b.createdDate).getTime()
+      return dateB - dateA
+    })
+  }, [leads, activeTab, searchQuery])
 
   const getTabStats = () => {
     const kypReview = leads?.filter(l =>
@@ -292,7 +313,16 @@ export default function InsuranceDashboardPage() {
                     <span className="font-semibold text-gray-700 dark:text-gray-300">{filteredLeads.length}</span> case{filteredLeads.length !== 1 ? 's' : ''} in queue
                   </CardDescription>
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      placeholder="Search patient, ref, hospital..."
+                      className="pl-8 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus:ring-blue-500"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
                   <Button
                     variant={activeTab === 'kyp-review' ? 'default' : 'outline'}
                     size="sm"
@@ -392,7 +422,7 @@ export default function InsuranceDashboardPage() {
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Hospital</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Treatment</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Stage</TableHead>
-                        <TableHead className="font-bold text-gray-700 dark:text-gray-300">Created</TableHead>
+                        <TableHead className="font-bold text-gray-700 dark:text-gray-300">Last Modified</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -400,11 +430,12 @@ export default function InsuranceDashboardPage() {
                       {filteredLeads.map((lead, index) => (
                         <TableRow 
                           key={lead.id}
-                          className={`transition-colors hover:bg-gradient-to-r ${
+                          className={`transition-colors cursor-pointer hover:bg-gradient-to-r ${
                             index % 2 === 0 
                               ? 'bg-white dark:bg-gray-950 hover:from-blue-50 hover:to-purple-50 dark:hover:from-blue-950/20 dark:hover:to-purple-950/20' 
                               : 'bg-gray-50/50 dark:bg-gray-900/50 hover:from-purple-50 hover:to-pink-50 dark:hover:from-purple-950/20 dark:hover:to-pink-950/20'
                           } border-l-4 border-transparent hover:border-blue-400 dark:hover:border-blue-600`}
+                          onClick={() => router.push(`/patient/${lead.id}`)}
                         >
                           <TableCell className="font-semibold text-gray-900 dark:text-gray-100">
                             <span className="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm font-mono">
@@ -421,17 +452,18 @@ export default function InsuranceDashboardPage() {
                           <TableCell className="text-gray-700 dark:text-gray-300">{lead.treatment || <span className="text-gray-400">-</span>}</TableCell>
                           <TableCell>{getStageBadge(lead.caseStage)}</TableCell>
                           <TableCell className="text-gray-600 dark:text-gray-400">
-                            {lead.createdDate
-                              ? format(new Date(lead.createdDate), 'MMM dd, yyyy')
+                            {lead.updatedDate || lead.createdDate
+                              ? format(new Date(lead.updatedDate || lead.createdDate), 'MMM dd, HH:mm')
                               : '-'}
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                               {lead.caseStage === CaseStage.PREAUTH_RAISED && (
                                 <Button
                                   variant="default"
                                   size="sm"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation()
                                     router.push(`/patient/${lead.id}/pre-auth`)
                                   }}
                                   className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md"
@@ -440,14 +472,6 @@ export default function InsuranceDashboardPage() {
                                   Complete Pre-Auth
                                 </Button>
                               )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => router.push(`/patient/${lead.id}`)}
-                                className="hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 dark:hover:text-blue-300"
-                              >
-                                View
-                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>

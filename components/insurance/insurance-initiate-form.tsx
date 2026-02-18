@@ -16,6 +16,7 @@ interface InsuranceInitiateFormProps {
   onSuccess?: () => void
   initialData?: any
   embedded?: boolean
+  readOnly?: boolean
 }
 
 interface Lead {
@@ -28,7 +29,7 @@ interface Lead {
   } | null
 }
 
-export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded }: InsuranceInitiateFormProps) {
+export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded, readOnly }: InsuranceInitiateFormProps) {
   const { data: lead } = useQuery<Lead>({
     queryKey: ['lead', leadId],
     queryFn: () => apiGet<Lead>(`/api/leads/${leadId}`),
@@ -165,6 +166,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             onChange={(e) => updateField('totalBillAmount', e.target.value)}
             placeholder="0.00"
             required
+            disabled={readOnly}
           />
         </div>
 
@@ -177,6 +179,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.discount}
             onChange={(e) => updateField('discount', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -189,6 +192,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.otherReductions}
             onChange={(e) => updateField('otherReductions', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -203,8 +207,9 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             placeholder="Autofilled from pre-auth"
             required
             className="bg-muted"
+            disabled={readOnly}
           />
-          <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
+          {!readOnly && <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>}
         </div>
 
         <div>
@@ -216,6 +221,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.copayBuffer}
             onChange={(e) => updateField('copayBuffer', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -228,6 +234,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.deductible}
             onChange={(e) => updateField('deductible', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -239,6 +246,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.exceedsPolicyLimit}
             onChange={(e) => updateField('exceedsPolicyLimit', e.target.value)}
             placeholder="Enter text"
+            disabled={readOnly}
           />
         </div>
 
@@ -251,6 +259,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.policyDeductibleAmount}
             onChange={(e) => updateField('policyDeductibleAmount', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -263,6 +272,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.totalAuthorizedAmount}
             onChange={(e) => updateField('totalAuthorizedAmount', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -275,6 +285,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             value={formData.amountToBePaidByInsurance}
             onChange={(e) => updateField('amountToBePaidByInsurance', e.target.value)}
             placeholder="0.00"
+            disabled={readOnly}
           />
         </div>
 
@@ -287,8 +298,9 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
             onChange={(e) => updateField('roomCategory', e.target.value)}
             placeholder="Autofilled from pre-auth"
             className="bg-muted"
+            disabled={readOnly}
           />
-          <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>
+          {!readOnly && <p className="text-xs text-muted-foreground mt-1">Autofilled from pre-authorization</p>}
         </div>
       </div>
 
@@ -296,21 +308,23 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
       <div className="space-y-2">
         <Label htmlFor="initialApprovalByHospital">Initial Approval by Hospital (Optional)</Label>
         <div className="flex items-center gap-2">
-          <Input
-            id="initialApprovalByHospital"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-              const result = await uploadFile(file)
-              if (result) {
-                updateField('initialApprovalByHospitalUrl', result.url)
-              }
-            }}
-            disabled={isUploading}
-            className="flex-1"
-          />
+          {!readOnly && (
+            <Input
+              id="initialApprovalByHospital"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                const result = await uploadFile(file)
+                if (result) {
+                  updateField('initialApprovalByHospitalUrl', result.url)
+                }
+              }}
+              disabled={isUploading}
+              className="flex-1"
+            />
+          )}
           {formData.initialApprovalByHospitalUrl && (
             <div className="flex items-center gap-2">
               <a
@@ -322,48 +336,52 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
                 <File className="h-4 w-4" />
                 View
               </a>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => updateField('initialApprovalByHospitalUrl', '')}
-                disabled={isUploading}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => updateField('initialApprovalByHospitalUrl', '')}
+                  disabled={isUploading}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
         </div>
         {isUploading && (
           <p className="text-xs text-muted-foreground">Uploading file...</p>
         )}
-        {formData.initialApprovalByHospitalUrl && !isUploading && (
+        {formData.initialApprovalByHospitalUrl && !isUploading && !readOnly && (
           <p className="text-xs text-green-600 dark:text-green-400">File uploaded successfully</p>
         )}
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
-        {(!embedded && onSuccess) && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onSuccess?.()}
-            disabled={submitting}
-          >
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" disabled={submitting}>
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            initialData ? 'Update Form' : 'Save Form'
+      {!readOnly && (
+        <div className="flex justify-end gap-2 pt-4">
+          {(!embedded && onSuccess) && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onSuccess?.()}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
           )}
-        </Button>
-      </div>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              initialData ? 'Update Form' : 'Save Form'
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   )
 

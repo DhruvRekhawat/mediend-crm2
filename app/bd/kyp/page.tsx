@@ -82,7 +82,7 @@ export default function KYPPage() {
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      PENDING: 'secondary',
+      PENDING: 'default',
       KYP_DETAILS_ADDED: 'default',
       PRE_AUTH_COMPLETE: 'default',
       FOLLOW_UP_COMPLETE: 'default',

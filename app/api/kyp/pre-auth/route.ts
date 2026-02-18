@@ -23,6 +23,7 @@ const hospitalSuggestionSchema = z.object({
 const preAuthSchema = z.object({
   kypSubmissionId: z.string(),
   sumInsured: z.string().optional(),
+  balanceInsured: z.string().optional(),
   roomRent: z.string().optional(),
   capping: z.string().optional(),
   copay: z.string().optional(),
@@ -86,6 +87,7 @@ export async function POST(request: NextRequest) {
         create: {
           kypSubmissionId: data.kypSubmissionId,
           sumInsured: data.sumInsured,
+          balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
@@ -93,6 +95,7 @@ export async function POST(request: NextRequest) {
         },
         update: {
           sumInsured: data.sumInsured,
+          balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
@@ -226,6 +229,7 @@ export async function POST(request: NextRequest) {
         create: {
           kypSubmissionId: data.kypSubmissionId,
           sumInsured: data.sumInsured,
+          balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
@@ -233,6 +237,7 @@ export async function POST(request: NextRequest) {
         },
         update: {
           sumInsured: data.sumInsured,
+          balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
@@ -267,6 +272,7 @@ export async function POST(request: NextRequest) {
 
       const updatePayload = {
         sumInsured: data.sumInsured,
+        balanceInsured: data.balanceInsured,
         roomRent: data.roomRent,
         capping: data.capping,
         copay: data.copay,
@@ -325,6 +331,7 @@ export async function POST(request: NextRequest) {
       // Insurance editing KYP details before BD has raised
       const payload = {
         sumInsured: data.sumInsured,
+        balanceInsured: data.balanceInsured,
         roomRent: data.roomRent,
         capping: data.capping,
         copay: data.copay,

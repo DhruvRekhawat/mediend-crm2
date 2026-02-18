@@ -56,6 +56,8 @@ interface Lead {
   phoneNumber: string
   city: string
   hospitalName: string
+  insuranceName: string | null
+  ipdDrName: string | null
   treatment: string | null
   category: string | null
   status: string
@@ -440,6 +442,28 @@ export default function PatientDetailsPage() {
                         <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.treatment || '-'}</p>
                       </div>
                     </div>
+                    {lead.insuranceName && (
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                          <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Insurance</p>
+                          <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.insuranceName}</p>
+                        </div>
+                      </div>
+                    )}
+                    {lead.ipdDrName && (
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                          <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Doctor</p>
+                          <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.ipdDrName}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
                         <Tag className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -570,7 +594,7 @@ export default function PatientDetailsPage() {
                   </Button>
                 )}
                 
-                {/* Insurance: Suggest hospitals (when KYP Basic just submitted – KYP_BASIC_PENDING) */}
+                {/* Insurance: Suggest hospitals (when KYP Basic just submitted – KYP_BASIC_COMPLETE) */}
                 {showSuggestHospitals && (
                   <Button
                     asChild
@@ -582,7 +606,7 @@ export default function PatientDetailsPage() {
                     </Link>
                   </Button>
                 )}
-                {canAddDetails && (
+                {canAddDetails && !showSuggestHospitals && (
                   <Button
                     asChild
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"

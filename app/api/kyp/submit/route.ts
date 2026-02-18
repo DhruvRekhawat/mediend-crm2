@@ -10,9 +10,13 @@ import { UserRole, CaseStage } from '@prisma/client'
 const submitKYPSchema = z.object({
   leadId: z.string(),
   type: z.enum(['basic', 'detailed']).optional(), // default: legacy single-step
+  patientName: z.string().optional(),
+  phone: z.string().optional(),
   aadhar: z.string().optional(),
   pan: z.string().optional(),
   insuranceCard: z.string().optional(),
+  insuranceName: z.string().optional(),
+  doctorName: z.string().optional(),
   disease: z.string().optional(),
   location: z.string().optional(),
   area: z.string().optional(),
@@ -20,6 +24,7 @@ const submitKYPSchema = z.object({
   aadharFileUrl: z.string().optional(),
   panFileUrl: z.string().optional(),
   insuranceCardFileUrl: z.string().optional(),
+  insuranceCardFiles: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
   prescriptionFileUrl: z.string().optional(),
   diseasePhotos: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
   patientConsent: z.boolean().optional(),
@@ -44,7 +49,7 @@ export async function POST(request: NextRequest) {
     const isDetailed = data.type === 'detailed'
 
     if (isBasic) {
-      if (!data.insuranceCardFileUrl?.trim()) {
+      if (!data.insuranceCardFileUrl?.trim() && (!data.insuranceCardFiles || data.insuranceCardFiles.length === 0)) {
         return errorResponse('Insurance card upload is required for KYP Basic', 400)
       }
       if (!data.location?.trim()) {
@@ -161,11 +166,11 @@ export async function POST(request: NextRequest) {
         remark: data.remark,
         aadharFileUrl: data.aadharFileUrl,
         panFileUrl: data.panFileUrl,
-        insuranceCardFileUrl: data.insuranceCardFileUrl ?? undefined,
+        insuranceCardFileUrl: data.insuranceCardFileUrl ?? (data.insuranceCardFiles?.[0]?.url || undefined),
         prescriptionFileUrl: data.prescriptionFileUrl,
         diseasePhotos: data.diseasePhotos ?? undefined,
         patientConsent: data.patientConsent ?? false,
-        otherFiles: data.otherFiles || [],
+        otherFiles: data.otherFiles || data.insuranceCardFiles || [],
         submittedById: user.id,
         status: 'PENDING',
       },
@@ -187,13 +192,17 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const targetStage = isBasic ? CaseStage.KYP_BASIC_PENDING : CaseStage.KYP_PENDING
+    const targetStage = isBasic ? CaseStage.KYP_BASIC_COMPLETE : CaseStage.KYP_PENDING
     const previousStage = lead.caseStage
     await prisma.lead.update({
       where: { id: data.leadId },
       data: {
         caseStage: targetStage,
+        ...(data.patientName?.trim() ? { patientName: data.patientName.trim() } : {}),
+        ...(data.phone?.trim() ? { phoneNumber: data.phone.trim() } : {}),
         ...(isBasic && data.location?.trim() ? { city: data.location.trim() } : {}),
+        ...(data.insuranceName?.trim() ? { insuranceName: data.insuranceName.trim() } : {}),
+        ...(data.doctorName?.trim() ? { ipdDrName: data.doctorName.trim() } : {}),
       },
     })
 

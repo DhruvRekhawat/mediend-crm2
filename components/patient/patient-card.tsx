@@ -27,6 +27,8 @@ interface PatientCardProps {
     phoneNumber: string
     city: string
     hospitalName: string
+    insuranceName: string | null
+    ipdDrName: string | null
     treatment: string | null
     category: string | null
     caseStage: CaseStage
@@ -55,6 +57,7 @@ interface PatientCardProps {
       preAuthData?: {
         id: string
         sumInsured: string | null
+        balanceInsured: string | null
         roomRent: string | null
         capping: string | null
         copay: string | null
@@ -220,6 +223,28 @@ export function PatientCard({ lead }: PatientCardProps) {
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{lead.treatment?.trim() || kyp?.disease?.trim() || '-'}</p>
               </div>
             </div>
+            {lead.insuranceName && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500 dark:text-gray-400">Insurance</Label>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{lead.insuranceName}</p>
+                </div>
+              </div>
+            )}
+            {lead.ipdDrName && (
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                  <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-500 dark:text-gray-400">Doctor</Label>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{lead.ipdDrName}</p>
+                </div>
+              </div>
+            )}
             {lead.category && (
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
@@ -483,6 +508,12 @@ export function PatientCard({ lead }: PatientCardProps) {
                           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{preAuth.sumInsured}</p>
                         </div>
                       )}
+                      {preAuth.balanceInsured && (
+                        <div>
+                          <Label className="text-xs text-gray-500 dark:text-gray-400">Balance Sum Insured</Label>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{preAuth.balanceInsured}</p>
+                        </div>
+                      )}
                       {preAuth.roomRent && (
                         <div>
                           <Label className="text-xs text-gray-500 dark:text-gray-400">Room Rent</Label>
@@ -525,58 +556,55 @@ export function PatientCard({ lead }: PatientCardProps) {
 
                 {/* Hospital Suggestions - Prominently displayed for BD */}
                 {(suggestedHospitals.length > 0 || legacyHospitals.length > 0) && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Hospital className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        Suggested Hospitals by Insurance
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                        <Hospital className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        Insurance Hospital Suggestions
                       </h3>
-                      {(preAuth.copay || preAuth.tpa) && (
-                        <div className="flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
-                          {preAuth.copay && (
-                            <span className="flex items-center gap-1">
-                              <Shield className="w-3 h-3" />
-                              Copay: {preAuth.copay}
-                            </span>
-                          )}
-                          {preAuth.tpa && (
-                            <span className="flex items-center gap-1">
-                              <Shield className="w-3 h-3" />
-                              TPA: {preAuth.tpa}
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {suggestedHospitals.map((hospital) => (
                         <div
                           key={hospital.id}
-                          className="rounded-lg border-2 border-gray-200 dark:border-gray-800 p-4 hover:border-green-400 dark:hover:border-green-600 transition-colors"
+                          className={`rounded-xl border-2 p-4 transition-all duration-200 ${
+                            preAuth.requestedHospitalName === hospital.hospitalName
+                              ? 'border-teal-500 bg-teal-50/30 ring-2 ring-teal-500/20'
+                              : 'border-gray-100 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 bg-gray-50/30 dark:bg-gray-900/30'
+                          }`}
                         >
-                          <div className="font-medium text-gray-900 dark:text-gray-100 mb-2">{hospital.hospitalName}</div>
-                          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="font-bold text-gray-900 dark:text-gray-100 leading-tight">{hospital.hospitalName}</div>
+                            {preAuth.requestedHospitalName === hospital.hospitalName && (
+                              <Badge className="bg-teal-500 text-white text-[10px] h-5">SELECTED</Badge>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 gap-2 text-sm">
                             {hospital.tentativeBill != null && (
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="w-3 h-3" />
-                                <span>Tentative Bill: ₹{hospital.tentativeBill.toLocaleString()}</span>
+                              <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-900">
+                                <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">Tentative Bill</span>
+                                <span className="font-bold text-blue-600 dark:text-blue-400">₹{hospital.tentativeBill.toLocaleString()}</span>
                               </div>
                             )}
                             {(hospital.roomRentGeneral != null || hospital.roomRentPrivate != null || hospital.roomRentICU != null) && (
-                              <div className="flex items-center gap-2">
-                                <Building2 className="w-3 h-3" />
-                                <span>
-                                  Room: {[
-                                    hospital.roomRentGeneral != null && `General ₹${hospital.roomRentGeneral.toLocaleString()}`,
-                                    hospital.roomRentPrivate != null && `Private ₹${hospital.roomRentPrivate.toLocaleString()}`,
-                                    hospital.roomRentICU != null && `ICU ₹${hospital.roomRentICU.toLocaleString()}`
-                                  ].filter(Boolean).join(', ')}
-                                </span>
+                              <div className="p-2 rounded-lg bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-900">
+                                <span className="text-gray-500 text-xs font-medium uppercase tracking-wider block mb-1">Room Rents</span>
+                                <div className="flex flex-wrap gap-2">
+                                  {hospital.roomRentGeneral != null && (
+                                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 font-medium">Gen: ₹{hospital.roomRentGeneral.toLocaleString()}</span>
+                                  )}
+                                  {hospital.roomRentPrivate != null && (
+                                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold">Pvt: ₹{hospital.roomRentPrivate.toLocaleString()}</span>
+                                  )}
+                                  {hospital.roomRentICU != null && (
+                                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold">ICU: ₹{hospital.roomRentICU.toLocaleString()}</span>
+                                  )}
+                                </div>
                               </div>
                             )}
                             {hospital.notes && (
-                              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
-                                {hospital.notes}
+                              <div className="mt-1 p-2 rounded bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/50 dark:border-amber-900/20 text-[11px] text-amber-700 dark:text-amber-400 italic">
+                                Note: {hospital.notes}
                               </div>
                             )}
                           </div>
@@ -585,57 +613,90 @@ export function PatientCard({ lead }: PatientCardProps) {
                       {legacyHospitals.map((hospital, index) => (
                         <div
                           key={index}
-                          className="rounded-lg border-2 border-gray-200 dark:border-gray-800 p-4"
+                          className={`rounded-xl border-2 p-4 ${
+                            preAuth.requestedHospitalName === hospital
+                              ? 'border-teal-500 bg-teal-50/30'
+                              : 'border-gray-100 dark:border-gray-800 bg-gray-50/30'
+                          }`}
                         >
-                          <div className="font-medium text-gray-900 dark:text-gray-100">{hospital}</div>
+                          <div className="flex justify-between items-center">
+                            <div className="font-bold text-gray-900 dark:text-gray-100">{hospital}</div>
+                            {preAuth.requestedHospitalName === hospital && (
+                              <Badge className="bg-teal-500 text-white text-[10px]">SELECTED</Badge>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* BD Request Details */}
+                {/* BD Request Details - Highlighted when pre-auth is raised */}
                 {(preAuth.requestedHospitalName || preAuth.requestedRoomType || preAuth.diseaseDescription) && (
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                      BD Pre-Auth Request
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {preAuth.requestedHospitalName && (
-                        <div>
-                          <Label className="text-xs text-gray-500 dark:text-gray-400">Requested Hospital</Label>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{preAuth.requestedHospitalName}</p>
-                        </div>
+                  <div className={`mb-6 p-4 rounded-xl border-2 transition-all ${
+                    lead.caseStage === 'PREAUTH_RAISED' 
+                      ? 'bg-teal-50/50 dark:bg-teal-950/20 border-teal-200 dark:border-teal-800 shadow-sm ring-1 ring-teal-100 dark:ring-teal-900' 
+                      : 'bg-gray-50/30 dark:bg-gray-900/30 border-gray-100 dark:border-gray-800'
+                  }`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className={`text-sm font-bold flex items-center gap-2 ${
+                        lead.caseStage === 'PREAUTH_RAISED' ? 'text-teal-700 dark:text-teal-400' : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        <FileText className={`w-4 h-4 ${lead.caseStage === 'PREAUTH_RAISED' ? 'text-teal-600' : 'text-gray-500'}`} />
+                        BD Selection & Request
+                      </h3>
+                      {lead.caseStage === 'PREAUTH_RAISED' && (
+                        <Badge className="bg-teal-600 text-white border-0 hover:bg-teal-700">
+                          Active Selection
+                        </Badge>
                       )}
-                      {preAuth.requestedRoomType && (
-                        <div>
-                          <Label className="text-xs text-gray-500 dark:text-gray-400">Requested Room Type</Label>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{preAuth.requestedRoomType}</p>
-                        </div>
-                      )}
-                      {preAuth.diseaseDescription && (
-                        <div className="col-span-2">
-                          <Label className="text-xs text-gray-500 dark:text-gray-400">Disease Description</Label>
-                          <p className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap mt-1">
-                            {preAuth.diseaseDescription}
-                          </p>
-                        </div>
-                      )}
-                      {preAuth.preAuthRaisedAt && (
-                        <div>
-                          <Label className="text-xs text-gray-500 dark:text-gray-400">Raised At</Label>
-                          <p className="text-sm text-gray-900 dark:text-gray-100">
-                            {format(new Date(preAuth.preAuthRaisedAt), 'PPpp')}
-                          </p>
-                        </div>
-                      )}
-                      {preAuth.preAuthRaisedBy && (
-                        <div>
-                          <Label className="text-xs text-gray-500 dark:text-gray-400">Raised By</Label>
-                          <p className="text-sm text-gray-900 dark:text-gray-100">{preAuth.preAuthRaisedBy.name}</p>
-                        </div>
-                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        {preAuth.requestedHospitalName && (
+                          <div className="p-3 rounded-lg bg-white dark:bg-gray-950 border border-teal-100 dark:border-teal-900 shadow-sm">
+                            <Label className="text-[10px] uppercase tracking-wider text-teal-600 dark:text-teal-500 font-bold">Selected Hospital</Label>
+                            <p className="text-base font-bold text-gray-900 dark:text-gray-100 mt-0.5">{preAuth.requestedHospitalName}</p>
+                          </div>
+                        )}
+                        {preAuth.requestedRoomType && (
+                          <div className="p-3 rounded-lg bg-white dark:bg-gray-950 border border-teal-100 dark:border-teal-900 shadow-sm">
+                            <Label className="text-[10px] uppercase tracking-wider text-teal-600 dark:text-teal-500 font-bold">Selected Room Type</Label>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-0.5">{preAuth.requestedRoomType}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        {preAuth.diseaseDescription && (
+                          <div className="p-3 rounded-lg bg-white dark:bg-gray-950 border border-teal-100 dark:border-teal-900 shadow-sm h-full">
+                            <Label className="text-[10px] uppercase tracking-wider text-teal-600 dark:text-teal-500 font-bold">Disease Description</Label>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap mt-1 leading-relaxed">
+                              {preAuth.diseaseDescription}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="col-span-1 md:col-span-2 flex flex-wrap items-center gap-x-6 gap-y-2 pt-2 border-t border-teal-100 dark:border-teal-900/50 mt-2">
+                        {preAuth.preAuthRaisedAt && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-teal-600" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              Raised: <span className="font-medium text-gray-700 dark:text-gray-300">{format(new Date(preAuth.preAuthRaisedAt), 'PPp')}</span>
+                            </span>
+                          </div>
+                        )}
+                        {preAuth.preAuthRaisedBy && (
+                          <div className="flex items-center gap-2">
+                            <User className="w-3.5 h-3.5 text-teal-600" />
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              By: <span className="font-medium text-gray-700 dark:text-gray-300">{preAuth.preAuthRaisedBy.name}</span>
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

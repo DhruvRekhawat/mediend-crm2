@@ -29,6 +29,7 @@ interface KYPSubmission {
   preAuthData?: {
     id: string
     sumInsured: string | null
+    balanceInsured: string | null
     roomRent: string | null
     capping: string | null
     copay: string | null
@@ -188,6 +189,28 @@ export default function PreAuthPage() {
                     <p className="text-sm font-medium">{lead.treatment ?? '-'}</p>
                   </div>
                 </div>
+                {lead.ipdDrName && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-rose-50 dark:bg-rose-950/30 rounded-lg border border-rose-200 dark:border-rose-800">
+                      <User className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Doctor</Label>
+                      <p className="text-sm font-medium">{lead.ipdDrName}</p>
+                    </div>
+                  </div>
+                )}
+                {lead.opdDrName && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                      <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Suggested Doctor</Label>
+                      <p className="text-sm font-medium">{lead.opdDrName}</p>
+                    </div>
+                  </div>
+                )}
                 {lead.category && (
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">

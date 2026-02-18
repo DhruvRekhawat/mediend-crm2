@@ -22,6 +22,7 @@ interface Lead {
   patientName?: string
   phoneNumber?: string
   surgeonName?: string
+  ipdDrName?: string
   hospitalName?: string
   category?: string
   treatment?: string
@@ -96,8 +97,6 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
       deductionAmount: '',
       discountAmount: '',
       waivedOffAmount: '',
-      settlementPart: '',
-      tdsAmount: '',
       otherDeduction: '',
       netSettlementAmount: '',
       // Financials
@@ -161,7 +160,7 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
           ...updated,
           patientName: lead.patientName || '',
           patientPhone: lead.phoneNumber || '',
-          doctorName: lead.surgeonName || '',
+          doctorName: lead.ipdDrName || lead.surgeonName || '',
           hospitalName: requestedName || lead.hospitalName || '',
           category: lead.category || '',
           treatment: lead.treatment || '',
@@ -202,8 +201,6 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
           deductionAmount: (initialData.deductionAmount != null ? String(initialData.deductionAmount) : updated.deductionAmount) ?? '',
           discountAmount: (initialData.discountAmount != null ? String(initialData.discountAmount) : updated.discountAmount) ?? '',
           waivedOffAmount: (initialData.waivedOffAmount != null ? String(initialData.waivedOffAmount) : updated.waivedOffAmount) ?? '',
-          settlementPart: (initialData.settlementPart != null ? String(initialData.settlementPart) : updated.settlementPart) ?? '',
-          tdsAmount: (initialData.tdsAmount != null ? String(initialData.tdsAmount) : updated.tdsAmount) ?? '',
           otherDeduction: (initialData.otherDeduction != null ? String(initialData.otherDeduction) : updated.otherDeduction) ?? '',
           netSettlementAmount: (initialData.netSettlementAmount != null ? String(initialData.netSettlementAmount) : updated.netSettlementAmount) ?? '',
         }
@@ -272,8 +269,6 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
         deductionAmount: parseFloat(finalData.deductionAmount as string) || 0,
         discountAmount: parseFloat(finalData.discountAmount as string) || 0,
         waivedOffAmount: parseFloat(finalData.waivedOffAmount as string) || 0,
-        settlementPart: parseFloat(finalData.settlementPart as string) || 0,
-        tdsAmount: parseFloat(finalData.tdsAmount as string) || 0,
         otherDeduction: parseFloat(finalData.otherDeduction as string) || 0,
         netSettlementAmount: parseFloat(finalData.netSettlementAmount as string) || 0,
       }
@@ -545,10 +540,8 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
               { key: 'deductionAmount', label: 'Deduction Amount' },
               { key: 'discountAmount', label: 'Discount' },
               { key: 'waivedOffAmount', label: 'Waived Off Amount' },
-              { key: 'settlementPart', label: 'Settlement Part' },
-              { key: 'tdsAmount', label: 'TDS' },
               { key: 'otherDeduction', label: 'Other Deduction' },
-              { key: 'netSettlementAmount', label: 'Net Settlement Amount' },
+              { key: 'netSettlementAmount', label: 'Net Amount' },
             ].map(({ key, label }) => (
               <div key={key} className="grid grid-cols-2 gap-2 p-3 border-t">
                 <Label htmlFor={key} className="text-sm flex items-center">{label}</Label>
@@ -567,8 +560,6 @@ export function DischargeSheetForm({ leadId, onSuccess, initialData }: Discharge
                           (parseFloat(next.deductionAmount as string) || 0) +
                           (parseFloat(next.discountAmount as string) || 0) +
                           (parseFloat(next.waivedOffAmount as string) || 0) +
-                          (parseFloat(next.settlementPart as string) || 0) +
-                          (parseFloat(next.tdsAmount as string) || 0) +
                           (parseFloat(next.otherDeduction as string) || 0)
                         next.netSettlementAmount = (approved - ded).toFixed(2)
                       }

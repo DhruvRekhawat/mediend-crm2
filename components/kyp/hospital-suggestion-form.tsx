@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +21,7 @@ interface HospitalRow {
 interface HospitalSuggestionFormProps {
   kypSubmissionId: string
   initialSumInsured?: string
+  initialBalanceInsured?: string
   initialCopayPercentage?: string
   initialTpa?: string
   initialHospitals?: Array<{
@@ -46,6 +48,7 @@ const emptyHospital = (): HospitalRow => ({
 export function HospitalSuggestionForm({
   kypSubmissionId,
   initialSumInsured = '',
+  initialBalanceInsured = '',
   initialCopayPercentage = '',
   initialTpa = '',
   initialHospitals,
@@ -53,6 +56,7 @@ export function HospitalSuggestionForm({
   onCancel,
 }: HospitalSuggestionFormProps) {
   const [sumInsured, setSumInsured] = useState(initialSumInsured)
+  const [balanceInsured, setBalanceInsured] = useState(initialBalanceInsured)
   const [copayPercentage, setCopayPercentage] = useState(initialCopayPercentage)
   const [tpa, setTpa] = useState(initialTpa)
   const [hospitals, setHospitals] = useState<HospitalRow[]>(() => {
@@ -76,6 +80,15 @@ export function HospitalSuggestionForm({
     setHospitals((prev) =>
       prev.map((h, i) => (i === index ? { ...h, [field]: value } : h))
     )
+
+  const hospitalColors = [
+    'bg-blue-100/80 border-blue-300 dark:bg-blue-900/40 dark:border-blue-700 [&_input]:bg-white dark:[&_input]:bg-gray-950',
+    'bg-emerald-100/80 border-emerald-300 dark:bg-emerald-900/40 dark:border-emerald-700 [&_input]:bg-white dark:[&_input]:bg-gray-950',
+    'bg-purple-100/80 border-purple-300 dark:bg-purple-900/40 dark:border-purple-700 [&_input]:bg-white dark:[&_input]:bg-gray-950',
+    'bg-amber-100/80 border-amber-300 dark:bg-amber-900/40 dark:border-amber-700 [&_input]:bg-white dark:[&_input]:bg-gray-950',
+    'bg-rose-100/80 border-rose-300 dark:bg-rose-900/40 dark:border-rose-700 [&_input]:bg-white dark:[&_input]:bg-gray-950',
+    'bg-indigo-100/80 border-indigo-300 dark:bg-indigo-900/40 dark:border-indigo-700 [&_input]:bg-white dark:[&_input]:bg-gray-950',
+  ]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,6 +115,7 @@ export function HospitalSuggestionForm({
       await apiPost('/api/kyp/pre-auth', {
         kypSubmissionId,
         sumInsured: sumInsured.trim(),
+        balanceInsured: balanceInsured.trim() || undefined,
         copay: copayPercentage.trim() || undefined,
         tpa: tpa.trim() || undefined,
         hospitals: list,
@@ -115,7 +129,7 @@ export function HospitalSuggestionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Label htmlFor="sumInsured">Sum Insured *</Label>
           <Input
@@ -124,6 +138,15 @@ export function HospitalSuggestionForm({
             onChange={(e) => setSumInsured(e.target.value)}
             placeholder="e.g. 500000"
             required
+          />
+        </div>
+        <div>
+          <Label htmlFor="balanceInsured">Balance Insured</Label>
+          <Input
+            id="balanceInsured"
+            value={balanceInsured}
+            onChange={(e) => setBalanceInsured(e.target.value)}
+            placeholder="e.g. 300000"
           />
         </div>
         <div>
@@ -155,7 +178,13 @@ export function HospitalSuggestionForm({
         </div>
         <div className="space-y-4">
           {hospitals.map((h, index) => (
-            <div key={index} className="rounded-lg border p-4 space-y-3">
+            <div 
+              key={index} 
+              className={cn(
+                "rounded-lg border p-4 space-y-3 transition-colors",
+                hospitalColors[index % hospitalColors.length]
+              )}
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Hospital {index + 1}</span>
                 <Button

@@ -45,8 +45,27 @@ interface DischargeSheet {
   hospitalShareAmount: number
   mediendSharePct: number | null
   mediendShareAmount: number
-  mediendNetProfit: number
+      mediendNetProfit: number
   remarks: string | null
+  tentativeAmount: number | null
+  copayPct: number | null
+  dischargeSummaryUrl: string | null
+  otNotesUrl: string | null
+  codesCount: number | null
+  finalBillUrl: string | null
+  settlementLetterUrl: string | null
+  roomRentAmount: number
+  pharmacyAmount: number
+  investigationAmount: number
+  consumablesAmount: number
+  implantsAmount: number
+  totalFinalBill: number
+  finalApprovedAmount: number
+  deductionAmount: number
+  discountAmount: number
+  waivedOffAmount: number
+  otherDeduction: number
+  netSettlementAmount: number
   lead: {
     id: string
     leadRef: string

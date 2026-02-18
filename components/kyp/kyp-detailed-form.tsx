@@ -10,10 +10,15 @@ import { useFileUpload } from '@/hooks/use-file-upload'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { File, X } from 'lucide-react'
+import { validateAadhaar, validatePAN } from '@/lib/validations'
 
 interface KYPDetailedFormProps {
   leadId: string
   initialDisease?: string
+  initialAadhar?: string
+  initialPan?: string
+  initialAadharFileUrl?: string
+  initialPanFileUrl?: string
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -26,19 +31,24 @@ interface FileWithUrl {
 export function KYPDetailedForm({
   leadId,
   initialDisease = '',
+  initialAadhar = '',
+  initialPan = '',
+  initialAadharFileUrl = '',
+  initialPanFileUrl = '',
   onSuccess,
   onCancel,
 }: KYPDetailedFormProps) {
   const [formData, setFormData] = useState({
     disease: initialDisease,
     patientConsent: false,
-    aadhar: '',
-    pan: '',
+    aadhar: initialAadhar,
+    pan: initialPan,
   })
-  const [aadharFileUrl, setAadharFileUrl] = useState('')
-  const [panFileUrl, setPanFileUrl] = useState('')
+  const [aadharFileUrl, setAadharFileUrl] = useState(initialAadharFileUrl)
+  const [panFileUrl, setPanFileUrl] = useState(initialPanFileUrl)
   const [prescriptionFileUrl, setPrescriptionFileUrl] = useState('')
   const [diseasePhotos, setDiseasePhotos] = useState<FileWithUrl[]>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const { uploadFile, uploading } = useFileUpload({ folder: 'kyp' })
 
@@ -65,11 +75,27 @@ export function KYPDetailedForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const newErrors: Record<string, string> = {}
+
     if (!formData.disease.trim()) {
-      toast.error('Disease/Diagnosis is required')
+      newErrors.disease = 'Disease/Diagnosis is required'
+    }
+
+    if (formData.aadhar && !validateAadhaar(formData.aadhar)) {
+      newErrors.aadhar = 'Invalid Aadhaar (12 digits starting with 2-9)'
+    }
+
+    if (formData.pan && !validatePAN(formData.pan)) {
+      newErrors.pan = 'Invalid PAN format'
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      toast.error('Please fix the errors in the form')
       return
     }
 
+    setErrors({})
     try {
       await apiPost('/api/kyp/submit', {
         leadId,
@@ -102,6 +128,7 @@ export function KYPDetailedForm({
           required
           rows={3}
         />
+        {errors.disease && <p className="text-xs text-destructive mt-1">{errors.disease}</p>}
       </div>
 
       <div className="flex items-center space-x-2">
@@ -126,12 +153,19 @@ export function KYPDetailedForm({
             onChange={(e) => setFormData({ ...formData, aadhar: e.target.value })}
             placeholder="Aadhar number"
           />
+          {errors.aadhar && <p className="text-xs text-destructive mt-1">{errors.aadhar}</p>}
           <div className="mt-2">
             <Input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => handleFileChange(e, 'aadhar')}
             />
+            {aadharFileUrl && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <File className="h-4 w-4" />
+                <span>Aadhaar card uploaded</span>
+              </div>
+            )}
           </div>
         </div>
         <div>
@@ -142,12 +176,19 @@ export function KYPDetailedForm({
             onChange={(e) => setFormData({ ...formData, pan: e.target.value })}
             placeholder="PAN number"
           />
+          {errors.pan && <p className="text-xs text-destructive mt-1">{errors.pan}</p>}
           <div className="mt-2">
             <Input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={(e) => handleFileChange(e, 'pan')}
             />
+            {panFileUrl && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                <File className="h-4 w-4" />
+                <span>PAN card uploaded</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
