@@ -9,9 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, FileText, MessageSquare, MessageCircle, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User, XCircle, File, ExternalLink } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
-import { FollowUpDetailsView } from '@/components/kyp/follow-up-details-view'
 import { PatientCard } from '@/components/patient/patient-card'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
+import { IPDMarkComponent } from '@/components/admission/ipd-mark-component'
 
 import { StageProgress } from '@/components/case/stage-progress'
 import { ActivityTimeline } from '@/components/case/activity-timeline'
@@ -36,9 +36,8 @@ import {
   canCompletePreAuth, 
   canRaisePreAuth, 
   canEditKYP,
-  canSubmitKYPDetailed,
   canInitiate,
-  canMarkDischarge,
+  canMarkIPD,
   canGeneratePDF,
   canEditDischargeSheet,
   canMarkLost,
@@ -251,8 +250,7 @@ export default function PatientDetailsPage() {
     expectedSurgeryDate: '',
     notes: '',
   })
-  const [showDischargeConfirm, setShowDischargeConfirm] = useState(false)
-  const [dischargeSubmitting, setDischargeSubmitting] = useState(false)
+  const [showIPDMarkModal, setShowIPDMarkModal] = useState(false)
   const [showMarkLostDialog, setShowMarkLostDialog] = useState(false)
   const [markLostReason, setMarkLostReason] = useState<string>('')
   const [pdfDownloading, setPdfDownloading] = useState(false)
@@ -324,9 +322,8 @@ export default function PatientDetailsPage() {
   const canAddDetails = user && canAddKYPDetails(user as any, lead)
   const canComplete = user && canCompletePreAuth(user as any, lead)
   const canEdit = user && canEditKYP(user as any, lead)
-  const canSubmitDetailed = user && canSubmitKYPDetailed(user as any, lead)
   const canInit = user && canInitiate(user as any, lead)
-  const canDischarge = user && canMarkDischarge(user as any, lead)
+  const canMarkIPDStatus = user && canMarkIPD(user as any, lead)
   const canPDF = user && canGeneratePDF(user as any, lead)
   const canFillDischargeForm = user && canEditDischargeSheet(user as any, lead)
   const showMarkLost = user && canMarkLost(user as any, lead)
@@ -546,17 +543,6 @@ export default function PatientDetailsPage() {
                     </Link>
                   </Button>
                 )}
-                {canSubmitDetailed && (
-                  <Button
-                    asChild
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border-0"
-                  >
-                    <Link href={`/patient/${leadId}/kyp/detailed`}>
-                      <Stethoscope className="h-4 w-4" />
-                      Submit KYP (Detailed)
-                    </Link>
-                  </Button>
-                )}
                 {canRaise && (
                   <Button
                     asChild
@@ -587,13 +573,13 @@ export default function PatientDetailsPage() {
                     Mark Admitted
                   </Button>
                 )}
-                {canDischarge && (
+                {canMarkIPDStatus && (
                   <Button
-                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white border-0"
-                    onClick={() => setShowDischargeConfirm(true)}
+                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white border-0"
+                    onClick={() => setShowIPDMarkModal(true)}
                   >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Mark Discharged
+                    <Activity className="h-4 w-4" />
+                    Update IPD Status
                   </Button>
                 )}
                 
@@ -859,19 +845,6 @@ export default function PatientDetailsPage() {
         {/* Patient Card - Unified View */}
         <PatientCard lead={lead as any} />
 
-        {/* Follow-Up Section */}
-        {lead.kypSubmission?.followUpData && kypSubmission?.followUpData && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Follow-Up Details</CardTitle>
-              <CardDescription>Patient admission and surgery information</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FollowUpDetailsView followUpData={kypSubmission.followUpData} />
-            </CardContent>
-          </Card>
-        )}
-
         {/* Discharge Sheet Link */}
         {lead.dischargeSheet && (
           <Card>
@@ -1015,53 +988,24 @@ export default function PatientDetailsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Mark Discharged confirmation */}
-        <Dialog open={showDischargeConfirm} onOpenChange={setShowDischargeConfirm}>
+        {/* IPD Mark Modal */}
+        <Dialog open={showIPDMarkModal} onOpenChange={setShowIPDMarkModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Mark Discharged</DialogTitle>
+              <DialogTitle>Update IPD Status</DialogTitle>
               <DialogDescription>
-                Mark this patient as discharged? Insurance will be notified and can then fill the discharge form and send to PL.
+                Update the current status of the patient in IPD.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowDischargeConfirm(false)}
-                disabled={dischargeSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled={dischargeSubmitting}
-                onClick={async () => {
-                  setDischargeSubmitting(true)
-                  try {
-                    await apiPost(`/api/leads/${leadId}/discharge`, {})
-                    toast.success('Patient marked as discharged. Insurance has been notified.')
-                    setShowDischargeConfirm(false)
-                    queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                    queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
-                  } catch (err) {
-                    toast.error(err instanceof Error ? err.message : 'Failed to mark discharged')
-                  } finally {
-                    setDischargeSubmitting(false)
-                  }
-                }}
-              >
-                {dischargeSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Updating…
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Mark Discharged
-                  </>
-                )}
-              </Button>
-            </div>
+            <IPDMarkComponent
+              leadId={leadId}
+              onSuccess={() => {
+                setShowIPDMarkModal(false)
+                queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
+              }}
+              onCancel={() => setShowIPDMarkModal(false)}
+            />
           </DialogContent>
         </Dialog>
 
