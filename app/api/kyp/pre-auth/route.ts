@@ -15,8 +15,9 @@ const hospitalSuggestionSchema = z.object({
   hospitalName: z.string().min(1),
   tentativeBill: z.number().optional(),
   roomRentGeneral: z.number().optional(),
-  roomRentPrivate: z.number().optional(),
-  roomRentICU: z.number().optional(),
+  roomRentSingle: z.number().optional(),
+  roomRentDeluxe: z.number().optional(),
+  roomRentSemiPrivate: z.number().optional(),
   notes: z.string().optional(),
 })
 
@@ -25,15 +26,15 @@ const preAuthSchema = z.object({
   sumInsured: z.string().optional(),
   balanceInsured: z.string().optional(),
   roomRent: z.string().optional(),
-  capping: z.string().optional(),
+  capping: z.number().optional(),
   copay: z.string().optional(),
   icu: z.string().optional(),
   hospitalNameSuggestion: z.string().optional(),
   hospitalSuggestions: z.array(z.string()).optional(),
   roomTypes: z.array(roomTypeSchema).optional(),
   insurance: z.string().optional(),
+  insuranceName: z.string().optional(),
   tpa: z.string().optional(),
-  // New: hospital suggestions (for KYP_BASIC_PENDING flow)
   hospitals: z.array(hospitalSuggestionSchema).optional(),
 })
 
@@ -73,10 +74,16 @@ export async function POST(request: NextRequest) {
 
     const { caseStage } = kypSubmission.lead
 
-    // Flow 0: Insurance suggests hospitals (KYP_BASIC_PENDING) → KYP_BASIC_COMPLETE
-    if (caseStage === CaseStage.KYP_BASIC_PENDING) {
+    // Flow: Insurance suggests hospitals (KYP_BASIC_COMPLETE) → HOSPITALS_SUGGESTED
+    if (caseStage === CaseStage.KYP_BASIC_COMPLETE) {
       if (!data.sumInsured?.trim()) {
         return errorResponse('Sum insured is required', 400)
+      }
+      if (!data.balanceInsured?.trim()) {
+        return errorResponse('Balance sum insured is required', 400)
+      }
+      if (!data.copay?.trim()) {
+        return errorResponse('Copay is required', 400)
       }
       if (!data.hospitals?.length) {
         return errorResponse('At least one hospital suggestion is required', 400)
@@ -89,6 +96,8 @@ export async function POST(request: NextRequest) {
           sumInsured: data.sumInsured,
           balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
+          capping: data.capping,
+          insuranceName: data.insuranceName?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
@@ -97,6 +106,8 @@ export async function POST(request: NextRequest) {
           sumInsured: data.sumInsured,
           balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
+          capping: data.capping,
+          insuranceName: data.insuranceName?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
@@ -111,8 +122,9 @@ export async function POST(request: NextRequest) {
             hospitalName: h.hospitalName.trim(),
             tentativeBill: h.tentativeBill ?? undefined,
             roomRentGeneral: h.roomRentGeneral ?? undefined,
-            roomRentPrivate: h.roomRentPrivate ?? undefined,
-            roomRentICU: h.roomRentICU ?? undefined,
+            roomRentSingle: h.roomRentSingle ?? undefined,
+            roomRentDeluxe: h.roomRentDeluxe ?? undefined,
+            roomRentSemiPrivate: h.roomRentSemiPrivate ?? undefined,
             notes: h.notes ?? undefined,
           },
         })
@@ -126,7 +138,7 @@ export async function POST(request: NextRequest) {
       await prisma.lead.update({
         where: { id: kypSubmission.lead.id },
         data: {
-          caseStage: CaseStage.KYP_BASIC_COMPLETE,
+          caseStage: CaseStage.HOSPITALS_SUGGESTED,
           pipelineStage: 'INSURANCE',
         },
       })
@@ -134,8 +146,8 @@ export async function POST(request: NextRequest) {
       await prisma.caseStageHistory.create({
         data: {
           leadId: kypSubmission.lead.id,
-          fromStage: CaseStage.KYP_BASIC_PENDING,
-          toStage: CaseStage.KYP_BASIC_COMPLETE,
+          fromStage: CaseStage.KYP_BASIC_COMPLETE,
+          toStage: CaseStage.HOSPITALS_SUGGESTED,
           changedById: user.id,
           note: `Insurance suggested ${data.hospitals.length} hospital(s)`,
         },
@@ -148,74 +160,13 @@ export async function POST(request: NextRequest) {
           userId: kypSubmission.submittedById,
           type: 'KYP_SUBMITTED',
           title: 'Hospital suggestions added',
-          message: `Insurance has suggested hospitals for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now submit KYP (Detailed) and raise pre-auth.`,
+          message: `Insurance has suggested hospitals for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now raise pre-auth.`,
           link: `/patient/${kypSubmission.lead.id}/pre-auth`,
           relatedId: kypSubmission.id,
         },
       })
 
-      return successResponse(preAuth, 'Hospital suggestions saved. BD can now submit KYP (Detailed) and raise pre-auth.')
-    }
-
-    // Flow 1: Insurance adds KYP details first (KYP_PENDING) → KYP_COMPLETE
-    if (caseStage === CaseStage.KYP_PENDING) {
-      const payload = {
-        kypSubmissionId: data.kypSubmissionId,
-        sumInsured: data.sumInsured,
-        roomRent: data.roomRent,
-        capping: data.capping,
-        copay: data.copay,
-        icu: data.icu,
-        hospitalNameSuggestion: data.hospitalNameSuggestion,
-        hospitalSuggestions: data.hospitalSuggestions ?? [],
-        roomTypes: data.roomTypes ?? [],
-        insurance: data.insurance,
-        tpa: data.tpa,
-        handledById: user.id,
-        handledAt: new Date(),
-      }
-
-      const preAuth = await prisma.preAuthorization.upsert({
-        where: { kypSubmissionId: data.kypSubmissionId },
-        create: payload,
-        update: payload,
-      })
-
-      await prisma.kYPSubmission.update({
-        where: { id: data.kypSubmissionId },
-        data: { status: 'KYP_DETAILS_ADDED' },
-      })
-
-      await prisma.lead.update({
-        where: { id: kypSubmission.lead.id },
-        data: { caseStage: CaseStage.KYP_COMPLETE },
-      })
-
-      await prisma.caseStageHistory.create({
-        data: {
-          leadId: kypSubmission.lead.id,
-          fromStage: CaseStage.KYP_PENDING,
-          toStage: CaseStage.KYP_COMPLETE,
-          changedById: user.id,
-          note: 'KYP details added by Insurance (hospitals, room types, TPA, etc.)',
-        },
-      })
-
-      const hospitalCount = Array.isArray(data.hospitalSuggestions) ? data.hospitalSuggestions.length : 0
-      await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance suggested ${hospitalCount} hospital(s). BD can now raise pre-auth.`)
-
-      await prisma.notification.create({
-        data: {
-          userId: kypSubmission.submittedById,
-          type: 'KYP_SUBMITTED',
-          title: 'KYP Complete – Ready for Pre-Auth',
-          message: `Insurance has added KYP details for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now raise pre-auth with hospital and room selection.`,
-          link: `/patient/${kypSubmission.lead.id}/pre-auth`,
-          relatedId: kypSubmission.id,
-        },
-      })
-
-      return successResponse(preAuth, 'KYP details saved. BD can now raise pre-auth with hospital and room selection.')
+      return successResponse(preAuth, 'Hospital suggestions saved. BD can now raise pre-auth.')
     }
 
     // Flow 1.5: Insurance suggests/modifies hospitals on pre-auth page
@@ -231,6 +182,8 @@ export async function POST(request: NextRequest) {
           sumInsured: data.sumInsured,
           balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
+          capping: data.capping,
+          insuranceName: data.insuranceName?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
@@ -239,6 +192,8 @@ export async function POST(request: NextRequest) {
           sumInsured: data.sumInsured,
           balanceInsured: data.balanceInsured?.trim() || undefined,
           copay: data.copay?.trim() || undefined,
+          capping: data.capping,
+          insuranceName: data.insuranceName?.trim() || undefined,
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
@@ -254,8 +209,9 @@ export async function POST(request: NextRequest) {
             hospitalName: h.hospitalName.trim(),
             tentativeBill: h.tentativeBill ?? undefined,
             roomRentGeneral: h.roomRentGeneral ?? undefined,
-            roomRentPrivate: h.roomRentPrivate ?? undefined,
-            roomRentICU: h.roomRentICU ?? undefined,
+            roomRentSingle: h.roomRentSingle ?? undefined,
+            roomRentDeluxe: h.roomRentDeluxe ?? undefined,
+            roomRentSemiPrivate: h.roomRentSemiPrivate ?? undefined,
             notes: h.notes ?? undefined,
           },
         })
@@ -327,39 +283,9 @@ export async function POST(request: NextRequest) {
       return successResponse(preAuth, 'Pre-authorization completed successfully')
     }
 
-    if (caseStage === CaseStage.KYP_COMPLETE && !kypSubmission.preAuthData?.preAuthRaisedAt) {
-      // Insurance editing KYP details before BD has raised
-      const payload = {
-        sumInsured: data.sumInsured,
-        balanceInsured: data.balanceInsured,
-        roomRent: data.roomRent,
-        capping: data.capping,
-        copay: data.copay,
-        icu: data.icu,
-        hospitalNameSuggestion: data.hospitalNameSuggestion,
-        hospitalSuggestions: (data.hospitalSuggestions ?? []) as object,
-        roomTypes: (data.roomTypes ?? []) as object,
-        insurance: data.insurance,
-        tpa: data.tpa,
-        handledById: user.id,
-        handledAt: new Date(),
-      }
-
-      const preAuth = await prisma.preAuthorization.upsert({
-        where: { kypSubmissionId: data.kypSubmissionId },
-        create: {
-          kypSubmissionId: data.kypSubmissionId,
-          ...payload,
-        },
-        update: payload,
-      })
-
-      return successResponse(preAuth, 'KYP details updated')
-    }
-
     return errorResponse(
       `Cannot update pre-auth. Current stage: ${caseStage}. ` +
-        'Insurance can add details when KYP is pending, or complete pre-auth after BD has raised.',
+        'Insurance can suggest hospitals at KYP_BASIC_COMPLETE stage, or complete pre-auth after BD has raised.',
       400
     )
   } catch (error) {

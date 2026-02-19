@@ -65,6 +65,10 @@ export async function POST(
       return errorResponse('Pre-authorization has already been approved', 400)
     }
 
+    if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.TEMP_APPROVED) {
+      return errorResponse('Pre-authorization has already been temp approved', 400)
+    }
+
     if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.REJECTED) {
       return errorResponse('Pre-authorization has already been rejected', 400)
     }

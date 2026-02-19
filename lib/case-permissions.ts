@@ -20,26 +20,14 @@ interface Lead {
   } | null
 }
 
-// BD (or Team Lead) can raise pre-auth when case is in KYP detailed complete or pending stage
+// BD (or Team Lead) can raise pre-auth when case is in HOSPITALS_SUGGESTED stage
 export function canRaisePreAuth(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
 
   const isBDOrTeamLead = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
-  const canRaiseStage =
-    lead.caseStage === CaseStage.KYP_DETAILED_COMPLETE ||
-    lead.caseStage === CaseStage.KYP_DETAILED_PENDING
+  const canRaiseStage = lead.caseStage === CaseStage.HOSPITALS_SUGGESTED
 
   return isBDOrTeamLead && canRaiseStage
-}
-
-// BD can submit detailed KYP when case is in basic complete stage
-export function canSubmitKYPDetailed(user: User, lead: Lead): boolean {
-  if (!user || !lead) return false
-  
-  const isBD = user.role === 'BD' || user.role === 'ADMIN'
-  const isKYPBasicComplete = lead.caseStage === CaseStage.KYP_BASIC_COMPLETE
-  
-  return isBD && isKYPBasicComplete
 }
 
 // Insurance can add KYP details when case is in basic complete stage
@@ -62,16 +50,14 @@ export function canCompletePreAuth(user: User, lead: Lead): boolean {
   return isInsurance && isPreAuthRaised
 }
 
-// BD can edit KYP when it's in pending or complete states
+// BD can edit KYP when it's in basic complete or hospitals suggested states
 export function canEditKYP(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
   const isBD = user.role === 'BD' || user.role === 'ADMIN'
   const canEditStages: CaseStage[] = [
-    CaseStage.KYP_BASIC_PENDING,
     CaseStage.KYP_BASIC_COMPLETE,
-    CaseStage.KYP_DETAILED_PENDING,
-    CaseStage.KYP_DETAILED_COMPLETE
+    CaseStage.HOSPITALS_SUGGESTED
   ]
   
   return isBD && canEditStages.includes(lead.caseStage)
@@ -87,8 +73,8 @@ export function canInitiate(user: User, lead: Lead): boolean {
   return isBD && isPreAuthComplete
 }
 
-// BD can mark discharged when initiated
-export function canMarkDischarge(user: User, lead: Lead): boolean {
+// BD can mark IPD when initiated
+export function canMarkIPD(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
   const isBD = user.role === 'BD' || user.role === 'ADMIN'
@@ -126,7 +112,7 @@ export function canMarkLost(user: User, lead: Lead): boolean {
   if (!isBD) return false
 
   // Not allowed: before KYP1 (basic complete) or after admission
-  const beforeKYP1: CaseStage[] = [CaseStage.NEW_LEAD, CaseStage.KYP_BASIC_PENDING]
+  const beforeKYP1: CaseStage[] = [CaseStage.NEW_LEAD]
   const afterAdmission: CaseStage[] = [
     CaseStage.INITIATED,
     CaseStage.ADMITTED,
@@ -142,8 +128,7 @@ export function canMarkLost(user: User, lead: Lead): boolean {
   // Allowed: after KYP1 up until (and including) pre-auth complete, before Mark Admitted
   const allowedStages: CaseStage[] = [
     CaseStage.KYP_BASIC_COMPLETE,
-    CaseStage.KYP_DETAILED_PENDING,
-    CaseStage.KYP_DETAILED_COMPLETE,
+    CaseStage.HOSPITALS_SUGGESTED,
     CaseStage.PREAUTH_RAISED,
     CaseStage.PREAUTH_COMPLETE,
     CaseStage.KYP_PENDING,
@@ -164,10 +149,8 @@ export function canShowInsuranceActions(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
   const canAccessStages: CaseStage[] = [
-    CaseStage.KYP_BASIC_PENDING, // suggest hospitals
     CaseStage.KYP_BASIC_COMPLETE,
-    CaseStage.KYP_DETAILED_PENDING,
-    CaseStage.KYP_DETAILED_COMPLETE,
+    CaseStage.HOSPITALS_SUGGESTED,
     CaseStage.PREAUTH_RAISED,
     CaseStage.PREAUTH_COMPLETE,
     CaseStage.INITIATED,

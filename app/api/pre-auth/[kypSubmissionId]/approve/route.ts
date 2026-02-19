@@ -5,6 +5,13 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { hasPermission } from '@/lib/rbac'
 import { CaseStage, PreAuthStatus } from '@prisma/client'
+import { z } from 'zod'
+
+const approveSchema = z.object({
+  approvalStatus: z.enum(['APPROVED', 'TEMP_APPROVED']),
+  approvedAmount: z.number().min(0, 'Approved amount must be positive'),
+  approvalNotes: z.string().optional(),
+})
 
 export async function POST(
   request: NextRequest,
@@ -21,6 +28,8 @@ export async function POST(
     }
 
     const { kypSubmissionId } = await params
+    const body = await request.json()
+    const data = approveSchema.parse(body)
 
     // Get KYP submission with lead and pre-auth data
     const kypSubmission = await prisma.kYPSubmission.findUnique({
@@ -58,15 +67,26 @@ export async function POST(
       return errorResponse('Pre-authorization has already been approved', 400)
     }
 
+    if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.TEMP_APPROVED) {
+      return errorResponse('Pre-authorization has already been temp approved', 400)
+    }
+
     if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.REJECTED) {
       return errorResponse('Pre-authorization has already been rejected', 400)
     }
 
     // Update pre-auth status
+    const statusMap = {
+      APPROVED: PreAuthStatus.APPROVED,
+      TEMP_APPROVED: PreAuthStatus.TEMP_APPROVED,
+    }
+
     await prisma.preAuthorization.update({
       where: { kypSubmissionId },
       data: {
-        approvalStatus: PreAuthStatus.APPROVED,
+        approvalStatus: statusMap[data.approvalStatus],
+        approvedAmount: data.approvedAmount,
+        approvalNotes: data.approvalNotes?.trim() || undefined,
         handledById: user.id,
         handledAt: new Date(),
         approvedAt: new Date(),
@@ -92,29 +112,33 @@ export async function POST(
         fromStage: CaseStage.PREAUTH_RAISED,
         toStage: CaseStage.PREAUTH_COMPLETE,
         changedById: user.id,
-        note: 'Pre-authorization approved by Insurance',
+        note: `Pre-authorization ${data.approvalStatus === 'TEMP_APPROVED' ? 'temp ' : ''}approved by Insurance`,
       },
     })
 
-    await postCaseChatSystemMessage(kypSubmission.lead.id, 'Insurance approved pre-auth.')
+    const statusMsg = data.approvalStatus === 'TEMP_APPROVED' ? 'temp approved' : 'approved'
+    await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance ${statusMsg} pre-auth.`)
 
     // Notify BD
     await prisma.notification.create({
       data: {
         userId: kypSubmission.lead.bdId,
         type: 'PRE_AUTH_COMPLETE',
-        title: 'Pre-Authorization Approved',
-        message: `Pre-authorization has been approved for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now proceed with admission.`,
+        title: `Pre-Authorization ${data.approvalStatus === 'TEMP_APPROVED' ? 'Temp ' : ''}Approved`,
+        message: `Pre-authorization has been ${statusMsg} for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now proceed with admission.`,
         link: `/patient/${kypSubmission.lead.id}/pre-auth`,
         relatedId: kypSubmission.preAuthData.id,
       },
     })
 
     return successResponse(
-      { message: 'Pre-authorization approved successfully' },
-      'Pre-authorization approved successfully'
+      { message: `Pre-authorization ${statusMsg} successfully` },
+      `Pre-authorization ${statusMsg} successfully`
     )
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse('Invalid request data', 400)
+    }
     console.error('Error approving pre-auth:', error)
     return errorResponse('Failed to approve pre-authorization', 500)
   }

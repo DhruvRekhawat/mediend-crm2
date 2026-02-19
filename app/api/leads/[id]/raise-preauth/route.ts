@@ -8,14 +8,19 @@ import { CaseStage } from '@prisma/client'
 
 const raisePreAuthSchema = z.object({
   requestedHospitalName: z.string().min(1, 'Hospital name is required'),
-  requestedRoomType: z.string().optional(), // required only when not new hospital in UI
+  requestedRoomType: z.string().optional(),
   diseaseDescription: z.string().min(1, 'Disease description is required'),
-  diseaseImages: z.array(z.object({
+  aadhar: z.string().optional(),
+  pan: z.string().optional(),
+  aadharFileUrl: z.string().optional(),
+  panFileUrl: z.string().optional(),
+  prescriptionFileUrl: z.string().optional(),
+  investigationFileUrls: z.array(z.object({
     name: z.string(),
     url: z.string(),
   })).optional(),
-  expectedAdmissionDate: z.string().optional(),
-  expectedSurgeryDate: z.string().optional(),
+  expectedAdmissionDate: z.string().min(1, 'Expected admission date is required'),
+  expectedSurgeryDate: z.string().min(1, 'Expected surgery date is required'),
   isNewHospitalRequest: z.boolean().optional().default(false),
 })
 
@@ -54,12 +59,10 @@ export async function POST(
     }
 
     const allowedStages: CaseStage[] = [
-      CaseStage.KYP_DETAILED_PENDING,
-      CaseStage.KYP_DETAILED_COMPLETE,
-      CaseStage.KYP_COMPLETE,
+      CaseStage.HOSPITALS_SUGGESTED,
     ]
     if (!allowedStages.includes(lead.caseStage)) {
-      return errorResponse(`Cannot raise pre-auth. Current stage: ${lead.caseStage}. Submit KYP (Detailed) first or wait for Insurance to add details.`, 400)
+      return errorResponse(`Cannot raise pre-auth. Current stage: ${lead.caseStage}. Insurance must suggest hospitals first.`, 400)
     }
 
     const existingPreAuth = await prisma.preAuthorization.findFirst({
@@ -78,14 +81,12 @@ export async function POST(
     const isNewHospital = data.isNewHospitalRequest === true
     if (!isNewHospital) {
       const suggestedNames = existingPreAuth.suggestedHospitals.map((h) => h.hospitalName)
-      const legacyHospitals = (existingPreAuth.hospitalSuggestions as string[] | null) ?? []
-      const allHospitals = suggestedNames.length > 0 ? suggestedNames : legacyHospitals
-      if (allHospitals.length > 0 && !allHospitals.includes(data.requestedHospitalName)) {
+      if (suggestedNames.length > 0 && !suggestedNames.includes(data.requestedHospitalName)) {
         return errorResponse('Selected hospital must be one of Insurance\'s suggested hospitals, or use Request New Hospital.', 400)
       }
-      if (!data.requestedRoomType?.trim()) {
-        return errorResponse('Room type is required when selecting a suggested hospital.', 400)
-      }
+    }
+    if (!data.requestedRoomType?.trim()) {
+      return errorResponse('Room type is required', 400)
     }
 
     const preAuth = await prisma.preAuthorization.update({
@@ -94,7 +95,9 @@ export async function POST(
         requestedHospitalName: data.requestedHospitalName,
         requestedRoomType: data.requestedRoomType ?? null,
         diseaseDescription: data.diseaseDescription,
-        diseaseImages: data.diseaseImages ?? [],
+        expectedAdmissionDate: new Date(data.expectedAdmissionDate),
+        expectedSurgeryDate: new Date(data.expectedSurgeryDate),
+        investigationFileUrls: data.investigationFileUrls ?? undefined,
         preAuthRaisedAt: new Date(),
         preAuthRaisedById: user.id,
         isNewHospitalRequest: isNewHospital,

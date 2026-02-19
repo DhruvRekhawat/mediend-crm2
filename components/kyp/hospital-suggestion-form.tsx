@@ -13,8 +13,9 @@ interface HospitalRow {
   hospitalName: string
   tentativeBill: string
   roomRentGeneral: string
-  roomRentPrivate: string
-  roomRentICU: string
+  roomRentSingle: string
+  roomRentDeluxe: string
+  roomRentSemiPrivate: string
   notes: string
 }
 
@@ -23,13 +24,16 @@ interface HospitalSuggestionFormProps {
   initialSumInsured?: string
   initialBalanceInsured?: string
   initialCopayPercentage?: string
+  initialCapping?: number | null
+  initialInsuranceName?: string
   initialTpa?: string
   initialHospitals?: Array<{
     hospitalName: string
     tentativeBill?: number | null
     roomRentGeneral?: number | null
-    roomRentPrivate?: number | null
-    roomRentICU?: number | null
+    roomRentSingle?: number | null
+    roomRentDeluxe?: number | null
+    roomRentSemiPrivate?: number | null
     notes?: string | null
   }>
   onSuccess?: () => void
@@ -40,8 +44,9 @@ const emptyHospital = (): HospitalRow => ({
   hospitalName: '',
   tentativeBill: '',
   roomRentGeneral: '',
-  roomRentPrivate: '',
-  roomRentICU: '',
+  roomRentSingle: '',
+  roomRentDeluxe: '',
+  roomRentSemiPrivate: '',
   notes: '',
 })
 
@@ -50,6 +55,8 @@ export function HospitalSuggestionForm({
   initialSumInsured = '',
   initialBalanceInsured = '',
   initialCopayPercentage = '',
+  initialCapping,
+  initialInsuranceName = '',
   initialTpa = '',
   initialHospitals,
   onSuccess,
@@ -58,6 +65,8 @@ export function HospitalSuggestionForm({
   const [sumInsured, setSumInsured] = useState(initialSumInsured)
   const [balanceInsured, setBalanceInsured] = useState(initialBalanceInsured)
   const [copayPercentage, setCopayPercentage] = useState(initialCopayPercentage)
+  const [capping, setCapping] = useState(initialCapping ? String(initialCapping) : '')
+  const [insuranceName, setInsuranceName] = useState(initialInsuranceName)
   const [tpa, setTpa] = useState(initialTpa)
   const [hospitals, setHospitals] = useState<HospitalRow[]>(() => {
     if (initialHospitals?.length) {
@@ -65,8 +74,9 @@ export function HospitalSuggestionForm({
         hospitalName: h.hospitalName ?? '',
         tentativeBill: h.tentativeBill != null ? String(h.tentativeBill) : '',
         roomRentGeneral: h.roomRentGeneral != null ? String(h.roomRentGeneral) : '',
-        roomRentPrivate: h.roomRentPrivate != null ? String(h.roomRentPrivate) : '',
-        roomRentICU: h.roomRentICU != null ? String(h.roomRentICU) : '',
+        roomRentSingle: h.roomRentSingle != null ? String(h.roomRentSingle) : '',
+        roomRentDeluxe: h.roomRentDeluxe != null ? String(h.roomRentDeluxe) : '',
+        roomRentSemiPrivate: h.roomRentSemiPrivate != null ? String(h.roomRentSemiPrivate) : '',
         notes: h.notes ?? '',
       }))
     }
@@ -96,13 +106,22 @@ export function HospitalSuggestionForm({
       toast.error('Sum insured is required')
       return
     }
+    if (!balanceInsured.trim()) {
+      toast.error('Balance insured is required')
+      return
+    }
+    if (!copayPercentage.trim()) {
+      toast.error('Copay is required')
+      return
+    }
     const list = hospitals
       .map((h) => ({
         hospitalName: h.hospitalName.trim(),
         tentativeBill: h.tentativeBill ? parseFloat(h.tentativeBill) : undefined,
         roomRentGeneral: h.roomRentGeneral ? parseFloat(h.roomRentGeneral) : undefined,
-        roomRentPrivate: h.roomRentPrivate ? parseFloat(h.roomRentPrivate) : undefined,
-        roomRentICU: h.roomRentICU ? parseFloat(h.roomRentICU) : undefined,
+        roomRentSingle: h.roomRentSingle ? parseFloat(h.roomRentSingle) : undefined,
+        roomRentDeluxe: h.roomRentDeluxe ? parseFloat(h.roomRentDeluxe) : undefined,
+        roomRentSemiPrivate: h.roomRentSemiPrivate ? parseFloat(h.roomRentSemiPrivate) : undefined,
         notes: h.notes.trim() || undefined,
       }))
       .filter((h) => h.hospitalName)
@@ -115,8 +134,10 @@ export function HospitalSuggestionForm({
       await apiPost('/api/kyp/pre-auth', {
         kypSubmissionId,
         sumInsured: sumInsured.trim(),
-        balanceInsured: balanceInsured.trim() || undefined,
-        copay: copayPercentage.trim() || undefined,
+        balanceInsured: balanceInsured.trim(),
+        copay: copayPercentage.trim(),
+        capping: capping ? parseFloat(capping) : undefined,
+        insuranceName: insuranceName.trim() || undefined,
         tpa: tpa.trim() || undefined,
         hospitals: list,
       })
@@ -141,21 +162,45 @@ export function HospitalSuggestionForm({
           />
         </div>
         <div>
-          <Label htmlFor="balanceInsured">Balance Insured</Label>
+          <Label htmlFor="balanceInsured">Balance Insured *</Label>
           <Input
             id="balanceInsured"
             value={balanceInsured}
             onChange={(e) => setBalanceInsured(e.target.value)}
             placeholder="e.g. 300000"
+            required
           />
         </div>
         <div>
-          <Label htmlFor="copayPercentage">Copay Percentage</Label>
+          <Label htmlFor="copayPercentage">Copay % *</Label>
           <Input
             id="copayPercentage"
             value={copayPercentage}
             onChange={(e) => setCopayPercentage(e.target.value)}
-            placeholder="e.g. 10%"
+            placeholder="e.g. 10"
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="capping">Capping</Label>
+          <Input
+            id="capping"
+            type="number"
+            value={capping}
+            onChange={(e) => setCapping(e.target.value)}
+            placeholder="Optional"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="insuranceName">Insurance Name</Label>
+          <Input
+            id="insuranceName"
+            value={insuranceName}
+            onChange={(e) => setInsuranceName(e.target.value)}
+            placeholder="Enter insurance name"
           />
         </div>
         <div>
@@ -204,6 +249,7 @@ export function HospitalSuggestionForm({
                     value={h.hospitalName}
                     onChange={(e) => updateHospital(index, 'hospitalName', e.target.value)}
                     placeholder="Hospital name"
+                    required
                   />
                 </div>
                 <div>
@@ -227,22 +273,32 @@ export function HospitalSuggestionForm({
                   />
                 </div>
                 <div>
-                  <Label>Room Rent – Private (₹)</Label>
+                  <Label>Room Rent – Single (₹)</Label>
                   <Input
                     type="number"
                     step="0.01"
-                    value={h.roomRentPrivate}
-                    onChange={(e) => updateHospital(index, 'roomRentPrivate', e.target.value)}
+                    value={h.roomRentSingle}
+                    onChange={(e) => updateHospital(index, 'roomRentSingle', e.target.value)}
                     placeholder="Optional"
                   />
                 </div>
                 <div>
-                  <Label>Room Rent – ICU (₹)</Label>
+                  <Label>Room Rent – Deluxe (₹)</Label>
                   <Input
                     type="number"
                     step="0.01"
-                    value={h.roomRentICU}
-                    onChange={(e) => updateHospital(index, 'roomRentICU', e.target.value)}
+                    value={h.roomRentDeluxe}
+                    onChange={(e) => updateHospital(index, 'roomRentDeluxe', e.target.value)}
+                    placeholder="Optional"
+                  />
+                </div>
+                <div>
+                  <Label>Room Rent – Semi-Private (₹)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={h.roomRentSemiPrivate}
+                    onChange={(e) => updateHospital(index, 'roomRentSemiPrivate', e.target.value)}
                     placeholder="Optional"
                   />
                 </div>

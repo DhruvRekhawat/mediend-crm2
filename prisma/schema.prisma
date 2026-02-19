@@ -185,13 +185,23 @@ enum QueryStatus {
   RESOLVED
 }
 
+enum InsuranceType {
+  INDIVIDUAL
+  FAMILY_FLOATER
+  GROUP_CORPORATE
+}
+
+enum IpdStatus {
+  ADMITTED_DONE
+  POSTPONED
+  CANCELLED
+  DISCHARGED
+}
+
 enum CaseStage {
   NEW_LEAD
-  // New two-stage KYP (use these after migration)
-  KYP_BASIC_PENDING
   KYP_BASIC_COMPLETE
-  KYP_DETAILED_PENDING
-  KYP_DETAILED_COMPLETE
+  HOSPITALS_SUGGESTED
   PREAUTH_RAISED
   PREAUTH_COMPLETE
   INITIATED
@@ -203,6 +213,9 @@ enum CaseStage {
   KYP_COMPLETE
   ADMITTED
   IPD_DONE
+  KYP_BASIC_PENDING
+  KYP_DETAILED_PENDING
+  KYP_DETAILED_COMPLETE
 }
 
 enum ChatMessageType {
@@ -215,6 +228,7 @@ enum PreAuthStatus {
   PENDING
   APPROVED
   REJECTED
+  TEMP_APPROVED
 }
 
 model User {
@@ -260,7 +274,6 @@ model User {
   // KYP Relations
   kypSubmissions  KYPSubmission[]    @relation("KYPSubmitter")
   preAuthHandled  PreAuthorization[] @relation("PreAuthHandler")
-  followUpUpdated PatientFollowUp[]  @relation("FollowUpUpdater")
   queriesRaised   InsuranceQuery[]   @relation("QueryRaiser")
   queriesAnswered InsuranceQuery[]   @relation("QueryAnswerer")
   notifications   Notification[]
@@ -1390,6 +1403,7 @@ model KYPSubmission {
   location      String? // City name
   area          String? // Area within city (Call 1 - Basic)
   remark        String?
+  insuranceType InsuranceType?
 
   // File URLs (stored in S3)
   aadharFileUrl        String?
@@ -1411,9 +1425,6 @@ model KYPSubmission {
   // Pre-authorization (filled by Insurance)
   preAuthData PreAuthorization?
 
-  // Patient follow-up (filled by Sales)
-  followUpData PatientFollowUp?
-
   // Discharge sheet (optional link)
   dischargeSheet DischargeSheet? @relation("DischargeSheetKYP")
 
@@ -1434,7 +1445,7 @@ model PreAuthorization {
   sumInsured             String?
   balanceInsured         String?
   roomRent               String?
-  capping                String?
+  capping                Float?
   copay                  String?
   icu                    String?
   hospitalNameSuggestion String?
@@ -1458,12 +1469,24 @@ model PreAuthorization {
   isNewHospitalRequest      Boolean @default(false)
   newHospitalPreAuthRaised  Boolean @default(false) // Insurance marks they raised pre-auth for new hospital
 
+  // Expected dates (persisted)
+  expectedAdmissionDate DateTime?
+  expectedSurgeryDate   DateTime?
+
+  // Investigation files
+  investigationFileUrls Json?   // Array of {name, url}
+
+  // Insurance type (auto-filled from KYPSubmission)
+  insuranceType String?
+
   handledById String?
   handledBy   User?    @relation("PreAuthHandler", fields: [handledById], references: [id])
   handledAt   DateTime?
 
   // Approval/Rejection
   approvalStatus PreAuthStatus @default(PENDING)
+  approvedAmount Float?
+  approvalNotes  String?       @db.Text
   rejectionReason String?      @db.Text
   approvedAt      DateTime?
   rejectedAt      DateTime?
@@ -1495,37 +1518,13 @@ model HospitalSuggestion {
   hospitalName     String
   tentativeBill    Float?
   roomRentGeneral  Float?
-  roomRentPrivate  Float?
-  roomRentICU      Float?
+  roomRentSingle   Float?
+  roomRentDeluxe   Float?
+  roomRentSemiPrivate Float?
   notes            String?          @db.Text
   createdAt        DateTime         @default(now())
 
   @@index([preAuthId])
-}
-
-model PatientFollowUp {
-  id              String        @id @default(cuid())
-  kypSubmissionId String        @unique
-  kypSubmission   KYPSubmission @relation(fields: [kypSubmissionId], references: [id], onDelete: Cascade)
-
-  admissionDate DateTime?
-  surgeryDate   DateTime?
-  prescription  String?
-  report        String?
-  hospitalName  String?
-  doctorName    String?
-
-  // File URLs
-  prescriptionFileUrl String?
-  reportFileUrl       String?
-
-  updatedById String
-  updatedBy   User     @relation("FollowUpUpdater", fields: [updatedById], references: [id])
-  updatedAt   DateTime @default(now())
-
-  createdAt DateTime @default(now())
-
-  @@index([kypSubmissionId])
 }
 
 model Notification {
@@ -1608,9 +1607,28 @@ model AdmissionRecord {
   lead     Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
   
   admissionDate     DateTime
-  admissionTime     String?
+  admissionTime     String  // Non-nullable now
   admittingHospital String
   expectedSurgeryDate DateTime?
+  
+  // New fields
+  surgeryDate       DateTime?
+  surgeryTime       String?
+  hospitalAddress   String?
+  googleMapLocation String?
+  tpa               String?
+  instrument        String?
+  implantConsumables String?
+  noMediendLogo     Boolean @default(false)
+  
+  // IPD Status tracking
+  ipdStatus         IpdStatus?
+  ipdStatusReason   String?
+  newSurgeryDate    DateTime?
+  ipdDischargeDate  DateTime?
+  ipdStatusNotes    String? @db.Text
+  ipdStatusUpdatedAt DateTime?
+  
   notes             String? @db.Text
   
   initiatedById String
@@ -1745,10 +1763,12 @@ model DischargeSheet {
   investigationAmount  Float @default(0)
   consumablesAmount    Float @default(0)
   implantsAmount       Float @default(0)
+  instrumentsAmount    Float?
   totalFinalBill       Float @default(0)
 
   // D. Approval & Deductions
   finalApprovedAmount  Float @default(0)
+  finalAmount          Float?
   deductionAmount      Float @default(0)
   discountAmount       Float @default(0)
   waivedOffAmount      Float @default(0)

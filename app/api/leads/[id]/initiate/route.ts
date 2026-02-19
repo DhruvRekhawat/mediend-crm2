@@ -8,9 +8,15 @@ import { CaseStage } from '@prisma/client'
 
 const initiateSchema = z.object({
   admissionDate: z.string().min(1, 'Admission date is required'),
-  admissionTime: z.string().optional(),
+  admissionTime: z.string().min(1, 'Admission time is required'),
   admittingHospital: z.string().min(1, 'Hospital name is required'),
-  expectedSurgeryDate: z.string().optional(),
+  hospitalAddress: z.string().min(1, 'Hospital address is required'),
+  googleMapLocation: z.string().optional(),
+  surgeryDate: z.string().min(1, 'Surgery date is required'),
+  surgeryTime: z.string().min(1, 'Surgery time is required'),
+  tpa: z.string().min(1, 'TPA is required'),
+  instrument: z.string().optional(),
+  implantConsumables: z.string().optional(),
   notes: z.string().optional(),
 })
 
@@ -68,8 +74,14 @@ export async function POST(
         admissionDate: new Date(data.admissionDate),
         admissionTime: data.admissionTime,
         admittingHospital: data.admittingHospital,
-        expectedSurgeryDate: data.expectedSurgeryDate ? new Date(data.expectedSurgeryDate) : null,
-        notes: data.notes,
+        hospitalAddress: data.hospitalAddress,
+        googleMapLocation: data.googleMapLocation?.trim() || undefined,
+        surgeryDate: new Date(data.surgeryDate),
+        surgeryTime: data.surgeryTime,
+        tpa: data.tpa,
+        instrument: data.instrument?.trim() || undefined,
+        implantConsumables: data.implantConsumables?.trim() || undefined,
+        notes: data.notes?.trim() || undefined,
         initiatedById: user.id,
       },
     })

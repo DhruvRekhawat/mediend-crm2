@@ -10,10 +10,8 @@ const STAGES: Array<{
   shortLabel: string
 }> = [
   { stage: CaseStage.NEW_LEAD, label: 'New Lead', shortLabel: 'New' },
-  { stage: CaseStage.KYP_BASIC_PENDING, label: 'KYP Basic', shortLabel: 'KYP 1' },
-  { stage: CaseStage.KYP_BASIC_COMPLETE, label: 'Hospitals Suggested', shortLabel: 'Hosp' },
-  { stage: CaseStage.KYP_DETAILED_PENDING, label: 'KYP Detailed', shortLabel: 'KYP 2' },
-  { stage: CaseStage.KYP_DETAILED_COMPLETE, label: 'KYP Complete', shortLabel: 'KYP ✓' },
+  { stage: CaseStage.KYP_BASIC_COMPLETE, label: 'KYP Basic', shortLabel: 'KYP 1' },
+  { stage: CaseStage.HOSPITALS_SUGGESTED, label: 'Hospitals Suggested', shortLabel: 'Hosp' },
   { stage: CaseStage.PREAUTH_RAISED, label: 'Pre-Auth Raised', shortLabel: 'Pre-Auth' },
   { stage: CaseStage.PREAUTH_COMPLETE, label: 'Pre-Auth Complete', shortLabel: 'Pre-Auth ✓' },
   { stage: CaseStage.INITIATED, label: 'Admitted', shortLabel: 'Admitted' },
@@ -25,8 +23,11 @@ function getStageIndex(stage: CaseStage): number {
   if (inStages >= 0) return inStages
   // Legacy or extra stages: map to nearest visible stage
   const legacyToNew: Partial<Record<CaseStage, CaseStage>> = {
-    [CaseStage.KYP_PENDING]: CaseStage.KYP_BASIC_PENDING,
-    [CaseStage.KYP_COMPLETE]: CaseStage.KYP_DETAILED_COMPLETE,
+    [CaseStage.KYP_BASIC_PENDING]: CaseStage.KYP_BASIC_COMPLETE,
+    [CaseStage.KYP_DETAILED_PENDING]: CaseStage.HOSPITALS_SUGGESTED,
+    [CaseStage.KYP_DETAILED_COMPLETE]: CaseStage.HOSPITALS_SUGGESTED,
+    [CaseStage.KYP_PENDING]: CaseStage.KYP_BASIC_COMPLETE,
+    [CaseStage.KYP_COMPLETE]: CaseStage.HOSPITALS_SUGGESTED,
     [CaseStage.ADMITTED]: CaseStage.INITIATED,
     [CaseStage.IPD_DONE]: CaseStage.DISCHARGED,
     [CaseStage.PL_PENDING]: CaseStage.DISCHARGED,
@@ -53,41 +54,17 @@ function getStageColor(stage: CaseStage): { bg: string; border: string; text: st
       text: 'text-blue-700 dark:text-blue-300',
       connector: 'bg-blue-300 dark:bg-blue-700',
     },
-    [CaseStage.KYP_BASIC_PENDING]: {
+    [CaseStage.KYP_BASIC_COMPLETE]: {
       bg: 'bg-amber-100 dark:bg-amber-900',
       border: 'border-amber-300 dark:border-amber-700',
       text: 'text-amber-700 dark:text-amber-300',
       connector: 'bg-amber-300 dark:bg-amber-700',
     },
-    [CaseStage.KYP_BASIC_COMPLETE]: {
+    [CaseStage.HOSPITALS_SUGGESTED]: {
       bg: 'bg-emerald-100 dark:bg-emerald-900',
       border: 'border-emerald-300 dark:border-emerald-700',
       text: 'text-emerald-700 dark:text-emerald-300',
       connector: 'bg-emerald-300 dark:bg-emerald-700',
-    },
-    [CaseStage.KYP_DETAILED_PENDING]: {
-      bg: 'bg-amber-100 dark:bg-amber-900',
-      border: 'border-amber-300 dark:border-amber-700',
-      text: 'text-amber-700 dark:text-amber-300',
-      connector: 'bg-amber-300 dark:bg-amber-700',
-    },
-    [CaseStage.KYP_DETAILED_COMPLETE]: {
-      bg: 'bg-green-100 dark:bg-green-900',
-      border: 'border-green-300 dark:border-green-700',
-      text: 'text-green-700 dark:text-green-300',
-      connector: 'bg-green-300 dark:bg-green-700',
-    },
-    [CaseStage.KYP_PENDING]: {
-      bg: 'bg-amber-100 dark:bg-amber-900',
-      border: 'border-amber-300 dark:border-amber-700',
-      text: 'text-amber-700 dark:text-amber-300',
-      connector: 'bg-amber-300 dark:bg-amber-700',
-    },
-    [CaseStage.KYP_COMPLETE]: {
-      bg: 'bg-green-100 dark:bg-green-900',
-      border: 'border-green-300 dark:border-green-700',
-      text: 'text-green-700 dark:text-green-300',
-      connector: 'bg-green-300 dark:bg-green-700',
     },
     [CaseStage.PREAUTH_RAISED]: {
       bg: 'bg-teal-100 dark:bg-teal-900',
@@ -107,23 +84,54 @@ function getStageColor(stage: CaseStage): { bg: string; border: string; text: st
       text: 'text-green-700 dark:text-green-300',
       connector: 'bg-green-300 dark:bg-green-700',
     },
-    [CaseStage.ADMITTED]: {
-      bg: 'bg-green-100 dark:bg-green-900',
-      border: 'border-green-300 dark:border-green-700',
-      text: 'text-green-700 dark:text-green-300',
-      connector: 'bg-green-300 dark:bg-green-700',
-    },
     [CaseStage.DISCHARGED]: {
       bg: 'bg-orange-100 dark:bg-orange-900',
       border: 'border-orange-300 dark:border-orange-700',
       text: 'text-orange-700 dark:text-orange-300',
       connector: 'bg-orange-300 dark:bg-orange-700',
     },
+    // Legacy stages (for backward compatibility)
+    [CaseStage.KYP_BASIC_PENDING]: {
+      bg: 'bg-amber-100 dark:bg-amber-900',
+      border: 'border-amber-300 dark:border-amber-700',
+      text: 'text-amber-700 dark:text-amber-300',
+      connector: 'bg-amber-300 dark:bg-amber-700',
+    },
+    [CaseStage.KYP_DETAILED_PENDING]: {
+      bg: 'bg-emerald-100 dark:bg-emerald-900',
+      border: 'border-emerald-300 dark:border-emerald-700',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      connector: 'bg-emerald-300 dark:bg-emerald-700',
+    },
+    [CaseStage.KYP_DETAILED_COMPLETE]: {
+      bg: 'bg-emerald-100 dark:bg-emerald-900',
+      border: 'border-emerald-300 dark:border-emerald-700',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      connector: 'bg-emerald-300 dark:bg-emerald-700',
+    },
+    [CaseStage.KYP_PENDING]: {
+      bg: 'bg-amber-100 dark:bg-amber-900',
+      border: 'border-amber-300 dark:border-amber-700',
+      text: 'text-amber-700 dark:text-amber-300',
+      connector: 'bg-amber-300 dark:bg-amber-700',
+    },
+    [CaseStage.KYP_COMPLETE]: {
+      bg: 'bg-emerald-100 dark:bg-emerald-900',
+      border: 'border-emerald-300 dark:border-emerald-700',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      connector: 'bg-emerald-300 dark:bg-emerald-700',
+    },
+    [CaseStage.ADMITTED]: {
+      bg: 'bg-green-100 dark:bg-green-900',
+      border: 'border-green-300 dark:border-green-700',
+      text: 'text-green-700 dark:text-green-300',
+      connector: 'bg-green-300 dark:bg-green-700',
+    },
     [CaseStage.IPD_DONE]: {
-      bg: 'bg-teal-100 dark:bg-teal-900',
-      border: 'border-teal-300 dark:border-teal-700',
-      text: 'text-teal-700 dark:text-teal-300',
-      connector: 'bg-teal-300 dark:bg-teal-700',
+      bg: 'bg-orange-100 dark:bg-orange-900',
+      border: 'border-orange-300 dark:border-orange-700',
+      text: 'text-orange-700 dark:text-orange-300',
+      connector: 'bg-orange-300 dark:bg-orange-700',
     },
     [CaseStage.PL_PENDING]: {
       bg: 'bg-gray-100 dark:bg-gray-900',
@@ -154,41 +162,17 @@ function getStageColors(stage: CaseStage): { gradient: string, bgGradient: strin
       textColor: 'text-blue-600 dark:text-blue-400',
       connectorColor: 'bg-gradient-to-r from-blue-500 to-cyan-500',
     },
-    [CaseStage.KYP_BASIC_PENDING]: {
+    [CaseStage.KYP_BASIC_COMPLETE]: {
       gradient: 'from-yellow-500 to-amber-500',
       bgGradient: 'from-yellow-400 to-amber-400',
       textColor: 'text-yellow-600 dark:text-yellow-400',
       connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
     },
-    [CaseStage.KYP_BASIC_COMPLETE]: {
+    [CaseStage.HOSPITALS_SUGGESTED]: {
       gradient: 'from-emerald-500 to-teal-500',
       bgGradient: 'from-emerald-400 to-teal-400',
       textColor: 'text-emerald-600 dark:text-emerald-400',
       connectorColor: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-    },
-    [CaseStage.KYP_DETAILED_PENDING]: {
-      gradient: 'from-yellow-500 to-amber-500',
-      bgGradient: 'from-yellow-400 to-amber-400',
-      textColor: 'text-yellow-600 dark:text-yellow-400',
-      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
-    },
-    [CaseStage.KYP_DETAILED_COMPLETE]: {
-      gradient: 'from-green-500 to-emerald-500',
-      bgGradient: 'from-green-400 to-emerald-400',
-      textColor: 'text-green-600 dark:text-green-400',
-      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    },
-    [CaseStage.KYP_PENDING]: {
-      gradient: 'from-yellow-500 to-amber-500',
-      bgGradient: 'from-yellow-400 to-amber-400',
-      textColor: 'text-yellow-600 dark:text-yellow-400',
-      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
-    },
-    [CaseStage.KYP_COMPLETE]: {
-      gradient: 'from-green-500 to-emerald-500',
-      bgGradient: 'from-green-400 to-emerald-400',
-      textColor: 'text-green-600 dark:text-green-400',
-      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
     },
     [CaseStage.PREAUTH_RAISED]: {
       gradient: 'from-purple-500 to-pink-500',
@@ -208,17 +192,48 @@ function getStageColors(stage: CaseStage): { gradient: string, bgGradient: strin
       textColor: 'text-cyan-600 dark:text-cyan-400',
       connectorColor: 'bg-gradient-to-r from-cyan-500 to-teal-500',
     },
-    [CaseStage.ADMITTED]: {
-      gradient: 'from-emerald-500 to-green-500',
-      bgGradient: 'from-emerald-400 to-green-400',
-      textColor: 'text-emerald-600 dark:text-emerald-400',
-      connectorColor: 'bg-gradient-to-r from-emerald-500 to-green-500',
-    },
     [CaseStage.DISCHARGED]: {
       gradient: 'from-orange-500 to-amber-500',
       bgGradient: 'from-orange-400 to-amber-400',
       textColor: 'text-orange-600 dark:text-orange-400',
       connectorColor: 'bg-gradient-to-r from-orange-500 to-amber-500',
+    },
+    // Legacy stages
+    [CaseStage.KYP_BASIC_PENDING]: {
+      gradient: 'from-yellow-500 to-amber-500',
+      bgGradient: 'from-yellow-400 to-amber-400',
+      textColor: 'text-yellow-600 dark:text-yellow-400',
+      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
+    },
+    [CaseStage.KYP_DETAILED_PENDING]: {
+      gradient: 'from-emerald-500 to-teal-500',
+      bgGradient: 'from-emerald-400 to-teal-400',
+      textColor: 'text-emerald-600 dark:text-emerald-400',
+      connectorColor: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+    },
+    [CaseStage.KYP_DETAILED_COMPLETE]: {
+      gradient: 'from-green-500 to-emerald-500',
+      bgGradient: 'from-green-400 to-emerald-400',
+      textColor: 'text-green-600 dark:text-green-400',
+      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
+    },
+    [CaseStage.KYP_PENDING]: {
+      gradient: 'from-yellow-500 to-amber-500',
+      bgGradient: 'from-yellow-400 to-amber-400',
+      textColor: 'text-yellow-600 dark:text-yellow-400',
+      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
+    },
+    [CaseStage.KYP_COMPLETE]: {
+      gradient: 'from-green-500 to-emerald-500',
+      bgGradient: 'from-green-400 to-emerald-400',
+      textColor: 'text-green-600 dark:text-green-400',
+      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
+    },
+    [CaseStage.ADMITTED]: {
+      gradient: 'from-emerald-500 to-green-500',
+      bgGradient: 'from-emerald-400 to-green-400',
+      textColor: 'text-emerald-600 dark:text-emerald-400',
+      connectorColor: 'bg-gradient-to-r from-emerald-500 to-green-500',
     },
     [CaseStage.IPD_DONE]: {
       gradient: 'from-teal-500 to-cyan-500',

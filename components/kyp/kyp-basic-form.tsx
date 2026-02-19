@@ -27,6 +27,8 @@ interface KYPBasicFormProps {
   leadId: string
   initialPatientName?: string
   initialPhone?: string
+  initialAge?: number
+  initialSex?: string
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -35,6 +37,8 @@ export function KYPBasicForm({
   leadId,
   initialPatientName = '',
   initialPhone = '',
+  initialAge,
+  initialSex = '',
   onSuccess,
   onCancel,
 }: KYPBasicFormProps) {
@@ -45,6 +49,10 @@ export function KYPBasicForm({
     area: '',
     patientName: initialPatientName,
     phone: initialPhone,
+    age: initialAge || '',
+    sex: initialSex,
+    disease: '',
+    insuranceType: '',
     remark: '',
     insuranceName: '',
     doctorName: '',
@@ -115,6 +123,15 @@ export function KYPBasicForm({
     if (!formData.area.trim()) {
       newErrors.area = 'Area is required'
     }
+    if (!formData.disease.trim()) {
+      newErrors.disease = 'Disease/Treatment is required'
+    }
+    if (!formData.doctorName.trim()) {
+      newErrors.doctorName = 'Surgeon/Doctor Name is required'
+    }
+    if (!formData.insuranceType) {
+      newErrors.insuranceType = 'Insurance Type is required'
+    }
 
     if (formData.aadhar && !validateAadhaar(formData.aadhar)) {
       newErrors.aadhar = 'Invalid Aadhaar (12 digits starting with 2-9)'
@@ -134,11 +151,14 @@ export function KYPBasicForm({
     try {
       await apiPost('/api/kyp/submit', {
         leadId,
-        type: 'basic',
         patientName: formData.patientName.trim(),
         phone: formData.phone.trim(),
+        age: formData.age ? parseInt(formData.age as string) : undefined,
+        sex: formData.sex,
         location: formData.location.trim(),
         area: formData.area.trim(),
+        disease: formData.disease.trim(),
+        insuranceType: formData.insuranceType,
         insuranceName: formData.insuranceName.trim(),
         doctorName: formData.doctorName.trim(),
         aadhar: formData.aadhar.trim(),
@@ -244,13 +264,76 @@ export function KYPBasicForm({
           />
         </div>
         <div>
-          <Label htmlFor="doctorName">Doctor Name</Label>
+          <Label htmlFor="doctorName">Surgeon/Doctor Name *</Label>
           <Input
             id="doctorName"
             value={formData.doctorName}
             onChange={(e) => setFormData({ ...formData, doctorName: e.target.value })}
             placeholder="Enter doctor name"
+            required
           />
+          {errors.doctorName && <p className="text-xs text-destructive mt-1">{errors.doctorName}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="disease">Disease/Treatment *</Label>
+          <Textarea
+            id="disease"
+            value={formData.disease}
+            onChange={(e) => setFormData({ ...formData, disease: e.target.value })}
+            placeholder="Describe the disease or treatment needed"
+            required
+          />
+          {errors.disease && <p className="text-xs text-destructive mt-1">{errors.disease}</p>}
+        </div>
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="insuranceType">Insurance Type *</Label>
+            <select
+              id="insuranceType"
+              value={formData.insuranceType}
+              onChange={(e) => setFormData({ ...formData, insuranceType: e.target.value })}
+              className="w-full px-3 py-2 border border-input bg-background rounded-md"
+              required
+            >
+              <option value="">Select insurance type</option>
+              <option value="INDIVIDUAL">Individual</option>
+              <option value="FAMILY_FLOATER">Family Floater</option>
+              <option value="GROUP_CORPORATE">Group/Corporate</option>
+            </select>
+            {errors.insuranceType && <p className="text-xs text-destructive mt-1">{errors.insuranceType}</p>}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="age">Age</Label>
+          <Input
+            id="age"
+            type="number"
+            min="0"
+            max="150"
+            value={formData.age}
+            onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+            placeholder="Optional"
+          />
+        </div>
+        <div>
+          <Label htmlFor="sex">Gender</Label>
+          <select
+            id="sex"
+            value={formData.sex}
+            onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
+            className="w-full px-3 py-2 border border-input bg-background rounded-md"
+          >
+            <option value="">Select gender</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
+          </select>
         </div>
       </div>
 
