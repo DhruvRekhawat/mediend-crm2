@@ -140,6 +140,7 @@ export async function GET(
         },
       },
     })
+    console.log('[DEBUG] Prisma query successful')
 
     if (!lead) {
       console.log('[DEBUG] Lead not found in DB', { id })
@@ -174,11 +175,16 @@ export async function GET(
       phoneNumber: canViewPhone ? lead.phoneNumber : (lead.phoneNumber ? maskPhoneNumber(lead.phoneNumber) : null),
       caseStage: lead.caseStage,
     }
+    console.log('[DEBUG] Mapping successful')
 
     return successResponse(mappedLead)
   } catch (error) {
     console.error('Error fetching lead:', error)
-    return errorResponse('Failed to fetch lead', 500)
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    return errorResponse(`Failed to fetch lead: ${error instanceof Error ? error.message : 'Unknown error'}`, 500)
   }
 }
 
