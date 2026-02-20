@@ -31,6 +31,7 @@ const STAGE_LABELS: Record<CaseStage, string> = {
   [CaseStage.NEW_LEAD]: 'New Lead',
   [CaseStage.KYP_BASIC_PENDING]: 'KYP Basic',
   [CaseStage.KYP_BASIC_COMPLETE]: 'Hospitals Suggested',
+  [CaseStage.HOSPITALS_SUGGESTED]: 'Hospitals Suggested',
   [CaseStage.KYP_DETAILED_PENDING]: 'KYP Detailed',
   [CaseStage.KYP_DETAILED_COMPLETE]: 'KYP Complete',
   [CaseStage.KYP_PENDING]: 'KYP Pending',
@@ -64,6 +65,14 @@ function getStageColor(stage: CaseStage): { bg: string; border: string; text: st
       icon: <Clock className="w-3 h-3" />,
     },
     [CaseStage.KYP_BASIC_COMPLETE]: {
+      bg: 'bg-emerald-50 dark:bg-emerald-950/30',
+      border: 'border-emerald-200 dark:border-emerald-800',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      dot: 'bg-emerald-500 dark:bg-emerald-400',
+      connector: 'bg-emerald-300 dark:bg-emerald-700',
+      icon: <CheckCircle2 className="w-3 h-3" />,
+    },
+    [CaseStage.HOSPITALS_SUGGESTED]: {
       bg: 'bg-emerald-50 dark:bg-emerald-950/30',
       border: 'border-emerald-200 dark:border-emerald-800',
       text: 'text-emerald-700 dark:text-emerald-300',

@@ -94,36 +94,45 @@ export default function PLRecordEditPage() {
     const surgeryDate = record.surgeryDate || (pl?.surgeryDate as string | Date | null | undefined)
     const monthFromSurgery = getMonthFromDate(surgeryDate)
     const monthValue = (pl?.month ? new Date(pl.month as string).toISOString().slice(0, 10) : null) || monthFromSurgery
-    setFormData({
-      month: monthValue ? monthValue.slice(0, 7) : '',
-      surgeryDate: surgeryDate ? new Date(surgeryDate as string).toISOString().slice(0, 10) : '',
-      managerRole: (pl?.managerRole as string) || '',
-      managerName: (pl?.managerName as string) || '',
-      bdmName: (pl?.bdmName as string) || record.bd?.name || '',
-      paymentType: (pl?.paymentType as string) || '',
-      status: (pl?.status as string) || '',
-      approvedOrCash: (pl?.approvedOrCash as string) ?? '',
-      paymentCollectedAt: (pl?.paymentCollectedAt as string) || '',
-      totalAmount: pl?.totalAmount != null ? String(pl.totalAmount) : '',
-      billAmount: pl?.billAmount != null ? String(pl.billAmount) : (record.billAmount != null ? String(record.billAmount) : ''),
-      cashPaidByPatient: pl?.cashPaidByPatient != null ? String(pl.cashPaidByPatient) : '',
-      cashOrDedPaid: pl?.cashOrDedPaid != null ? String(pl.cashOrDedPaid) : '',
-      referralAmount: pl?.referralAmount != null ? String(pl.referralAmount) : '',
-      cabCharges: pl?.cabCharges != null ? String(pl.cabCharges) : '',
-      dcCharges: pl?.dcCharges != null ? String(pl.dcCharges) : '',
-      doctorCharges: pl?.doctorCharges != null ? String(pl.doctorCharges) : '',
-      implantCost: pl?.implantCost != null ? String(pl.implantCost) : '',
-      hospitalSharePct: pl?.hospitalSharePct != null ? String(pl.hospitalSharePct) : '',
-      hospitalShareAmount: pl?.hospitalShareAmount != null ? String(pl.hospitalShareAmount) : '',
-      mediendSharePct: pl?.mediendSharePct != null ? String(pl.mediendSharePct) : '',
-      mediendShareAmount: pl?.mediendShareAmount != null ? String(pl.mediendShareAmount) : '',
-      mediendNetProfit: pl?.mediendNetProfit != null ? String(pl.mediendNetProfit) : (record.plRecord?.finalProfit != null ? String(record.plRecord.finalProfit) : (record.netProfit != null ? String(record.netProfit) : '')),
-      remarks: (pl?.remarks as string) || '',
-      hospitalPayoutStatus: record.plRecord?.hospitalPayoutStatus || 'PENDING',
-      doctorPayoutStatus: record.plRecord?.doctorPayoutStatus || 'PENDING',
-      mediendInvoiceStatus: record.plRecord?.mediendInvoiceStatus || 'PENDING',
-    })
-    initialized.current = true
+    
+    const timer = setTimeout(() => {
+      setFormData((prev) => {
+        const next = {
+          ...prev,
+          month: monthValue ? monthValue.slice(0, 7) : '',
+          surgeryDate: surgeryDate ? new Date(surgeryDate as string).toISOString().slice(0, 10) : '',
+          managerRole: (pl?.managerRole as string) || '',
+          managerName: (pl?.managerName as string) || '',
+          bdmName: (pl?.bdmName as string) || record.bd?.name || '',
+          paymentType: (pl?.paymentType as string) || '',
+          status: (pl?.status as string) || '',
+          approvedOrCash: (pl?.approvedOrCash as string) ?? '',
+          paymentCollectedAt: (pl?.paymentCollectedAt as string) || '',
+          totalAmount: pl?.totalAmount != null ? String(pl.totalAmount) : '',
+          billAmount: pl?.billAmount != null ? String(pl.billAmount) : (record.billAmount != null ? String(record.billAmount) : ''),
+          cashPaidByPatient: pl?.cashPaidByPatient != null ? String(pl.cashPaidByPatient) : '',
+          cashOrDedPaid: pl?.cashOrDedPaid != null ? String(pl.cashOrDedPaid) : '',
+          referralAmount: pl?.referralAmount != null ? String(pl.referralAmount) : '',
+          cabCharges: pl?.cabCharges != null ? String(pl.cabCharges) : '',
+          dcCharges: pl?.dcCharges != null ? String(pl.dcCharges) : '',
+          doctorCharges: pl?.doctorCharges != null ? String(pl.doctorCharges) : '',
+          implantCost: pl?.implantCost != null ? String(pl.implantCost) : '',
+          hospitalSharePct: pl?.hospitalSharePct != null ? String(pl.hospitalSharePct) : '',
+          hospitalShareAmount: pl?.hospitalShareAmount != null ? String(pl.hospitalShareAmount) : '',
+          mediendSharePct: pl?.mediendSharePct != null ? String(pl.mediendSharePct) : '',
+          mediendShareAmount: pl?.mediendShareAmount != null ? String(pl.mediendShareAmount) : '',
+          mediendNetProfit: pl?.mediendNetProfit != null ? String(pl.mediendNetProfit) : (record.plRecord?.finalProfit != null ? String(record.plRecord.finalProfit) : (record.netProfit != null ? String(record.netProfit) : '')),
+          remarks: (pl?.remarks as string) || '',
+          hospitalPayoutStatus: (record.plRecord?.hospitalPayoutStatus as string) || 'PENDING',
+          doctorPayoutStatus: (record.plRecord?.doctorPayoutStatus as string) || 'PENDING',
+          mediendInvoiceStatus: (record.plRecord?.mediendInvoiceStatus as string) || 'PENDING',
+        }
+        if (JSON.stringify(prev) === JSON.stringify(next)) return prev
+        return next
+      })
+      initialized.current = true
+    }, 0)
+    return () => clearTimeout(timer)
   }, [record])
 
   const updateMutation = useMutation({

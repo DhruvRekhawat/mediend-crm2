@@ -731,7 +731,7 @@ function MentalHealthTab() {
               </div>
               <div className="flex-1 space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">We're here for you</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">We&apos;re here for you</h3>
                 </div>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -763,7 +763,7 @@ function MentalHealthTab() {
                       <div className="h-2 w-2 rounded-full bg-rose-500"></div>
                     </div>
                     <p className="text-base text-gray-800 leading-7 font-medium">
-                      You can share as much or as little as you're comfortable with
+                      You can share as much or as little as you&apos;re comfortable with
                     </p>
                   </div>
                 </div>
@@ -856,7 +856,7 @@ function MentalHealthTab() {
           <div className="text-center py-12 text-rose-700">
             <Heart className="h-16 w-16 mx-auto mb-4 text-rose-400 opacity-60" />
             <p className="text-rose-800 font-medium">No requests yet</p>
-            <p className="text-sm text-rose-600 mt-1">We're here whenever you need support</p>
+            <p className="text-sm text-rose-600 mt-1">We&apos;re here whenever you need support</p>
           </div>
         )}
       </SectionContainer>

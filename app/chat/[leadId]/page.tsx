@@ -56,7 +56,7 @@ export default function ChatPage() {
     return (
       <AuthenticatedLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-muted-foreground">You don't have access to chat</div>
+          <div className="text-muted-foreground">You don&apos;t have access to chat</div>
         </div>
       </AuthenticatedLayout>
     )

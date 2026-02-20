@@ -115,16 +115,11 @@ export async function GET(
                     hospitalName: true,
                     tentativeBill: true,
                     roomRentGeneral: true,
-                    roomRentPrivate: true,
-                    roomRentICU: true,
+                    roomRentDeluxe: true,
+                    roomRentSemiPrivate: true,
                     notes: true,
                   },
                 },
-              },
-            },
-            followUpData: {
-              select: {
-                id: true,
               },
             },
           },

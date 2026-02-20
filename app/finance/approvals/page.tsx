@@ -490,12 +490,15 @@ export default function ApprovalsPage() {
 
   // Auto-set view mode based on device
   useEffect(() => {
-    if (isMobile) {
-      setViewMode('cards')
-    } else {
-      setViewMode('table')
+    if (isMobile && viewMode !== 'cards') {
+      // Use a microtask or timeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => setViewMode('cards'), 0)
+      return () => clearTimeout(timer)
+    } else if (!isMobile && viewMode !== 'table') {
+      const timer = setTimeout(() => setViewMode('table'), 0)
+      return () => clearTimeout(timer)
     }
-  }, [isMobile])
+  }, [isMobile, viewMode])
 
   // Fetch pending debit entries
   const { data: pendingData, isLoading } = useQuery<LedgerResponse>({
@@ -730,8 +733,9 @@ export default function ApprovalsPage() {
 
   // Filter pending data by head and search
   const filteredPendingData = useMemo(() => {
-    if (!pendingData?.data) return []
-    let filtered = pendingData.data
+    const data = pendingData?.data
+    if (!data) return []
+    let filtered = data
 
     // Filter by head
     if (headFilter !== 'all') {
@@ -751,7 +755,7 @@ export default function ApprovalsPage() {
     }
 
     return filtered
-  }, [pendingData?.data, headFilter, searchQuery])
+  }, [pendingData, headFilter, searchQuery])
 
   const pendingCount = filteredPendingData.length
   const totalPendingAmount = filteredPendingData.reduce((sum, e) => sum + (e.paymentAmount || 0), 0)

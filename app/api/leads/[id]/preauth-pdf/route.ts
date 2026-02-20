@@ -273,7 +273,7 @@ export async function POST(
         tpa: preAuth.tpa ?? null,
         sumInsured: preAuth.sumInsured ?? null,
         roomRent: preAuth.roomRent ?? null,
-        capping: preAuth.capping ?? null,
+        capping: preAuth.capping ? String(preAuth.capping) : null,
         copay: preAuth.copay ?? null,
         icu: preAuth.icu ?? null,
         requestedHospitalName: preAuth.requestedHospitalName ?? null,

@@ -91,16 +91,6 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        followUpData: {
-          include: {
-            updatedBy: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
       },
       orderBy: {
         submittedAt: 'desc',

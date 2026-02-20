@@ -85,7 +85,7 @@ export function IPDDetailsForm({
     setErrors({})
     setSubmitting(true)
     try {
-      const response = await apiPost(`/api/leads/${leadId}/initiate`, {
+      const response = await apiPost<{ id: string }>(`/api/leads/${leadId}/initiate`, {
         admissionDate: formData.admissionDate,
         admissionTime: formData.admissionTime.trim(),
         admittingHospital: hospitalName,

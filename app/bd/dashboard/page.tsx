@@ -110,6 +110,7 @@ export default function BDDashboardPage() {
       [CaseStage.KYP_DETAILED_COMPLETE]: 'default',
       [CaseStage.KYP_PENDING]: 'secondary',
       [CaseStage.KYP_COMPLETE]: 'default',
+      [CaseStage.HOSPITALS_SUGGESTED]: 'default',
       [CaseStage.PREAUTH_RAISED]: 'default',
       [CaseStage.PREAUTH_COMPLETE]: 'default',
       [CaseStage.INITIATED]: 'default',

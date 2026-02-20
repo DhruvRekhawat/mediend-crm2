@@ -62,14 +62,24 @@ export default function OutstandingEditPage() {
   useEffect(() => {
     if (!record || initialized.current) return
     const pl = record.plRecord as Record<string, unknown> | undefined
-    setFormData({
-      hospitalPayoutStatus: (pl?.hospitalPayoutStatus as string) || 'PENDING',
-      doctorPayoutStatus: (pl?.doctorPayoutStatus as string) || 'PENDING',
-      mediendInvoiceStatus: (pl?.mediendInvoiceStatus as string) || 'PENDING',
-      hospitalAmountPending: pl?.hospitalAmountPending != null ? String(pl.hospitalAmountPending) : '',
-      doctorAmountPending: pl?.doctorAmountPending != null ? String(pl.doctorAmountPending) : '',
-    })
-    initialized.current = true
+    
+    // Use a microtask to avoid synchronous setState in effect
+    const timer = setTimeout(() => {
+      setFormData((prev) => {
+        const next = {
+          ...prev,
+          hospitalPayoutStatus: (pl?.hospitalPayoutStatus as string) || 'PENDING',
+          doctorPayoutStatus: (pl?.doctorPayoutStatus as string) || 'PENDING',
+          mediendInvoiceStatus: (pl?.mediendInvoiceStatus as string) || 'PENDING',
+          hospitalAmountPending: pl?.hospitalAmountPending != null ? String(pl.hospitalAmountPending) : '',
+          doctorAmountPending: pl?.doctorAmountPending != null ? String(pl.doctorAmountPending) : '',
+        }
+        if (JSON.stringify(prev) === JSON.stringify(next)) return prev
+        return next
+      })
+      initialized.current = true
+    }, 0)
+    return () => clearTimeout(timer)
   }, [record])
 
   const updateMutation = useMutation({

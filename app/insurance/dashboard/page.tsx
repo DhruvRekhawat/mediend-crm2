@@ -177,6 +177,7 @@ export default function InsuranceDashboardPage() {
       [CaseStage.KYP_DETAILED_COMPLETE]: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
       [CaseStage.KYP_PENDING]: { variant: 'secondary', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
       [CaseStage.KYP_COMPLETE]: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
+      [CaseStage.HOSPITALS_SUGGESTED]: { variant: 'default', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
       [CaseStage.PREAUTH_RAISED]: { variant: 'default', className: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
       [CaseStage.PREAUTH_COMPLETE]: { variant: 'default', className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
       [CaseStage.INITIATED]: { variant: 'default', className: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300' },

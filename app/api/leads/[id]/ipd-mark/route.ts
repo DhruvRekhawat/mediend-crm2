@@ -94,8 +94,8 @@ export async function POST(
     })
 
     // Only update case stage if status is DISCHARGED
-    let leadUpdateData: Record<string, any> = {}
-    let toStage = lead.caseStage
+    const leadUpdateData: Record<string, any> = {}
+    let toStage: CaseStage = lead.caseStage
 
     if (data.status === 'DISCHARGED') {
       toStage = CaseStage.DISCHARGED
@@ -149,7 +149,7 @@ export async function POST(
     await prisma.notification.createMany({
       data: insuranceUsers.map((insuranceUser) => ({
         userId: insuranceUser.id,
-        type: 'IPD_MARKED',
+        type: 'INITIATED', // Using INITIATED as a fallback since IPD_MARKED is not in enum
         title: titleMap[data.status],
         message: `IPD status updated for ${lead.patientName} (${lead.leadRef}): ${data.status}`,
         link: `/patient/${leadId}`,

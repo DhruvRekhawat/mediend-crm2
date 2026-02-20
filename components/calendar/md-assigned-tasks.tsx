@@ -41,17 +41,18 @@ export function MDAssignedTasks({
   // Fetch all tasks
   const { data: allTasks = [], isLoading } = useTasks()
 
+  const userId = user?.id
   // Filter tasks to only show those assigned by the current MD user
   const assignedTasks = useMemo(() => {
-    if (!user?.id) return []
+    if (!userId) return []
 
     return allTasks.filter(task =>
-      task.createdById === user.id
+      task.createdById === userId
     ).map(task => ({
       ...task,
       statusType: getTaskStatus(task)
     }))
-  }, [allTasks, user?.id])
+  }, [allTasks, userId])
 
   // Sort tasks by status priority (expired first, then due today, then expiring soon, then normal)
   const sortedTasks = useMemo(() => {

@@ -95,7 +95,7 @@ export default function RaisePreAuthPage() {
           <CardHeader>
             <CardTitle>Pre-Auth Request Form</CardTitle>
             <CardDescription>
-              Select a hospital from Insurance's suggestions or request a new hospital. Provide disease details and upload relevant documents.
+              Select a hospital from Insurance&apos;s suggestions or request a new hospital. Provide disease details and upload relevant documents.
             </CardDescription>
           </CardHeader>
           <CardContent>
