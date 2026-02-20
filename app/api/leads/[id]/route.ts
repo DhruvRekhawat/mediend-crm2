@@ -18,6 +18,8 @@ export async function GET(
     }
 
     const { id } = await params
+    console.log('[DEBUG] GET /api/leads/[id]', { id, userId: user.id, userRole: user.role, userTeamId: user.teamId })
+
     const lead = await prisma.lead.findUnique({
       where: { id },
       include: {
@@ -140,10 +142,25 @@ export async function GET(
     })
 
     if (!lead) {
+      console.log('[DEBUG] Lead not found in DB', { id })
       return errorResponse('Lead not found', 404)
     }
 
-    if (!canAccessLead(user, lead.bdId, lead.bd.team?.id)) {
+    console.log('[DEBUG] Lead found', { 
+      id: lead.id, 
+      bdId: lead.bdId, 
+      bdTeamId: lead.bd?.team?.id,
+      patientName: lead.patientName 
+    })
+
+    if (!canAccessLead(user, lead.bdId, lead.bd?.team?.id)) {
+      console.log('[DEBUG] Access denied by canAccessLead', {
+        userId: user.id,
+        userRole: user.role,
+        userTeamId: user.teamId,
+        leadBdId: lead.bdId,
+        leadBdTeamId: lead.bd?.team?.id
+      })
       return errorResponse('Forbidden', 403)
     }
 

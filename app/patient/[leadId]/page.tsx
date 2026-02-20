@@ -214,10 +214,11 @@ export default function PatientDetailsPage() {
   const queryClient = useQueryClient()
   const leadId = params.leadId as string
 
-  const { data: lead, isLoading } = useQuery<Lead>({
+  const { data: lead, isLoading, error } = useQuery<Lead, Error>({
     queryKey: ['lead', leadId],
     queryFn: () => apiGet<Lead>(`/api/leads/${leadId}`),
     enabled: !!leadId,
+    retry: false,
   })
 
   const { data: kypSubmission, isLoading: isLoadingKYP } = useQuery<KYPSubmission | null>({
@@ -267,11 +268,17 @@ export default function PatientDetailsPage() {
     )
   }
 
-  if (!lead) {
+  if (error || !lead) {
     return (
       <AuthenticatedLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-muted-foreground">Patient not found</div>
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+          <div className="text-destructive font-semibold text-lg">
+            {error ? error.message : 'Patient not found'}
+          </div>
+          <Button variant="outline" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go Back
+          </Button>
         </div>
       </AuthenticatedLayout>
     )
