@@ -155,12 +155,15 @@ export default function OutstandingDashboardPage() {
                       <TableHead>Doctor Payout</TableHead>
                       <TableHead>Doctor Pending</TableHead>
                       <TableHead>Invoice Status</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead>Remarks</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {records?.map((record) => {
                       const pl = record.plRecord as Record<string, unknown> | undefined
+                      const oc = record.outstandingCase as { paymentReceived?: boolean; remark2?: string | null } | undefined
                       const surgeryDate = pl?.surgeryDate || record.surgeryDate
                       const surgeryStr = surgeryDate ? new Date(surgeryDate as string).toLocaleDateString('en-IN') : '—'
                       const hospitalPending = (pl?.hospitalAmountPending as number) || 0
@@ -203,6 +206,16 @@ export default function OutstandingDashboardPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
+                            <Badge variant={oc?.paymentReceived ? 'default' : 'outline'} className={oc?.paymentReceived ? 'bg-green-500 hover:bg-green-600' : ''}>
+                              {oc?.paymentReceived ? 'Received' : 'Pending'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="max-w-[160px]">
+                            <span className="text-sm text-muted-foreground truncate block" title={oc?.remark2 ?? ''}>
+                              {oc?.remark2 || '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
                             <Button variant="outline" size="sm" asChild>
                               <Link href={`/outstanding/edit/${record.id}`}>Update</Link>
                             </Button>
@@ -212,7 +225,7 @@ export default function OutstandingDashboardPage() {
                     })}
                     {(!records || records.length === 0) && (
                       <TableRow>
-                        <TableCell colSpan={14} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={16} className="text-center text-muted-foreground py-8">
                           No outstanding records found
                         </TableCell>
                       </TableRow>

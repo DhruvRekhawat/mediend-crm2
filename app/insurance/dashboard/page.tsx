@@ -473,6 +473,20 @@ export default function InsuranceDashboardPage() {
                                   Complete Pre-Auth
                                 </Button>
                               )}
+                              {lead.caseStage === CaseStage.PREAUTH_COMPLETE && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    router.push(`/patient/${lead.id}`)
+                                  }}
+                                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                                  Fill Initial Form
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

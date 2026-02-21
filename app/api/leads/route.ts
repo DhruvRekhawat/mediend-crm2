@@ -145,6 +145,12 @@ export async function GET(request: NextRequest) {
             id: true,
             admissionDate: true,
             admittingHospital: true,
+            ipdStatus: true,
+          },
+        },
+        insuranceInitiateForm: {
+          select: {
+            id: true,
           },
         },
         dischargeSheet: {

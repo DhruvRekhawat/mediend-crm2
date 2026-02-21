@@ -68,6 +68,12 @@ export async function GET(request: NextRequest) {
             mediendNetProfit: true,
           },
         },
+        outstandingCase: {
+          select: {
+            paymentReceived: true,
+            remark2: true,
+          },
+        },
       },
       orderBy: {
         createdDate: 'desc',

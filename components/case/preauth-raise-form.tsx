@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Select,
   SelectContent,
@@ -15,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useFileUpload } from '@/hooks/use-file-upload'
-import { Upload, X } from 'lucide-react'
+import { Upload, X, FileText, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface RoomTypeOption {
@@ -28,12 +29,18 @@ export interface HospitalSuggestionItem {
   hospitalName: string
   tentativeBill?: number | null
   roomRentGeneral?: number | null
-  roomRentPrivate?: number | null
-  roomRentICU?: number | null
+  roomRentSingle?: number | null
+  roomRentDeluxe?: number | null
+  roomRentSemiPrivate?: number | null
   notes?: string | null
 }
 
-interface PreAuthRaiseFormProps {
+interface FilePreview {
+  name: string
+  url: string
+}
+
+export interface PreAuthRaiseFormProps {
   leadId: string
   initialData?: {
     requestedHospitalName?: string
@@ -43,60 +50,118 @@ interface PreAuthRaiseFormProps {
     hospitalSuggestions?: string[]
     roomTypes?: RoomTypeOption[]
     suggestedHospitals?: HospitalSuggestionItem[]
+    // Prescription & investigation files
+    prescriptionFiles?: Array<{ name: string; url: string }>
+    investigationFileUrls?: Array<{ name: string; url: string }>
+    notes?: string
+    expectedAdmissionDate?: string
+    expectedSurgeryDate?: string
+  }
+  // KYP submission data for auto-fills
+  kypData?: {
+    disease?: string | null
+    surgeonName?: string | null
+    insuranceType?: string | null
+    aadhar?: string | null
+    pan?: string | null
+    aadharFileUrl?: string | null
+    panFileUrl?: string | null
+    prescriptionFileUrl?: string | null
+    location?: string | null
+    area?: string | null
+  }
+  // Pre-auth insurance data for auto-fills
+  preAuthMeta?: {
+    sumInsured?: string | null
+    balanceInsured?: string | null
+    copay?: string | null
+    capping?: string | number | null
+    roomRent?: string | null
+    insurance?: string | null
+    tpa?: string | null
   }
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-interface FilePreview {
-  name: string
-  url: string
-}
-
 export function PreAuthRaiseForm({
   leadId,
   initialData,
+  kypData,
+  preAuthMeta,
   onSuccess,
   onCancel,
 }: PreAuthRaiseFormProps) {
   const router = useRouter()
   const { uploadFile, uploading: isUploading } = useFileUpload({ folder: 'preauth' })
+
   const suggestedHospitals = initialData?.suggestedHospitals ?? []
   const legacyHospitals = initialData?.hospitalSuggestions ?? []
   const legacyRoomTypes = initialData?.roomTypes ?? []
   const hasSuggestedCards = suggestedHospitals.length > 0
 
+  // Aadhar / PAN pre-fills from KYP
+  const existingAadharUrl = kypData?.aadharFileUrl ?? null
+  const existingPanUrl = kypData?.panFileUrl ?? null
+
   const [formData, setFormData] = useState({
     requestedHospitalName: initialData?.requestedHospitalName || '',
     requestedRoomType: initialData?.requestedRoomType || '',
-    diseaseDescription: initialData?.diseaseDescription || '',
+    diseaseDescription: initialData?.diseaseDescription || kypData?.disease || '',
+    notes: initialData?.notes || '',
     diseaseImages: (initialData?.diseaseImages || []) as FilePreview[],
-    expectedAdmissionDate: '',
-    expectedSurgeryDate: '',
+    prescriptionFiles: (initialData?.prescriptionFiles || []) as FilePreview[],
+    investigationFileUrls: (initialData?.investigationFileUrls || []) as FilePreview[],
+    expectedAdmissionDate: initialData?.expectedAdmissionDate || '',
+    expectedSurgeryDate: initialData?.expectedSurgeryDate || '',
     isNewHospitalRequest: false,
     newHospitalName: '',
+    // Aadhar / PAN: user can replace if needed
+    aadharFileUrl: existingAadharUrl || '',
+    aadharFileName: existingAadharUrl ? 'Existing Aadhar' : '',
+    panFileUrl: existingPanUrl || '',
+    panFileName: existingPanUrl ? 'Existing PAN' : '',
   })
 
-  const handleFileUpload = async (file: File) => {
+  // Generic file upload helper
+  const uploadSingleFile = async (
+    file: File,
+    onDone: (url: string, name: string) => void
+  ) => {
     try {
       const result = await uploadFile(file)
       if (!result) return
-      const url = result.url
-      setFormData((prev) => ({
-        ...prev,
-        diseaseImages: [...prev.diseaseImages, { name: file.name, url }],
-      }))
+      onDone(result.url, file.name)
       toast.success('File uploaded successfully')
-    } catch (error) {
+    } catch {
       toast.error('Failed to upload file')
-      console.error('File upload error:', error)
     }
   }
 
-  const removeFile = (index: number) => {
+  const uploadMultipleFile = async (
+    file: File,
+    field: 'prescriptionFiles' | 'investigationFileUrls' | 'diseaseImages'
+  ) => {
+    try {
+      const result = await uploadFile(file)
+      if (!result) return
+      setFormData((prev) => ({
+        ...prev,
+        [field]: [...prev[field], { name: file.name, url: result.url }],
+      }))
+      toast.success('File uploaded successfully')
+    } catch {
+      toast.error('Failed to upload file')
+    }
+  }
+
+  const removeMultipleFile = (
+    field: 'prescriptionFiles' | 'investigationFileUrls' | 'diseaseImages',
+    index: number
+  ) => {
     setFormData((prev) => ({
       ...prev,
-      diseaseImages: prev.diseaseImages.filter((_, i) => i !== index),
+      [field]: prev[field].filter((_, i) => i !== index),
     }))
   }
 
@@ -117,6 +182,27 @@ export function PreAuthRaiseForm({
       toast.error('Disease description is required')
       return
     }
+    if (!formData.expectedAdmissionDate) {
+      toast.error('Date of Admission is required')
+      return
+    }
+    if (!formData.expectedSurgeryDate) {
+      toast.error('Date of Surgery is required')
+      return
+    }
+    if (!formData.aadharFileUrl) {
+      toast.error('Aadhar Card upload is required')
+      return
+    }
+    if (!formData.panFileUrl) {
+      toast.error('PAN Card upload is required')
+      return
+    }
+    if (formData.prescriptionFiles.length === 0) {
+      toast.error('At least one Prescription upload is required')
+      return
+    }
+
     try {
       const response = await fetch(`/api/leads/${leadId}/raise-preauth`, {
         method: 'POST',
@@ -125,6 +211,11 @@ export function PreAuthRaiseForm({
           requestedHospitalName: hospitalNameForSubmit,
           requestedRoomType: formData.requestedRoomType || undefined,
           diseaseDescription: formData.diseaseDescription,
+          notes: formData.notes || undefined,
+          aadharFileUrl: formData.aadharFileUrl || undefined,
+          panFileUrl: formData.panFileUrl || undefined,
+          prescriptionFiles: formData.prescriptionFiles,
+          investigationFileUrls: formData.investigationFileUrls,
           diseaseImages: formData.diseaseImages,
           expectedAdmissionDate: formData.expectedAdmissionDate,
           expectedSurgeryDate: formData.expectedSurgeryDate,
@@ -148,139 +239,347 @@ export function PreAuthRaiseForm({
     }
   }
 
-  const selectedHospitalCard = hasSuggestedCards && formData.requestedHospitalName && !formData.isNewHospitalRequest
-    ? suggestedHospitals.find((h) => h.hospitalName === formData.requestedHospitalName)
-    : null
+  const selectedHospitalCard =
+    hasSuggestedCards && formData.requestedHospitalName && !formData.isNewHospitalRequest
+      ? suggestedHospitals.find((h) => h.hospitalName === formData.requestedHospitalName)
+      : null
 
   const roomOptionsFromCard = selectedHospitalCard
     ? [
-        ...(selectedHospitalCard.roomRentGeneral != null ? [{ name: 'General', rent: String(selectedHospitalCard.roomRentGeneral) }] : []),
-        ...(selectedHospitalCard.roomRentPrivate != null ? [{ name: 'Private', rent: String(selectedHospitalCard.roomRentPrivate) }] : []),
-        ...(selectedHospitalCard.roomRentICU != null ? [{ name: 'ICU', rent: String(selectedHospitalCard.roomRentICU) }] : []),
+        ...(selectedHospitalCard.roomRentGeneral != null
+          ? [{ name: 'General', rent: String(selectedHospitalCard.roomRentGeneral) }]
+          : []),
+        ...(selectedHospitalCard.roomRentSingle != null
+          ? [{ name: 'Single', rent: String(selectedHospitalCard.roomRentSingle) }]
+          : []),
+        ...(selectedHospitalCard.roomRentDeluxe != null
+          ? [{ name: 'Deluxe', rent: String(selectedHospitalCard.roomRentDeluxe) }]
+          : []),
+        ...(selectedHospitalCard.roomRentSemiPrivate != null
+          ? [{ name: 'Semi-Private', rent: String(selectedHospitalCard.roomRentSemiPrivate) }]
+          : []),
       ]
     : []
 
+  // ─── Auto-fill info chips ────────────────────────────────────────────────────
+  const AutoFillBadge = ({ label, value }: { label: string; value?: string | null }) => {
+    if (!value) return null
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+        <span className="text-sm font-medium">{value}</span>
+      </div>
+    )
+  }
+
+  const hasAutoFills =
+    kypData?.disease ||
+    kypData?.surgeonName ||
+    kypData?.insuranceType ||
+    preAuthMeta?.insurance ||
+    preAuthMeta?.sumInsured ||
+    preAuthMeta?.balanceInsured ||
+    preAuthMeta?.copay ||
+    preAuthMeta?.capping ||
+    preAuthMeta?.roomRent ||
+    kypData?.area ||
+    kypData?.location
+
+  // ─── File upload row UI ──────────────────────────────────────────────────────
+  const FileUploadRow = ({
+    id,
+    label,
+    required,
+    existingUrl,
+    currentUrl,
+    currentName,
+    accept,
+    onUpload,
+    onClear,
+  }: {
+    id: string
+    label: string
+    required?: boolean
+    existingUrl?: string | null
+    currentUrl: string
+    currentName: string
+    accept?: string
+    onUpload: (file: File) => void
+    onClear: () => void
+  }) => {
+    const hasFile = !!currentUrl
+    return (
+      <div className="space-y-1">
+        <Label htmlFor={id}>
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </Label>
+        {hasFile ? (
+          <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
+            <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+            <span className="text-sm truncate flex-1">{currentName}</span>
+            {existingUrl && currentUrl === existingUrl && (
+              <a href={existingUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={onClear}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <input
+              type="file"
+              id={id}
+              accept={accept || 'image/*,.pdf'}
+              className="hidden"
+              disabled={isUploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) onUpload(file)
+                e.target.value = ''
+              }}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => document.getElementById(id)?.click()}
+              disabled={isUploading}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading ? 'Uploading…' : `Upload ${label}`}
+            </Button>
+          </>
+        )}
+      </div>
+    )
+  }
+
+  // ─── Multi-file upload row UI ────────────────────────────────────────────────
+  const MultiFileUploadRow = ({
+    id,
+    label,
+    required,
+    files,
+    accept,
+    onAdd,
+    onRemove,
+  }: {
+    id: string
+    label: string
+    required?: boolean
+    files: FilePreview[]
+    accept?: string
+    onAdd: (file: File) => void
+    onRemove: (index: number) => void
+  }) => (
+    <div className="space-y-2">
+      <Label>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
+      {files.length > 0 && (
+        <div className="space-y-1">
+          {files.map((f, i) => (
+            <div key={i} className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
+              <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+              <a
+                href={f.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm truncate flex-1 hover:underline"
+              >
+                {f.name}
+              </a>
+              <button
+                type="button"
+                onClick={() => onRemove(i)}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <input
+        type="file"
+        id={id}
+        accept={accept || 'image/*,.pdf'}
+        className="hidden"
+        disabled={isUploading}
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) onAdd(file)
+          e.target.value = ''
+        }}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => document.getElementById(id)?.click()}
+        disabled={isUploading}
+      >
+        <Upload className="w-4 h-4 mr-2" />
+        {isUploading ? 'Uploading…' : `Add ${label}`}
+      </Button>
+    </div>
+  )
+
+  // ─── Steps ───────────────────────────────────────────────────────────────────
   const steps = [
     {
       id: 'hospital',
-      title: 'Hospital & Room Selection',
-      description: 'Select from Insurance’s suggested hospitals and room types',
+      title: 'Hospital & Timeline',
+      description: 'Select hospital, room type, and admission/surgery dates',
       component: (
-        <div className="space-y-4">
-          {hasSuggestedCards ? (
-            <>
-              <div className="space-y-2">
-                <Label>Hospital *</Label>
-                <div className="grid gap-2">
-                  {suggestedHospitals.map((h) => (
-                    <div
-                      key={h.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          isNewHospitalRequest: false,
-                          requestedHospitalName: h.hospitalName,
-                          requestedRoomType: '',
-                          newHospitalName: '',
-                        }))
-                      }
-                      onKeyDown={(e) => e.key === 'Enter' && setFormData((prev) => ({ ...prev, isNewHospitalRequest: false, requestedHospitalName: h.hospitalName, requestedRoomType: '', newHospitalName: '' }))}
-                      className={`rounded-lg border-2 p-4 text-left transition-colors cursor-pointer ${
-                        formData.requestedHospitalName === h.hospitalName && !formData.isNewHospitalRequest
-                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30'
-                          : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
-                      }`}
-                    >
-                      <div className="font-medium">{h.hospitalName}</div>
-                      {(h.tentativeBill != null || h.roomRentGeneral != null || h.roomRentPrivate != null || h.roomRentICU != null) && (
-                        <div className="mt-1 text-sm text-muted-foreground">
-                          {h.tentativeBill != null && <span>Tentative bill: ₹{h.tentativeBill}</span>}
-                          {(h.roomRentGeneral != null || h.roomRentPrivate != null || h.roomRentICU != null) && (
-                            <span className="ml-2">
-                              Room: {[h.roomRentGeneral != null && `General ₹${h.roomRentGeneral}`, h.roomRentPrivate != null && `Private ₹${h.roomRentPrivate}`, h.roomRentICU != null && `ICU ₹${h.roomRentICU}`].filter(Boolean).join(', ')}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      {h.notes && <div className="mt-1 text-sm text-muted-foreground">{h.notes}</div>}
-                    </div>
-                  ))}
+        <div className="space-y-5">
+          {/* Auto-fill summary */}
+          {hasAutoFills && (
+            <div className="rounded-lg border bg-muted/20 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">
+                Auto-filled from previous steps
+              </p>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                <AutoFillBadge label="Disease / Treatment" value={kypData?.disease} />
+                <AutoFillBadge label="Surgeon Name" value={kypData?.surgeonName} />
+                <AutoFillBadge label="Insurance Name" value={preAuthMeta?.insurance} />
+                <AutoFillBadge label="Insurance Type" value={kypData?.insuranceType} />
+                <AutoFillBadge label="Sum Insured" value={preAuthMeta?.sumInsured ? `₹${preAuthMeta.sumInsured}` : undefined} />
+                <AutoFillBadge label="Balance Insured" value={preAuthMeta?.balanceInsured ? `₹${preAuthMeta.balanceInsured}` : undefined} />
+                <AutoFillBadge label="Copay" value={preAuthMeta?.copay ? `${preAuthMeta.copay}%` : undefined} />
+                <AutoFillBadge label="Capping" value={preAuthMeta?.capping != null ? `₹${preAuthMeta.capping}` : undefined} />
+                <AutoFillBadge label="Room Rent" value={preAuthMeta?.roomRent ? `₹${preAuthMeta.roomRent}` : undefined} />
+                <AutoFillBadge label="Area" value={kypData?.area} />
+                <AutoFillBadge label="City" value={kypData?.location} />
+              </div>
+            </div>
+          )}
+
+          {/* Hospital selection */}
+          <div className="space-y-2">
+            <Label>Choose Hospital <span className="text-red-500">*</span></Label>
+            {hasSuggestedCards ? (
+              <div className="grid gap-2">
+                {suggestedHospitals.map((h) => (
                   <div
+                    key={h.id}
                     role="button"
                     tabIndex={0}
                     onClick={() =>
                       setFormData((prev) => ({
                         ...prev,
-                        isNewHospitalRequest: true,
-                        requestedHospitalName: '',
+                        isNewHospitalRequest: false,
+                        requestedHospitalName: h.hospitalName,
                         requestedRoomType: '',
-                        newHospitalName: prev.newHospitalName || '',
+                        newHospitalName: '',
                       }))
                     }
-                    onKeyDown={(e) => e.key === 'Enter' && setFormData((prev) => ({ ...prev, isNewHospitalRequest: true, requestedHospitalName: '', requestedRoomType: '', newHospitalName: prev.newHospitalName || '' }))}
-                    className={`rounded-lg border-2 border-dashed p-4 text-left transition-colors cursor-pointer ${
-                      formData.isNewHospitalRequest ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30' : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' &&
+                      setFormData((prev) => ({
+                        ...prev,
+                        isNewHospitalRequest: false,
+                        requestedHospitalName: h.hospitalName,
+                        requestedRoomType: '',
+                        newHospitalName: '',
+                      }))
+                    }
+                    className={`rounded-lg border-2 p-4 text-left transition-colors cursor-pointer ${
+                      formData.requestedHospitalName === h.hospitalName && !formData.isNewHospitalRequest
+                        ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30'
+                        : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                     }`}
                   >
-                    <span className="font-medium">Request New Hospital</span>
-                    <p className="text-sm text-muted-foreground mt-1">Enter a hospital name not in the list</p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{h.hospitalName}</span>
+                      {formData.requestedHospitalName === h.hospitalName && !formData.isNewHospitalRequest && (
+                        <CheckCircle2 className="w-4 h-4 text-teal-600" />
+                      )}
+                    </div>
+                    {(h.tentativeBill != null ||
+                      h.roomRentGeneral != null ||
+                      h.roomRentSingle != null ||
+                      h.roomRentDeluxe != null ||
+                      h.roomRentSemiPrivate != null) && (
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {h.tentativeBill != null && (
+                          <span>Tentative bill: ₹{h.tentativeBill}</span>
+                        )}
+                        {(h.roomRentGeneral != null ||
+                          h.roomRentSingle != null ||
+                          h.roomRentDeluxe != null ||
+                          h.roomRentSemiPrivate != null) && (
+                          <span className="ml-2">
+                            Room:{' '}
+                            {[
+                              h.roomRentGeneral != null && `General ₹${h.roomRentGeneral}`,
+                              h.roomRentSingle != null && `Single ₹${h.roomRentSingle}`,
+                              h.roomRentDeluxe != null && `Deluxe ₹${h.roomRentDeluxe}`,
+                              h.roomRentSemiPrivate != null && `Semi-Private ₹${h.roomRentSemiPrivate}`,
+                            ]
+                              .filter(Boolean)
+                              .join(', ')}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {h.notes && (
+                      <div className="mt-1 text-sm text-muted-foreground">{h.notes}</div>
+                    )}
                   </div>
+                ))}
+                {/* Request new hospital option */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isNewHospitalRequest: true,
+                      requestedHospitalName: '',
+                      requestedRoomType: '',
+                      newHospitalName: prev.newHospitalName || '',
+                    }))
+                  }
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    setFormData((prev) => ({
+                      ...prev,
+                      isNewHospitalRequest: true,
+                      requestedHospitalName: '',
+                      requestedRoomType: '',
+                      newHospitalName: prev.newHospitalName || '',
+                    }))
+                  }
+                  className={`rounded-lg border-2 border-dashed p-4 text-left transition-colors cursor-pointer ${
+                    formData.isNewHospitalRequest
+                      ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30'
+                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'
+                  }`}
+                >
+                  <span className="font-medium">Request New Hospital</span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Enter a hospital name not in the list
+                  </p>
                 </div>
               </div>
-              {formData.isNewHospitalRequest ? (
-                <div>
-                  <Label htmlFor="newHospitalName">New Hospital Name *</Label>
-                  <Input
-                    id="newHospitalName"
-                    value={formData.newHospitalName}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, newHospitalName: e.target.value }))}
-                    placeholder="Enter hospital name"
-                  />
-                </div>
-              ) : selectedHospitalCard && (roomOptionsFromCard.length > 0 ? (
-                <div>
-                  <Label htmlFor="roomType">Room Type *</Label>
-                  <Select
-                    value={formData.requestedRoomType}
-                    onValueChange={(v) => setFormData((prev) => ({ ...prev, requestedRoomType: v }))}
-                  >
-                    <SelectTrigger id="roomType">
-                      <SelectValue placeholder="Select room type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roomOptionsFromCard.map((r) => (
-                        <SelectItem key={r.name} value={r.name}>
-                          {r.name}
-                          {r.rent ? ` – ₹${r.rent}` : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div>
-                  <Label htmlFor="roomType">Room Type *</Label>
-                  <Input
-                    id="roomType"
-                    value={formData.requestedRoomType}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, requestedRoomType: e.target.value }))}
-                    placeholder="e.g. General, Private, ICU"
-                  />
-                </div>
-              ))}
-            </>
-          ) : legacyHospitals.length > 0 ? (
-            <div>
-              <Label htmlFor="hospital">Hospital *</Label>
+            ) : legacyHospitals.length > 0 ? (
               <Select
                 value={formData.requestedHospitalName}
                 onValueChange={(v) =>
                   setFormData((prev) => ({ ...prev, requestedHospitalName: v }))
                 }
               >
-                <SelectTrigger id="hospital">
+                <SelectTrigger>
                   <SelectValue placeholder="Select hospital" />
                 </SelectTrigger>
                 <SelectContent>
@@ -291,12 +590,8 @@ export function PreAuthRaiseForm({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          ) : (
-            <div>
-              <Label htmlFor="hospital">Hospital Name *</Label>
+            ) : (
               <Input
-                id="hospital"
                 value={formData.requestedHospitalName}
                 onChange={(e) =>
                   setFormData((prev) => ({
@@ -305,54 +600,95 @@ export function PreAuthRaiseForm({
                   }))
                 }
                 placeholder="Enter hospital name"
-                required
+              />
+            )}
+          </div>
+
+          {/* New hospital name input */}
+          {formData.isNewHospitalRequest && (
+            <div>
+              <Label htmlFor="newHospitalName">
+                New Hospital Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="newHospitalName"
+                value={formData.newHospitalName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, newHospitalName: e.target.value }))
+                }
+                placeholder="Enter hospital name"
+                className="mt-1"
               />
             </div>
           )}
 
-          {!hasSuggestedCards && (legacyRoomTypes.length > 0 ? (
+          {/* Room type — shown when a hospital card is selected */}
+          {!formData.isNewHospitalRequest && (hasSuggestedCards ? selectedHospitalCard : true) && (
             <div>
-              <Label htmlFor="roomType">Room Type *</Label>
-              <Select
-                value={formData.requestedRoomType}
-                onValueChange={(v) =>
-                  setFormData((prev) => ({ ...prev, requestedRoomType: v }))
-                }
-              >
-                <SelectTrigger id="roomType">
-                  <SelectValue placeholder="Select room type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {legacyRoomTypes.map((r) => (
-                    <SelectItem key={r.name} value={r.name}>
-                      {r.name}
-                      {r.rent ? ` – ₹${r.rent}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="roomType">
+                Room Type <span className="text-red-500">*</span>
+              </Label>
+              {roomOptionsFromCard.length > 0 ? (
+                <Select
+                  value={formData.requestedRoomType}
+                  onValueChange={(v) =>
+                    setFormData((prev) => ({ ...prev, requestedRoomType: v }))
+                  }
+                >
+                  <SelectTrigger id="roomType" className="mt-1">
+                    <SelectValue placeholder="Select room type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roomOptionsFromCard.map((r) => (
+                      <SelectItem key={r.name} value={r.name}>
+                        {r.name}
+                        {r.rent ? ` – ₹${r.rent}/day` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : legacyRoomTypes.length > 0 ? (
+                <Select
+                  value={formData.requestedRoomType}
+                  onValueChange={(v) =>
+                    setFormData((prev) => ({ ...prev, requestedRoomType: v }))
+                  }
+                >
+                  <SelectTrigger id="roomType" className="mt-1">
+                    <SelectValue placeholder="Select room type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {legacyRoomTypes.map((r) => (
+                      <SelectItem key={r.name} value={r.name}>
+                        {r.name}
+                        {r.rent ? ` – ₹${r.rent}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="roomType"
+                  value={formData.requestedRoomType}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      requestedRoomType: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. General, Single AC, Deluxe"
+                  className="mt-1"
+                />
+              )}
             </div>
-          ) : !hasSuggestedCards ? (
-            <div>
-              <Label htmlFor="roomType">Room Type *</Label>
-              <Input
-                id="roomType"
-                value={formData.requestedRoomType}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    requestedRoomType: e.target.value,
-                  }))
-                }
-                placeholder="e.g. General Ward, Single AC"
-                required
-              />
-            </div>
-          ) : null)}
+          )}
 
+          {/* Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="admissionDate">Expected Admission Date</Label>
+              <Label htmlFor="admissionDate">
+                Date of Admission <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="admissionDate"
                 type="date"
@@ -363,10 +699,13 @@ export function PreAuthRaiseForm({
                     expectedAdmissionDate: e.target.value,
                   }))
                 }
+                className="mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="surgeryDate">Expected Surgery Date</Label>
+              <Label htmlFor="surgeryDate">
+                Date of Surgery <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="surgeryDate"
                 type="date"
@@ -377,23 +716,96 @@ export function PreAuthRaiseForm({
                     expectedSurgeryDate: e.target.value,
                   }))
                 }
+                className="mt-1"
               />
             </div>
           </div>
+          {formData.expectedAdmissionDate &&
+            formData.expectedSurgeryDate &&
+            formData.expectedAdmissionDate > formData.expectedSurgeryDate && (
+              <p className="text-sm text-destructive">
+                Admission date must be on or before surgery date.
+              </p>
+            )}
         </div>
       ),
-      validate: () =>
-        (formData.isNewHospitalRequest ? formData.newHospitalName.trim().length > 0 : formData.requestedHospitalName.length > 0) &&
-        (formData.isNewHospitalRequest || roomOptionsFromCard.length === 0 || formData.requestedRoomType.length > 0),
+      validate: () => {
+        if (formData.isNewHospitalRequest) {
+          return formData.newHospitalName.trim().length > 0
+        }
+        return (
+          formData.requestedHospitalName.length > 0 &&
+          (roomOptionsFromCard.length === 0 || formData.requestedRoomType.length > 0)
+        )
+      },
     },
+
     {
-      id: 'disease',
-      title: 'Disease Details & Documents',
-      description: 'Describe the disease and upload any related images',
+      id: 'documents',
+      title: 'Documents & Medical Details',
+      description: 'Upload required documents and provide disease information',
       component: (
-        <div className="space-y-6">
+        <div className="space-y-5">
+          {/* Aadhar */}
+          <FileUploadRow
+            id="aadhar-upload"
+            label="Aadhar Card"
+            required
+            existingUrl={existingAadharUrl}
+            currentUrl={formData.aadharFileUrl}
+            currentName={formData.aadharFileName}
+            onUpload={(file) =>
+              uploadSingleFile(file, (url, name) =>
+                setFormData((prev) => ({ ...prev, aadharFileUrl: url, aadharFileName: name }))
+              )
+            }
+            onClear={() =>
+              setFormData((prev) => ({ ...prev, aadharFileUrl: '', aadharFileName: '' }))
+            }
+          />
+
+          {/* PAN */}
+          <FileUploadRow
+            id="pan-upload"
+            label="PAN Card"
+            required
+            existingUrl={existingPanUrl}
+            currentUrl={formData.panFileUrl}
+            currentName={formData.panFileName}
+            onUpload={(file) =>
+              uploadSingleFile(file, (url, name) =>
+                setFormData((prev) => ({ ...prev, panFileUrl: url, panFileName: name }))
+              )
+            }
+            onClear={() =>
+              setFormData((prev) => ({ ...prev, panFileUrl: '', panFileName: '' }))
+            }
+          />
+
+          {/* Prescription (multiple) */}
+          <MultiFileUploadRow
+            id="prescription-upload"
+            label="Prescription"
+            required
+            files={formData.prescriptionFiles}
+            onAdd={(file) => uploadMultipleFile(file, 'prescriptionFiles')}
+            onRemove={(i) => removeMultipleFile('prescriptionFiles', i)}
+          />
+
+          {/* Investigation (multiple, optional) */}
+          <MultiFileUploadRow
+            id="investigation-upload"
+            label="Investigation Reports"
+            files={formData.investigationFileUrls}
+            onAdd={(file) => uploadMultipleFile(file, 'investigationFileUrls')}
+            onRemove={(i) => removeMultipleFile('investigationFileUrls', i)}
+          />
+
+          {/* Disease description */}
           <div>
-            <Label htmlFor="diseaseDescription">Disease Description *</Label>
+            <Label htmlFor="diseaseDescription">
+              Disease Description <span className="text-red-500">*</span>
+            </Label>
             <Textarea
               id="diseaseDescription"
               value={formData.diseaseDescription}
@@ -404,106 +816,137 @@ export function PreAuthRaiseForm({
                 }))
               }
               placeholder="Describe the disease, symptoms, and treatment required"
-              rows={5}
-              required
-              className="mt-2"
+              rows={4}
+              className="mt-1"
             />
           </div>
+
+          {/* Disease images (optional) */}
+          <MultiFileUploadRow
+            id="disease-images-upload"
+            label="Disease Images (optional)"
+            files={formData.diseaseImages}
+            accept="image/*"
+            onAdd={(file) => uploadMultipleFile(file, 'diseaseImages')}
+            onRemove={(i) => removeMultipleFile('diseaseImages', i)}
+          />
+
+          {/* Notes for Insurance */}
           <div>
-            <Label>Disease Images (optional)</Label>
-            <div className="mt-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleFileUpload(file)
-                }}
-                className="hidden"
-                id="file-upload"
-                disabled={isUploading}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  document.getElementById('file-upload')?.click()
-                }
-                disabled={isUploading}
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? 'Uploading...' : 'Upload Image'}
-              </Button>
-            </div>
+            <Label htmlFor="notes">Notes for Insurance (optional)</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, notes: e.target.value }))
+              }
+              placeholder="Additional information for Insurance team"
+              rows={3}
+              className="mt-1"
+            />
           </div>
-          {formData.diseaseImages.length > 0 && (
-            <div className="space-y-2">
-              <Label>Uploaded Images</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {formData.diseaseImages.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 border rounded"
-                  >
-                    <span className="text-sm truncate">{file.name}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeFile(index)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       ),
-      validate: () => formData.diseaseDescription.trim().length > 0,
+      validate: () =>
+        formData.aadharFileUrl.length > 0 &&
+        formData.panFileUrl.length > 0 &&
+        formData.prescriptionFiles.length > 0 &&
+        formData.diseaseDescription.trim().length > 0,
     },
+
     {
       id: 'review',
       title: 'Review & Submit',
       description: 'Review all information before submitting',
       component: (
-        <div className="space-y-4">
-          <div>
-            <Label>Hospital</Label>
-            <p className="text-sm">{hospitalNameForSubmit || formData.requestedHospitalName || formData.newHospitalName}</p>
-            {formData.isNewHospitalRequest && <p className="text-xs text-muted-foreground">(New hospital request)</p>}
-          </div>
-          <div>
-            <Label>Room Type</Label>
-            <p className="text-sm">{formData.requestedRoomType || '—'}</p>
-          </div>
-          {formData.expectedAdmissionDate && (
-            <div>
-              <Label>Expected Admission Date</Label>
-              <p className="text-sm">{formData.expectedAdmissionDate}</p>
+        <div className="space-y-5">
+          {/* Hospital summary */}
+          <div className="rounded-lg border p-4 space-y-3">
+            <p className="text-sm font-semibold">Hospital & Timeline</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">Hospital</span>
+                <p className="font-medium">
+                  {hospitalNameForSubmit}
+                  {formData.isNewHospitalRequest && (
+                    <Badge variant="outline" className="ml-2 text-xs">New Request</Badge>
+                  )}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Room Type</span>
+                <p className="font-medium">{formData.requestedRoomType || '—'}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Admission Date</span>
+                <p className="font-medium">{formData.expectedAdmissionDate || '—'}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Surgery Date</span>
+                <p className="font-medium">{formData.expectedSurgeryDate || '—'}</p>
+              </div>
             </div>
-          )}
-          {formData.expectedSurgeryDate && (
-            <div>
-              <Label>Expected Surgery Date</Label>
-              <p className="text-sm">{formData.expectedSurgeryDate}</p>
-            </div>
-          )}
-          <div>
-            <Label>Disease Description</Label>
-            <p className="text-sm whitespace-pre-wrap">
-              {formData.diseaseDescription}
-            </p>
           </div>
-          {formData.diseaseImages.length > 0 && (
-            <div>
-              <Label>Uploaded Images ({formData.diseaseImages.length})</Label>
-              <p className="text-sm text-muted-foreground">
-                {formData.diseaseImages.map((f) => f.name).join(', ')}
-              </p>
+
+          {/* Documents summary */}
+          <div className="rounded-lg border p-4 space-y-3">
+            <p className="text-sm font-semibold">Documents</p>
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span>Aadhar Card: {formData.aadharFileName || 'uploaded'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span>PAN Card: {formData.panFileName || 'uploaded'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span>Prescriptions: {formData.prescriptionFiles.length} file(s)</span>
+              </div>
+              {formData.investigationFileUrls.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  <span>Investigation Reports: {formData.investigationFileUrls.length} file(s)</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Disease + auto-fills */}
+          <div className="rounded-lg border p-4 space-y-3">
+            <p className="text-sm font-semibold">Medical & Insurance Details</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-muted-foreground">Disease</span>
+                <p className="font-medium">{formData.diseaseDescription.slice(0, 60)}{formData.diseaseDescription.length > 60 ? '…' : ''}</p>
+              </div>
+              {preAuthMeta?.insurance && (
+                <div>
+                  <span className="text-muted-foreground">Insurance Name</span>
+                  <p className="font-medium">{preAuthMeta.insurance}</p>
+                </div>
+              )}
+              {preAuthMeta?.sumInsured && (
+                <div>
+                  <span className="text-muted-foreground">Sum Insured</span>
+                  <p className="font-medium">₹{preAuthMeta.sumInsured}</p>
+                </div>
+              )}
+              {preAuthMeta?.copay && (
+                <div>
+                  <span className="text-muted-foreground">Copay</span>
+                  <p className="font-medium">{preAuthMeta.copay}%</p>
+                </div>
+              )}
+            </div>
+            {formData.notes && (
+              <div>
+                <span className="text-sm text-muted-foreground">Notes for Insurance</span>
+                <p className="text-sm whitespace-pre-wrap mt-0.5">{formData.notes}</p>
+              </div>
+            )}
+          </div>
         </div>
       ),
     },

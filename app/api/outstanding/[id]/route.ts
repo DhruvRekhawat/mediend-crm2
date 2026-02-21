@@ -36,8 +36,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return errorResponse('Lead must have a discharge sheet to update outstanding', 400)
     }
 
-    // Only allow updating these specific fields
-    const allowedFields = [
+    // PLRecord fields
+    const plAllowedFields = [
       'hospitalPayoutStatus',
       'doctorPayoutStatus',
       'mediendInvoiceStatus',
@@ -45,36 +45,61 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       'doctorAmountPending',
     ]
 
-    const updateData: Record<string, unknown> = {}
-    for (const key of allowedFields) {
+    // OutstandingCase fields
+    const outstandingAllowedFields = ['paymentReceived', 'remark2']
+
+    const plUpdateData: Record<string, unknown> = {}
+    for (const key of plAllowedFields) {
       if (body[key] !== undefined) {
         if (key === 'hospitalAmountPending' || key === 'doctorAmountPending') {
-          updateData[key] = parseFloat(body[key]) || 0
+          plUpdateData[key] = parseFloat(body[key]) || 0
         } else {
-          updateData[key] = body[key]
+          plUpdateData[key] = body[key]
         }
       }
     }
 
-    if (Object.keys(updateData).length === 0) {
+    const outstandingUpdateData: Record<string, unknown> = {}
+    for (const key of outstandingAllowedFields) {
+      if (body[key] !== undefined) {
+        if (key === 'paymentReceived') {
+          outstandingUpdateData[key] = Boolean(body[key])
+        } else {
+          outstandingUpdateData[key] = body[key]
+        }
+      }
+    }
+
+    if (Object.keys(plUpdateData).length === 0 && Object.keys(outstandingUpdateData).length === 0) {
       return errorResponse('No valid fields to update', 400)
     }
 
-    // Update PLRecord
-    const updatedRecord = await prisma.pLRecord.upsert({
-      where: { leadId: id },
-      create: {
-        leadId: id,
-        ...updateData,
-      },
-      update: updateData,
-    })
+    // Update PLRecord if needed
+    if (Object.keys(plUpdateData).length > 0) {
+      await prisma.pLRecord.upsert({
+        where: { leadId: id },
+        create: { leadId: id, ...plUpdateData },
+        update: plUpdateData,
+      })
+    }
+
+    // Update OutstandingCase paymentReceived / remark2 if needed
+    if (Object.keys(outstandingUpdateData).length > 0) {
+      const existingOutstanding = await prisma.outstandingCase.findUnique({ where: { leadId: id } })
+      if (existingOutstanding) {
+        await prisma.outstandingCase.update({
+          where: { leadId: id },
+          data: outstandingUpdateData,
+        })
+      }
+    }
 
     // Fetch updated lead with relations
     const updatedLead = await prisma.lead.findUnique({
       where: { id },
       include: {
         plRecord: true,
+        outstandingCase: true,
         dischargeSheet: {
           select: { id: true },
         },

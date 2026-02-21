@@ -202,11 +202,8 @@ export function ActivityTimeline({ history, className }: ActivityTimelineProps) 
   }
 
   return (
-    <Card className={cn('border-2 shadow-sm', className)}>
-      <CardHeader>
-        <CardTitle>Activity Timeline</CardTitle>
-      </CardHeader>
-      <CardContent>
+
+      <div className="mt-4">
         <div className="space-y-0">
           {history.map((entry, index) => {
             const stageColor = getStageColor(entry.toStage)
@@ -252,7 +249,6 @@ export function ActivityTimeline({ history, className }: ActivityTimelineProps) 
             )
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
   )
 }

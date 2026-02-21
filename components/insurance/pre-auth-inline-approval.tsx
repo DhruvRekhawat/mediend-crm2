@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { PreAuthStatus } from '@prisma/client'
 import { apiPost, apiGet } from '@/lib/api-client'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { CheckCircle2, XCircle, Loader2, Hospital } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Loader2, Hospital } from 'lucide-react'
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 
@@ -19,16 +20,21 @@ interface PreAuthInlineApprovalProps {
   kypSubmissionId: string
   lead?: {
     caseStage?: string
+    insuranceName?: string | null
   }
   preAuthData?: {
     id: string
     approvalStatus?: PreAuthStatus
     rejectionReason?: string | null
+    approvalNotes?: string | null
+    approvedAmount?: number | null
     isNewHospitalRequest?: boolean
     newHospitalPreAuthRaised?: boolean
     sumInsured?: string | null
     balanceInsured?: string | null
     copay?: string | null
+    capping?: string | number | null
+    insurance?: string | null
     tpa?: string | null
     hospitalNameSuggestion?: string | null
     hospitalSuggestions?: string[] | null
@@ -38,13 +44,16 @@ interface PreAuthInlineApprovalProps {
       hospitalName: string
       tentativeBill?: number | null
       roomRentGeneral?: number | null
-      roomRentPrivate?: number | null
-      roomRentICU?: number | null
+      roomRentSingle?: number | null
+      roomRentDeluxe?: number | null
+      roomRentSemiPrivate?: number | null
       notes?: string | null
     }>
   } | null
   onSuccess?: () => void
 }
+
+type ApprovalAction = 'approve' | 'temp_approve' | 'reject' | null
 
 export function PreAuthInlineApproval({
   leadId,
@@ -53,7 +62,11 @@ export function PreAuthInlineApproval({
   preAuthData,
   onSuccess,
 }: PreAuthInlineApprovalProps) {
-  const [action, setAction] = useState<'approve' | 'reject' | null>(null)
+  const [action, setAction] = useState<ApprovalAction>(null)
+  const [approvedAmount, setApprovedAmount] = useState(
+    preAuthData?.approvedAmount != null ? String(preAuthData.approvedAmount) : ''
+  )
+  const [approvalNotes, setApprovalNotes] = useState(preAuthData?.approvalNotes || '')
   const [rejectionReason, setRejectionReason] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showHospitalForm, setShowHospitalForm] = useState(false)
@@ -70,9 +83,11 @@ export function PreAuthInlineApproval({
   const newHospitalMarked = preAuthData?.newHospitalPreAuthRaised === true
   const showMarkNewHospitalFirst = isNewHospital && !newHospitalMarked
 
-  const isAlreadyProcessed =
+  const isFullyProcessed =
     preAuthData?.approvalStatus === PreAuthStatus.APPROVED ||
     preAuthData?.approvalStatus === PreAuthStatus.REJECTED
+
+  const isTempApproved = preAuthData?.approvalStatus === PreAuthStatus.TEMP_APPROVED
 
   const initiateForm = initiateFormData?.initiateForm
   const isInitiateFormFilled =
@@ -83,58 +98,49 @@ export function PreAuthInlineApproval({
     typeof initiateForm.copay === 'number'
 
   const hasHospitalSuggestions =
-    (preAuthData?.suggestedHospitals &&
-    preAuthData.suggestedHospitals.length > 0) || false
+    (preAuthData?.suggestedHospitals && preAuthData.suggestedHospitals.length > 0) || false
 
   const hasLegacyHospitals =
     (preAuthData?.hospitalSuggestions &&
-    (preAuthData.hospitalSuggestions as string[]).length > 0) ||
+      (preAuthData.hospitalSuggestions as string[]).length > 0) ||
     preAuthData?.hospitalNameSuggestion
 
   const hasAnyHospitalData = hasHospitalSuggestions || !!hasLegacyHospitals
-
   const isPreAuthRaised = lead?.caseStage === 'PREAUTH_RAISED'
-
-  // Updated logic - show hospital form for more stages
-  const isHospitalSuggestionStage =
-    lead?.caseStage === 'KYP_BASIC_COMPLETE' ||
-    lead?.caseStage === 'KYP_BASIC_PENDING' ||
-    lead?.caseStage === 'KYP_PENDING' ||
-    lead?.caseStage === 'KYP_DETAILED_PENDING' ||
-    lead?.caseStage === 'KYP_DETAILED_COMPLETE' ||
-    lead?.caseStage === 'PREAUTH_RAISED'
-
-  // Data-driven logic as recommended
-  const shouldAlwaysShowHospitalForm = 
-    preAuthData?.approvalStatus !== PreAuthStatus.APPROVED && 
-    preAuthData?.approvalStatus !== PreAuthStatus.REJECTED
-    
   const shouldForceHospitalForm = !hasAnyHospitalData
 
-  const handleApprove = async () => {
+  // ─── Handlers ────────────────────────────────────────────────────────────────
+
+  const handleApprove = async (status: 'APPROVED' | 'TEMP_APPROVED') => {
     if (!hasAnyHospitalData) {
       toast.error('Please suggest hospitals before approving')
       return
     }
-
-    if (!isInitiateFormFilled) {
-      toast.error('Please fill the initiate form before approving')
+    if (status === 'APPROVED' && !isInitiateFormFilled) {
+      toast.error('Please fill the Insurance Initial Form before giving full approval')
+      return
+    }
+    if (!approvedAmount || isNaN(Number(approvedAmount)) || Number(approvedAmount) < 0) {
+      toast.error('Please enter a valid approved amount')
       return
     }
 
     setIsSubmitting(true)
     try {
-      await apiPost(`/api/pre-auth/${kypSubmissionId}/approve`, {})
-      toast.success('Pre-authorization approved successfully')
+      await apiPost(`/api/pre-auth/${kypSubmissionId}/approve`, {
+        approvalStatus: status,
+        approvedAmount: Number(approvedAmount),
+        approvalNotes: approvalNotes.trim() || undefined,
+      })
+      const label = status === 'TEMP_APPROVED' ? 'temporarily approved' : 'approved'
+      toast.success(`Pre-authorization ${label} successfully`)
       queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
       queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
       setAction(null)
       onSuccess?.()
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to approve pre-auth'
-      )
+      toast.error(error instanceof Error ? error.message : 'Failed to approve pre-auth')
     } finally {
       setIsSubmitting(false)
     }
@@ -145,12 +151,9 @@ export function PreAuthInlineApproval({
       toast.error('Please provide a reason for rejection')
       return
     }
-
     setIsSubmitting(true)
     try {
-      await apiPost(`/api/pre-auth/${kypSubmissionId}/reject`, {
-        reason: rejectionReason,
-      })
+      await apiPost(`/api/pre-auth/${kypSubmissionId}/reject`, { reason: rejectionReason })
       toast.success('Pre-authorization rejected')
       queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
@@ -159,9 +162,7 @@ export function PreAuthInlineApproval({
       setRejectionReason('')
       onSuccess?.()
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to reject pre-auth'
-      )
+      toast.error(error instanceof Error ? error.message : 'Failed to reject pre-auth')
     } finally {
       setIsSubmitting(false)
     }
@@ -170,89 +171,199 @@ export function PreAuthInlineApproval({
   const handleMarkNewHospitalRaised = async () => {
     setIsSubmitting(true)
     try {
-      await apiPost(
-        `/api/pre-auth/${kypSubmissionId}/mark-new-hospital-raised`,
-        {}
-      )
+      await apiPost(`/api/pre-auth/${kypSubmissionId}/mark-new-hospital-raised`, {})
       toast.success('Marked pre-auth raised for new hospital')
       queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to update'
-      )
+      toast.error(error instanceof Error ? error.message : 'Failed to update')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (isAlreadyProcessed) {
+  // ─── Shared: hospital suggestions list (read-only) ───────────────────────────
+  const hospitalSuggestionsJsx = hasAnyHospitalData ? (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Hospital className="w-4 h-4 text-blue-600" />
+          Hospital Suggestions Provided
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {preAuthData?.suggestedHospitals?.map((hospital, idx) => (
+            <div
+              key={idx}
+              className={`p-4 rounded-xl border-2 ${
+                preAuthData.requestedHospitalName === hospital.hospitalName
+                  ? 'border-teal-500 bg-teal-50/30'
+                  : 'border-gray-100 dark:border-gray-800'
+              }`}
+            >
+              <div className="font-bold flex justify-between">
+                {hospital.hospitalName}
+                {preAuthData.requestedHospitalName === hospital.hospitalName && (
+                  <Badge className="bg-teal-500">SELECTED</Badge>
+                )}
+              </div>
+              <div className="text-sm mt-2 space-y-1 text-muted-foreground">
+                {hospital.tentativeBill && (
+                  <p>Tentative Bill: ₹{hospital.tentativeBill.toLocaleString()}</p>
+                )}
+                <p>
+                  Room Rents:{' '}
+                  {[
+                    hospital.roomRentGeneral != null && `Gen: ₹${hospital.roomRentGeneral.toLocaleString()}`,
+                    hospital.roomRentSingle != null && `Single: ₹${hospital.roomRentSingle.toLocaleString()}`,
+                    hospital.roomRentDeluxe != null && `Deluxe: ₹${hospital.roomRentDeluxe.toLocaleString()}`,
+                    hospital.roomRentSemiPrivate != null && `Semi-Pvt: ₹${hospital.roomRentSemiPrivate.toLocaleString()}`,
+                  ]
+                    .filter(Boolean)
+                    .join(', ') || 'N/A'}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  ) : null
+
+  // ─── Shared: approval detail form (amount + notes + confirm button) ──────────
+  // isTemp controls labels and button colour; targetStatus drives the API call.
+  const approvalDetailJsx = (isTemp: boolean) => (
+    <div className="space-y-4 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <p className="font-medium">
+          {isTemp ? 'Temporary Approval Details' : 'Approval Details'}
+        </p>
+        <Button variant="ghost" size="sm" onClick={() => setAction(null)}>
+          Cancel
+        </Button>
+      </div>
+
+      <div>
+        <Label htmlFor="approvedAmount">
+          Approved Amount <span className="text-red-500">*</span>
+        </Label>
+        <div className="relative mt-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+            ₹
+          </span>
+          <Input
+            id="approvedAmount"
+            type="number"
+            min="0"
+            step="0.01"
+            value={approvedAmount}
+            onChange={(e) => setApprovedAmount(e.target.value)}
+            placeholder="0.00"
+            className="pl-7"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="approvalNotes">
+          {isTemp ? 'Conditions / Notes' : 'Approval Notes'}{' '}
+          <span className="text-muted-foreground text-xs">(optional)</span>
+        </Label>
+        <Textarea
+          id="approvalNotes"
+          value={approvalNotes}
+          onChange={(e) => setApprovalNotes(e.target.value)}
+          placeholder={
+            isTemp
+              ? 'Specify conditions for temporary approval…'
+              : 'Any notes for the BD team…'
+          }
+          rows={3}
+          className="mt-1"
+        />
+      </div>
+
+      <Button
+        onClick={() => handleApprove(isTemp ? 'TEMP_APPROVED' : 'APPROVED')}
+        disabled={isSubmitting}
+        className={
+          isTemp
+            ? 'w-full bg-amber-500 hover:bg-amber-600 text-white'
+            : 'w-full bg-green-600 hover:bg-green-700 text-white'
+        }
+      >
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {isTemp ? 'Confirm Temporary Approval' : 'Confirm Approval'}
+      </Button>
+    </div>
+  )
+
+  // ─── 1. Fully processed (APPROVED / REJECTED) — locked read-only ─────────────
+  if (isFullyProcessed) {
+    const isApproved = preAuthData?.approvalStatus === PreAuthStatus.APPROVED
     return (
       <div className="space-y-6">
         <Card>
           <CardContent className="pt-6">
-            <div className="p-4 rounded-lg bg-muted">
+            <div
+              className={`p-4 rounded-lg border ${
+                isApproved
+                  ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-800'
+                  : 'bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-800'
+              }`}
+            >
               <div className="flex items-center gap-2">
-                {preAuthData?.approvalStatus === PreAuthStatus.APPROVED ? (
-                  <>
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    <span className="font-medium text-green-600">
-                      Pre-authorization has been approved
-                    </span>
-                  </>
+                {isApproved ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
                 ) : (
-                  <>
-                    <XCircle className="h-5 w-5 text-red-600" />
-                    <span className="font-medium text-red-600">
-                      Pre-authorization has been rejected
-                    </span>
-                  </>
+                  <XCircle className="h-5 w-5 text-red-600" />
+                )}
+                <span
+                  className={`font-medium ${
+                    isApproved
+                      ? 'text-green-700 dark:text-green-400'
+                      : 'text-red-700 dark:text-red-400'
+                  }`}
+                >
+                  {isApproved
+                    ? 'Pre-authorization has been approved'
+                    : 'Pre-authorization has been rejected'}
+                </span>
+                {isApproved ? (
+                  <Badge className="bg-green-600 text-white ml-2">Approved</Badge>
+                ) : (
+                  <Badge variant="destructive" className="ml-2">Rejected</Badge>
                 )}
               </div>
-
-              {preAuthData?.approvalStatus === PreAuthStatus.REJECTED &&
-                preAuthData?.rejectionReason && (
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Reason: {preAuthData.rejectionReason}
-                  </p>
-                )}
+              {isApproved && preAuthData?.approvedAmount != null && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Approved Amount:{' '}
+                  <span className="font-semibold">
+                    ₹{preAuthData.approvedAmount.toLocaleString()}
+                  </span>
+                </p>
+              )}
+              {isApproved && preAuthData?.approvalNotes && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Notes: {preAuthData.approvalNotes}
+                </p>
+              )}
+              {!isApproved && preAuthData?.rejectionReason && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Reason: {preAuthData.rejectionReason}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Show Hospital Suggestions (Read-only) */}
-        {hasAnyHospitalData && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Hospital className="w-4 h-4 text-blue-600" />
-                Hospital Suggestions Provided
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {preAuthData?.suggestedHospitals?.map((hospital, idx) => (
-                  <div key={idx} className={`p-4 rounded-xl border-2 ${preAuthData.requestedHospitalName === hospital.hospitalName ? 'border-teal-500 bg-teal-50/30' : 'border-gray-100'}`}>
-                    <div className="font-bold flex justify-between">
-                      {hospital.hospitalName}
-                      {preAuthData.requestedHospitalName === hospital.hospitalName && <Badge className="bg-teal-500">SELECTED</Badge>}
-                    </div>
-                    <div className="text-sm mt-2 space-y-1">
-                      {hospital.tentativeBill && <p>Tentative Bill: ₹{hospital.tentativeBill.toLocaleString()}</p>}
-                      <p>Room Rents: Gen: ₹{hospital.roomRentGeneral?.toLocaleString()}, Pvt: ₹{hospital.roomRentPrivate?.toLocaleString()}, ICU: ₹{hospital.roomRentICU?.toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {hospitalSuggestionsJsx}
 
-        {/* Show Initiate Form (Read-only) */}
         {initiateForm && (
           <div className="space-y-4">
             <h3 className="text-lg font-bold px-1">Insurance Initiate Form Details</h3>
-            <InsuranceInitiateForm 
-              leadId={leadId} 
+            <InsuranceInitiateForm
+              leadId={leadId}
               initialData={initiateForm}
               onSuccess={() => {}}
               embedded
@@ -264,13 +375,94 @@ export function PreAuthInlineApproval({
     )
   }
 
+  // ─── 2. Temporarily approved — fill initiate form, then confirm full approval ─
+  if (isTempApproved) {
+    return (
+      <div className="space-y-6">
+        {/* Status banner */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="p-4 rounded-lg border bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-800">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-600" />
+                <span className="font-medium text-amber-700 dark:text-amber-400">
+                  Pre-authorization is temporarily approved
+                </span>
+                <Badge className="bg-amber-500 text-white ml-2">Temp Approved</Badge>
+              </div>
+              {preAuthData?.approvedAmount != null && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Approved Amount:{' '}
+                  <span className="font-semibold">
+                    ₹{preAuthData.approvedAmount.toLocaleString()}
+                  </span>
+                </p>
+              )}
+              {preAuthData?.approvalNotes && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Conditions: {preAuthData.approvalNotes}
+                </p>
+              )}
+              <p className="mt-3 text-sm text-amber-700 dark:text-amber-300">
+                Fill in the Insurance Initial Form below, then give final approval.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {hospitalSuggestionsJsx}
+
+        {/* Insurance Initiate Form — editable at PREAUTH_COMPLETE */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold px-1">Insurance Initial Form</h3>
+          <InsuranceInitiateForm
+            leadId={leadId}
+            initialData={initiateFormData?.initiateForm}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+            }}
+            embedded
+          />
+        </div>
+
+        {/* Confirm full approval */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Confirm Full Approval</CardTitle>
+            <CardDescription>
+              Once the Initial Form is filled, confirm full approval to complete Step 4.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!isInitiateFormFilled && (
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                Fill in the Insurance Initial Form above to enable full approval.
+              </p>
+            )}
+            {action === null && (
+              <Button
+                onClick={() => setAction('approve')}
+                disabled={!isInitiateFormFilled}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Give Full Approval
+              </Button>
+            )}
+            {action === 'approve' && approvalDetailJsx(false)}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // ─── 3. Active — PENDING, awaiting Insurance decision ────────────────────────
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          {shouldForceHospitalForm
-            ? 'Suggest Hospitals'
-            : 'Complete Pre-Authorization'}
+          {shouldForceHospitalForm ? 'Suggest Hospitals' : 'Complete Pre-Authorization'}
         </CardTitle>
         <CardDescription>
           {shouldForceHospitalForm
@@ -280,27 +472,27 @@ export function PreAuthInlineApproval({
       </CardHeader>
 
       <CardContent className="space-y-6">
-        {/* Always show hospital suggestion form when data allows it */}
-        {shouldAlwaysShowHospitalForm && (shouldForceHospitalForm || showHospitalForm) && (
+        {/* Hospital suggestion form */}
+        {(shouldForceHospitalForm || showHospitalForm) && (
           <HospitalSuggestionForm
             kypSubmissionId={kypSubmissionId}
             initialSumInsured={preAuthData?.sumInsured || ''}
             initialBalanceInsured={preAuthData?.balanceInsured || ''}
             initialCopayPercentage={preAuthData?.copay || ''}
+            initialCapping={preAuthData?.capping ? Number(preAuthData.capping) : undefined}
+            initialInsuranceName={preAuthData?.insurance || lead?.insuranceName || ''}
             initialTpa={preAuthData?.tpa || ''}
             initialHospitals={preAuthData?.suggestedHospitals}
             onSuccess={() => {
               setShowHospitalForm(false)
-              queryClient.invalidateQueries({
-                queryKey: ['kyp-submission', leadId],
-              })
+              queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
             }}
             onCancel={shouldForceHospitalForm ? undefined : () => setShowHospitalForm(false)}
           />
         )}
 
-        {/* Show modify button if hospitals exist and form is not forced */}
-        {shouldAlwaysShowHospitalForm && hasAnyHospitalData && !shouldForceHospitalForm && !showHospitalForm && !isPreAuthRaised && (
+        {/* Hospitals provided — modify (pre-raise) */}
+        {hasAnyHospitalData && !shouldForceHospitalForm && !showHospitalForm && !isPreAuthRaised && (
           <div className="p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
             <p className="text-sm text-green-900 dark:text-green-100 mb-3">
               Hospital suggestions have been provided.
@@ -311,8 +503,8 @@ export function PreAuthInlineApproval({
           </div>
         )}
 
-        {/* Show info message if hospitals exist and pre-auth is raised */}
-        {shouldAlwaysShowHospitalForm && hasAnyHospitalData && !showHospitalForm && isPreAuthRaised && (
+        {/* Hospitals provided — locked after pre-auth raised */}
+        {hasAnyHospitalData && !showHospitalForm && isPreAuthRaised && (
           <div className="p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
             <p className="text-sm text-green-900 dark:text-green-100">
               Hospital suggestions have been provided and pre-authorization has been raised.
@@ -320,23 +512,20 @@ export function PreAuthInlineApproval({
           </div>
         )}
 
-        {/* Pre-auth approval section - only show when hospitals are provided */}
-        {shouldAlwaysShowHospitalForm && hasAnyHospitalData && !showHospitalForm && (
-          <div className="space-y-4 border-t pt-4">
+        {/* Approval section — only when hospitals exist */}
+        {hasAnyHospitalData && !showHospitalForm && (
+          <div className="space-y-5 border-t pt-5">
             {showMarkNewHospitalFirst && (
-              <Button
-                onClick={handleMarkNewHospitalRaised}
-                disabled={isSubmitting}
-              >
+              <Button onClick={handleMarkNewHospitalRaised} disabled={isSubmitting}>
                 Mark pre-auth raised for new hospital
               </Button>
             )}
 
-            {/* Insurance Initiate Form Integration */}
-            {lead?.caseStage === 'PREAUTH_RAISED' && (
-              <div className="mb-6 space-y-4">
-                <InsuranceInitiateForm 
-                  leadId={leadId} 
+            {/* Insurance Initiate Form */}
+            {isPreAuthRaised && (
+              <div className="space-y-4">
+                <InsuranceInitiateForm
+                  leadId={leadId}
                   initialData={initiateFormData?.initiateForm}
                   onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
@@ -347,42 +536,73 @@ export function PreAuthInlineApproval({
               </div>
             )}
 
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setAction('approve')}
-                disabled={!hasAnyHospitalData || !isInitiateFormFilled}
-                className="flex-1"
-              >
-                Approve Pre-Auth
-              </Button>
+            {/* Three action buttons */}
+            {action === null && (
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => setAction('approve')}
+                  disabled={!isInitiateFormFilled}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  title={!isInitiateFormFilled ? 'Fill the Initial Form above first' : undefined}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Approve
+                </Button>
 
-              <Button
-                variant="destructive"
-                onClick={() => setAction('reject')}
-                className="flex-1"
-              >
-                Reject Pre-Auth
-              </Button>
-            </div>
+                <Button
+                  onClick={() => setAction('temp_approve')}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Temporary Approval
+                </Button>
 
-            {action === 'approve' && (
-              <Button
-                onClick={handleApprove}
-                disabled={isSubmitting}
-                className="w-full"
-              >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Confirm Approval
-              </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => setAction('reject')}
+                  className="flex-1"
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Reject
+                </Button>
+              </div>
             )}
 
+            {action === null && !isInitiateFormFilled && (
+              <p className="text-xs text-muted-foreground">
+                Tip: Fill the Initial Form above to enable full Approval. Temporary Approval can be
+                given without it.
+              </p>
+            )}
+
+            {/* Approve detail form */}
+            {action === 'approve' && approvalDetailJsx(false)}
+
+            {/* Temp approve detail form */}
+            {action === 'temp_approve' && approvalDetailJsx(true)}
+
+            {/* Reject form */}
             {action === 'reject' && (
-              <>
-                <Textarea
-                  placeholder="Reason for rejection"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                />
+              <div className="space-y-4 rounded-lg border border-red-200 dark:border-red-800 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-red-700 dark:text-red-400">Rejection Details</p>
+                  <Button variant="ghost" size="sm" onClick={() => setAction(null)}>
+                    Cancel
+                  </Button>
+                </div>
+                <div>
+                  <Label htmlFor="rejectionReason">
+                    Reason for Rejection <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="rejectionReason"
+                    placeholder="Provide a reason for rejection"
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={3}
+                    className="mt-1"
+                  />
+                </div>
                 <Button
                   variant="destructive"
                   onClick={handleReject}
@@ -392,7 +612,7 @@ export function PreAuthInlineApproval({
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Confirm Rejection
                 </Button>
-              </>
+              </div>
             )}
           </div>
         )}

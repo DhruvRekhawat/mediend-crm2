@@ -1,24 +1,20 @@
 'use client'
 
+import { IPDDetailsForm } from '@/components/admission/ipd-details-form'
+import { IPDMarkComponent } from '@/components/admission/ipd-mark-component'
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
-import { useAuth } from '@/hooks/use-auth'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost } from '@/lib/api-client'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, FileText, MessageSquare, MessageCircle, ClipboardList, Receipt, Plus, FileDown, CheckCircle2, Shield, Activity, Phone, MapPin, Stethoscope, Tag, User, XCircle, File, ExternalLink } from 'lucide-react'
-import { useRouter, useParams } from 'next/navigation'
-import { PatientCard } from '@/components/patient/patient-card'
-import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
-import { IPDMarkComponent } from '@/components/admission/ipd-mark-component'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '@/hooks/use-auth'
+import { apiGet, apiPost } from '@/lib/api-client'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
 
-import { StageProgress } from '@/components/case/stage-progress'
 import { ActivityTimeline } from '@/components/case/activity-timeline'
-import { format } from 'date-fns'
-import Link from 'next/link'
-import { CaseStage } from '@prisma/client'
-import { useState } from 'react'
+import { StageProgress } from '@/components/case/stage-progress'
 import {
   Dialog,
   DialogContent,
@@ -26,42 +22,57 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-import { 
-  canAddKYPDetails, 
-  canCompletePreAuth, 
-  canRaisePreAuth, 
+import {
+  canAddKYPDetails,
+  canCompletePreAuth,
+  canEditDischargeSheet,
   canEditKYP,
+  canFillInitiateForm,
+  canGeneratePDF,
   canInitiate,
   canMarkIPD,
-  canGeneratePDF,
-  canEditDischargeSheet,
   canMarkLost,
+  canRaisePreAuth,
   canSuggestHospitals,
-  canViewPhoneNumber,
-  canFillInitiateForm
+  canViewPhoneNumber
 } from '@/lib/case-permissions'
-import { getPhoneDisplay } from '@/lib/phone-utils'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
+import { getPhoneDisplay } from '@/lib/phone-utils'
+import { CaseStage } from '@prisma/client'
+import { format } from 'date-fns'
+import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface Lead {
   id: string
   leadRef: string
   patientName: string
+  age?: number
+  sex?: string
   phoneNumber: string
+  alternateNumber?: string | null
+  attendantName?: string | null
+  attendantContactNo?: string | null
+  circle?: string
   city: string
   hospitalName: string
   insuranceName: string | null
+  insuranceType?: string | null
   ipdDrName: string | null
   treatment: string | null
   category: string | null
+  quantityGrade?: string | null
+  anesthesia?: string | null
+  surgeonName?: string | null
+  surgeonType?: string | null
   status: string
   pipelineStage: string
   caseStage: CaseStage
+  bd?: { name?: string; manager?: { name?: string } | null } | null
   kypSubmission?: {
     id: string
     status: string
@@ -121,6 +132,10 @@ interface Lead {
   insuranceInitiateForm?: {
     id: string
   } | null
+  admissionRecord?: {
+    id: string
+    ipdStatus?: string | null
+  } | null
 }
 
 interface KYPSubmission {
@@ -168,8 +183,9 @@ interface KYPSubmission {
       hospitalName: string
       tentativeBill?: number | null
       roomRentGeneral?: number | null
-      roomRentPrivate?: number | null
-      roomRentICU?: number | null
+      roomRentSingle?: number | null
+      roomRentDeluxe?: number | null
+      roomRentSemiPrivate?: number | null
       notes?: string | null
     }> | null
     insurance: string | null
@@ -243,14 +259,6 @@ export default function PatientDetailsPage() {
   })
 
   const [showAdmitModal, setShowAdmitModal] = useState(false)
-  const [admitSubmitting, setAdmitSubmitting] = useState(false)
-  const [admitForm, setAdmitForm] = useState({
-    admissionDate: '',
-    admissionTime: '',
-    admittingHospital: '',
-    expectedSurgeryDate: '',
-    notes: '',
-  })
   const [showIPDMarkModal, setShowIPDMarkModal] = useState(false)
   const [showMarkLostDialog, setShowMarkLostDialog] = useState(false)
   const [markLostReason, setMarkLostReason] = useState<string>('')
@@ -490,7 +498,11 @@ export default function PatientDetailsPage() {
                 <div className="mb-3">
                   <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold">Case Progress</p>
                 </div>
-                <StageProgress currentStage={lead.caseStage} />
+                <StageProgress
+                  currentStage={lead.caseStage}
+                  hasInitiateForm={!!lead.insuranceInitiateForm?.id}
+                  hasIpdMark={!!lead.admissionRecord?.ipdStatus}
+                />
               </div>
             </div>
 
@@ -565,17 +577,7 @@ export default function PatientDetailsPage() {
                 {canInit && (
                   <Button
                     className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white border-0"
-                    onClick={() => {
-                      const hospital = lead.kypSubmission?.preAuthData?.requestedHospitalName?.trim() || lead.hospitalName || ''
-                      setAdmitForm({
-                        admissionDate: new Date().toISOString().slice(0, 10),
-                        admissionTime: '',
-                        admittingHospital: hospital,
-                        expectedSurgeryDate: '',
-                        notes: '',
-                      })
-                      setShowAdmitModal(true)
-                    }}
+                    onClick={() => setShowAdmitModal(true)}
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     Mark Admitted
@@ -830,8 +832,8 @@ export default function PatientDetailsPage() {
           </Card>
         )}
 
-        {/* Insurance Initiate Form - Only show for viewing/editing after approval, not during PREAUTH_RAISED */}
-        {canFillInitiate && lead?.caseStage !== CaseStage.PREAUTH_RAISED && initiateFormData?.data?.initiateForm && (
+        {/* Insurance Initiate Form — Step 5, shown at PREAUTH_COMPLETE for Insurance to fill */}
+        {canFillInitiate && (
           <Card>
             <CardHeader>
               <CardTitle>Insurance Initiate Form</CardTitle>
@@ -850,8 +852,6 @@ export default function PatientDetailsPage() {
           </Card>
         )}
 
-        {/* Patient Card - Unified View */}
-        <PatientCard lead={lead as any} />
 
         {/* Discharge Sheet Link */}
         {lead.dischargeSheet && (
@@ -874,125 +874,53 @@ export default function PatientDetailsPage() {
         {/* Activity Timeline */}
         {stageHistory && <ActivityTimeline history={stageHistory} />}
 
-        {/* Mark Admitted Modal */}
+        {/* Mark Admitted Modal — Full IPD Details Form */}
         <Dialog open={showAdmitModal} onOpenChange={setShowAdmitModal}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Mark Admitted</DialogTitle>
+              <DialogTitle>Step 6: IPD Details</DialogTitle>
               <DialogDescription>
-                Record admission details. Insurance will be notified.
+                Fill all admission details. Insurance will be notified once saved.
               </DialogDescription>
             </DialogHeader>
-            <form
-              className="space-y-4"
-              onSubmit={async (e) => {
-                e.preventDefault()
-                if (!admitForm.admissionDate || !admitForm.admittingHospital.trim()) {
-                  toast.error('Admission date and hospital are required')
-                  return
-                }
-                setAdmitSubmitting(true)
-                try {
-                  await apiPost(`/api/leads/${leadId}/initiate`, {
-                    admissionDate: admitForm.admissionDate,
-                    admissionTime: admitForm.admissionTime || undefined,
-                    admittingHospital: admitForm.admittingHospital.trim(),
-                    expectedSurgeryDate: admitForm.expectedSurgeryDate || undefined,
-                    notes: admitForm.notes || undefined,
-                  })
-                  toast.success('Patient marked as admitted. Insurance has been notified.')
+            {lead && (
+              <IPDDetailsForm
+                leadId={leadId}
+                patientName={lead.patientName}
+                leadRef={lead.leadRef}
+                age={lead.age}
+                sex={lead.sex}
+                phoneNumber={lead.phoneNumber}
+                alternateNumber={lead.alternateNumber ?? undefined}
+                attendantName={lead.attendantName ?? undefined}
+                attendantContactNo={lead.attendantContactNo ?? undefined}
+                circle={lead.circle}
+                city={lead.city}
+                category={lead.category ?? undefined}
+                treatment={lead.treatment ?? undefined}
+                quantityGrade={lead.quantityGrade ?? undefined}
+                anesthesia={lead.anesthesia ?? undefined}
+                surgeonName={lead.surgeonName ?? undefined}
+                surgeonType={lead.surgeonType ?? undefined}
+                hospitalName={lead.hospitalName}
+                insuranceName={lead.insuranceName ?? undefined}
+                insuranceType={lead.insuranceType ?? undefined}
+                tpa={lead.kypSubmission?.preAuthData?.tpa ?? undefined}
+                sumInsured={lead.kypSubmission?.preAuthData?.sumInsured ?? undefined}
+                copay={lead.kypSubmission?.preAuthData?.copay ?? undefined}
+                capping={lead.kypSubmission?.preAuthData?.capping ?? undefined}
+                roomType={lead.kypSubmission?.preAuthData?.requestedRoomType ?? undefined}
+                roomRent={lead.kypSubmission?.preAuthData?.roomRent ?? undefined}
+                bdName={lead.bd?.name}
+                bdManagerName={lead.bd?.manager?.name ?? undefined}
+                onSuccess={() => {
                   setShowAdmitModal(false)
                   queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
                   queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : 'Failed to mark admitted')
-                } finally {
-                  setAdmitSubmitting(false)
-                }
-              }}
-            >
-              <div className="space-y-2">
-                <Label htmlFor="admissionDate">Admission Date *</Label>
-                <Input
-                  id="admissionDate"
-                  type="date"
-                  value={admitForm.admissionDate}
-                  onChange={(e) =>
-                    setAdmitForm((prev) => ({ ...prev, admissionDate: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="admissionTime">Admission Time</Label>
-                <Input
-                  id="admissionTime"
-                  type="time"
-                  value={admitForm.admissionTime}
-                  onChange={(e) =>
-                    setAdmitForm((prev) => ({ ...prev, admissionTime: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="admittingHospital">Admitting Hospital *</Label>
-                <Input
-                  id="admittingHospital"
-                  value={admitForm.admittingHospital}
-                  onChange={(e) =>
-                    setAdmitForm((prev) => ({ ...prev, admittingHospital: e.target.value }))
-                  }
-                  placeholder="Hospital name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expectedSurgeryDate">Expected Surgery Date</Label>
-                <Input
-                  id="expectedSurgeryDate"
-                  type="date"
-                  value={admitForm.expectedSurgeryDate}
-                  onChange={(e) =>
-                    setAdmitForm((prev) => ({ ...prev, expectedSurgeryDate: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={admitForm.notes}
-                  onChange={(e) =>
-                    setAdmitForm((prev) => ({ ...prev, notes: e.target.value }))
-                  }
-                  placeholder="Optional notes"
-                  rows={2}
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAdmitModal(false)}
-                  disabled={admitSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={admitSubmitting}>
-                  {admitSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving…
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Mark Admitted
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
+                }}
+                onCancel={() => setShowAdmitModal(false)}
+              />
+            )}
           </DialogContent>
         </Dialog>
 

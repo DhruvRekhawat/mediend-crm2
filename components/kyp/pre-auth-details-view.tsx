@@ -13,8 +13,9 @@ interface SuggestedHospital {
   hospitalName: string
   tentativeBill?: number | null
   roomRentGeneral?: number | null
-  roomRentPrivate?: number | null
-  roomRentICU?: number | null
+  roomRentSingle?: number | null
+  roomRentDeluxe?: number | null
+  roomRentSemiPrivate?: number | null
   notes?: string | null
 }
 
@@ -223,8 +224,9 @@ export function PreAuthDetailsView({
                         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-muted-foreground">
                           {h.tentativeBill != null && <span>Tentative bill: ₹{h.tentativeBill.toLocaleString()}</span>}
                           {h.roomRentGeneral != null && <span>General: ₹{h.roomRentGeneral.toLocaleString()}</span>}
-                          {h.roomRentPrivate != null && <span>Private: ₹{h.roomRentPrivate.toLocaleString()}</span>}
-                          {h.roomRentICU != null && <span>ICU: ₹{h.roomRentICU.toLocaleString()}</span>}
+                          {h.roomRentSingle != null && <span>Single: ₹{h.roomRentSingle.toLocaleString()}</span>}
+                          {h.roomRentDeluxe != null && <span>Deluxe: ₹{h.roomRentDeluxe.toLocaleString()}</span>}
+                          {h.roomRentSemiPrivate != null && <span>Semi-Private: ₹{h.roomRentSemiPrivate.toLocaleString()}</span>}
                         </div>
                         {h.notes?.trim() && <p className="mt-1 text-muted-foreground">{h.notes}</p>}
                       </li>

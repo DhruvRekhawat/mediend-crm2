@@ -62,108 +62,142 @@ export async function POST(request: NextRequest) {
     // No body provided - seed all default users
     const existingUsers = await prisma.user.findMany()
     
-    if (existingUsers.length > 0) {
-      return errorResponse('Users already exist. Pass user data in body to create individual users.', 400)
+    // Check if we already have the specific users we want to seed
+    const defaultEmails = [
+      'admin@mediend.com',
+      'saleshead@mediend.com',
+      'bd@mediend.com',
+      'insurance@mediend.com',
+      'pl@mediend.com',
+      'hr@mediend.com',
+      'finance@mediend.com'
+    ]
+
+    const existingDefaultUsers = await prisma.user.findMany({
+      where: { email: { in: defaultEmails } }
+    })
+
+    if (existingDefaultUsers.length === defaultEmails.length) {
+      return errorResponse('Default users already exist.', 400)
     }
 
-    // Create default admin user
-    const adminPasswordHash = await hashPassword('Admin@123')
-    await prisma.user.create({
-      data: {
-        email: 'admin@mediend.com',
-        passwordHash: adminPasswordHash,
-        name: 'System Admin',
-        role: 'ADMIN',
-      },
-    })
+    const seededUsers = []
 
-    // Create Sales Head user
-    const salesHeadPasswordHash = await hashPassword('SalesHead@123')
-    const salesHead = await prisma.user.create({
-      data: {
-        email: 'saleshead@mediend.com',
-        passwordHash: salesHeadPasswordHash,
-        name: 'Sales Head',
-        role: 'SALES_HEAD',
-      },
-    })
+    // Create default admin user if not exists
+    if (!existingDefaultUsers.find(u => u.email === 'admin@mediend.com')) {
+      const adminPasswordHash = await hashPassword('Admin@123')
+      await prisma.user.create({
+        data: {
+          email: 'admin@mediend.com',
+          passwordHash: adminPasswordHash,
+          name: 'System Admin',
+          role: 'ADMIN',
+        },
+      })
+      seededUsers.push({ email: 'admin@mediend.com', password: 'Admin@123', role: 'ADMIN' })
+    }
 
-    // Create a sample Team
-    const team = await prisma.team.create({
-      data: {
-        name: 'North Team',
-        circle: 'North',
-        salesHeadId: salesHead.id,
-      },
-    })
+    // Create Sales Head user if not exists
+    let salesHead = existingDefaultUsers.find(u => u.email === 'saleshead@mediend.com')
+    if (!salesHead) {
+      const salesHeadPasswordHash = await hashPassword('SalesHead@123')
+      salesHead = await prisma.user.create({
+        data: {
+          email: 'saleshead@mediend.com',
+          passwordHash: salesHeadPasswordHash,
+          name: 'Sales Head',
+          role: 'SALES_HEAD',
+        },
+      })
+      seededUsers.push({ email: 'saleshead@mediend.com', password: 'SalesHead@123', role: 'SALES_HEAD' })
+    }
 
-    // Create BD user
-    const bdPasswordHash = await hashPassword('BD@123')
-    await prisma.user.create({
-      data: {
-        email: 'bd@mediend.com',
-        passwordHash: bdPasswordHash,
-        name: 'Sample BD',
-        role: 'BD',
-        teamId: team.id,
-      },
-    })
+    // Create a sample Team if not exists
+    let team = await prisma.team.findFirst({ where: { name: 'North Team' } })
+    if (!team) {
+      team = await prisma.team.create({
+        data: {
+          name: 'North Team',
+          circle: 'North',
+          salesHeadId: salesHead.id,
+        },
+      })
+    }
 
-    // Create Insurance Head
-    const insuranceHeadPasswordHash = await hashPassword('Insurance@123')
-    await prisma.user.create({
-      data: {
-        email: 'insurance@mediend.com',
-        passwordHash: insuranceHeadPasswordHash,
-        name: 'Insurance Head',
-        role: 'INSURANCE_HEAD',
-      },
-    })
+    // Create BD user if not exists
+    if (!existingDefaultUsers.find(u => u.email === 'bd@mediend.com')) {
+      const bdPasswordHash = await hashPassword('BD@123')
+      await prisma.user.create({
+        data: {
+          email: 'bd@mediend.com',
+          passwordHash: bdPasswordHash,
+          name: 'Sample BD',
+          role: 'BD',
+          teamId: team.id,
+        },
+      })
+      seededUsers.push({ email: 'bd@mediend.com', password: 'BD@123', role: 'BD' })
+    }
 
-    // Create P/L Head
-    const plHeadPasswordHash = await hashPassword('PL@123')
-    await prisma.user.create({
-      data: {
-        email: 'pl@mediend.com',
-        passwordHash: plHeadPasswordHash,
-        name: 'P/L Head',
-        role: 'PL_HEAD',
-      },
-    })
+    // Create Insurance Head if not exists
+    if (!existingDefaultUsers.find(u => u.email === 'insurance@mediend.com')) {
+      const insuranceHeadPasswordHash = await hashPassword('Insurance@123')
+      await prisma.user.create({
+        data: {
+          email: 'insurance@mediend.com',
+          passwordHash: insuranceHeadPasswordHash,
+          name: 'Insurance Head',
+          role: 'INSURANCE_HEAD',
+        },
+      })
+      seededUsers.push({ email: 'insurance@mediend.com', password: 'Insurance@123', role: 'INSURANCE_HEAD' })
+    }
 
-    // Create HR Head
-    const hrHeadPasswordHash = await hashPassword('HR@123')
-    await prisma.user.create({
-      data: {
-        email: 'hr@mediend.com',
-        passwordHash: hrHeadPasswordHash,
-        name: 'HR Head',
-        role: 'HR_HEAD',
-      },
-    })
+    // Create P/L Head if not exists
+    if (!existingDefaultUsers.find(u => u.email === 'pl@mediend.com')) {
+      const plHeadPasswordHash = await hashPassword('PL@123')
+      await prisma.user.create({
+        data: {
+          email: 'pl@mediend.com',
+          passwordHash: plHeadPasswordHash,
+          name: 'P/L Head',
+          role: 'PL_HEAD',
+        },
+      })
+      seededUsers.push({ email: 'pl@mediend.com', password: 'PL@123', role: 'PL_HEAD' })
+    }
 
-    // Create Finance Head
-    const financeHeadPasswordHash = await hashPassword('Finance@123')
-    await prisma.user.create({
-      data: {
-        email: 'finance@mediend.com',
-        passwordHash: financeHeadPasswordHash,
-        name: 'Finance Head',
-        role: 'FINANCE_HEAD',
-      },
-    })
+    // Create HR Head if not exists
+    if (!existingDefaultUsers.find(u => u.email === 'hr@mediend.com')) {
+      const hrHeadPasswordHash = await hashPassword('HR@123')
+      await prisma.user.create({
+        data: {
+          email: 'hr@mediend.com',
+          passwordHash: hrHeadPasswordHash,
+          name: 'HR Head',
+          role: 'HR_HEAD',
+        },
+      })
+      seededUsers.push({ email: 'hr@mediend.com', password: 'HR@123', role: 'HR_HEAD' })
+    }
+
+    // Create Finance Head if not exists
+    if (!existingDefaultUsers.find(u => u.email === 'finance@mediend.com')) {
+      const financeHeadPasswordHash = await hashPassword('Finance@123')
+      await prisma.user.create({
+        data: {
+          email: 'finance@mediend.com',
+          passwordHash: financeHeadPasswordHash,
+          name: 'Finance Head',
+          role: 'FINANCE_HEAD',
+        },
+      })
+      seededUsers.push({ email: 'finance@mediend.com', password: 'Finance@123', role: 'FINANCE_HEAD' })
+    }
 
     return successResponse({
       message: 'Default users created successfully',
-      users: [
-        { email: 'admin@mediend.com', password: 'Admin@123', role: 'ADMIN' },
-        { email: 'saleshead@mediend.com', password: 'SalesHead@123', role: 'SALES_HEAD' },
-        { email: 'bd@mediend.com', password: 'BD@123', role: 'BD' },
-        { email: 'insurance@mediend.com', password: 'Insurance@123', role: 'INSURANCE_HEAD' },
-        { email: 'pl@mediend.com', password: 'PL@123', role: 'PL_HEAD' },
-        { email: 'hr@mediend.com', password: 'HR@123', role: 'HR_HEAD' },
-        { email: 'finance@mediend.com', password: 'Finance@123', role: 'FINANCE_HEAD' },
-      ],
+      users: seededUsers,
       team: { name: 'North Team', circle: 'North' },
     }, 'Users seeded successfully')
   } catch (error) {

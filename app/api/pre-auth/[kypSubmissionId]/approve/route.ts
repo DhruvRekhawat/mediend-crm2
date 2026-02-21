@@ -56,26 +56,38 @@ export async function POST(
       return errorResponse('Pre-authorization data not found', 400)
     }
 
-    if (kypSubmission.lead.caseStage !== CaseStage.PREAUTH_RAISED) {
+    const currentStage = kypSubmission.lead.caseStage
+    const currentStatus = kypSubmission.preAuthData.approvalStatus
+
+    // ── Path A: upgrade TEMP_APPROVED → APPROVED ────────────────────────────────
+    const isUpgrade =
+      currentStage === CaseStage.PREAUTH_COMPLETE &&
+      currentStatus === PreAuthStatus.TEMP_APPROVED &&
+      data.approvalStatus === 'APPROVED'
+
+    // ── Path B: initial approval (PREAUTH_RAISED, PENDING → APPROVED/TEMP) ──────
+    const isInitial = currentStage === CaseStage.PREAUTH_RAISED
+
+    if (!isUpgrade && !isInitial) {
       return errorResponse(
-        `Cannot approve pre-auth. Current stage: ${kypSubmission.lead.caseStage}. Pre-auth must be raised first.`,
+        `Cannot approve pre-auth. Current stage: ${currentStage}, status: ${currentStatus}.`,
         400
       )
     }
 
-    if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.APPROVED) {
-      return errorResponse('Pre-authorization has already been approved', 400)
+    if (currentStatus === PreAuthStatus.APPROVED) {
+      return errorResponse('Pre-authorization has already been fully approved', 400)
     }
 
-    if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.TEMP_APPROVED) {
-      return errorResponse('Pre-authorization has already been temp approved', 400)
-    }
-
-    if (kypSubmission.preAuthData.approvalStatus === PreAuthStatus.REJECTED) {
+    if (currentStatus === PreAuthStatus.REJECTED) {
       return errorResponse('Pre-authorization has already been rejected', 400)
     }
 
-    // Update pre-auth status
+    // Prevent re-temp-approving an already temp-approved case
+    if (currentStatus === PreAuthStatus.TEMP_APPROVED && data.approvalStatus === 'TEMP_APPROVED') {
+      return errorResponse('Pre-authorization is already temporarily approved', 400)
+    }
+
     const statusMap = {
       APPROVED: PreAuthStatus.APPROVED,
       TEMP_APPROVED: PreAuthStatus.TEMP_APPROVED,
@@ -93,39 +105,57 @@ export async function POST(
       },
     })
 
-    // Update KYP submission status
-    await prisma.kYPSubmission.update({
-      where: { id: kypSubmissionId },
-      data: { status: 'PRE_AUTH_COMPLETE' },
-    })
+    if (isInitial) {
+      // First-time approval — advance stage
+      await prisma.kYPSubmission.update({
+        where: { id: kypSubmissionId },
+        data: { status: 'PRE_AUTH_COMPLETE' },
+      })
 
-    // Update lead case stage
-    await prisma.lead.update({
-      where: { id: kypSubmission.lead.id },
-      data: { caseStage: CaseStage.PREAUTH_COMPLETE },
-    })
+      await prisma.lead.update({
+        where: { id: kypSubmission.lead.id },
+        data: { caseStage: CaseStage.PREAUTH_COMPLETE },
+      })
 
-    // Create stage history entry
-    await prisma.caseStageHistory.create({
-      data: {
-        leadId: kypSubmission.lead.id,
-        fromStage: CaseStage.PREAUTH_RAISED,
-        toStage: CaseStage.PREAUTH_COMPLETE,
-        changedById: user.id,
-        note: `Pre-authorization ${data.approvalStatus === 'TEMP_APPROVED' ? 'temp ' : ''}approved by Insurance`,
-      },
-    })
+      await prisma.caseStageHistory.create({
+        data: {
+          leadId: kypSubmission.lead.id,
+          fromStage: CaseStage.PREAUTH_RAISED,
+          toStage: CaseStage.PREAUTH_COMPLETE,
+          changedById: user.id,
+          note: `Pre-authorization ${data.approvalStatus === 'TEMP_APPROVED' ? 'temp ' : ''}approved by Insurance`,
+        },
+      })
+    } else {
+      // Upgrade — stage already at PREAUTH_COMPLETE, just record history
+      await prisma.caseStageHistory.create({
+        data: {
+          leadId: kypSubmission.lead.id,
+          fromStage: CaseStage.PREAUTH_COMPLETE,
+          toStage: CaseStage.PREAUTH_COMPLETE,
+          changedById: user.id,
+          note: 'Pre-authorization upgraded from temporary to full approval by Insurance',
+        },
+      })
+    }
 
     const statusMsg = data.approvalStatus === 'TEMP_APPROVED' ? 'temp approved' : 'approved'
-    await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance ${statusMsg} pre-auth.`)
+    const chatMsg = isUpgrade
+      ? 'Insurance upgraded pre-auth from temporary to full approval.'
+      : `Insurance ${statusMsg} pre-auth.`
+    await postCaseChatSystemMessage(kypSubmission.lead.id, chatMsg)
 
     // Notify BD
     await prisma.notification.create({
       data: {
         userId: kypSubmission.lead.bdId,
         type: 'PRE_AUTH_COMPLETE',
-        title: `Pre-Authorization ${data.approvalStatus === 'TEMP_APPROVED' ? 'Temp ' : ''}Approved`,
-        message: `Pre-authorization has been ${statusMsg} for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now proceed with admission.`,
+        title: isUpgrade
+          ? 'Pre-Authorization Fully Approved'
+          : `Pre-Authorization ${data.approvalStatus === 'TEMP_APPROVED' ? 'Temp ' : ''}Approved`,
+        message: isUpgrade
+          ? `Pre-authorization for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}) has been upgraded to full approval.`
+          : `Pre-authorization has been ${statusMsg} for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}). You can now proceed with admission.`,
         link: `/patient/${kypSubmission.lead.id}/pre-auth`,
         relatedId: kypSubmission.preAuthData.id,
       },

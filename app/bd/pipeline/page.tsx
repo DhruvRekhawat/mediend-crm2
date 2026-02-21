@@ -38,6 +38,7 @@ import { UserPlus, Eye, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { CaseStage } from '@prisma/client'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
+import { StageProgress } from '@/components/case/stage-progress'
 
 interface Target {
   id: string
@@ -653,19 +654,21 @@ export default function BDPipelinePage() {
                               {lead.pipelineStage}
                             </Badge>
                           </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              {kypSubmission?.status && (
+                          <TableCell onClick={(e) => e.stopPropagation()}>
+                            {lead.caseStage ? (
+                              <StageProgress
+                                currentStage={lead.caseStage}
+                                hasInitiateForm={!!(lead as any).insuranceInitiateForm?.id}
+                                hasIpdMark={!!(lead as any).admissionRecord?.ipdStatus}
+                                compact
+                              />
+                            ) : (
+                              kypSubmission?.status && (
                                 <Badge className={`border-0 ${getStatusBadgeColor(kypSubmission.status)}`}>
                                   {getKYPStatusLabel(kypSubmission.status)}
                                 </Badge>
-                              )}
-                              {lead.caseStage && (
-                                <Badge className={`border-2 ${getStageBadgeColor(lead.caseStage)}`}>
-                                  {lead.caseStage.replace(/_/g, ' ')}
-                                </Badge>
-                              )}
-                            </div>
+                              )
+                            )}
                           </TableCell>
                         </TableRow>
                         )

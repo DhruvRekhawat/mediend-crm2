@@ -1476,6 +1476,12 @@ model PreAuthorization {
   // Investigation files
   investigationFileUrls Json?   // Array of {name, url}
 
+  // Prescription files (uploaded by BD during pre-auth raise)
+  prescriptionFiles Json?   // Array of {name, url}
+
+  // BD notes for Insurance team
+  notes String? @db.Text
+
   // Insurance type (auto-filled from KYPSubmission)
   insuranceType String?
 
@@ -1607,11 +1613,10 @@ model AdmissionRecord {
   lead     Lead   @relation(fields: [leadId], references: [id], onDelete: Cascade)
   
   admissionDate     DateTime
-  admissionTime     String  // Non-nullable now
+  admissionTime     String
   admittingHospital String
   expectedSurgeryDate DateTime?
   
-  // New fields
   surgeryDate       DateTime?
   surgeryTime       String?
   hospitalAddress   String?
@@ -1620,6 +1625,18 @@ model AdmissionRecord {
   instrument        String?
   implantConsumables String?
   noMediendLogo     Boolean @default(false)
+
+  // Cab Service - Admission Pickup
+  cabAdmissionPickupLocation String?
+  cabAdmissionPickupDateTime DateTime?
+  cabAdmissionFrom           String?
+  cabAdmissionTo             String?
+
+  // Cab Service - Discharge Pickup
+  cabDischargePickupLocation String?
+  cabDischargePickupDateTime DateTime?
+  cabDischargeFrom           String?
+  cabDischargeTo             String?
   
   // IPD Status tracking
   ipdStatus         IpdStatus?

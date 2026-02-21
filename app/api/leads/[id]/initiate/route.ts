@@ -18,6 +18,16 @@ const initiateSchema = z.object({
   instrument: z.string().optional(),
   implantConsumables: z.string().optional(),
   notes: z.string().optional(),
+  // Cab Service - Admission Pickup
+  cabAdmissionPickupLocation: z.string().optional(),
+  cabAdmissionPickupDateTime: z.string().optional(),
+  cabAdmissionFrom: z.string().optional(),
+  cabAdmissionTo: z.string().optional(),
+  // Cab Service - Discharge Pickup
+  cabDischargePickupLocation: z.string().optional(),
+  cabDischargePickupDateTime: z.string().optional(),
+  cabDischargeFrom: z.string().optional(),
+  cabDischargeTo: z.string().optional(),
 })
 
 export async function POST(
@@ -38,7 +48,6 @@ export async function POST(
     const body = await request.json()
     const data = initiateSchema.parse(body)
 
-    // Check if lead exists
     const lead = await prisma.lead.findUnique({
       where: { id: leadId },
       include: {
@@ -58,7 +67,6 @@ export async function POST(
       return errorResponse(`Cannot initiate admission. Current stage: ${lead.caseStage}. Pre-auth must be complete first.`, 400)
     }
 
-    // Check if admission already exists
     const existingAdmission = await prisma.admissionRecord.findUnique({
       where: { leadId },
     })
@@ -67,7 +75,6 @@ export async function POST(
       return errorResponse('Admission already initiated for this case', 400)
     }
 
-    // Create admission record
     const admission = await prisma.admissionRecord.create({
       data: {
         leadId,
@@ -82,11 +89,20 @@ export async function POST(
         instrument: data.instrument?.trim() || undefined,
         implantConsumables: data.implantConsumables?.trim() || undefined,
         notes: data.notes?.trim() || undefined,
+        // Cab service - Admission
+        cabAdmissionPickupLocation: data.cabAdmissionPickupLocation?.trim() || undefined,
+        cabAdmissionPickupDateTime: data.cabAdmissionPickupDateTime ? new Date(data.cabAdmissionPickupDateTime) : undefined,
+        cabAdmissionFrom: data.cabAdmissionFrom?.trim() || undefined,
+        cabAdmissionTo: data.cabAdmissionTo?.trim() || undefined,
+        // Cab service - Discharge
+        cabDischargePickupLocation: data.cabDischargePickupLocation?.trim() || undefined,
+        cabDischargePickupDateTime: data.cabDischargePickupDateTime ? new Date(data.cabDischargePickupDateTime) : undefined,
+        cabDischargeFrom: data.cabDischargeFrom?.trim() || undefined,
+        cabDischargeTo: data.cabDischargeTo?.trim() || undefined,
         initiatedById: user.id,
       },
     })
 
-    // Update lead case stage
     const previousStage = lead.caseStage
     await prisma.lead.update({
       where: { id: leadId },
@@ -97,7 +113,6 @@ export async function POST(
       },
     })
 
-    // Create stage history entry
     await prisma.caseStageHistory.create({
       data: {
         leadId,
@@ -110,11 +125,8 @@ export async function POST(
 
     await postCaseChatSystemMessage(leadId, `BD marked patient admitted at ${data.admittingHospital}.`)
 
-    // Create notifications for Insurance team
     const insuranceUsers = await prisma.user.findMany({
-      where: {
-        role: 'INSURANCE_HEAD',
-      },
+      where: { role: 'INSURANCE_HEAD' },
     })
 
     await prisma.notification.createMany({

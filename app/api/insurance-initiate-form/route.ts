@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
       return errorResponse('Lead not found', 404)
     }
 
-    // Check if case stage is PREAUTH_RAISED (during approval)
-    if (lead.caseStage !== CaseStage.PREAUTH_RAISED) {
+    // Check if case stage is PREAUTH_COMPLETE (Step 5 happens after Step 4 approval)
+    if (lead.caseStage !== CaseStage.PREAUTH_COMPLETE) {
       return errorResponse(
-        `Cannot create initiate form. Current stage: ${lead.caseStage}. Form can only be created when pre-auth is raised (during approval).`,
+        `Cannot create initiate form. Current stage: ${lead.caseStage}. Form can only be created after pre-auth is approved (PREAUTH_COMPLETE).`,
         400
       )
     }

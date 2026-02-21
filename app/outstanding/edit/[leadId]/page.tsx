@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useEffect, useRef } from 'react'
+import { Textarea } from '@/components/ui/textarea'
 
 interface Lead {
   id: string
@@ -28,6 +29,10 @@ interface Lead {
   surgeryDate?: string | Date
   bd?: { name?: string }
   dischargeSheet?: { id: string } | null
+  outstandingCase?: {
+    paymentReceived?: boolean
+    remark2?: string | null
+  } | null
   plRecord?: Record<string, unknown> & {
     hospitalPayoutStatus?: string
     doctorPayoutStatus?: string
@@ -56,6 +61,8 @@ export default function OutstandingEditPage() {
     mediendInvoiceStatus: 'PENDING',
     hospitalAmountPending: '',
     doctorAmountPending: '',
+    paymentReceived: false,
+    remark2: '',
   })
 
   const initialized = useRef(false)
@@ -66,6 +73,7 @@ export default function OutstandingEditPage() {
     // Use a microtask to avoid synchronous setState in effect
     const timer = setTimeout(() => {
       setFormData((prev) => {
+        const oc = record.outstandingCase
         const next = {
           ...prev,
           hospitalPayoutStatus: (pl?.hospitalPayoutStatus as string) || 'PENDING',
@@ -73,6 +81,8 @@ export default function OutstandingEditPage() {
           mediendInvoiceStatus: (pl?.mediendInvoiceStatus as string) || 'PENDING',
           hospitalAmountPending: pl?.hospitalAmountPending != null ? String(pl.hospitalAmountPending) : '',
           doctorAmountPending: pl?.doctorAmountPending != null ? String(pl.doctorAmountPending) : '',
+          paymentReceived: oc?.paymentReceived ?? false,
+          remark2: oc?.remark2 ?? '',
         }
         if (JSON.stringify(prev) === JSON.stringify(next)) return prev
         return next
@@ -97,8 +107,11 @@ export default function OutstandingEditPage() {
     },
   })
 
-  const update = (key: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [key]: value }))
+  const update = (key: string, value: string | boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [key]: key === 'paymentReceived' ? (value === 'true' || value === true) : value,
+    }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -109,6 +122,8 @@ export default function OutstandingEditPage() {
       mediendInvoiceStatus: formData.mediendInvoiceStatus,
       hospitalAmountPending: parseFloat(formData.hospitalAmountPending) || 0,
       doctorAmountPending: parseFloat(formData.doctorAmountPending) || 0,
+      paymentReceived: formData.paymentReceived,
+      remark2: formData.remark2.trim() || null,
     }
     updateMutation.mutate(payload)
   }
@@ -276,6 +291,35 @@ export default function OutstandingEditPage() {
                     onChange={(e) => update('doctorAmountPending', e.target.value)}
                     placeholder="0.00"
                     className="mt-1"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment & Remarks</CardTitle>
+                <CardDescription>Mark payment received and add follow-up notes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="paymentReceived"
+                    checked={formData.paymentReceived}
+                    onChange={(e) => update('paymentReceived', e.target.checked)}
+                    className="h-4 w-4 rounded border border-input accent-primary cursor-pointer"
+                  />
+                  <Label htmlFor="paymentReceived" className="cursor-pointer">Payment Received</Label>
+                </div>
+                <div>
+                  <Label>Follow-up Remarks (remark2)</Label>
+                  <Textarea
+                    value={formData.remark2}
+                    onChange={(e) => update('remark2', e.target.value)}
+                    placeholder="Enter follow-up notes..."
+                    className="mt-1 resize-none"
+                    rows={3}
                   />
                 </div>
               </CardContent>

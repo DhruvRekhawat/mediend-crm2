@@ -10,17 +10,26 @@ const raisePreAuthSchema = z.object({
   requestedHospitalName: z.string().min(1, 'Hospital name is required'),
   requestedRoomType: z.string().optional(),
   diseaseDescription: z.string().min(1, 'Disease description is required'),
+  notes: z.string().optional(),
   aadhar: z.string().optional(),
   pan: z.string().optional(),
   aadharFileUrl: z.string().optional(),
   panFileUrl: z.string().optional(),
   prescriptionFileUrl: z.string().optional(),
+  prescriptionFiles: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+  })).optional(),
   investigationFileUrls: z.array(z.object({
     name: z.string(),
     url: z.string(),
   })).optional(),
-  expectedAdmissionDate: z.string().min(1, 'Expected admission date is required'),
-  expectedSurgeryDate: z.string().min(1, 'Expected surgery date is required'),
+  diseaseImages: z.array(z.object({
+    name: z.string(),
+    url: z.string(),
+  })).optional(),
+  expectedAdmissionDate: z.string().optional(),
+  expectedSurgeryDate: z.string().optional(),
   isNewHospitalRequest: z.boolean().optional().default(false),
 })
 
@@ -84,9 +93,9 @@ export async function POST(
       if (suggestedNames.length > 0 && !suggestedNames.includes(data.requestedHospitalName)) {
         return errorResponse('Selected hospital must be one of Insurance\'s suggested hospitals, or use Request New Hospital.', 400)
       }
-    }
-    if (!data.requestedRoomType?.trim()) {
-      return errorResponse('Room type is required', 400)
+      if (!data.requestedRoomType?.trim()) {
+        return errorResponse('Room type is required', 400)
+      }
     }
 
     const preAuth = await prisma.preAuthorization.update({
@@ -95,14 +104,29 @@ export async function POST(
         requestedHospitalName: data.requestedHospitalName,
         requestedRoomType: data.requestedRoomType ?? null,
         diseaseDescription: data.diseaseDescription,
-        expectedAdmissionDate: new Date(data.expectedAdmissionDate),
-        expectedSurgeryDate: new Date(data.expectedSurgeryDate),
+        notes: data.notes ?? null,
+        ...(data.expectedAdmissionDate ? { expectedAdmissionDate: new Date(data.expectedAdmissionDate) } : {}),
+        ...(data.expectedSurgeryDate ? { expectedSurgeryDate: new Date(data.expectedSurgeryDate) } : {}),
+        prescriptionFiles: data.prescriptionFiles ?? undefined,
         investigationFileUrls: data.investigationFileUrls ?? undefined,
+        diseaseImages: data.diseaseImages ?? undefined,
         preAuthRaisedAt: new Date(),
         preAuthRaisedById: user.id,
         isNewHospitalRequest: isNewHospital,
       },
     })
+
+    // Update KYP submission with any new aadhar/pan files provided
+    if (data.aadharFileUrl || data.panFileUrl || data.prescriptionFileUrl) {
+      await prisma.kYPSubmission.update({
+        where: { id: lead.kypSubmission.id },
+        data: {
+          ...(data.aadharFileUrl ? { aadharFileUrl: data.aadharFileUrl } : {}),
+          ...(data.panFileUrl ? { panFileUrl: data.panFileUrl } : {}),
+          ...(data.prescriptionFileUrl ? { prescriptionFileUrl: data.prescriptionFileUrl } : {}),
+        },
+      })
+    }
 
     // Update lead case stage
     const previousStage = lead.caseStage

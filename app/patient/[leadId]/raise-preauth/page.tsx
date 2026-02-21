@@ -1,7 +1,6 @@
 'use client'
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
-import { useAuth } from '@/hooks/use-auth'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,10 +10,39 @@ import { useRouter, useParams } from 'next/navigation'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { Loader2 } from 'lucide-react'
 
+interface HospitalSuggestionItem {
+  id: string
+  hospitalName: string
+  tentativeBill?: number | null
+  roomRentGeneral?: number | null
+  roomRentSingle?: number | null
+  roomRentDeluxe?: number | null
+  roomRentSemiPrivate?: number | null
+  notes?: string | null
+}
+
 interface KYPSubmission {
   id: string
   leadId: string
+  // KYP fields for auto-fills
   disease: string | null
+  aadhar: string | null
+  pan: string | null
+  aadharFileUrl: string | null
+  panFileUrl: string | null
+  prescriptionFileUrl: string | null
+  location: string | null
+  area: string | null
+  insuranceType: string | null
+  // Lead data
+  lead: {
+    id: string
+    leadRef: string
+    patientName: string
+    surgeonName?: string | null
+    insuranceName?: string | null
+    city?: string | null
+  }
   preAuthData?: {
     id: string
     requestedHospitalName?: string | null
@@ -23,20 +51,24 @@ interface KYPSubmission {
     diseaseImages?: Array<{ name: string; url: string }> | null
     hospitalSuggestions?: string[] | null
     roomTypes?: Array<{ name: string; rent: string }> | null
-    suggestedHospitals?: Array<{
-      id: string
-      hospitalName: string
-      tentativeBill?: number | null
-      roomRentGeneral?: number | null
-      roomRentPrivate?: number | null
-      roomRentICU?: number | null
-      notes?: string | null
-    }> | null
+    suggestedHospitals?: HospitalSuggestionItem[] | null
+    prescriptionFiles?: Array<{ name: string; url: string }> | null
+    investigationFileUrls?: Array<{ name: string; url: string }> | null
+    notes?: string | null
+    expectedAdmissionDate?: string | null
+    expectedSurgeryDate?: string | null
+    // Insurance meta (auto-fills)
+    sumInsured?: string | null
+    balanceInsured?: string | null
+    copay?: string | null
+    capping?: string | number | null
+    roomRent?: string | null
+    insurance?: string | null
+    tpa?: string | null
   } | null
 }
 
 export default function RaisePreAuthPage() {
-  const { user } = useAuth()
   const router = useRouter()
   const params = useParams()
   const queryClient = useQueryClient()
@@ -71,6 +103,8 @@ export default function RaisePreAuthPage() {
     )
   }
 
+  const preAuth = kypSubmission.preAuthData
+
   return (
     <AuthenticatedLayout>
       <div className="space-y-6">
@@ -95,21 +129,54 @@ export default function RaisePreAuthPage() {
           <CardHeader>
             <CardTitle>Pre-Auth Request Form</CardTitle>
             <CardDescription>
-              Select a hospital from Insurance&apos;s suggestions or request a new hospital. Provide disease details and upload relevant documents.
+              Select a hospital from Insurance&apos;s suggestions or request a new hospital.
+              Upload required documents and provide disease details.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <PreAuthRaiseForm
               leadId={leadId}
-              initialData={kypSubmission.preAuthData ? {
-                requestedHospitalName: kypSubmission.preAuthData.requestedHospitalName || undefined,
-                requestedRoomType: kypSubmission.preAuthData.requestedRoomType || undefined,
-                diseaseDescription: kypSubmission.preAuthData.diseaseDescription || kypSubmission.disease || undefined,
-                diseaseImages: kypSubmission.preAuthData.diseaseImages as Array<{ name: string; url: string }> | undefined,
-                hospitalSuggestions: kypSubmission.preAuthData.hospitalSuggestions ?? undefined,
-                roomTypes: kypSubmission.preAuthData.roomTypes ?? undefined,
-                suggestedHospitals: kypSubmission.preAuthData.suggestedHospitals ?? undefined,
-              } : undefined}
+              initialData={
+                preAuth
+                  ? {
+                      requestedHospitalName: preAuth.requestedHospitalName || undefined,
+                      requestedRoomType: preAuth.requestedRoomType || undefined,
+                      diseaseDescription: preAuth.diseaseDescription || kypSubmission.disease || undefined,
+                      diseaseImages: (preAuth.diseaseImages as Array<{ name: string; url: string }>) ?? undefined,
+                      hospitalSuggestions: preAuth.hospitalSuggestions ?? undefined,
+                      roomTypes: preAuth.roomTypes ?? undefined,
+                      suggestedHospitals: preAuth.suggestedHospitals ?? undefined,
+                      prescriptionFiles: (preAuth.prescriptionFiles as Array<{ name: string; url: string }>) ?? undefined,
+                      investigationFileUrls: (preAuth.investigationFileUrls as Array<{ name: string; url: string }>) ?? undefined,
+                      notes: preAuth.notes || undefined,
+                      expectedAdmissionDate: preAuth.expectedAdmissionDate || undefined,
+                      expectedSurgeryDate: preAuth.expectedSurgeryDate || undefined,
+                    }
+                  : undefined
+              }
+              kypData={{
+                disease: kypSubmission.disease,
+                surgeonName: kypSubmission.lead?.surgeonName,
+                insuranceType: kypSubmission.insuranceType
+                  ? String(kypSubmission.insuranceType)
+                  : undefined,
+                aadhar: kypSubmission.aadhar,
+                pan: kypSubmission.pan,
+                aadharFileUrl: kypSubmission.aadharFileUrl,
+                panFileUrl: kypSubmission.panFileUrl,
+                prescriptionFileUrl: kypSubmission.prescriptionFileUrl,
+                location: kypSubmission.location,
+                area: kypSubmission.area,
+              }}
+              preAuthMeta={{
+                sumInsured: preAuth?.sumInsured,
+                balanceInsured: preAuth?.balanceInsured,
+                copay: preAuth?.copay,
+                capping: preAuth?.capping,
+                roomRent: preAuth?.roomRent,
+                insurance: preAuth?.insurance || kypSubmission.lead?.insuranceName,
+                tpa: preAuth?.tpa,
+              }}
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
                 queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })

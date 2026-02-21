@@ -60,6 +60,8 @@ export async function GET(request: NextRequest) {
             city: true,
             hospitalName: true,
             caseStage: true,
+            surgeonName: true,
+            insuranceName: true,
             bd: {
               select: {
                 id: true,

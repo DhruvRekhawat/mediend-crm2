@@ -22,6 +22,21 @@ export async function GET(
 
     const lead = await prisma.lead.findUnique({
       where: { id },
+    })
+
+    if (!lead) {
+      console.log('[DEBUG] Lead not found in DB', { id })
+      return errorResponse('Lead not found', 404)
+    }
+
+    console.log('[DEBUG] Lead found, fetching relations separately', { 
+      id: lead.id, 
+      patientName: lead.patientName 
+    })
+
+    // Fetch relations separately to identify which one is causing the "column not found" error
+    const fullLead = await prisma.lead.findUnique({
+      where: { id },
       include: {
         bd: {
           include: {
@@ -54,24 +69,7 @@ export async function GET(
           },
         },
         kypSubmission: {
-          select: {
-            id: true,
-            status: true,
-            submittedAt: true,
-            location: true,
-            area: true,
-            aadhar: true,
-            pan: true,
-            insuranceCard: true,
-            disease: true,
-            remark: true,
-            patientConsent: true,
-            aadharFileUrl: true,
-            panFileUrl: true,
-            insuranceCardFileUrl: true,
-            prescriptionFileUrl: true,
-            diseasePhotos: true,
-            otherFiles: true,
+          include: {
             submittedBy: {
               select: {
                 id: true,
@@ -79,26 +77,7 @@ export async function GET(
               },
             },
             preAuthData: {
-              select: {
-                id: true,
-                requestedHospitalName: true,
-                requestedRoomType: true,
-                diseaseDescription: true,
-                diseaseImages: true,
-                preAuthRaisedAt: true,
-                sumInsured: true,
-                roomRent: true,
-                capping: true,
-                copay: true,
-                icu: true,
-                hospitalNameSuggestion: true,
-                hospitalSuggestions: true,
-                roomTypes: true,
-                insurance: true,
-                tpa: true,
-                handledAt: true,
-                approvalStatus: true,
-                rejectionReason: true,
+              include: {
                 handledBy: {
                   select: {
                     id: true,
@@ -111,17 +90,7 @@ export async function GET(
                     name: true,
                   },
                 },
-                suggestedHospitals: {
-                  select: {
-                    id: true,
-                    hospitalName: true,
-                    tentativeBill: true,
-                    roomRentGeneral: true,
-                    roomRentDeluxe: true,
-                    roomRentSemiPrivate: true,
-                    notes: true,
-                  },
-                },
+                suggestedHospitals: true,
               },
             },
           },
@@ -138,29 +107,28 @@ export async function GET(
             id: true,
           },
         },
+        admissionRecord: {
+          select: {
+            id: true,
+            ipdStatus: true,
+          },
+        },
       },
     })
-    console.log('[DEBUG] Prisma query successful')
 
-    if (!lead) {
-      console.log('[DEBUG] Lead not found in DB', { id })
-      return errorResponse('Lead not found', 404)
+    if (!fullLead) {
+      return errorResponse('Failed to load lead relations', 500)
     }
 
-    console.log('[DEBUG] Lead found', { 
-      id: lead.id, 
-      bdId: lead.bdId, 
-      bdTeamId: lead.bd?.team?.id,
-      patientName: lead.patientName 
-    })
+    console.log('[DEBUG] Full lead with relations fetched successfully')
 
-    if (!canAccessLead(user, lead.bdId, lead.bd?.team?.id)) {
+    if (!canAccessLead(user, fullLead.bdId, fullLead.bd?.team?.id)) {
       console.log('[DEBUG] Access denied by canAccessLead', {
         userId: user.id,
         userRole: user.role,
         userTeamId: user.teamId,
-        leadBdId: lead.bdId,
-        leadBdTeamId: lead.bd?.team?.id
+        leadBdId: fullLead.bdId,
+        leadBdTeamId: fullLead.bd?.team?.id
       })
       return errorResponse('Forbidden', 403)
     }
@@ -169,11 +137,11 @@ export async function GET(
     // Mask phone number if user is not INSURANCE_HEAD or ADMIN
     const canViewPhone = user.role === 'INSURANCE_HEAD' || user.role === 'ADMIN'
     const mappedLead = {
-      ...lead,
-      status: mapStatusCode(lead.status),
-      source: lead.source ? mapSourceCode(lead.source) : lead.source,
-      phoneNumber: canViewPhone ? lead.phoneNumber : (lead.phoneNumber ? maskPhoneNumber(lead.phoneNumber) : null),
-      caseStage: lead.caseStage,
+      ...fullLead,
+      status: mapStatusCode(fullLead.status),
+      source: fullLead.source ? mapSourceCode(fullLead.source) : fullLead.source,
+      phoneNumber: canViewPhone ? fullLead.phoneNumber : (fullLead.phoneNumber ? maskPhoneNumber(fullLead.phoneNumber) : null),
+      caseStage: fullLead.caseStage,
     }
     console.log('[DEBUG] Mapping successful')
 

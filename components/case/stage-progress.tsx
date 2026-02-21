@@ -2,357 +2,304 @@
 
 import { CaseStage } from '@prisma/client'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, Circle } from 'lucide-react'
+import { CheckCircle2, Clock } from 'lucide-react'
 
-const STAGES: Array<{
-  stage: CaseStage
+// ─── Step definitions matching the 8-step workflow ──────────────────────────
+
+type StepOwner = 'BD' | 'INSURANCE'
+
+interface WorkflowStep {
+  number: number
   label: string
   shortLabel: string
-}> = [
-  { stage: CaseStage.NEW_LEAD, label: 'New Lead', shortLabel: 'New' },
-  { stage: CaseStage.KYP_BASIC_COMPLETE, label: 'KYP Basic', shortLabel: 'KYP 1' },
-  { stage: CaseStage.HOSPITALS_SUGGESTED, label: 'Hospitals Suggested', shortLabel: 'Hosp' },
-  { stage: CaseStage.PREAUTH_RAISED, label: 'Pre-Auth Raised', shortLabel: 'Pre-Auth' },
-  { stage: CaseStage.PREAUTH_COMPLETE, label: 'Pre-Auth Complete', shortLabel: 'Pre-Auth ✓' },
-  { stage: CaseStage.INITIATED, label: 'Admitted', shortLabel: 'Admitted' },
-  { stage: CaseStage.DISCHARGED, label: 'Discharged', shortLabel: 'Discharged' },
-]
+  owner: StepOwner
+  /** Returns true when this step has been completed */
+  isDone: (stageIndex: number, extras: StepExtras) => boolean
+}
+
+interface StepExtras {
+  hasInitiateForm: boolean
+  hasIpdMark: boolean
+}
+
+// Map active CaseStage values to a linear index for ordering
+const STAGE_ORDER: Partial<Record<CaseStage, number>> = {
+  [CaseStage.NEW_LEAD]: 0,
+  [CaseStage.KYP_BASIC_COMPLETE]: 1,
+  [CaseStage.HOSPITALS_SUGGESTED]: 2,
+  [CaseStage.PREAUTH_RAISED]: 3,
+  [CaseStage.PREAUTH_COMPLETE]: 4,
+  [CaseStage.INITIATED]: 5,
+  [CaseStage.DISCHARGED]: 6,
+  // Legacy mappings
+  [CaseStage.KYP_BASIC_PENDING]: 1,
+  [CaseStage.KYP_DETAILED_PENDING]: 2,
+  [CaseStage.KYP_DETAILED_COMPLETE]: 2,
+  [CaseStage.KYP_PENDING]: 1,
+  [CaseStage.KYP_COMPLETE]: 2,
+  [CaseStage.ADMITTED]: 5,
+  [CaseStage.IPD_DONE]: 6,
+  [CaseStage.PL_PENDING]: 6,
+  [CaseStage.OUTSTANDING]: 6,
+}
 
 function getStageIndex(stage: CaseStage): number {
-  const inStages = STAGES.findIndex(s => s.stage === stage)
-  if (inStages >= 0) return inStages
-  // Legacy or extra stages: map to nearest visible stage
-  const legacyToNew: Partial<Record<CaseStage, CaseStage>> = {
-    [CaseStage.KYP_BASIC_PENDING]: CaseStage.KYP_BASIC_COMPLETE,
-    [CaseStage.KYP_DETAILED_PENDING]: CaseStage.HOSPITALS_SUGGESTED,
-    [CaseStage.KYP_DETAILED_COMPLETE]: CaseStage.HOSPITALS_SUGGESTED,
-    [CaseStage.KYP_PENDING]: CaseStage.KYP_BASIC_COMPLETE,
-    [CaseStage.KYP_COMPLETE]: CaseStage.HOSPITALS_SUGGESTED,
-    [CaseStage.ADMITTED]: CaseStage.INITIATED,
-    [CaseStage.IPD_DONE]: CaseStage.DISCHARGED,
-    [CaseStage.PL_PENDING]: CaseStage.DISCHARGED,
-    [CaseStage.OUTSTANDING]: CaseStage.DISCHARGED,
-  }
-  const mapped = legacyToNew[stage] ?? stage
-  return STAGES.findIndex(s => s.stage === mapped)
+  return STAGE_ORDER[stage] ?? 0
 }
 
-function getStageStatus(currentStage: CaseStage, stage: CaseStage): 'completed' | 'current' | 'pending' {
-  const currentIndex = getStageIndex(currentStage)
-  const stageIndex = getStageIndex(stage)
-  
-  if (stageIndex < currentIndex) return 'completed'
-  if (stageIndex === currentIndex) return 'current'
-  return 'pending'
+const WORKFLOW_STEPS: WorkflowStep[] = [
+  {
+    number: 1,
+    label: 'Insurance Card Details',
+    shortLabel: 'Card Details',
+    owner: 'BD',
+    isDone: (si) => si >= 1,
+  },
+  {
+    number: 2,
+    label: 'Suggest Hospitals',
+    shortLabel: 'Hospitals',
+    owner: 'INSURANCE',
+    isDone: (si) => si >= 2,
+  },
+  {
+    number: 3,
+    label: 'Pre-Auth Raise',
+    shortLabel: 'Pre-Auth Raise',
+    owner: 'BD',
+    isDone: (si) => si >= 3,
+  },
+  {
+    number: 4,
+    label: 'Pre-Auth Approval',
+    shortLabel: 'PA Approval',
+    owner: 'INSURANCE',
+    isDone: (si) => si >= 4,
+  },
+  {
+    number: 5,
+    label: 'Insurance Initial Form',
+    shortLabel: 'Initial Form',
+    owner: 'INSURANCE',
+    isDone: (si, ex) => si >= 4 && ex.hasInitiateForm,
+  },
+  {
+    number: 6,
+    label: 'IPD Details',
+    shortLabel: 'IPD Details',
+    owner: 'BD',
+    isDone: (si) => si >= 5,
+  },
+  {
+    number: 7,
+    label: 'IPD Mark',
+    shortLabel: 'IPD Mark',
+    owner: 'BD',
+    isDone: (si, ex) => si >= 5 && ex.hasIpdMark,
+  },
+  {
+    number: 8,
+    label: 'Discharge Summary',
+    shortLabel: 'Discharge',
+    owner: 'INSURANCE',
+    isDone: (si) => si >= 6,
+  },
+]
+
+function getCurrentStep(stageIndex: number, extras: StepExtras): number {
+  // Returns 1-based index of the current (in-progress) step.
+  // If all done, returns 8.
+  for (let i = 0; i < WORKFLOW_STEPS.length; i++) {
+    if (!WORKFLOW_STEPS[i].isDone(stageIndex, extras)) return i + 1
+  }
+  return WORKFLOW_STEPS.length
 }
 
-function getStageColor(stage: CaseStage): { bg: string; border: string; text: string; connector: string } {
-  const colors: Record<CaseStage, { bg: string; border: string; text: string; connector: string }> = {
-    [CaseStage.NEW_LEAD]: {
-      bg: 'bg-blue-100 dark:bg-blue-900',
-      border: 'border-blue-300 dark:border-blue-700',
-      text: 'text-blue-700 dark:text-blue-300',
-      connector: 'bg-blue-300 dark:bg-blue-700',
-    },
-    [CaseStage.KYP_BASIC_COMPLETE]: {
-      bg: 'bg-amber-100 dark:bg-amber-900',
-      border: 'border-amber-300 dark:border-amber-700',
-      text: 'text-amber-700 dark:text-amber-300',
-      connector: 'bg-amber-300 dark:bg-amber-700',
-    },
-    [CaseStage.HOSPITALS_SUGGESTED]: {
-      bg: 'bg-emerald-100 dark:bg-emerald-900',
-      border: 'border-emerald-300 dark:border-emerald-700',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      connector: 'bg-emerald-300 dark:bg-emerald-700',
-    },
-    [CaseStage.PREAUTH_RAISED]: {
-      bg: 'bg-teal-100 dark:bg-teal-900',
-      border: 'border-teal-300 dark:border-teal-700',
-      text: 'text-teal-700 dark:text-teal-300',
-      connector: 'bg-teal-300 dark:bg-teal-700',
-    },
-    [CaseStage.PREAUTH_COMPLETE]: {
-      bg: 'bg-blue-100 dark:bg-blue-900',
-      border: 'border-blue-300 dark:border-blue-700',
-      text: 'text-blue-700 dark:text-blue-300',
-      connector: 'bg-blue-300 dark:bg-blue-700',
-    },
-    [CaseStage.INITIATED]: {
-      bg: 'bg-green-100 dark:bg-green-900',
-      border: 'border-green-300 dark:border-green-700',
-      text: 'text-green-700 dark:text-green-300',
-      connector: 'bg-green-300 dark:bg-green-700',
-    },
-    [CaseStage.DISCHARGED]: {
-      bg: 'bg-orange-100 dark:bg-orange-900',
-      border: 'border-orange-300 dark:border-orange-700',
-      text: 'text-orange-700 dark:text-orange-300',
-      connector: 'bg-orange-300 dark:bg-orange-700',
-    },
-    // Legacy stages (for backward compatibility)
-    [CaseStage.KYP_BASIC_PENDING]: {
-      bg: 'bg-amber-100 dark:bg-amber-900',
-      border: 'border-amber-300 dark:border-amber-700',
-      text: 'text-amber-700 dark:text-amber-300',
-      connector: 'bg-amber-300 dark:bg-amber-700',
-    },
-    [CaseStage.KYP_DETAILED_PENDING]: {
-      bg: 'bg-emerald-100 dark:bg-emerald-900',
-      border: 'border-emerald-300 dark:border-emerald-700',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      connector: 'bg-emerald-300 dark:bg-emerald-700',
-    },
-    [CaseStage.KYP_DETAILED_COMPLETE]: {
-      bg: 'bg-emerald-100 dark:bg-emerald-900',
-      border: 'border-emerald-300 dark:border-emerald-700',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      connector: 'bg-emerald-300 dark:bg-emerald-700',
-    },
-    [CaseStage.KYP_PENDING]: {
-      bg: 'bg-amber-100 dark:bg-amber-900',
-      border: 'border-amber-300 dark:border-amber-700',
-      text: 'text-amber-700 dark:text-amber-300',
-      connector: 'bg-amber-300 dark:bg-amber-700',
-    },
-    [CaseStage.KYP_COMPLETE]: {
-      bg: 'bg-emerald-100 dark:bg-emerald-900',
-      border: 'border-emerald-300 dark:border-emerald-700',
-      text: 'text-emerald-700 dark:text-emerald-300',
-      connector: 'bg-emerald-300 dark:bg-emerald-700',
-    },
-    [CaseStage.ADMITTED]: {
-      bg: 'bg-green-100 dark:bg-green-900',
-      border: 'border-green-300 dark:border-green-700',
-      text: 'text-green-700 dark:text-green-300',
-      connector: 'bg-green-300 dark:bg-green-700',
-    },
-    [CaseStage.IPD_DONE]: {
-      bg: 'bg-orange-100 dark:bg-orange-900',
-      border: 'border-orange-300 dark:border-orange-700',
-      text: 'text-orange-700 dark:text-orange-300',
-      connector: 'bg-orange-300 dark:bg-orange-700',
-    },
-    [CaseStage.PL_PENDING]: {
-      bg: 'bg-gray-100 dark:bg-gray-900',
-      border: 'border-gray-300 dark:border-gray-700',
-      text: 'text-gray-700 dark:text-gray-300',
-      connector: 'bg-gray-300 dark:bg-gray-700',
-    },
-    [CaseStage.OUTSTANDING]: {
-      bg: 'bg-gray-100 dark:bg-gray-900',
-      border: 'border-gray-300 dark:border-gray-700',
-      text: 'text-gray-700 dark:text-gray-300',
-      connector: 'bg-gray-300 dark:bg-gray-700',
-    },
-  }
-  return colors[stage] || {
-    bg: 'bg-gray-100 dark:bg-gray-900',
-    border: 'border-gray-300 dark:border-gray-700',
-    text: 'text-gray-700 dark:text-gray-300',
-    connector: 'bg-gray-300 dark:bg-gray-700',
-  }
+// ─── Colour helpers ──────────────────────────────────────────────────────────
+
+const BD_COLORS = {
+  dot: 'bg-blue-500',
+  dotCurrent: 'bg-blue-500 ring-4 ring-blue-200 dark:ring-blue-900',
+  text: 'text-blue-700 dark:text-blue-300',
+  badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  connector: 'bg-blue-400',
 }
 
-function getStageColors(stage: CaseStage): { gradient: string, bgGradient: string, textColor: string, connectorColor: string } {
-  const colors: Record<CaseStage, { gradient: string, bgGradient: string, textColor: string, connectorColor: string }> = {
-    [CaseStage.NEW_LEAD]: {
-      gradient: 'from-blue-500 to-cyan-500',
-      bgGradient: 'from-blue-400 to-cyan-400',
-      textColor: 'text-blue-600 dark:text-blue-400',
-      connectorColor: 'bg-gradient-to-r from-blue-500 to-cyan-500',
-    },
-    [CaseStage.KYP_BASIC_COMPLETE]: {
-      gradient: 'from-yellow-500 to-amber-500',
-      bgGradient: 'from-yellow-400 to-amber-400',
-      textColor: 'text-yellow-600 dark:text-yellow-400',
-      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
-    },
-    [CaseStage.HOSPITALS_SUGGESTED]: {
-      gradient: 'from-emerald-500 to-teal-500',
-      bgGradient: 'from-emerald-400 to-teal-400',
-      textColor: 'text-emerald-600 dark:text-emerald-400',
-      connectorColor: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-    },
-    [CaseStage.PREAUTH_RAISED]: {
-      gradient: 'from-purple-500 to-pink-500',
-      bgGradient: 'from-purple-400 to-pink-400',
-      textColor: 'text-purple-600 dark:text-purple-400',
-      connectorColor: 'bg-gradient-to-r from-purple-500 to-pink-500',
-    },
-    [CaseStage.PREAUTH_COMPLETE]: {
-      gradient: 'from-indigo-500 to-blue-500',
-      bgGradient: 'from-indigo-400 to-blue-400',
-      textColor: 'text-indigo-600 dark:text-indigo-400',
-      connectorColor: 'bg-gradient-to-r from-indigo-500 to-blue-500',
-    },
-    [CaseStage.INITIATED]: {
-      gradient: 'from-cyan-500 to-teal-500',
-      bgGradient: 'from-cyan-400 to-teal-400',
-      textColor: 'text-cyan-600 dark:text-cyan-400',
-      connectorColor: 'bg-gradient-to-r from-cyan-500 to-teal-500',
-    },
-    [CaseStage.DISCHARGED]: {
-      gradient: 'from-orange-500 to-amber-500',
-      bgGradient: 'from-orange-400 to-amber-400',
-      textColor: 'text-orange-600 dark:text-orange-400',
-      connectorColor: 'bg-gradient-to-r from-orange-500 to-amber-500',
-    },
-    // Legacy stages
-    [CaseStage.KYP_BASIC_PENDING]: {
-      gradient: 'from-yellow-500 to-amber-500',
-      bgGradient: 'from-yellow-400 to-amber-400',
-      textColor: 'text-yellow-600 dark:text-yellow-400',
-      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
-    },
-    [CaseStage.KYP_DETAILED_PENDING]: {
-      gradient: 'from-emerald-500 to-teal-500',
-      bgGradient: 'from-emerald-400 to-teal-400',
-      textColor: 'text-emerald-600 dark:text-emerald-400',
-      connectorColor: 'bg-gradient-to-r from-emerald-500 to-teal-500',
-    },
-    [CaseStage.KYP_DETAILED_COMPLETE]: {
-      gradient: 'from-green-500 to-emerald-500',
-      bgGradient: 'from-green-400 to-emerald-400',
-      textColor: 'text-green-600 dark:text-green-400',
-      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    },
-    [CaseStage.KYP_PENDING]: {
-      gradient: 'from-yellow-500 to-amber-500',
-      bgGradient: 'from-yellow-400 to-amber-400',
-      textColor: 'text-yellow-600 dark:text-yellow-400',
-      connectorColor: 'bg-gradient-to-r from-yellow-500 to-amber-500',
-    },
-    [CaseStage.KYP_COMPLETE]: {
-      gradient: 'from-green-500 to-emerald-500',
-      bgGradient: 'from-green-400 to-emerald-400',
-      textColor: 'text-green-600 dark:text-green-400',
-      connectorColor: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    },
-    [CaseStage.ADMITTED]: {
-      gradient: 'from-emerald-500 to-green-500',
-      bgGradient: 'from-emerald-400 to-green-400',
-      textColor: 'text-emerald-600 dark:text-emerald-400',
-      connectorColor: 'bg-gradient-to-r from-emerald-500 to-green-500',
-    },
-    [CaseStage.IPD_DONE]: {
-      gradient: 'from-teal-500 to-cyan-500',
-      bgGradient: 'from-teal-400 to-cyan-400',
-      textColor: 'text-teal-600 dark:text-teal-400',
-      connectorColor: 'bg-gradient-to-r from-teal-500 to-cyan-500',
-    },
-    [CaseStage.PL_PENDING]: {
-      gradient: 'from-pink-500 to-rose-500',
-      bgGradient: 'from-pink-400 to-rose-400',
-      textColor: 'text-pink-600 dark:text-pink-400',
-      connectorColor: 'bg-gradient-to-r from-pink-500 to-rose-500',
-    },
-    [CaseStage.OUTSTANDING]: {
-      gradient: 'from-red-500 to-rose-500',
-      bgGradient: 'from-red-400 to-rose-400',
-      textColor: 'text-red-600 dark:text-red-400',
-      connectorColor: 'bg-gradient-to-r from-red-500 to-rose-500',
-    },
-  }
-  return colors[stage] || {
-    gradient: 'from-gray-500 to-gray-600',
-    bgGradient: 'from-gray-400 to-gray-500',
-    textColor: 'text-gray-600 dark:text-gray-400',
-    connectorColor: 'bg-gray-400',
-  }
+const INS_COLORS = {
+  dot: 'bg-orange-500',
+  dotCurrent: 'bg-orange-500 ring-4 ring-orange-200 dark:ring-orange-900',
+  text: 'text-orange-700 dark:text-orange-300',
+  badge: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
+  connector: 'bg-orange-400',
 }
 
-interface StageProgressProps {
+const DONE_COLORS = {
+  dot: 'bg-green-500',
+  text: 'text-green-700 dark:text-green-400',
+  connector: 'bg-green-400',
+}
+
+// ─── Props ───────────────────────────────────────────────────────────────────
+
+export interface StageProgressProps {
   currentStage: CaseStage
+  hasInitiateForm?: boolean
+  hasIpdMark?: boolean
+  compact?: boolean
   className?: string
-  onStageClick?: (stage: CaseStage) => void
 }
 
-export function StageProgress({ currentStage, className, onStageClick }: StageProgressProps) {
-  const currentIndex = getStageIndex(currentStage)
+// ─── Full progress bar (patient page) ────────────────────────────────────────
+
+export function StageProgress({
+  currentStage,
+  hasInitiateForm = false,
+  hasIpdMark = false,
+  compact = false,
+  className,
+}: StageProgressProps) {
+  const stageIndex = getStageIndex(currentStage)
+  const extras: StepExtras = { hasInitiateForm, hasIpdMark }
+  const currentStepNumber = getCurrentStep(stageIndex, extras)
+
+  if (compact) {
+    return <StageProgressCompact stageIndex={stageIndex} extras={extras} currentStepNumber={currentStepNumber} className={className} />
+  }
 
   return (
-    <div className={cn('w-full', className)}>
-      <div className="relative pb-4">
-        {/* Continuous background line */}
-        <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-700 z-0" />
-        
-        {/* Colored segments for completed stages */}
-        {STAGES.map((stageInfo, index) => {
-          if (index >= currentIndex) return null
-          const stageColor = getStageColor(stageInfo.stage)
-          const nextStageColor = index < STAGES.length - 1 ? getStageColor(STAGES[index + 1].stage) : null
-          const segmentColor = nextStageColor?.connector || stageColor.connector
-          
+    <div className={cn('w-full select-none', className)}>
+      {/* Step row */}
+      <div className="relative flex items-start">
+        {/* Background connector line */}
+        <div className="absolute top-4 left-4 right-4 h-0.5 bg-gray-200 dark:bg-gray-700 z-0" />
+
+        {WORKFLOW_STEPS.map((step, idx) => {
+          const done = step.isDone(stageIndex, extras)
+          const isCurrent = step.number === currentStepNumber
+          const colors = step.owner === 'BD' ? BD_COLORS : INS_COLORS
+          const isLast = idx === WORKFLOW_STEPS.length - 1
+          const nextDone = idx < WORKFLOW_STEPS.length - 1 && WORKFLOW_STEPS[idx + 1].isDone(stageIndex, extras)
+
+          return (
+            <div key={step.number} className="relative flex flex-col items-center flex-1 z-10">
+              {/* Connector to next step */}
+              {!isLast && (
+                <div
+                  className={cn(
+                    'absolute top-4 left-1/2 right-0 h-0.5 z-0',
+                    done && nextDone ? DONE_COLORS.connector : done ? colors.connector : 'bg-gray-200 dark:bg-gray-700'
+                  )}
+                  style={{ width: '100%' }}
+                />
+              )}
+
+              {/* Dot */}
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all duration-300',
+                  done
+                    ? `${DONE_COLORS.dot} shadow-sm`
+                    : isCurrent
+                    ? `${colors.dotCurrent} animate-pulse`
+                    : 'bg-gray-200 dark:bg-gray-700'
+                )}
+              >
+                {done ? (
+                  <CheckCircle2 className="w-4 h-4 text-white" />
+                ) : isCurrent ? (
+                  <Clock className="w-3.5 h-3.5 text-white" />
+                ) : (
+                  <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500">{step.number}</span>
+                )}
+              </div>
+
+              {/* Label + owner badge */}
+              <div className="mt-2 flex flex-col items-center gap-1 text-center px-0.5">
+                <span
+                  className={cn(
+                    'text-[10px] font-semibold leading-tight',
+                    done ? DONE_COLORS.text : isCurrent ? colors.text : 'text-gray-400 dark:text-gray-600'
+                  )}
+                >
+                  {step.shortLabel}
+                </span>
+                <span
+                  className={cn(
+                    'text-[9px] px-1 py-0.5 rounded font-medium leading-none',
+                    done || isCurrent ? colors.badge : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600'
+                  )}
+                >
+                  {step.owner}
+                </span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Current step label */}
+      <div className="mt-3 flex items-center justify-center gap-2">
+        {(() => {
+          const step = WORKFLOW_STEPS[currentStepNumber - 1]
+          if (!step) return null
+          const allDone = currentStepNumber === WORKFLOW_STEPS.length && WORKFLOW_STEPS[WORKFLOW_STEPS.length - 1].isDone(stageIndex, extras)
+          const colors = step.owner === 'BD' ? BD_COLORS : INS_COLORS
+          return (
+            <span className={cn('text-xs font-semibold px-2 py-1 rounded-full', colors.badge)}>
+              {allDone ? '✓ Case Complete' : `Step ${step.number}: ${step.label}`}
+            </span>
+          )
+        })()}
+      </div>
+    </div>
+  )
+}
+
+// ─── Compact version (pipeline rows) ────────────────────────────────────────
+
+function StageProgressCompact({
+  stageIndex,
+  extras,
+  currentStepNumber,
+  className,
+}: {
+  stageIndex: number
+  extras: StepExtras
+  currentStepNumber: number
+  className?: string
+}) {
+  const allDone = currentStepNumber === WORKFLOW_STEPS.length && WORKFLOW_STEPS[WORKFLOW_STEPS.length - 1].isDone(stageIndex, extras)
+  const currentStep = WORKFLOW_STEPS[currentStepNumber - 1]
+  const colors = currentStep?.owner === 'BD' ? BD_COLORS : INS_COLORS
+
+  return (
+    <div className={cn('flex flex-col gap-1.5', className)}>
+      {/* Mini dot track */}
+      <div className="flex items-center gap-0.5">
+        {WORKFLOW_STEPS.map((step) => {
+          const done = step.isDone(stageIndex, extras)
+          const isCurrent = step.number === currentStepNumber
+          const stepColors = step.owner === 'BD' ? BD_COLORS : INS_COLORS
           return (
             <div
-              key={`segment-${index}`}
-              className={cn('absolute h-0.5 z-0 top-4', segmentColor)}
-              style={{
-                left: `${(index + 0.5) * (100 / STAGES.length)}%`,
-                width: `${100 / STAGES.length}%`,
-              }}
+              key={step.number}
+              title={`Step ${step.number}: ${step.label} (${step.owner})`}
+              className={cn(
+                'rounded-full transition-all',
+                done
+                  ? `h-2 w-2 ${DONE_COLORS.dot}`
+                  : isCurrent
+                  ? `h-2.5 w-2.5 ${stepColors.dot} animate-pulse`
+                  : 'h-2 w-2 bg-gray-200 dark:bg-gray-700'
+              )}
             />
           )
         })}
-        
-        {/* Stages container */}
-        <div className="relative flex items-center">
-          {STAGES.map((stageInfo, index) => {
-            const status = getStageStatus(currentStage, stageInfo.stage)
-            const isClickable = onStageClick && status !== 'pending'
-            const stageColor = getStageColor(stageInfo.stage)
-            
-            return (
-              <div
-                key={stageInfo.stage}
-                className={cn(
-                  'flex flex-col items-center gap-2 flex-1',
-                  isClickable && 'cursor-pointer hover:opacity-80'
-                )}
-                onClick={() => isClickable && onStageClick?.(stageInfo.stage)}
-              >
-                {/* Stage indicator */}
-                <div
-                  className={cn(
-                    'flex items-center justify-center rounded-full transition-all border-2 relative z-10',
-                    status === 'completed' && `${stageColor.bg} ${stageColor.text} ${stageColor.border}`,
-                    status === 'current' && `${stageColor.bg} ${stageColor.text} ${stageColor.border} ring-2 ring-offset-2`,
-                    status === 'pending' && 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700',
-                    'w-8 h-8',
-                    status === 'current' && 'animate-pulse'
-                  )}
-                >
-                  {status === 'completed' ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    <Circle className="w-4 h-4" />
-                  )}
-                </div>
-                
-                {/* Stage label */}
-                <div className="text-center">
-                  <div
-                    className={cn(
-                      'text-xs font-medium',
-                      status === 'current' && stageColor.text,
-                      status === 'completed' && stageColor.text,
-                      status === 'pending' && 'text-gray-400 dark:text-gray-600'
-                    )}
-                  >
-                    {stageInfo.shortLabel}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
       </div>
-      
-      {/* Current stage description */}
-      <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
-        Current: {STAGES[currentIndex]?.label}
-      </div>
+      {/* Step label */}
+      <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded w-fit', colors.badge)}>
+        {allDone ? '✓ Complete' : `Step ${currentStepNumber}: ${currentStep?.shortLabel}`}
+      </span>
     </div>
   )
 }

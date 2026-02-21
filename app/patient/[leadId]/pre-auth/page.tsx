@@ -40,8 +40,9 @@ interface KYPSubmission {
       hospitalName: string
       tentativeBill: number | null
       roomRentGeneral: number | null
-      roomRentPrivate: number | null
-      roomRentICU: number | null
+      roomRentSingle: number | null
+      roomRentDeluxe: number | null
+      roomRentSemiPrivate: number | null
       notes: string | null
     }>
     roomTypes?: Array<{ name: string; rent: string }> | null
