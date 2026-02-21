@@ -29,6 +29,7 @@ interface KYPBasicFormProps {
   initialPhone?: string
   initialAge?: number
   initialSex?: string
+  initialTreatment?: string
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -39,6 +40,7 @@ export function KYPBasicForm({
   initialPhone = '',
   initialAge,
   initialSex = '',
+  initialTreatment = '',
   onSuccess,
   onCancel,
 }: KYPBasicFormProps) {
@@ -51,7 +53,7 @@ export function KYPBasicForm({
     phone: initialPhone,
     age: initialAge || '',
     sex: initialSex,
-    disease: '',
+    disease: initialTreatment,
     insuranceType: '',
     remark: '',
     insuranceName: '',
@@ -285,6 +287,8 @@ export function KYPBasicForm({
             onChange={(e) => setFormData({ ...formData, disease: e.target.value })}
             placeholder="Describe the disease or treatment needed"
             required
+            readOnly
+            className="bg-muted"
           />
           {errors.disease && <p className="text-xs text-destructive mt-1">{errors.disease}</p>}
         </div>
@@ -300,7 +304,6 @@ export function KYPBasicForm({
             >
               <option value="">Select insurance type</option>
               <option value="INDIVIDUAL">Individual</option>
-              <option value="FAMILY_FLOATER">Family Floater</option>
               <option value="GROUP_CORPORATE">Group/Corporate</option>
             </select>
             {errors.insuranceType && <p className="text-xs text-destructive mt-1">{errors.insuranceType}</p>}

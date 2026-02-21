@@ -18,6 +18,9 @@ interface Lead {
   dischargeSheet?: {
     id: string
   } | null
+  insuranceInitiateForm?: {
+    id: string
+  } | null
 }
 
 // BD (or Team Lead) can raise pre-auth when case is in HOSPITALS_SUGGESTED stage
@@ -94,14 +97,15 @@ export function canGeneratePDF(user: User, lead: Lead): boolean {
   return isInsurance && afterPreAuthRaised
 }
 
-// Insurance or PL can edit discharge sheet when discharged
+// Insurance or PL can edit discharge sheet when discharged AND initial form is filled
 export function canEditDischargeSheet(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
   const isInsuranceOrPL = ['INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'ADMIN'].includes(user.role)
   const isDischarged = lead.caseStage === CaseStage.DISCHARGED
+  const hasInitiateForm = !!lead.insuranceInitiateForm?.id
   
-  return isInsuranceOrPL && isDischarged
+  return isInsuranceOrPL && isDischarged && hasInitiateForm
 }
 
 // BD can mark case as lost only after KYP1 and up until Mark Admitted (not before KYP1, not after admitted)
@@ -179,12 +183,20 @@ export function canViewPhoneNumber(user: { role: string } | null | undefined): b
   return ['INSURANCE_HEAD', 'ADMIN'].includes(user.role)
 }
 
-// Insurance can fill initiate form after pre-auth is approved (Step 5, after Step 4 approval)
+// Insurance can fill initiate form after pre-auth is raised or complete
 export function canFillInitiateForm(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
   const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
-  const isPreAuthComplete = lead.caseStage === CaseStage.PREAUTH_COMPLETE
+  const isValidStage = lead.caseStage === CaseStage.PREAUTH_RAISED || lead.caseStage === CaseStage.PREAUTH_COMPLETE
   
-  return isInsurance && isPreAuthComplete
+  return isInsurance && isValidStage
+}
+
+// True when discharge is blocked because the initiate form has not been filled yet
+export function isDischargeBlockedByInitiateForm(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  const isInsuranceOrPL = ['INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'ADMIN'].includes(user.role)
+  const isDischarged = lead.caseStage === CaseStage.DISCHARGED
+  return isInsuranceOrPL && isDischarged && !lead.insuranceInitiateForm?.id
 }

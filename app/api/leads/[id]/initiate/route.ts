@@ -10,7 +10,7 @@ const initiateSchema = z.object({
   admissionDate: z.string().min(1, 'Admission date is required'),
   admissionTime: z.string().min(1, 'Admission time is required'),
   admittingHospital: z.string().min(1, 'Hospital name is required'),
-  hospitalAddress: z.string().min(1, 'Hospital address is required'),
+  hospitalAddress: z.string().optional(),
   googleMapLocation: z.string().optional(),
   surgeryDate: z.string().min(1, 'Surgery date is required'),
   surgeryTime: z.string().min(1, 'Surgery time is required'),
@@ -28,6 +28,12 @@ const initiateSchema = z.object({
   cabDischargePickupDateTime: z.string().optional(),
   cabDischargeFrom: z.string().optional(),
   cabDischargeTo: z.string().optional(),
+  // Overrides for Lead details
+  quantityGrade: z.string().optional(),
+  anesthesia: z.string().optional(),
+  surgeonType: z.string().optional(),
+  alternateContactName: z.string().optional(),
+  alternateContactNumber: z.string().optional(),
 })
 
 export async function POST(
@@ -81,7 +87,7 @@ export async function POST(
         admissionDate: new Date(data.admissionDate),
         admissionTime: data.admissionTime,
         admittingHospital: data.admittingHospital,
-        hospitalAddress: data.hospitalAddress,
+        hospitalAddress: data.hospitalAddress?.trim() || undefined,
         googleMapLocation: data.googleMapLocation?.trim() || undefined,
         surgeryDate: new Date(data.surgeryDate),
         surgeryTime: data.surgeryTime,
@@ -110,6 +116,12 @@ export async function POST(
         caseStage: CaseStage.INITIATED,
         hospitalName: data.admittingHospital,
         ipdAdmissionDate: new Date(data.admissionDate),
+        // Save overrides
+        ...(data.quantityGrade ? { quantityGrade: data.quantityGrade } : {}),
+        ...(data.anesthesia ? { anesthesia: data.anesthesia } : {}),
+        ...(data.surgeonType ? { surgeonType: data.surgeonType } : {}),
+        ...(data.alternateContactName ? { attendantName: data.alternateContactName } : {}),
+        ...(data.alternateContactNumber ? { alternateNumber: data.alternateContactNumber } : {}),
       },
     })
 

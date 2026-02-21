@@ -17,6 +17,7 @@ interface HospitalRow {
   roomRentDeluxe: string
   roomRentSemiPrivate: string
   notes: string
+  suggestedDoctor: string
 }
 
 interface HospitalSuggestionFormProps {
@@ -27,8 +28,10 @@ interface HospitalSuggestionFormProps {
   initialCapping?: number | null
   initialInsuranceName?: string
   initialTpa?: string
+  initialDoctorName?: string
   initialHospitals?: Array<{
     hospitalName: string
+    suggestedDoctor?: string | null
     tentativeBill?: number | null
     roomRentGeneral?: number | null
     roomRentSingle?: number | null
@@ -48,6 +51,7 @@ const emptyHospital = (): HospitalRow => ({
   roomRentDeluxe: '',
   roomRentSemiPrivate: '',
   notes: '',
+  suggestedDoctor: '',
 })
 
 export function HospitalSuggestionForm({
@@ -58,6 +62,7 @@ export function HospitalSuggestionForm({
   initialCapping,
   initialInsuranceName = '',
   initialTpa = '',
+  initialDoctorName = '',
   initialHospitals,
   onSuccess,
   onCancel,
@@ -78,12 +83,13 @@ export function HospitalSuggestionForm({
         roomRentDeluxe: h.roomRentDeluxe != null ? String(h.roomRentDeluxe) : '',
         roomRentSemiPrivate: h.roomRentSemiPrivate != null ? String(h.roomRentSemiPrivate) : '',
         notes: h.notes ?? '',
+        suggestedDoctor: h.suggestedDoctor ?? initialDoctorName,
       }))
     }
-    return [emptyHospital()]
+    return [{ ...emptyHospital(), suggestedDoctor: initialDoctorName }]
   })
 
-  const addHospital = () => setHospitals((prev) => [...prev, emptyHospital()])
+  const addHospital = () => setHospitals((prev) => [...prev, { ...emptyHospital(), suggestedDoctor: initialDoctorName }])
   const removeHospital = (index: number) =>
     setHospitals((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)))
   const updateHospital = (index: number, field: keyof HospitalRow, value: string) =>
@@ -123,6 +129,7 @@ export function HospitalSuggestionForm({
         roomRentDeluxe: h.roomRentDeluxe ? parseFloat(h.roomRentDeluxe) : undefined,
         roomRentSemiPrivate: h.roomRentSemiPrivate ? parseFloat(h.roomRentSemiPrivate) : undefined,
         notes: h.notes.trim() || undefined,
+        suggestedDoctor: h.suggestedDoctor.trim() || undefined,
       }))
       .filter((h) => h.hospitalName)
     if (!list.length) {
@@ -182,7 +189,7 @@ export function HospitalSuggestionForm({
           />
         </div>
         <div>
-          <Label htmlFor="capping">Capping</Label>
+          <Label htmlFor="capping">Disease Capping</Label>
           <Input
             id="capping"
             type="number"
@@ -246,10 +253,15 @@ export function HospitalSuggestionForm({
                 <div className="col-span-2">
                   <Label>Hospital Name *</Label>
                   <Input
-                    value={h.hospitalName}
-                    onChange={(e) => updateHospital(index, 'hospitalName', e.target.value)}
-                    placeholder="Hospital name"
                     required
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Suggested Doctor</Label>
+                  <Input
+                    value={h.suggestedDoctor}
+                    onChange={(e) => updateHospital(index, 'suggestedDoctor', e.target.value)}
+                    placeholder="Doctor name"
                   />
                 </div>
                 <div>

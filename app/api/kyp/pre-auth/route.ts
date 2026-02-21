@@ -19,6 +19,7 @@ const hospitalSuggestionSchema = z.object({
   roomRentDeluxe: z.number().optional(),
   roomRentSemiPrivate: z.number().optional(),
   notes: z.string().optional(),
+  suggestedDoctor: z.string().optional(),
 })
 
 const preAuthSchema = z.object({
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
             roomRentDeluxe: h.roomRentDeluxe ?? undefined,
             roomRentSemiPrivate: h.roomRentSemiPrivate ?? undefined,
             notes: h.notes ?? undefined,
+            suggestedDoctor: h.suggestedDoctor ?? undefined,
           },
         })
       }
@@ -213,6 +215,7 @@ export async function POST(request: NextRequest) {
             roomRentDeluxe: h.roomRentDeluxe ?? undefined,
             roomRentSemiPrivate: h.roomRentSemiPrivate ?? undefined,
             notes: h.notes ?? undefined,
+            suggestedDoctor: h.suggestedDoctor ?? undefined,
           },
         })
       }

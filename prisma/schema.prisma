@@ -1522,6 +1522,7 @@ model HospitalSuggestion {
   preAuthId        String
   preAuth          PreAuthorization  @relation(fields: [preAuthId], references: [id], onDelete: Cascade)
   hospitalName     String
+  suggestedDoctor  String?
   tentativeBill    Float?
   roomRentGeneral  Float?
   roomRentSingle   Float?

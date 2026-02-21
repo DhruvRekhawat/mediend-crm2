@@ -236,6 +236,10 @@ export default function PreAuthPage() {
           lead?.caseStage === 'KYP_DETAILED_PENDING' ||
           lead?.caseStage === 'KYP_DETAILED_COMPLETE' ||
           lead?.caseStage === 'PREAUTH_RAISED' ||
+          lead?.caseStage === 'PREAUTH_COMPLETE' ||
+          lead?.caseStage === 'INITIATED' ||
+          lead?.caseStage === 'ADMITTED' ||
+          lead?.caseStage === 'DISCHARGED' ||
           canComplete
         ) && (
           <PreAuthInlineApproval

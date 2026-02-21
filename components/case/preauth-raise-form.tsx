@@ -116,11 +116,20 @@ export function PreAuthRaiseForm({
     expectedSurgeryDate: initialData?.expectedSurgeryDate || '',
     isNewHospitalRequest: false,
     newHospitalName: '',
-    // Aadhar / PAN: user can replace if needed
+    // Aadhaar / PAN numbers
+    aadhar: initialData?.diseaseDescription ? (kypData?.aadhar || '') : (kypData?.aadhar || ''),
+    pan: initialData?.diseaseDescription ? (kypData?.pan || '') : (kypData?.pan || ''),
+    // Aadhaar / PAN files: user can replace if needed
     aadharFileUrl: existingAadharUrl || '',
     aadharFileName: existingAadharUrl ? 'Existing Aadhar' : '',
     panFileUrl: existingPanUrl || '',
     panFileName: existingPanUrl ? 'Existing PAN' : '',
+  })
+  
+  // Update aadhar/pan if kypData changes or on initial load
+  useState(() => {
+    if (kypData?.aadhar && !formData.aadhar) formData.aadhar = kypData.aadhar;
+    if (kypData?.pan && !formData.pan) formData.pan = kypData.pan;
   })
 
   // Generic file upload helper
@@ -212,6 +221,8 @@ export function PreAuthRaiseForm({
           requestedRoomType: formData.requestedRoomType || undefined,
           diseaseDescription: formData.diseaseDescription,
           notes: formData.notes || undefined,
+          aadhar: formData.aadhar || undefined,
+          pan: formData.pan || undefined,
           aadharFileUrl: formData.aadharFileUrl || undefined,
           panFileUrl: formData.panFileUrl || undefined,
           prescriptionFiles: formData.prescriptionFiles,
@@ -746,7 +757,18 @@ export function PreAuthRaiseForm({
       description: 'Upload required documents and provide disease information',
       component: (
         <div className="space-y-5">
-          {/* Aadhar */}
+          {/* Aadhaar Number */}
+          <div className="space-y-1">
+            <Label htmlFor="aadhar-number">Aadhaar Number</Label>
+            <Input
+              id="aadhar-number"
+              value={formData.aadhar}
+              onChange={(e) => setFormData(prev => ({ ...prev, aadhar: e.target.value }))}
+              placeholder="Enter 12-digit Aadhaar number"
+            />
+          </div>
+
+          {/* Aadhaar File */}
           <FileUploadRow
             id="aadhar-upload"
             label="Aadhar Card"
@@ -764,7 +786,18 @@ export function PreAuthRaiseForm({
             }
           />
 
-          {/* PAN */}
+          {/* PAN Number */}
+          <div className="space-y-1">
+            <Label htmlFor="pan-number">PAN Number</Label>
+            <Input
+              id="pan-number"
+              value={formData.pan}
+              onChange={(e) => setFormData(prev => ({ ...prev, pan: e.target.value }))}
+              placeholder="Enter 10-digit PAN number"
+            />
+          </div>
+
+          {/* PAN File */}
           <FileUploadRow
             id="pan-upload"
             label="PAN Card"

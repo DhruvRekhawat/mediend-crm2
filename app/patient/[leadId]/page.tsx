@@ -36,7 +36,8 @@ import {
   canMarkLost,
   canRaisePreAuth,
   canSuggestHospitals,
-  canViewPhoneNumber
+  canViewPhoneNumber,
+  isDischargeBlockedByInitiateForm,
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { getPhoneDisplay } from '@/lib/phone-utils'
@@ -345,6 +346,7 @@ export default function PatientDetailsPage() {
   const showMarkLost = user && canMarkLost(user as any, lead)
   const showSuggestHospitals = user && canSuggestHospitals(user as any, lead)
   const canFillInitiate = user && canFillInitiateForm(user as any, lead)
+  const isDischargeBlocked = user && isDischargeBlockedByInitiateForm(user as any, lead)
 
   // Collect all uploaded documents for grid (KYP + PreAuth)
   const uploadedDocuments = (() => {
@@ -627,6 +629,17 @@ export default function PatientDetailsPage() {
                     </Link>
                   </Button>
                 )}
+                {canFillInitiate && (
+                  <Button
+                    asChild
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white border-0"
+                  >
+                    <Link href={`/patient/${leadId}/pre-auth?initiate=true`}>
+                      <FileText className="h-4 w-4" />
+                      Fill Initial Form
+                    </Link>
+                  </Button>
+                )}
                 {canPDF && (
                   <Button
                     variant="outline"
@@ -669,6 +682,21 @@ export default function PatientDetailsPage() {
                     </Link>
                   </Button>
                 )}
+                {isDischargeBlocked && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      disabled
+                      className="flex items-center gap-2 bg-gray-400 dark:bg-gray-600 text-white border-0 cursor-not-allowed"
+                      title="You must fill the Insurance Initial Form (from the Pre-Auth page) before you can fill the discharge form."
+                    >
+                      <Receipt className="h-4 w-4" />
+                      Fill Discharge Form
+                    </Button>
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                      ⚠ Fill the Initial Form first
+                    </span>
+                  </div>
+                )}
                 {showMarkLost && (
                   <Button
                     variant="outline"
@@ -688,17 +716,58 @@ export default function PatientDetailsPage() {
         {kypSubmission && (
           <Card className="border-2 shadow-sm">
             <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <FileText className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <CardTitle>KYP Details</CardTitle>
                   {getStatusBadge(kypSubmission.status)}
+                  {/* Case stage status chip */}
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/70 dark:bg-black/30 border border-gray-200 dark:border-gray-700 text-[11px] text-gray-600 dark:text-gray-400">
+                    <Activity className="w-3 h-3" />
+                    {lead.caseStage.replace(/_/g, ' ')}
+                  </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   Submitted by <span className="font-semibold">{kypSubmission.submittedBy.name}</span> on {format(new Date(kypSubmission.submittedAt), 'PPp')}
                 </div>
               </div>
+              {/* Follow-up / KYP status details row */}
+              {kypSubmission.followUpData && (
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 border-t border-green-100 dark:border-green-900/30 pt-3">
+                  {kypSubmission.followUpData.admissionDate && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3 text-teal-500" />
+                      Admission: <strong>{format(new Date(kypSubmission.followUpData.admissionDate), 'dd MMM yyyy')}</strong>
+                    </span>
+                  )}
+                  {kypSubmission.followUpData.surgeryDate && (
+                    <span className="flex items-center gap-1">
+                      <Stethoscope className="w-3 h-3 text-purple-500" />
+                      Surgery: <strong>{format(new Date(kypSubmission.followUpData.surgeryDate), 'dd MMM yyyy')}</strong>
+                    </span>
+                  )}
+                  {kypSubmission.followUpData.hospitalName && (
+                    <span className="flex items-center gap-1">
+                      <Shield className="w-3 h-3 text-blue-500" />
+                      {kypSubmission.followUpData.hospitalName}
+                    </span>
+                  )}
+                  {kypSubmission.followUpData.doctorName && (
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3 text-indigo-500" />
+                      Dr. {kypSubmission.followUpData.doctorName}
+                    </span>
+                  )}
+                  {kypSubmission.followUpData.updatedAt && (
+                    <span className="ml-auto flex items-center gap-1 text-gray-400">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Updated {format(new Date(kypSubmission.followUpData.updatedAt), 'dd MMM, HH:mm')}
+                    </span>
+                  )}
+                </div>
+              )}
             </CardHeader>
+
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Personal & ID Details */}
@@ -832,25 +901,7 @@ export default function PatientDetailsPage() {
           </Card>
         )}
 
-        {/* Insurance Initiate Form — Step 5, shown at PREAUTH_COMPLETE for Insurance to fill */}
-        {canFillInitiate && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Insurance Initiate Form</CardTitle>
-              <CardDescription>View or edit the initiate form details</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InsuranceInitiateForm
-                leadId={leadId}
-                initialData={initiateFormData?.data?.initiateForm}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                }}
-              />
-            </CardContent>
-          </Card>
-        )}
+
 
 
         {/* Discharge Sheet Link */}
@@ -900,7 +951,7 @@ export default function PatientDetailsPage() {
                 treatment={lead.treatment ?? undefined}
                 quantityGrade={lead.quantityGrade ?? undefined}
                 anesthesia={lead.anesthesia ?? undefined}
-                surgeonName={lead.surgeonName ?? undefined}
+                surgeonName={lead.ipdDrName || lead.surgeonName || undefined}
                 surgeonType={lead.surgeonType ?? undefined}
                 hospitalName={lead.hospitalName}
                 insuranceName={lead.insuranceName ?? undefined}

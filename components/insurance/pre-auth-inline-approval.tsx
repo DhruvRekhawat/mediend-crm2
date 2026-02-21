@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge'
 import { PreAuthStatus } from '@prisma/client'
 import { apiPost, apiGet } from '@/lib/api-client'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { CheckCircle2, XCircle, Clock, Loader2, Hospital } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, Loader2, Hospital, FileText } from 'lucide-react'
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 
@@ -21,6 +22,7 @@ interface PreAuthInlineApprovalProps {
   lead?: {
     caseStage?: string
     insuranceName?: string | null
+    ipdDrName?: string | null
   }
   preAuthData?: {
     id: string
@@ -70,8 +72,10 @@ export function PreAuthInlineApproval({
   const [rejectionReason, setRejectionReason] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showHospitalForm, setShowHospitalForm] = useState(false)
+  const [showInitiateForm, setShowInitiateForm] = useState(false)
 
   const queryClient = useQueryClient()
+  const searchParams = useSearchParams()
 
   const { data: initiateFormData } = useQuery<any>({
     queryKey: ['insurance-initiate-form', leadId],
@@ -106,8 +110,24 @@ export function PreAuthInlineApproval({
     preAuthData?.hospitalNameSuggestion
 
   const hasAnyHospitalData = hasHospitalSuggestions || !!hasLegacyHospitals
-  const isPreAuthRaised = lead?.caseStage === 'PREAUTH_RAISED'
+  const isPreAuthRaised = 
+    lead?.caseStage === 'PREAUTH_RAISED' || 
+    lead?.caseStage === 'PREAUTH_COMPLETE' ||
+    lead?.caseStage === 'INITIATED' ||
+    lead?.caseStage === 'ADMITTED' ||
+    lead?.caseStage === 'DISCHARGED'
   const shouldForceHospitalForm = !hasAnyHospitalData
+
+  useEffect(() => {
+    // Show if query param is present
+    if (searchParams.get('initiate') === 'true') {
+      setShowInitiateForm(true)
+    }
+    // Show by default if in raised/complete stage AND form is not filled
+    else if (isPreAuthRaised && !isInitiateFormFilled && initiateFormData) {
+      setShowInitiateForm(true)
+    }
+  }, [searchParams, isPreAuthRaised, isInitiateFormFilled, !!initiateFormData])
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
@@ -482,6 +502,7 @@ export function PreAuthInlineApproval({
             initialCapping={preAuthData?.capping ? Number(preAuthData.capping) : undefined}
             initialInsuranceName={preAuthData?.insurance || lead?.insuranceName || ''}
             initialTpa={preAuthData?.tpa || ''}
+            initialDoctorName={lead?.ipdDrName || ''}
             initialHospitals={preAuthData?.suggestedHospitals}
             onSuccess={() => {
               setShowHospitalForm(false)
@@ -491,29 +512,28 @@ export function PreAuthInlineApproval({
           />
         )}
 
-        {/* Hospitals provided — modify (pre-raise) */}
-        {hasAnyHospitalData && !shouldForceHospitalForm && !showHospitalForm && !isPreAuthRaised && (
-          <div className="p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
-            <p className="text-sm text-green-900 dark:text-green-100 mb-3">
-              Hospital suggestions have been provided.
-            </p>
-            <Button onClick={() => setShowHospitalForm(true)} variant="outline">
-              Modify Hospital Suggestions
-            </Button>
+        {/* Hospitals provided — read-only view with modify/lock status */}
+        {hasAnyHospitalData && !shouldForceHospitalForm && !showHospitalForm && (
+          <div className="space-y-4">
+            {/* Suggested hospitals read-only display */}
+            {hospitalSuggestionsJsx}
+
+            {/* Modify button only before pre-auth is raised */}
+            {!isPreAuthRaised && (
+              <Button onClick={() => setShowHospitalForm(true)} variant="outline" size="sm">
+                Modify Hospital Suggestions
+              </Button>
+            )}
+            {isPreAuthRaised && (
+              <p className="text-xs text-muted-foreground">
+                Hospital suggestions are locked — pre-authorization has been raised by BD.
+              </p>
+            )}
           </div>
         )}
 
-        {/* Hospitals provided — locked after pre-auth raised */}
+        {/* Approval section — only visible after pre-auth is raised */}
         {hasAnyHospitalData && !showHospitalForm && isPreAuthRaised && (
-          <div className="p-4 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
-            <p className="text-sm text-green-900 dark:text-green-100">
-              Hospital suggestions have been provided and pre-authorization has been raised.
-            </p>
-          </div>
-        )}
-
-        {/* Approval section — only when hospitals exist */}
-        {hasAnyHospitalData && !showHospitalForm && (
           <div className="space-y-5 border-t pt-5">
             {showMarkNewHospitalFirst && (
               <Button onClick={handleMarkNewHospitalRaised} disabled={isSubmitting}>
@@ -522,14 +542,21 @@ export function PreAuthInlineApproval({
             )}
 
             {/* Insurance Initiate Form */}
-            {isPreAuthRaised && (
-              <div className="space-y-4">
+            {showInitiateForm && (
+              <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold">Insurance Initiate Form</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowInitiateForm(false)}>
+                    Close
+                  </Button>
+                </div>
                 <InsuranceInitiateForm
                   leadId={leadId}
                   initialData={initiateFormData?.initiateForm}
                   onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
                     queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                    setShowInitiateForm(false)
                   }}
                   embedded
                 />
@@ -541,9 +568,7 @@ export function PreAuthInlineApproval({
               <div className="flex flex-wrap gap-3">
                 <Button
                   onClick={() => setAction('approve')}
-                  disabled={!isInitiateFormFilled}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                  title={!isInitiateFormFilled ? 'Fill the Initial Form above first' : undefined}
                 >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   Approve
@@ -565,15 +590,19 @@ export function PreAuthInlineApproval({
                   <XCircle className="w-4 h-4 mr-2" />
                   Reject
                 </Button>
+
+                {isTempApproved && !showInitiateForm && (
+                  <Button
+                    onClick={() => setShowInitiateForm(true)}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    {isInitiateFormFilled ? 'Edit Initial Form' : 'Fill Initial Form'}
+                  </Button>
+                )}
               </div>
             )}
 
-            {action === null && !isInitiateFormFilled && (
-              <p className="text-xs text-muted-foreground">
-                Tip: Fill the Initial Form above to enable full Approval. Temporary Approval can be
-                given without it.
-              </p>
-            )}
 
             {/* Approve detail form */}
             {action === 'approve' && approvalDetailJsx(false)}

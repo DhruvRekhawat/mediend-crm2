@@ -37,6 +37,7 @@ export type Permission =
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
     'leads:read',
+    'leads:write',
     'analytics:read',
     'reports:export',
     'users:read',
@@ -80,6 +81,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
   ],
   INSURANCE_HEAD: [
     'leads:read',
+    'leads:write',
     'insurance:read',
     'insurance:write',
     'analytics:read',
@@ -89,6 +91,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
   ],
   PL_HEAD: [
     'leads:read',
+    'leads:write',
     'pl:read',
     'pl:write',
     'analytics:read',

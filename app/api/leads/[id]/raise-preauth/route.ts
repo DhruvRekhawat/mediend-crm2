@@ -117,10 +117,12 @@ export async function POST(
     })
 
     // Update KYP submission with any new aadhar/pan files provided
-    if (data.aadharFileUrl || data.panFileUrl || data.prescriptionFileUrl) {
+    if (data.aadhar || data.pan || data.aadharFileUrl || data.panFileUrl || data.prescriptionFileUrl) {
       await prisma.kYPSubmission.update({
         where: { id: lead.kypSubmission.id },
         data: {
+          ...(data.aadhar ? { aadhar: data.aadhar } : {}),
+          ...(data.pan ? { pan: data.pan } : {}),
           ...(data.aadharFileUrl ? { aadharFileUrl: data.aadharFileUrl } : {}),
           ...(data.panFileUrl ? { panFileUrl: data.panFileUrl } : {}),
           ...(data.prescriptionFileUrl ? { prescriptionFileUrl: data.prescriptionFileUrl } : {}),

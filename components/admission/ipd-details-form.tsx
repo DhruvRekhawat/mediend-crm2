@@ -4,11 +4,11 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
-import { User, Phone, MapPin, Stethoscope, Building2, Shield, Calendar, Package, Car, ChevronDown, ChevronUp } from 'lucide-react'
+import { User, MapPin, Stethoscope, Building2, Shield, Calendar, Package, ChevronDown, ChevronUp } from 'lucide-react'
 
 export interface IPDDetailsFormProps {
   leadId: string
@@ -23,12 +23,12 @@ export interface IPDDetailsFormProps {
   attendantContactNo?: string
   circle?: string
   city?: string
-  // Treatment & Procedure
+  // Treatment & Procedure (auto-fetched from lead)
   category?: string
   treatment?: string
   quantityGrade?: string
   anesthesia?: string
-  // Surgeon
+  // Surgeon (auto-fetched from lead)
   surgeonName?: string
   surgeonType?: string
   // Hospital
@@ -125,25 +125,28 @@ export function IPDDetailsForm({
     hospitalAddress: '',
     googleMapLocation: '',
     tpa: tpaProp,
-    instrument: '',
-    implantConsumables: '',
+    // Alternate contact (editable)
+    alternateContactName: attendantName,
+    alternateContactNumber: alternateNumber,
+    // Treatment overrides (editable)
+    quantityGrade: quantityGrade,
+    anesthesia: anesthesia,
+    // Surgeon overrides
+    surgeonType: surgeonType,
+    // Implants & Consumables
+    implantText: '',
+    implantAmount: '',
+    instrumentText: '',
+    instrumentAmount: '',
+    consumablesText: '',
+    consumablesAmount: '',
     notes: '',
-    // Cab - Admission
-    cabAdmissionPickupLocation: '',
-    cabAdmissionPickupDateTime: '',
-    cabAdmissionFrom: '',
-    cabAdmissionTo: '',
-    // Cab - Discharge
-    cabDischargePickupLocation: '',
-    cabDischargePickupDateTime: '',
-    cabDischargeFrom: '',
-    cabDischargeTo: '',
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
 
-  const set = (key: string, value: string | boolean) =>
+  const set = (key: string, value: string) =>
     setFormData((prev) => ({ ...prev, [key]: value }))
 
   const validate = () => {
@@ -152,7 +155,6 @@ export function IPDDetailsForm({
     if (!formData.admissionTime.trim()) e.admissionTime = 'Required'
     if (!formData.surgeryDate) e.surgeryDate = 'Required'
     if (!formData.surgeryTime.trim()) e.surgeryTime = 'Required'
-    if (!formData.hospitalAddress.trim()) e.hospitalAddress = 'Required'
     if (!formData.tpa.trim()) e.tpa = 'Required'
     return e
   }
@@ -168,26 +170,33 @@ export function IPDDetailsForm({
     setErrors({})
     setSubmitting(true)
     try {
+      // Combine implant/instrument/consumables into legacy fields
+      const implantConsumables = [
+        formData.implantText && `Implants: ${formData.implantText}${formData.implantAmount ? ` (₹${formData.implantAmount})` : ''}`,
+        formData.consumablesText && `Consumables: ${formData.consumablesText}${formData.consumablesAmount ? ` (₹${formData.consumablesAmount})` : ''}`,
+      ].filter(Boolean).join('\n') || undefined
+
+      const instrument = [
+        formData.instrumentText && `Instruments: ${formData.instrumentText}${formData.instrumentAmount ? ` (₹${formData.instrumentAmount})` : ''}`,
+      ].filter(Boolean).join('\n') || undefined
+
       const response = await apiPost<{ id: string }>(`/api/leads/${leadId}/initiate`, {
         admissionDate: formData.admissionDate,
         admissionTime: formData.admissionTime.trim(),
         admittingHospital: hospitalName,
-        hospitalAddress: formData.hospitalAddress.trim(),
+        hospitalAddress: formData.hospitalAddress.trim() || 'N/A',
         googleMapLocation: formData.googleMapLocation.trim() || undefined,
         surgeryDate: formData.surgeryDate,
         surgeryTime: formData.surgeryTime.trim(),
         tpa: formData.tpa.trim(),
-        instrument: formData.instrument.trim() || undefined,
-        implantConsumables: formData.implantConsumables.trim() || undefined,
+        instrument,
+        implantConsumables,
         notes: formData.notes.trim() || undefined,
-        cabAdmissionPickupLocation: formData.cabAdmissionPickupLocation.trim() || undefined,
-        cabAdmissionPickupDateTime: formData.cabAdmissionPickupDateTime || undefined,
-        cabAdmissionFrom: formData.cabAdmissionFrom.trim() || undefined,
-        cabAdmissionTo: formData.cabAdmissionTo.trim() || undefined,
-        cabDischargePickupLocation: formData.cabDischargePickupLocation.trim() || undefined,
-        cabDischargePickupDateTime: formData.cabDischargePickupDateTime || undefined,
-        cabDischargeFrom: formData.cabDischargeFrom.trim() || undefined,
-        cabDischargeTo: formData.cabDischargeTo.trim() || undefined,
+        quantityGrade: formData.quantityGrade.trim() || undefined,
+        anesthesia: formData.anesthesia.trim() || undefined,
+        surgeonType: formData.surgeonType.trim() || undefined,
+        alternateContactName: formData.alternateContactName.trim() || undefined,
+        alternateContactNumber: formData.alternateContactNumber.trim() || undefined,
       })
       toast.success('IPD details saved successfully')
       onSuccess?.(response?.id)
@@ -200,6 +209,14 @@ export function IPDDetailsForm({
 
   const fmt = (v?: string | number | null) => (v != null && v !== '' ? String(v) : undefined)
 
+  // Compute room rent based on selected room type
+  const getRoomRentDisplay = () => {
+    if (roomRent != null && roomRent !== '') {
+      return `₹${Number(roomRent).toLocaleString('en-IN')}`
+    }
+    return undefined
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -210,28 +227,41 @@ export function IPDDetailsForm({
         color="border-blue-500"
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3">
             <ReadOnlyField label="Patient Name" value={patientName} />
             <ReadOnlyField label="Patient ID / Ref" value={leadRef} />
             <ReadOnlyField label="Age" value={fmt(age)} />
             <ReadOnlyField label="Gender" value={sex} />
           </div>
+
+          {/* Alternate Contact — editable inputs */}
           <div className="border-t pt-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Contact Details</p>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <ReadOnlyField label="Primary Contact" value={phoneNumber} />
-              <ReadOnlyField label="Alternate Contact" value={alternateNumber} />
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Alternate Contact</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="alternateContactName">Alternate Contact Name</Label>
+                <Input
+                  id="alternateContactName"
+                  value={formData.alternateContactName}
+                  onChange={(e) => set('alternateContactName', e.target.value)}
+                  placeholder="Name of alternate contact person"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="alternateContactNumber">Alternate Contact Number</Label>
+                <Input
+                  id="alternateContactNumber"
+                  value={formData.alternateContactNumber}
+                  onChange={(e) => set('alternateContactNumber', e.target.value)}
+                  placeholder="Phone number"
+                  className="mt-1"
+                />
+              </div>
             </div>
           </div>
+
           <div className="border-t pt-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Attendant Details</p>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <ReadOnlyField label="Attendant Name" value={attendantName} />
-              <ReadOnlyField label="Attendant Contact" value={attendantContactNo} />
-            </div>
-          </div>
-          <div className="border-t pt-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Location Details</p>
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
               <ReadOnlyField label="Circle" value={circle} />
               <ReadOnlyField label="City" value={city} />
@@ -246,24 +276,60 @@ export function IPDDetailsForm({
         icon={<Stethoscope className="h-4 w-4 text-purple-600" />}
         color="border-purple-500"
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-          <ReadOnlyField label="Category" value={category} />
-          <ReadOnlyField label="Treatment Name" value={treatment} />
-          <ReadOnlyField label="Quantity / Grade" value={quantityGrade} />
-          <ReadOnlyField label="Type of Anaesthesia" value={anesthesia} />
+        <div className="space-y-4">
+          {/* Auto-fetched read-only fields */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+            <ReadOnlyField label="Category" value={category} />
+            <ReadOnlyField label="Treatment Name" value={treatment} />
+          </div>
+          {/* Editable text fields */}
+          <div className="border-t pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="quantityGrade">Quantity / Grade</Label>
+              <Input
+                id="quantityGrade"
+                value={formData.quantityGrade}
+                onChange={(e) => set('quantityGrade', e.target.value)}
+                placeholder="e.g. Grade 1, Quantity 2"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="anesthesia">Type of Anaesthesia</Label>
+              <Input
+                id="anesthesia"
+                value={formData.anesthesia}
+                onChange={(e) => set('anesthesia', e.target.value)}
+                placeholder="e.g. General, Spinal, Local"
+                className="mt-1"
+              />
+            </div>
+          </div>
         </div>
       </Section>
 
-      {/* Section 3: Surgeon Details */}
+      {/* Section 3: Surgeon Details — Auto-fetched */}
       <Section
         title="3. Surgeon Details"
         icon={<User className="h-4 w-4 text-teal-600" />}
         color="border-teal-500"
       >
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ReadOnlyField label="Surgeon Name" value={surgeonName} />
-          <ReadOnlyField label="Surgeon Type" value={surgeonType} />
+          <div>
+            <Label htmlFor="surgeonType">Surgeon Type</Label>
+            <Input
+              id="surgeonType"
+              value={formData.surgeonType}
+              onChange={(e) => set('surgeonType', e.target.value)}
+              placeholder="e.g. Primary, Assistant"
+              className="mt-1"
+            />
+          </div>
         </div>
+        {!surgeonName && (
+          <p className="text-xs text-muted-foreground mt-2">Auto-fetched from patient KYP details.</p>
+        )}
       </Section>
 
       {/* Section 4: Hospital / Clinic Details */}
@@ -279,15 +345,13 @@ export function IPDDetailsForm({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="hospitalAddress">
-                Address <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="hospitalAddress">Address</Label>
               <Input
                 id="hospitalAddress"
                 value={formData.hospitalAddress}
                 onChange={(e) => set('hospitalAddress', e.target.value)}
-                placeholder="Full hospital address"
-                className={errors.hospitalAddress ? 'border-destructive' : ''}
+                placeholder="Full hospital address (optional)"
+                className={errors.hospitalAddress ? 'mt-1 border-destructive' : 'mt-1'}
               />
               {errors.hospitalAddress && <p className="text-xs text-destructive mt-1">{errors.hospitalAddress}</p>}
             </div>
@@ -298,19 +362,21 @@ export function IPDDetailsForm({
                 value={formData.googleMapLocation}
                 onChange={(e) => set('googleMapLocation', e.target.value)}
                 placeholder="Paste Google Maps link (optional)"
+                className="mt-1"
               />
             </div>
           </div>
         </div>
       </Section>
 
-      {/* Section 5: Insurance & Billing */}
+      {/* Section 5: Insurance & Billing — Auto-fetched */}
       <Section
         title="5. Insurance & Billing Details"
         icon={<Shield className="h-4 w-4 text-green-600" />}
         color="border-green-500"
       >
         <div className="space-y-4">
+          {/* Auto-fetched insurance type */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
             <ReadOnlyField label="Insurance Type" value={insuranceType} />
             <ReadOnlyField label="Insurance Company" value={insuranceName} />
@@ -320,25 +386,24 @@ export function IPDDetailsForm({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3">
               <ReadOnlyField label="Co-pay %" value={copay != null ? `${copay}%` : undefined} />
               <ReadOnlyField label="Sum Insured" value={sumInsured != null ? `₹${Number(sumInsured).toLocaleString('en-IN')}` : undefined} />
-              <ReadOnlyField label="Room Rent Limit" value={roomRent != null ? `₹${Number(roomRent).toLocaleString('en-IN')}` : undefined} />
               <ReadOnlyField label="Room Type" value={roomType} />
+              {/* Room rent fetched based on selected room type */}
+              <ReadOnlyField label="Room Rent Limit" value={getRoomRentDisplay()} />
               <ReadOnlyField label="Capping" value={capping != null && capping !== '' ? `₹${Number(capping).toLocaleString('en-IN')}` : 'No'} />
             </div>
           </div>
           <div className="border-t pt-3">
-            <div>
-              <Label htmlFor="tpa">
-                TPA Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="tpa"
-                value={formData.tpa}
-                onChange={(e) => set('tpa', e.target.value)}
-                placeholder="Third Party Administrator name"
-                className={`mt-1 ${errors.tpa ? 'border-destructive' : ''}`}
-              />
-              {errors.tpa && <p className="text-xs text-destructive mt-1">{errors.tpa}</p>}
-            </div>
+            <Label htmlFor="tpa">
+              TPA Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="tpa"
+              value={formData.tpa}
+              onChange={(e) => set('tpa', e.target.value)}
+              placeholder="Third Party Administrator name"
+              className={`mt-1 ${errors.tpa ? 'border-destructive' : ''}`}
+            />
+            {errors.tpa && <p className="text-xs text-destructive mt-1">{errors.tpa}</p>}
           </div>
         </div>
       </Section>
@@ -415,143 +480,81 @@ export function IPDDetailsForm({
         </div>
       </Section>
 
-      {/* Section 7: Implants & Consumables */}
+      {/* Section 7: Implants, Instruments & Consumables */}
       <Section
-        title="7. Implants & Consumables"
+        title="7. Implants, Instruments & Consumables"
         icon={<Package className="h-4 w-4 text-indigo-600" />}
         color="border-indigo-500"
         collapsible
         defaultOpen={false}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+          {/* Implants row */}
           <div>
-            <Label htmlFor="implantConsumables">Implants Used / Consumables</Label>
-            <Textarea
-              id="implantConsumables"
-              value={formData.implantConsumables}
-              onChange={(e) => set('implantConsumables', e.target.value)}
-              placeholder="List implants and consumables used..."
-              rows={3}
-              className="mt-1 resize-none"
-            />
-          </div>
-          <div>
-            <Label htmlFor="instrument">Instruments Required</Label>
-            <Textarea
-              id="instrument"
-              value={formData.instrument}
-              onChange={(e) => set('instrument', e.target.value)}
-              placeholder="List special instruments required..."
-              rows={3}
-              className="mt-1 resize-none"
-            />
-          </div>
-        </div>
-      </Section>
-
-      {/* Section 8: Cab Service */}
-      <Section
-        title="8. Cab Service (Optional)"
-        icon={<Car className="h-4 w-4 text-yellow-600" />}
-        color="border-yellow-500"
-        collapsible
-        defaultOpen={false}
-      >
-        <div className="space-y-5">
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Admission Pickup</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="cabAdmissionPickupLocation">Pickup Location</Label>
-                <Input
-                  id="cabAdmissionPickupLocation"
-                  value={formData.cabAdmissionPickupLocation}
-                  onChange={(e) => set('cabAdmissionPickupLocation', e.target.value)}
-                  placeholder="Pickup address"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="cabAdmissionPickupDateTime">Pickup Date & Time</Label>
-                <Input
-                  id="cabAdmissionPickupDateTime"
-                  type="datetime-local"
-                  value={formData.cabAdmissionPickupDateTime}
-                  onChange={(e) => set('cabAdmissionPickupDateTime', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="cabAdmissionFrom">From</Label>
-                <Input
-                  id="cabAdmissionFrom"
-                  value={formData.cabAdmissionFrom}
-                  onChange={(e) => set('cabAdmissionFrom', e.target.value)}
-                  placeholder="Pickup origin"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="cabAdmissionTo">To</Label>
-                <Input
-                  id="cabAdmissionTo"
-                  value={formData.cabAdmissionTo}
-                  onChange={(e) => set('cabAdmissionTo', e.target.value)}
-                  placeholder="Drop destination (hospital)"
-                  className="mt-1"
-                />
-              </div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Implants</p>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+              <Input
+                id="implantText"
+                value={formData.implantText}
+                onChange={(e) => set('implantText', e.target.value)}
+                placeholder="Implant description"
+              />
+              <Input
+                id="implantAmount"
+                value={formData.implantAmount}
+                onChange={(e) => set('implantAmount', e.target.value)}
+                placeholder="Amount (₹)"
+                type="number"
+                min="0"
+              />
             </div>
           </div>
-          <div className="border-t pt-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Discharge Pickup</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="cabDischargePickupLocation">Pickup Location</Label>
-                <Input
-                  id="cabDischargePickupLocation"
-                  value={formData.cabDischargePickupLocation}
-                  onChange={(e) => set('cabDischargePickupLocation', e.target.value)}
-                  placeholder="Hospital address"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="cabDischargePickupDateTime">Pickup Date & Time</Label>
-                <Input
-                  id="cabDischargePickupDateTime"
-                  type="datetime-local"
-                  value={formData.cabDischargePickupDateTime}
-                  onChange={(e) => set('cabDischargePickupDateTime', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="cabDischargeFrom">From</Label>
-                <Input
-                  id="cabDischargeFrom"
-                  value={formData.cabDischargeFrom}
-                  onChange={(e) => set('cabDischargeFrom', e.target.value)}
-                  placeholder="Hospital (origin)"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="cabDischargeTo">To</Label>
-                <Input
-                  id="cabDischargeTo"
-                  value={formData.cabDischargeTo}
-                  onChange={(e) => set('cabDischargeTo', e.target.value)}
-                  placeholder="Home address (destination)"
-                  className="mt-1"
-                />
-              </div>
+
+          {/* Instruments row */}
+          <div className="border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Instruments</p>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+              <Input
+                id="instrumentText"
+                value={formData.instrumentText}
+                onChange={(e) => set('instrumentText', e.target.value)}
+                placeholder="Instrument description"
+              />
+              <Input
+                id="instrumentAmount"
+                value={formData.instrumentAmount}
+                onChange={(e) => set('instrumentAmount', e.target.value)}
+                placeholder="Amount (₹)"
+                type="number"
+                min="0"
+              />
+            </div>
+          </div>
+
+          {/* Consumables row */}
+          <div className="border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consumables</p>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-3">
+              <Input
+                id="consumablesText"
+                value={formData.consumablesText}
+                onChange={(e) => set('consumablesText', e.target.value)}
+                placeholder="Consumables description"
+              />
+              <Input
+                id="consumablesAmount"
+                value={formData.consumablesAmount}
+                onChange={(e) => set('consumablesAmount', e.target.value)}
+                placeholder="Amount (₹)"
+                type="number"
+                min="0"
+              />
             </div>
           </div>
         </div>
       </Section>
 
-      {/* Document & BD Info */}
+      {/* BD Info & Notes */}
       <Card className="border-l-4 border-gray-400">
         <CardContent className="pt-4 space-y-4">
           <div className="grid grid-cols-2 gap-x-6 gap-y-3">
