@@ -161,6 +161,7 @@ enum NotificationType {
   DUE_DATE_CHANGE_REQUESTED
   DUE_DATE_CHANGE_APPROVED
   DUE_DATE_CHANGE_REJECTED
+  HOSPITAL_SUGGESTION_REQUESTED
 }
 
 enum TaskPriority {
@@ -1471,6 +1472,7 @@ model PreAuthorization {
   // BD Pre-Auth Request fields (selection from Insurance suggestions)
   requestedHospitalName String?
   requestedRoomType     String?
+  bdSuggestedHospital   String? @db.Text
   diseaseDescription    String? @db.Text
   diseaseImages         Json?   // Array of {name, url}
   preAuthRaisedAt       DateTime?

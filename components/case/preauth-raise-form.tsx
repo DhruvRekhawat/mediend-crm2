@@ -114,8 +114,6 @@ export function PreAuthRaiseForm({
     investigationFileUrls: (initialData?.investigationFileUrls || []) as FilePreview[],
     expectedAdmissionDate: initialData?.expectedAdmissionDate || '',
     expectedSurgeryDate: initialData?.expectedSurgeryDate || '',
-    isNewHospitalRequest: false,
-    newHospitalName: '',
     // Aadhaar / PAN numbers
     aadhar: initialData?.diseaseDescription ? (kypData?.aadhar || '') : (kypData?.aadhar || ''),
     pan: initialData?.diseaseDescription ? (kypData?.pan || '') : (kypData?.pan || ''),
@@ -174,16 +172,14 @@ export function PreAuthRaiseForm({
     }))
   }
 
-  const hospitalNameForSubmit = formData.isNewHospitalRequest
-    ? formData.newHospitalName.trim()
-    : formData.requestedHospitalName
+  const hospitalNameForSubmit = formData.requestedHospitalName
 
   const handleSubmit = async () => {
     if (!hospitalNameForSubmit) {
       toast.error('Hospital name is required')
       return
     }
-    if (!formData.isNewHospitalRequest && !formData.requestedRoomType?.trim()) {
+    if (!formData.requestedRoomType?.trim()) {
       toast.error('Room type is required')
       return
     }
@@ -230,7 +226,7 @@ export function PreAuthRaiseForm({
           diseaseImages: formData.diseaseImages,
           expectedAdmissionDate: formData.expectedAdmissionDate,
           expectedSurgeryDate: formData.expectedSurgeryDate,
-          isNewHospitalRequest: formData.isNewHospitalRequest,
+          isNewHospitalRequest: false,
         }),
       })
 
@@ -251,7 +247,7 @@ export function PreAuthRaiseForm({
   }
 
   const selectedHospitalCard =
-    hasSuggestedCards && formData.requestedHospitalName && !formData.isNewHospitalRequest
+    hasSuggestedCards && formData.requestedHospitalName
       ? suggestedHospitals.find((h) => h.hospitalName === formData.requestedHospitalName)
       : null
 
@@ -488,31 +484,27 @@ export function PreAuthRaiseForm({
                     onClick={() =>
                       setFormData((prev) => ({
                         ...prev,
-                        isNewHospitalRequest: false,
                         requestedHospitalName: h.hospitalName,
                         requestedRoomType: '',
-                        newHospitalName: '',
                       }))
                     }
                     onKeyDown={(e) =>
                       e.key === 'Enter' &&
                       setFormData((prev) => ({
                         ...prev,
-                        isNewHospitalRequest: false,
                         requestedHospitalName: h.hospitalName,
                         requestedRoomType: '',
-                        newHospitalName: '',
                       }))
                     }
                     className={`rounded-lg border-2 p-4 text-left transition-colors cursor-pointer ${
-                      formData.requestedHospitalName === h.hospitalName && !formData.isNewHospitalRequest
+                      formData.requestedHospitalName === h.hospitalName
                         ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30'
                         : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{h.hospitalName}</span>
-                      {formData.requestedHospitalName === h.hospitalName && !formData.isNewHospitalRequest && (
+                      {formData.requestedHospitalName === h.hospitalName && (
                         <CheckCircle2 className="w-4 h-4 text-teal-600" />
                       )}
                     </div>
@@ -548,40 +540,6 @@ export function PreAuthRaiseForm({
                     )}
                   </div>
                 ))}
-                {/* Request new hospital option */}
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      isNewHospitalRequest: true,
-                      requestedHospitalName: '',
-                      requestedRoomType: '',
-                      newHospitalName: prev.newHospitalName || '',
-                    }))
-                  }
-                  onKeyDown={(e) =>
-                    e.key === 'Enter' &&
-                    setFormData((prev) => ({
-                      ...prev,
-                      isNewHospitalRequest: true,
-                      requestedHospitalName: '',
-                      requestedRoomType: '',
-                      newHospitalName: prev.newHospitalName || '',
-                    }))
-                  }
-                  className={`rounded-lg border-2 border-dashed p-4 text-left transition-colors cursor-pointer ${
-                    formData.isNewHospitalRequest
-                      ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/30'
-                      : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'
-                  }`}
-                >
-                  <span className="font-medium">Request New Hospital</span>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Enter a hospital name not in the list
-                  </p>
-                </div>
               </div>
             ) : legacyHospitals.length > 0 ? (
               <Select
@@ -615,26 +573,8 @@ export function PreAuthRaiseForm({
             )}
           </div>
 
-          {/* New hospital name input */}
-          {formData.isNewHospitalRequest && (
-            <div>
-              <Label htmlFor="newHospitalName">
-                New Hospital Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="newHospitalName"
-                value={formData.newHospitalName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, newHospitalName: e.target.value }))
-                }
-                placeholder="Enter hospital name"
-                className="mt-1"
-              />
-            </div>
-          )}
-
           {/* Room type — shown when a hospital card is selected */}
-          {!formData.isNewHospitalRequest && (hasSuggestedCards ? selectedHospitalCard : true) && (
+          {(hasSuggestedCards ? selectedHospitalCard : true) && (
             <div>
               <Label htmlFor="roomType">
                 Room Type <span className="text-red-500">*</span>
@@ -741,9 +681,6 @@ export function PreAuthRaiseForm({
         </div>
       ),
       validate: () => {
-        if (formData.isNewHospitalRequest) {
-          return formData.newHospitalName.trim().length > 0
-        }
         return (
           formData.requestedHospitalName.length > 0 &&
           (roomOptionsFromCard.length === 0 || formData.requestedRoomType.length > 0)
@@ -901,9 +838,6 @@ export function PreAuthRaiseForm({
                 <span className="text-muted-foreground">Hospital</span>
                 <p className="font-medium">
                   {hospitalNameForSubmit}
-                  {formData.isNewHospitalRequest && (
-                    <Badge variant="outline" className="ml-2 text-xs">New Request</Badge>
-                  )}
                 </p>
               </div>
               <div>

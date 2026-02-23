@@ -189,6 +189,7 @@ export async function POST(request: NextRequest) {
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
+          bdSuggestedHospital: null, // Clear any pending suggestion
         },
         update: {
           sumInsured: data.sumInsured,
@@ -199,6 +200,7 @@ export async function POST(request: NextRequest) {
           tpa: data.tpa?.trim() || undefined,
           handledById: user.id,
           handledAt: new Date(),
+          bdSuggestedHospital: null, // Clear any pending suggestion
         },
       })
 
@@ -219,6 +221,23 @@ export async function POST(request: NextRequest) {
           },
         })
       }
+
+      // Notify BD if this was in response to a suggestion or just an update
+      const notifyUserId = preAuth.preAuthRaisedById || kypSubmission.submittedById
+      if (notifyUserId) {
+        await prisma.notification.create({
+          data: {
+            userId: notifyUserId,
+            type: 'KYP_SUBMITTED', // Re-using type as it's a hospital update
+            title: 'Hospital suggestions updated',
+            message: `Insurance has updated hospital suggestions for ${kypSubmission.lead.patientName} (${kypSubmission.lead.leadRef}).`,
+            link: `/patient/${kypSubmission.lead.id}/pre-auth`,
+            relatedId: kypSubmission.id,
+          },
+        })
+      }
+      
+      await postCaseChatSystemMessage(kypSubmission.lead.id, `Insurance updated hospital suggestions.`)
 
       return successResponse(preAuth, `Hospital suggestions ${kypSubmission.preAuthData ? 'updated' : 'saved'} successfully`)
     }

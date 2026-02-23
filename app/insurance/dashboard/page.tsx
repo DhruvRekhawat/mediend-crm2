@@ -47,6 +47,7 @@ interface LeadWithStage {
       id: string
       requestedHospitalName?: string | null
       requestedRoomType?: string | null
+      bdSuggestedHospital?: string | null
       diseaseDescription?: string | null
       diseaseImages?: Array<{ name: string; url: string }> | null
       preAuthRaisedAt?: string | null
@@ -91,8 +92,12 @@ const KYP_STAGES: CaseStage[] = [
   CaseStage.HOSPITALS_SUGGESTED,
 ]
 
-function getPriorityTier(lead: LeadWithStage): 0 | 1 | 2 {
-  if (lead.caseStage === CaseStage.DISCHARGED && !lead.dischargeSheet) return 1 // highest urgency
+function getPriorityTier(lead: LeadWithStage): 0 | 1 | 2 | 3 {
+  // Tier 3: Hospital Suggestion Pending (Highest)
+  if (lead.caseStage === CaseStage.HOSPITALS_SUGGESTED && lead.kypSubmission?.preAuthData?.bdSuggestedHospital) return 3
+  // Tier 1: Discharge Pending
+  if (lead.caseStage === CaseStage.DISCHARGED && !lead.dischargeSheet) return 1
+  // Tier 2: Initial Form Pending
   if (lead.caseStage === CaseStage.PREAUTH_COMPLETE && !lead.insuranceInitiateForm) return 2
   return 0
 }
@@ -211,16 +216,25 @@ export default function InsuranceDashboardPage() {
       )
     }
 
-    // Priority sort: tier 1 > tier 2 > rest, then by date
+    // Priority sort: tier 3 > tier 1 > tier 2 > rest, then by date
     return result.sort((a, b) => {
       const tierA = getPriorityTier(a)
       const tierB = getPriorityTier(b)
-      if (tierA !== tierB) return tierA - tierB // lower = more urgent
+      if (tierA !== tierB) return tierB - tierA // higher tier first
       const dateA = new Date(a.updatedDate || a.createdDate).getTime()
       const dateB = new Date(b.updatedDate || b.createdDate).getTime()
       return dateB - dateA
     })
   }, [leads, activeTab, searchQuery])
+
+  // ── Pending Hospital Suggestions ───────────────────────────────────────────
+  const pendingSuggestions = useMemo(() => {
+    if (!leads) return []
+    return leads.filter(l => 
+      l.caseStage === CaseStage.HOSPITALS_SUGGESTED && 
+      l.kypSubmission?.preAuthData?.bdSuggestedHospital
+    )
+  }, [leads])
 
   // ── Components ─────────────────────────────────────────────────────────────
   const getStageBadge = (stage: CaseStage) => {
@@ -280,6 +294,48 @@ export default function InsuranceDashboardPage() {
     <ProtectedRoute>
       <div className="min-h-screen p-6">
         <div className="mx-auto max-w-7xl space-y-6">
+
+          {/* ── Pending Hospital Suggestions Alert ────────────────────────── */}
+          {pendingSuggestions.length > 0 && (
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 border-l-4 border-l-amber-500">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  <CardTitle className="text-lg font-bold text-amber-900 dark:text-amber-100">
+                    Hospital Suggestions Pending ({pendingSuggestions.length})
+                  </CardTitle>
+                </div>
+                <CardDescription className="text-amber-700 dark:text-amber-300">
+                  The following cases have new hospital suggestions from BD that need your review.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {pendingSuggestions.map(lead => (
+                    <div key={lead.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-lg border border-amber-100 dark:border-amber-900 shadow-sm">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">{lead.patientName}</span>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{lead.leadRef}</Badge>
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Suggested: <span className="font-medium text-amber-700 dark:text-amber-400">{lead.kypSubmission?.preAuthData?.bdSuggestedHospital}</span>
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        className="bg-amber-600 hover:bg-amber-700 text-white border-0"
+                        onClick={() => router.push(`/patient/${lead.id}/pre-auth`)}
+                      >
+                        Update Hospitals
+                        <ArrowRight className="ml-2 h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* ── IPD Metrics Row ─────────────────────────────────────────── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -460,10 +516,13 @@ export default function InsuranceDashboardPage() {
                     <TableBody>
                       {filteredLeads.map((lead, index) => {
                         const tier = getPriorityTier(lead)
+                        const isSuggestionPending = tier === 3
                         const isDischargeUrgent = tier === 1
                         const isInitialFormUrgent = tier === 2
 
-                        const rowBg = isDischargeUrgent
+                        const rowBg = isSuggestionPending
+                          ? 'bg-amber-50/60 dark:bg-amber-950/20'
+                          : isDischargeUrgent
                           ? 'bg-amber-50/60 dark:bg-amber-950/20'
                           : isInitialFormUrgent
                           ? 'bg-purple-50/60 dark:bg-purple-950/20'
@@ -471,7 +530,9 @@ export default function InsuranceDashboardPage() {
                           ? 'bg-white dark:bg-gray-950'
                           : 'bg-gray-50/50 dark:bg-gray-900/50'
 
-                        const borderLeft = isDischargeUrgent
+                        const borderLeft = isSuggestionPending
+                          ? 'border-l-4 border-l-amber-500'
+                          : isDischargeUrgent
                           ? 'border-l-4 border-l-orange-500'
                           : isInitialFormUrgent
                           ? 'border-l-4 border-l-purple-500'
@@ -492,6 +553,11 @@ export default function InsuranceDashboardPage() {
                               <div>
                                 <div className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1">
                                   {lead.patientName}
+                                  {isSuggestionPending && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                                      <AlertTriangle className="w-2.5 h-2.5" /> Hospital Suggestion Pending
+                                    </span>
+                                  )}
                                   {isDischargeUrgent && (
                                     <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 text-[10px] font-bold">
                                       <AlertTriangle className="w-2.5 h-2.5" /> Discharge
@@ -516,6 +582,17 @@ export default function InsuranceDashboardPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                {isSuggestionPending && (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={(e) => { e.stopPropagation(); router.push(`/patient/${lead.id}/pre-auth`) }}
+                                    className="bg-amber-600 hover:bg-amber-700 text-white shadow-md"
+                                  >
+                                    <ArrowRight className="w-4 h-4 mr-1" />
+                                    Update Hospitals
+                                  </Button>
+                                )}
                                 {lead.caseStage === CaseStage.PREAUTH_RAISED && (
                                   <Button
                                     variant="default"

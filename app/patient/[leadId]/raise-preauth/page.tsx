@@ -2,13 +2,26 @@
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet } from '@/lib/api-client'
+import { apiGet, apiPost } from '@/lib/api-client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, AlertCircle } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { PreAuthRaiseForm } from '@/components/case/preauth-raise-form'
 import { Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toast } from 'sonner'
 
 interface HospitalSuggestionItem {
   id: string
@@ -47,6 +60,7 @@ interface KYPSubmission {
     id: string
     requestedHospitalName?: string | null
     requestedRoomType?: string | null
+    bdSuggestedHospital?: string | null
     diseaseDescription?: string | null
     diseaseImages?: Array<{ name: string; url: string }> | null
     hospitalSuggestions?: string[] | null
@@ -73,6 +87,9 @@ export default function RaisePreAuthPage() {
   const params = useParams()
   const queryClient = useQueryClient()
   const leadId = params.leadId as string
+  const [isSuggestDialogOpen, setIsSuggestDialogOpen] = useState(false)
+  const [suggestedHospitalName, setSuggestedHospitalName] = useState('')
+  const [isSubmittingSuggestion, setIsSubmittingSuggestion] = useState(false)
 
   const { data: kypSubmission, isLoading } = useQuery<KYPSubmission | null>({
     queryKey: ['kyp-submission', leadId],
@@ -82,6 +99,28 @@ export default function RaisePreAuthPage() {
     },
     enabled: !!leadId,
   })
+
+  const handleSuggestHospital = async () => {
+    if (!suggestedHospitalName.trim()) {
+      toast.error('Please enter a hospital name')
+      return
+    }
+
+    try {
+      setIsSubmittingSuggestion(true)
+      await apiPost(`/api/leads/${leadId}/suggest-hospital`, {
+        suggestedHospitalName: suggestedHospitalName.trim(),
+      })
+      toast.success('Hospital suggestion submitted. Insurance team will be notified.')
+      setIsSuggestDialogOpen(false)
+      setSuggestedHospitalName('')
+      queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to suggest hospital')
+    } finally {
+      setIsSubmittingSuggestion(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -104,6 +143,7 @@ export default function RaisePreAuthPage() {
   }
 
   const preAuth = kypSubmission.preAuthData
+  const hasPendingSuggestion = !!preAuth?.bdSuggestedHospital
 
   return (
     <AuthenticatedLayout>
@@ -125,69 +165,134 @@ export default function RaisePreAuthPage() {
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pre-Auth Request Form</CardTitle>
-            <CardDescription>
-              Select a hospital from Insurance&apos;s suggestions or request a new hospital.
-              Upload required documents and provide disease details.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PreAuthRaiseForm
-              leadId={leadId}
-              initialData={
-                preAuth
-                  ? {
-                      requestedHospitalName: preAuth.requestedHospitalName || undefined,
-                      requestedRoomType: preAuth.requestedRoomType || undefined,
-                      diseaseDescription: preAuth.diseaseDescription || kypSubmission.disease || undefined,
-                      diseaseImages: (preAuth.diseaseImages as Array<{ name: string; url: string }>) ?? undefined,
-                      hospitalSuggestions: preAuth.hospitalSuggestions ?? undefined,
-                      roomTypes: preAuth.roomTypes ?? undefined,
-                      suggestedHospitals: preAuth.suggestedHospitals ?? undefined,
-                      prescriptionFiles: (preAuth.prescriptionFiles as Array<{ name: string; url: string }>) ?? undefined,
-                      investigationFileUrls: (preAuth.investigationFileUrls as Array<{ name: string; url: string }>) ?? undefined,
-                      notes: preAuth.notes || undefined,
-                      expectedAdmissionDate: preAuth.expectedAdmissionDate || undefined,
-                      expectedSurgeryDate: preAuth.expectedSurgeryDate || undefined,
-                    }
-                  : undefined
-              }
-              kypData={{
-                disease: kypSubmission.disease,
-                surgeonName: kypSubmission.lead?.surgeonName,
-                insuranceType: kypSubmission.insuranceType
-                  ? String(kypSubmission.insuranceType)
-                  : undefined,
-                aadhar: kypSubmission.aadhar,
-                pan: kypSubmission.pan,
-                aadharFileUrl: kypSubmission.aadharFileUrl,
-                panFileUrl: kypSubmission.panFileUrl,
-                prescriptionFileUrl: kypSubmission.prescriptionFileUrl,
-                location: kypSubmission.location,
-                area: kypSubmission.area,
-              }}
-              preAuthMeta={{
-                sumInsured: preAuth?.sumInsured,
-                balanceInsured: preAuth?.balanceInsured,
-                copay: preAuth?.copay,
-                capping: preAuth?.capping,
-                roomRent: preAuth?.roomRent,
-                insurance: preAuth?.insurance || kypSubmission.lead?.insuranceName,
-                tpa: preAuth?.tpa,
-              }}
-              onSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
-                router.push(`/patient/${leadId}`)
-              }}
-              onCancel={() => {
-                router.push(`/patient/${leadId}`)
-              }}
-            />
-          </CardContent>
-        </Card>
+        {hasPendingSuggestion ? (
+          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+            <CardContent className="pt-6 flex flex-col items-center text-center p-8">
+              <div className="h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-4">
+                <AlertCircle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-2">
+                Hospital Suggestion Pending
+              </h3>
+              <p className="text-amber-700 dark:text-amber-300 max-w-md mb-6">
+                You have suggested <strong>{preAuth.bdSuggestedHospital}</strong>. 
+                Please wait for the Insurance team to update the hospital list before raising pre-auth.
+              </p>
+              <Button 
+                variant="outline" 
+                className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900/40"
+                onClick={() => router.push(`/patient/${leadId}`)}
+              >
+                Return to Patient Page
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
+              <div className="space-y-1">
+                <CardTitle>Pre-Auth Request Form</CardTitle>
+                <CardDescription>
+                  Select a hospital from Insurance&apos;s suggestions.
+                  Upload required documents and provide disease details.
+                </CardDescription>
+              </div>
+              <Dialog open={isSuggestDialogOpen} onOpenChange={setIsSuggestDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="border-dashed border-2">
+                    Suggest New Hospital
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Suggest New Hospital</DialogTitle>
+                    <DialogDescription>
+                      Suggest a hospital not in the current list. The Insurance team will review and update the options.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="hospital-name">Hospital Name</Label>
+                      <Input
+                        id="hospital-name"
+                        value={suggestedHospitalName}
+                        onChange={(e) => setSuggestedHospitalName(e.target.value)}
+                        placeholder="Enter hospital name"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsSuggestDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleSuggestHospital} disabled={isSubmittingSuggestion}>
+                      {isSubmittingSuggestion ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        'Submit Suggestion'
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <PreAuthRaiseForm
+                leadId={leadId}
+                initialData={
+                  preAuth
+                    ? {
+                        requestedHospitalName: preAuth.requestedHospitalName || undefined,
+                        requestedRoomType: preAuth.requestedRoomType || undefined,
+                        diseaseDescription: preAuth.diseaseDescription || kypSubmission.disease || undefined,
+                        diseaseImages: (preAuth.diseaseImages as Array<{ name: string; url: string }>) ?? undefined,
+                        hospitalSuggestions: preAuth.hospitalSuggestions ?? undefined,
+                        roomTypes: preAuth.roomTypes ?? undefined,
+                        suggestedHospitals: preAuth.suggestedHospitals ?? undefined,
+                        prescriptionFiles: (preAuth.prescriptionFiles as Array<{ name: string; url: string }>) ?? undefined,
+                        investigationFileUrls: (preAuth.investigationFileUrls as Array<{ name: string; url: string }>) ?? undefined,
+                        notes: preAuth.notes || undefined,
+                        expectedAdmissionDate: preAuth.expectedAdmissionDate || undefined,
+                        expectedSurgeryDate: preAuth.expectedSurgeryDate || undefined,
+                      }
+                    : undefined
+                }
+                kypData={{
+                  disease: kypSubmission.disease,
+                  surgeonName: kypSubmission.lead?.surgeonName,
+                  insuranceType: kypSubmission.insuranceType
+                    ? String(kypSubmission.insuranceType)
+                    : undefined,
+                  aadhar: kypSubmission.aadhar,
+                  pan: kypSubmission.pan,
+                  aadharFileUrl: kypSubmission.aadharFileUrl,
+                  panFileUrl: kypSubmission.panFileUrl,
+                  prescriptionFileUrl: kypSubmission.prescriptionFileUrl,
+                  location: kypSubmission.location,
+                  area: kypSubmission.area,
+                }}
+                preAuthMeta={{
+                  sumInsured: preAuth?.sumInsured,
+                  balanceInsured: preAuth?.balanceInsured,
+                  copay: preAuth?.copay,
+                  capping: preAuth?.capping,
+                  roomRent: preAuth?.roomRent,
+                  insurance: preAuth?.insurance || kypSubmission.lead?.insuranceName,
+                  tpa: preAuth?.tpa,
+                }}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                  queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+                  router.push(`/patient/${leadId}`)
+                }}
+                onCancel={() => {
+                  router.push(`/patient/${leadId}`)
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AuthenticatedLayout>
   )

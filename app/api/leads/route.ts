@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
             id: true,
             requestedHospitalName: true,
             requestedRoomType: true,
+            bdSuggestedHospital: true,
             diseaseDescription: true,
             diseaseImages: true,
             preAuthRaisedAt: true,

@@ -1,0 +1,104 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/session'
+import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { postCaseChatSystemMessage } from '@/lib/case-chat'
+import { z } from 'zod'
+import { CaseStage } from '@prisma/client'
+
+const suggestHospitalSchema = z.object({
+  suggestedHospitalName: z.string().min(1, 'Hospital name is required'),
+})
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return unauthorizedResponse()
+    }
+
+    if (user.role !== 'BD' && user.role !== 'TEAM_LEAD' && user.role !== 'ADMIN') {
+      return errorResponse('Forbidden: Only BD or Team Lead can suggest new hospitals', 403)
+    }
+
+    const { id: leadId } = await params
+    const body = await request.json()
+    const data = suggestHospitalSchema.parse(body)
+
+    // Check if lead exists and get KYP submission
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      include: {
+        kypSubmission: true,
+      },
+    })
+
+    if (!lead) {
+      return errorResponse('Lead not found', 404)
+    }
+
+    if (!lead.kypSubmission) {
+      return errorResponse('KYP submission not found. Please submit KYP first.', 400)
+    }
+
+    const allowedStages: CaseStage[] = [
+      CaseStage.HOSPITALS_SUGGESTED,
+    ]
+    if (!allowedStages.includes(lead.caseStage)) {
+      return errorResponse(`Cannot suggest hospital. Current stage: ${lead.caseStage}. Insurance must suggest hospitals first.`, 400)
+    }
+
+    const existingPreAuth = await prisma.preAuthorization.findFirst({
+      where: { kypSubmissionId: lead.kypSubmission.id },
+    })
+
+    if (!existingPreAuth) {
+      return errorResponse('Insurance must suggest hospitals before BD can suggest a new one.', 400)
+    }
+
+    if (existingPreAuth.preAuthRaisedAt) {
+      return errorResponse('Pre-auth already raised for this case', 400)
+    }
+
+    // Update pre-auth with the suggested hospital name
+    const preAuth = await prisma.preAuthorization.update({
+      where: { kypSubmissionId: lead.kypSubmission.id },
+      data: {
+        bdSuggestedHospital: data.suggestedHospitalName,
+        // We also store who raised it so we can notify them back later
+        preAuthRaisedById: user.id, 
+      },
+    })
+
+    await postCaseChatSystemMessage(leadId, `BD suggested a new hospital: ${data.suggestedHospitalName}. Waiting for Insurance to update list.`)
+
+    // Create notifications for Insurance team
+    const insuranceUsers = await prisma.user.findMany({
+      where: {
+        role: 'INSURANCE_HEAD',
+      },
+    })
+
+    await prisma.notification.createMany({
+      data: insuranceUsers.map((insuranceUser) => ({
+        userId: insuranceUser.id,
+        type: 'HOSPITAL_SUGGESTION_REQUESTED',
+        title: 'New Hospital Suggested',
+        message: `BD has suggested a new hospital "${data.suggestedHospitalName}" for ${lead.patientName} (${lead.leadRef})`,
+        link: `/patient/${leadId}/pre-auth`, // Link to the pre-auth page where insurance can update hospitals
+        relatedId: preAuth.id,
+      })),
+    })
+
+    return successResponse(preAuth, 'Hospital suggestion submitted successfully')
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse('Invalid request data: ' + error.errors.map(e => e.message).join(', '), 400)
+    }
+    console.error('Error suggesting hospital:', error)
+    return errorResponse('Failed to suggest hospital', 500)
+  }
+}
