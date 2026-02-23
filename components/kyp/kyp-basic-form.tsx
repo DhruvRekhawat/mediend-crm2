@@ -29,6 +29,7 @@ interface KYPBasicFormProps {
   initialPhone?: string
   initialAge?: number
   initialSex?: string
+  initialCity?: string
   initialTreatment?: string
   onSuccess?: () => void
   onCancel?: () => void
@@ -40,6 +41,7 @@ export function KYPBasicForm({
   initialPhone = '',
   initialAge,
   initialSex = '',
+  initialCity = '',
   initialTreatment = '',
   onSuccess,
   onCancel,
@@ -47,7 +49,7 @@ export function KYPBasicForm({
   const { user } = useAuth()
   const canViewPhone = canViewPhoneNumber(user)
   const [formData, setFormData] = useState({
-    location: '',
+    location: initialCity,
     area: '',
     patientName: initialPatientName,
     phone: initialPhone,

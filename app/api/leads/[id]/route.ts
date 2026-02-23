@@ -339,6 +339,8 @@ export async function PATCH(
       'othersShare',
       'netProfit',
       'ticketSize',
+      'flowType',
+      'caseStage',
     ] as const
 
     for (const field of allowedFields) {

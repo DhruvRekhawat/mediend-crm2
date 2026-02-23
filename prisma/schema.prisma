@@ -31,6 +31,11 @@ enum Circle {
   Central
 }
 
+enum FlowType {
+  INSURANCE
+  CASH
+}
+
 enum PipelineStage {
   SALES
   INSURANCE
@@ -208,6 +213,12 @@ enum CaseStage {
   DISCHARGED
   PL_PENDING
   OUTSTANDING
+  // Cash Flow Stages
+  CASH_IPD_PENDING
+  CASH_IPD_SUBMITTED
+  CASH_APPROVED
+  CASH_ON_HOLD
+  CASH_DISCHARGED
   // Legacy (deprecated - migrate to new stages via scripts/migrate-case-stages-v2.ts)
   KYP_PENDING
   KYP_COMPLETE
@@ -348,6 +359,7 @@ model Lead {
   surgeonName     String?
   surgeonType     String?
   hospitalName    String
+  flowType        FlowType      @default(INSURANCE)
   modeOfPayment   String?
   discount        Float         @default(0)
   copay           Float         @default(0)

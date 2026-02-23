@@ -16,6 +16,9 @@ interface Lead {
   patientName: string
   phoneNumber: string
   treatment?: string
+  age?: number
+  sex?: string
+  city?: string
 }
 
 export default function KYPBasicSubmitPage() {
@@ -91,6 +94,9 @@ export default function KYPBasicSubmitPage() {
               initialPatientName={lead.patientName}
               initialPhone={lead.phoneNumber}
               initialTreatment={lead.treatment}
+              initialAge={lead.age}
+              initialSex={lead.sex}
+              initialCity={lead.city}
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
                 queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })

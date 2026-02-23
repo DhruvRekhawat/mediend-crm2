@@ -44,6 +44,12 @@ const STAGE_LABELS: Record<CaseStage, string> = {
   [CaseStage.IPD_DONE]: 'IPD Done',
   [CaseStage.PL_PENDING]: 'PL Pending',
   [CaseStage.OUTSTANDING]: 'Outstanding',
+  // Cash Flow Stages
+  [CaseStage.CASH_IPD_PENDING]: 'Cash IPD Pending',
+  [CaseStage.CASH_IPD_SUBMITTED]: 'Cash IPD Submitted',
+  [CaseStage.CASH_APPROVED]: 'Cash Approved',
+  [CaseStage.CASH_ON_HOLD]: 'Cash On Hold',
+  [CaseStage.CASH_DISCHARGED]: 'Cash Discharged',
 }
 
 function getStageColor(stage: CaseStage): { bg: string; border: string; text: string; dot: string; connector: string; icon: React.ReactNode } {
@@ -175,6 +181,47 @@ function getStageColor(stage: CaseStage): { bg: string; border: string; text: st
       dot: 'bg-gray-500 dark:bg-gray-400',
       connector: 'bg-gray-300 dark:bg-gray-700',
       icon: <Clock className="w-3 h-3" />,
+    },
+    // Cash Flow Stages
+    [CaseStage.CASH_IPD_PENDING]: {
+      bg: 'bg-amber-50 dark:bg-amber-950/30',
+      border: 'border-amber-200 dark:border-amber-800',
+      text: 'text-amber-700 dark:text-amber-300',
+      dot: 'bg-amber-500 dark:bg-amber-400',
+      connector: 'bg-amber-300 dark:bg-amber-700',
+      icon: <Clock className="w-3 h-3" />,
+    },
+    [CaseStage.CASH_IPD_SUBMITTED]: {
+      bg: 'bg-blue-50 dark:bg-blue-950/30',
+      border: 'border-blue-200 dark:border-blue-800',
+      text: 'text-blue-700 dark:text-blue-300',
+      dot: 'bg-blue-500 dark:bg-blue-400',
+      connector: 'bg-blue-300 dark:bg-blue-700',
+      icon: <FileText className="w-3 h-3" />,
+    },
+    [CaseStage.CASH_APPROVED]: {
+      bg: 'bg-green-50 dark:bg-green-950/30',
+      border: 'border-green-200 dark:border-green-800',
+      text: 'text-green-700 dark:text-green-300',
+      dot: 'bg-green-500 dark:bg-green-400',
+      connector: 'bg-green-300 dark:bg-green-700',
+      icon: <CheckCircle2 className="w-3 h-3" />,
+    },
+    [CaseStage.CASH_ON_HOLD]: {
+      bg: 'bg-red-50 dark:bg-red-950/30',
+      border: 'border-red-200 dark:border-red-800',
+      text: 'text-red-700 dark:text-red-300',
+      dot: 'bg-red-500 dark:bg-red-400',
+      connector: 'bg-red-300 dark:bg-red-700',
+      icon: <Clock className="w-3 h-3" />,
+    },
+    [CaseStage.CASH_DISCHARGED]: {
+      bg: 'bg-orange-50 dark:bg-orange-950/30',
+      border: 'border-orange-200 dark:border-orange-800',
+      text: 'text-orange-700 dark:text-orange-300',
+      dot: 'bg-orange-500 dark:bg-orange-400',
+      connector: 'bg-orange-300 dark:bg-orange-700',
+      icon: <Receipt className="w-3 h-3" />,
     },
   }
   return colors[stage] || {

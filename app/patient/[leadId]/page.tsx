@@ -1,6 +1,7 @@
 'use client'
 
 import { IPDDetailsForm } from '@/components/admission/ipd-details-form'
+import { IPDCashForm } from '@/components/admission/ipd-cash-form'
 import { IPDMarkComponent } from '@/components/admission/ipd-mark-component'
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
@@ -8,13 +9,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
-import { apiGet, apiPost } from '@/lib/api-client'
+import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle } from 'lucide-react'
+import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle, Wallet, RefreshCw, Calendar as CalendarIcon } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 
 import { ActivityTimeline } from '@/components/case/activity-timeline'
 import { StageProgress } from '@/components/case/stage-progress'
+import { CashStageProgress } from '@/components/case/cash-stage-progress'
 import {
   Dialog,
   DialogContent,
@@ -38,10 +40,14 @@ import {
   canSuggestHospitals,
   canViewPhoneNumber,
   isDischargeBlockedByInitiateForm,
+  canStartCashMode,
+  canRevertCashMode,
+  canFillIPDCashForm,
+  canFillCashDischarge,
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { getPhoneDisplay } from '@/lib/phone-utils'
-import { CaseStage } from '@prisma/client'
+import { CaseStage, FlowType } from '@prisma/client'
 import { format } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
@@ -73,7 +79,13 @@ interface Lead {
   status: string
   pipelineStage: string
   caseStage: CaseStage
+  flowType?: FlowType | null
   bd?: { name?: string; manager?: { name?: string } | null } | null
+  leadEntryDate?: string | null
+  createdDate?: string | null
+  month?: string | null
+  profession?: string | null
+  teamLeadId?: number | null
   kypSubmission?: {
     id: string
     status: string
@@ -269,12 +281,14 @@ export default function PatientDetailsPage() {
   })
 
   const [showAdmitModal, setShowAdmitModal] = useState(false)
+  const [showIPDCashModal, setShowIPDCashModal] = useState(false)
   const [showIPDMarkModal, setShowIPDMarkModal] = useState(false)
   const [showMarkLostDialog, setShowMarkLostDialog] = useState(false)
   const [markLostReason, setMarkLostReason] = useState<string>('')
   const [pdfDownloading, setPdfDownloading] = useState(false)
   const [markLostDetail, setMarkLostDetail] = useState('')
   const [markLostSubmitting, setMarkLostSubmitting] = useState(false)
+  const [switchingMode, setSwitchingMode] = useState(false)
 
   if (isLoading || isLoadingKYP) {
     return (
@@ -339,6 +353,12 @@ export default function PatientDetailsPage() {
       [CaseStage.IPD_DONE]: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300 border-teal-300',
       [CaseStage.PL_PENDING]: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300',
       [CaseStage.OUTSTANDING]: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300',
+      // Cash Flow Stages
+      [CaseStage.CASH_IPD_PENDING]: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 border-amber-300',
+      [CaseStage.CASH_IPD_SUBMITTED]: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 border-blue-300',
+      [CaseStage.CASH_APPROVED]: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 border-green-300',
+      [CaseStage.CASH_ON_HOLD]: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 border-red-300',
+      [CaseStage.CASH_DISCHARGED]: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 border-orange-300',
     }
     return colors[stage] || 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300 border-gray-300'
   }
@@ -356,6 +376,12 @@ export default function PatientDetailsPage() {
   const showSuggestHospitals = user && canSuggestHospitals(user as any, lead)
   const canFillInitiate = user && canFillInitiateForm(user as any, lead)
   const isDischargeBlocked = user && isDischargeBlockedByInitiateForm(user as any, lead)
+  
+  // Cash Flow Permissions
+  const canStartCash = user && canStartCashMode(user as any, lead)
+  const canRevertCash = user && canRevertCashMode(user as any, lead)
+  const canFillIPDCash = user && canFillIPDCashForm(user as any, lead)
+  const canFillCashDischargeSheet = user && canFillCashDischarge(user as any, lead)
 
   // Collect all uploaded documents for grid (KYP + PreAuth)
   const uploadedDocuments = (() => {
@@ -449,17 +475,26 @@ export default function PatientDetailsPage() {
                         <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{city || '-'}</p>
                       </div>
                     </div>
-                    {area && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
-                          <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Area</p>
-                          <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{area}</p>
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                        <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                       </div>
-                    )}
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Age / Sex</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
+                          {lead.age || '-'} / {lead.sex || '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Circle</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.circle || '-'}</p>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800">
                         <Stethoscope className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -469,28 +504,6 @@ export default function PatientDetailsPage() {
                         <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.treatment || '-'}</p>
                       </div>
                     </div>
-                    {lead.insuranceName && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
-                          <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Insurance</p>
-                          <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.insuranceName}</p>
-                        </div>
-                      </div>
-                    )}
-                    {lead.ipdDrName && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                          <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Doctor</p>
-                          <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.ipdDrName}</p>
-                        </div>
-                      </div>
-                    )}
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
                         <Tag className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -500,20 +513,73 @@ export default function PatientDetailsPage() {
                         <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.category || '-'}</p>
                       </div>
                     </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <CalendarIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Lead Date</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
+                          {lead.createdDate ? format(new Date(lead.createdDate), 'dd MMM yyyy') : '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-teal-50 dark:bg-teal-950/30 rounded-lg border border-teal-200 dark:border-teal-800">
+                        <CalendarIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Assign Date</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
+                          {lead.leadEntryDate ? format(new Date(lead.leadEntryDate), 'dd MMM yyyy') : '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                        <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">BDM / TL</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
+                          {lead.bd?.name || '-'} {lead.teamLeadId ? `/ TL-${lead.teamLeadId}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <Activity className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Status</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{lead.status || '-'}</p>
+                      </div>
+                    </div>
                   </div>
                 )
               })()}
 
               {/* Compact Stage Progress */}
               <div className="border-t border-gray-200 dark:border-gray-800 pt-4">
-                <div className="mb-3">
-                  <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold">Case Progress</p>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm font-semibold">
+                    {lead.flowType === FlowType.CASH ? 'Cash Flow Progress' : 'Case Progress'}
+                  </p>
+                  {lead.flowType === FlowType.CASH && (
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      Cash Mode
+                    </Badge>
+                  )}
                 </div>
-                <StageProgress
-                  currentStage={lead.caseStage}
-                  hasInitiateForm={!!lead.insuranceInitiateForm?.id}
-                  hasIpdMark={!!lead.admissionRecord?.ipdStatus}
-                />
+                {lead.flowType === FlowType.CASH ? (
+                  <CashStageProgress currentStage={lead.caseStage} />
+                ) : (
+                  <StageProgress
+                    currentStage={lead.caseStage}
+                    hasInitiateForm={!!lead.insuranceInitiateForm?.id}
+                    hasIpdMark={!!lead.admissionRecord?.ipdStatus}
+                  />
+                )}
               </div>
             </div>
 
@@ -562,8 +628,91 @@ export default function PatientDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3">
-                {/* BD Actions */}
-                {!lead.kypSubmission && (user.role === 'BD' || user.role === 'ADMIN') && (
+                {/* Cash Flow Actions */}
+                {canStartCash && (
+                  <Button
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white border-0"
+                    disabled={switchingMode}
+                    onClick={async () => {
+                      if (!confirm('Are you sure you want to switch to Cash Mode? This will change the workflow.')) return
+                      setSwitchingMode(true)
+                      try {
+                        await apiPatch(`/api/leads/${leadId}`, {
+                          flowType: FlowType.CASH,
+                          caseStage: CaseStage.CASH_IPD_PENDING,
+                          stageChangeNote: 'Switched to Cash Mode'
+                        })
+                        toast.success('Switched to Cash Mode')
+                        queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                      } catch (e) {
+                        toast.error('Failed to switch mode')
+                      } finally {
+                        setSwitchingMode(false)
+                      }
+                    }}
+                  >
+                    {switchingMode ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+                    Start Cash Mode
+                  </Button>
+                )}
+
+                {canRevertCash && (
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
+                    disabled={switchingMode}
+                    onClick={async () => {
+                      if (!confirm('Switch back to Insurance Flow?')) return
+                      setSwitchingMode(true)
+                      try {
+                        // Revert to previous stage logic is complex, for now revert to NEW_LEAD or KYP_BASIC_COMPLETE?
+                        // Or just set flowType to INSURANCE and let stage be what it was?
+                        // Ideally we should track previous stage.
+                        // For simplicity, let's set to KYP_BASIC_COMPLETE if kyp exists, else NEW_LEAD.
+                        const targetStage = lead.kypSubmission ? CaseStage.KYP_BASIC_COMPLETE : CaseStage.NEW_LEAD
+                        await apiPatch(`/api/leads/${leadId}`, {
+                          flowType: FlowType.INSURANCE,
+                          caseStage: targetStage,
+                          stageChangeNote: 'Reverted to Insurance Flow'
+                        })
+                        toast.success('Reverted to Insurance Flow')
+                        queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                      } catch (e) {
+                        toast.error('Failed to revert mode')
+                      } finally {
+                        setSwitchingMode(false)
+                      }
+                    }}
+                  >
+                    {switchingMode ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    Switch to Insurance Flow
+                  </Button>
+                )}
+
+                {canFillIPDCash && (
+                  <Button
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
+                    onClick={() => setShowIPDCashModal(true)}
+                  >
+                    <FileText className="h-4 w-4" />
+                    {lead.caseStage === CaseStage.CASH_ON_HOLD ? 'Edit IPD Cash Form' : 'Fill IPD Cash Form'}
+                  </Button>
+                )}
+
+                {canFillCashDischargeSheet && (
+                  <Button
+                    asChild
+                    className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white border-0"
+                  >
+                    <Link href={`/patient/${leadId}/discharge-cash`}>
+                      <Receipt className="h-4 w-4" />
+                      Fill Discharge Form
+                    </Link>
+                  </Button>
+                )}
+
+                {/* BD Actions (Insurance Flow) */}
+                {lead.flowType !== FlowType.CASH && !lead.kypSubmission && (user.role === 'BD' || user.role === 'ADMIN') && (
                   <Button
                     asChild
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
@@ -922,7 +1071,7 @@ export default function PatientDetailsPage() {
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline">
-                <Link href={`/patient/${leadId}/discharge`}>
+                <Link href={lead.flowType === FlowType.CASH ? `/patient/${leadId}/discharge-cash` : `/patient/${leadId}/discharge`}>
                   <Receipt className="h-4 w-4 mr-2" />
                   View Discharge Sheet
                 </Link>
@@ -979,6 +1128,50 @@ export default function PatientDetailsPage() {
                   queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
                 }}
                 onCancel={() => setShowAdmitModal(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* IPD Cash Form Modal */}
+        <Dialog open={showIPDCashModal} onOpenChange={setShowIPDCashModal}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>IPD Cash Details</DialogTitle>
+              <DialogDescription>
+                Fill admission and payment details for Cash Flow.
+              </DialogDescription>
+            </DialogHeader>
+            {lead && (
+              <IPDCashForm
+                leadId={leadId}
+                patientName={lead.patientName}
+                leadRef={lead.leadRef}
+                age={lead.age}
+                sex={lead.sex}
+                phoneNumber={lead.phoneNumber}
+                alternateNumber={lead.alternateNumber ?? undefined}
+                attendantName={lead.attendantName ?? undefined}
+                attendantContactNo={lead.attendantContactNo ?? undefined}
+                circle={lead.circle}
+                city={lead.city}
+                category={lead.category ?? undefined}
+                treatment={lead.treatment ?? undefined}
+                quantityGrade={lead.quantityGrade ?? undefined}
+                anesthesia={lead.anesthesia ?? undefined}
+                surgeonName={lead.ipdDrName || lead.surgeonName || undefined}
+                surgeonType={lead.surgeonType ?? undefined}
+                hospitalName={lead.hospitalName}
+                bdName={lead.bd?.name}
+                bdManagerName={lead.bd?.manager?.name ?? undefined}
+                // Pass existing data if editing (e.g. from admissionRecord if it exists)
+                initialData={lead.admissionRecord}
+                isEditMode={lead.caseStage === CaseStage.CASH_ON_HOLD}
+                onSuccess={() => {
+                  setShowIPDCashModal(false)
+                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                }}
+                onCancel={() => setShowIPDCashModal(false)}
               />
             )}
           </DialogContent>

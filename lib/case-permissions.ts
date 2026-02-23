@@ -1,4 +1,4 @@
-import { CaseStage, UserRole } from '@prisma/client'
+import { CaseStage, UserRole, FlowType } from '@prisma/client'
 
 interface User {
   id: string
@@ -11,6 +11,7 @@ interface Lead {
   id: string
   caseStage: CaseStage
   pipelineStage: string
+  flowType?: FlowType | null
   kypSubmission?: {
     id: string
     status: string
@@ -199,4 +200,75 @@ export function isDischargeBlockedByInitiateForm(user: User, lead: Lead): boolea
   const isInsuranceOrPL = ['INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'ADMIN'].includes(user.role)
   const isDischarged = lead.caseStage === CaseStage.DISCHARGED
   return isInsuranceOrPL && isDischarged && !lead.insuranceInitiateForm?.id
+}
+
+// ─── Cash Flow Permissions ──────────────────────────────────────────────────
+
+// BD can start cash mode if not already in cash mode and in early stages
+export function canStartCashMode(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  
+  const isBD = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
+  const isNotCash = lead.flowType !== FlowType.CASH
+  
+  // Allowed stages to switch to cash:
+  // NEW_LEAD, KYP_BASIC_COMPLETE, HOSPITALS_SUGGESTED, PREAUTH_RAISED, PREAUTH_COMPLETE
+  // Basically before admission in insurance flow
+  const allowedStages: CaseStage[] = [
+    CaseStage.NEW_LEAD,
+    CaseStage.KYP_BASIC_COMPLETE,
+    CaseStage.HOSPITALS_SUGGESTED,
+    CaseStage.PREAUTH_RAISED,
+    CaseStage.PREAUTH_COMPLETE,
+    CaseStage.KYP_PENDING,
+    CaseStage.KYP_COMPLETE,
+  ]
+  
+  return isBD && isNotCash && allowedStages.includes(lead.caseStage)
+}
+
+// BD can revert to insurance flow if they haven't submitted the IPD cash form yet
+export function canRevertCashMode(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  
+  const isBD = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
+  const isCash = lead.flowType === FlowType.CASH
+  const isPending = lead.caseStage === CaseStage.CASH_IPD_PENDING
+  
+  return isBD && isCash && isPending
+}
+
+// BD can fill IPD Cash Form when pending or on hold
+export function canFillIPDCashForm(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  
+  const isBD = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
+  const isCash = lead.flowType === FlowType.CASH
+  // If pending or on hold, they can fill/edit
+  const allowedStages: CaseStage[] = [CaseStage.CASH_IPD_PENDING, CaseStage.CASH_ON_HOLD]
+  
+  return isBD && isCash && allowedStages.includes(lead.caseStage)
+}
+
+// Insurance can review cash case when submitted
+export function canReviewCashCase(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isCash = lead.flowType === FlowType.CASH
+  // Can review if submitted or on hold (to re-review or change decision)
+  const allowedStages: CaseStage[] = [CaseStage.CASH_IPD_SUBMITTED, CaseStage.CASH_ON_HOLD]
+  
+  return isInsurance && isCash && allowedStages.includes(lead.caseStage)
+}
+
+// Insurance can fill discharge form when approved
+export function canFillCashDischarge(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isCash = lead.flowType === FlowType.CASH
+  const isApproved = lead.caseStage === CaseStage.CASH_APPROVED
+  
+  return isInsurance && isCash && isApproved
 }

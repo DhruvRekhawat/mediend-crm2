@@ -76,8 +76,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
   BD: [
     'leads:read',
     'leads:write',
+    'leads:assign',
     'targets:read',
     'analytics:read',
+    'users:read',
   ],
   INSURANCE_HEAD: [
     'leads:read',

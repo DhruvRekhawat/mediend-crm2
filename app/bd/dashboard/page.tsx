@@ -119,6 +119,12 @@ export default function BDDashboardPage() {
       [CaseStage.IPD_DONE]: 'default',
       [CaseStage.PL_PENDING]: 'secondary',
       [CaseStage.OUTSTANDING]: 'secondary',
+      // Cash Flow Stages
+      [CaseStage.CASH_IPD_PENDING]: 'secondary',
+      [CaseStage.CASH_IPD_SUBMITTED]: 'secondary',
+      [CaseStage.CASH_APPROVED]: 'default',
+      [CaseStage.CASH_ON_HOLD]: 'destructive',
+      [CaseStage.CASH_DISCHARGED]: 'outline',
     }
     return (
       <Badge variant={variants[stage] || 'secondary'}>

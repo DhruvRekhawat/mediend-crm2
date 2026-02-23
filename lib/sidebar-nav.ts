@@ -96,6 +96,12 @@ export const navItems: NavItem[] = [
     permission: 'insurance:read',
   },
   {
+    title: 'Cash Cases',
+    url: '/insurance/cash-cases',
+    icon: Wallet,
+    permission: 'insurance:read',
+  },
+  {
     title: 'Chat',
     url: '/chat',
     icon: MessageSquare,
