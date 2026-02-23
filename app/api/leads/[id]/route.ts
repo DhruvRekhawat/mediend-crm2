@@ -35,86 +35,165 @@ export async function GET(
     })
 
     // Fetch relations separately to identify which one is causing the "column not found" error
-    const fullLead = await prisma.lead.findUnique({
-      where: { id },
+    let bd = null;
+    try {
+      bd = await prisma.user.findUnique({
+        where: { id: lead.bdId },
+        include: { team: true }
+      });
+      console.log('[DEBUG] BD relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching BD relation:', e);
+    }
+
+    let createdBy = null;
+    try {
+      createdBy = await prisma.user.findUnique({
+        where: { id: lead.createdById },
+        select: { id: true, name: true }
+      });
+      console.log('[DEBUG] createdBy relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching createdBy relation:', e);
+    }
+
+    let updatedBy = null;
+    try {
+      updatedBy = await prisma.user.findUnique({
+        where: { id: lead.updatedById },
+        select: { id: true, name: true }
+      });
+      console.log('[DEBUG] updatedBy relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching updatedBy relation:', e);
+    }
+
+    let stageEvents: (Prisma.LeadStageEventGetPayload<{
       include: {
-        bd: {
-          include: {
-            team: true,
-          },
+        changedBy: {
+          select: { id: true, name: true }
+        }
+      }
+    }>)[] = [];
+    try {
+      stageEvents = await prisma.leadStageEvent.findMany({
+        where: { leadId: id },
+        include: {
+          changedBy: {
+            select: { id: true, name: true }
+          }
         },
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        stageEvents: {
-          include: {
-            changedBy: {
-              select: {
-                id: true,
-                name: true,
+        orderBy: { changedAt: 'desc' }
+      });
+      console.log('[DEBUG] stageEvents relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching stageEvents relation:', e);
+    }
+
+    let kypSubmission = null;
+    try {
+      kypSubmission = await (prisma as any).kYPSubmission.findUnique({
+        where: { leadId: id },
+        include: {
+          submittedBy: {
+            select: { id: true, name: true }
+          }
+        }
+      });
+      console.log('[DEBUG] kypSubmission relation fetched successfully');
+      
+      if (kypSubmission) {
+        try {
+          const preAuthData = await (prisma as any).preAuthorization.findUnique({
+            where: { kypSubmissionId: kypSubmission.id },
+            include: {
+              handledBy: {
+                select: { id: true, name: true }
               },
-            },
-          },
-          orderBy: {
-            changedAt: 'desc',
-          },
-        },
-        kypSubmission: {
-          include: {
-            submittedBy: {
-              select: {
-                id: true,
-                name: true,
+              preAuthRaisedBy: {
+                select: { id: true, name: true }
               },
-            },
-            preAuthData: {
-              include: {
-                handledBy: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-                preAuthRaisedBy: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-                suggestedHospitals: true,
-              },
-            },
-          },
-        },
-        insuranceCase: true,
-        plRecord: true,
-        dischargeSheet: {
-          select: {
-            id: true,
-          },
-        },
-        insuranceInitiateForm: {
-          select: {
-            id: true,
-          },
-        },
-        admissionRecord: {
-          select: {
-            id: true,
-            ipdStatus: true,
-          },
-        },
-      },
-    })
+              suggestedHospitals: true
+            }
+          });
+          (kypSubmission as any).preAuthData = preAuthData;
+          console.log('[DEBUG] preAuthData relation fetched successfully');
+        } catch (e) {
+          console.error('[DEBUG] Error fetching preAuthData relation:', e);
+        }
+      }
+    } catch (e) {
+      console.error('[DEBUG] Error fetching kypSubmission relation:', e);
+    }
+
+    let insuranceCase = null;
+    try {
+      insuranceCase = await (prisma as any).insuranceCase.findUnique({
+        where: { leadId: id }
+      });
+      console.log('[DEBUG] insuranceCase relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching insuranceCase relation:', e);
+    }
+
+    let plRecord = null;
+    try {
+      plRecord = await (prisma as any).pLRecord.findUnique({
+        where: { leadId: id }
+      });
+      console.log('[DEBUG] plRecord relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching plRecord relation:', e);
+    }
+
+    let dischargeSheet = null;
+    try {
+      dischargeSheet = await (prisma as any).dischargeSheet.findUnique({
+        where: { leadId: id },
+        select: { id: true }
+      });
+      console.log('[DEBUG] dischargeSheet relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching dischargeSheet relation:', e);
+    }
+
+    let insuranceInitiateForm = null;
+    try {
+      insuranceInitiateForm = await (prisma as any).insuranceInitiateForm.findUnique({
+        where: { leadId: id },
+        select: { id: true }
+      });
+      console.log('[DEBUG] insuranceInitiateForm relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching insuranceInitiateForm relation:', e);
+    }
+
+    let admissionRecord = null;
+    try {
+      admissionRecord = await (prisma as any).admissionRecord.findUnique({
+        where: { leadId: id },
+        select: { id: true, ipdStatus: true }
+      });
+      console.log('[DEBUG] admissionRecord relation fetched successfully');
+    } catch (e) {
+      console.error('[DEBUG] Error fetching admissionRecord relation:', e);
+    }
+
+    const fullLead = {
+      ...lead,
+      bd,
+      createdBy,
+      updatedBy,
+      stageEvents,
+      kypSubmission,
+      insuranceCase,
+      plRecord,
+      dischargeSheet,
+      insuranceInitiateForm,
+      admissionRecord
+    } as any
+
+    console.log('[DEBUG] Full lead object constructed successfully with all relations')
 
     if (!fullLead) {
       return errorResponse('Failed to load lead relations', 500)

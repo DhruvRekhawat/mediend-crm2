@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       where.leadId = leadId
     }
 
-    const kypSubmissions = await prisma.kYPSubmission.findMany({
+    const kypSubmissions = await (prisma as any).kYPSubmission.findMany({
       where,
       include: {
         lead: {
@@ -76,7 +76,17 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
-        preAuthData: {
+      },
+      orderBy: {
+        submittedAt: 'desc',
+      },
+    })
+
+    // Fetch preAuthData separately to identify which relation is causing the error
+    const submissionsWithPreAuth = await Promise.all(kypSubmissions.map(async (kyp: any) => {
+      try {
+        const preAuthData = await (prisma as any).preAuthorization.findUnique({
+          where: { kypSubmissionId: kyp.id },
           include: {
             suggestedHospitals: true,
             handledBy: {
@@ -92,14 +102,15 @@ export async function GET(request: NextRequest) {
               },
             },
           },
-        },
-      },
-      orderBy: {
-        submittedAt: 'desc',
-      },
-    })
+        });
+        return { ...kyp, preAuthData };
+      } catch (e) {
+        console.error(`Error fetching preAuthData for KYP ${kyp.id}:`, e);
+        return kyp;
+      }
+    }));
 
-    return successResponse(kypSubmissions)
+    return successResponse(submissionsWithPreAuth)
   } catch (error) {
     console.error('Error fetching KYP submissions:', error)
     return errorResponse('Failed to fetch KYP submissions', 500)

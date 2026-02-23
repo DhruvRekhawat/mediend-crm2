@@ -192,12 +192,6 @@ export function canAccessLead(user: SessionUser | null, leadBdId: string, leadTe
     return true
   }
 
-  // Temporarily hide leads for BD and TEAM_LEAD roles as requested
-  if (user.role === 'BD' || user.role === 'TEAM_LEAD') {
-    return false
-  }
-
-  /* Commented out to fix unreachable code type errors
   // Team Lead can access leads from their team
   if (user.role === 'TEAM_LEAD' && leadTeamId && user.teamId === leadTeamId) {
     return true
@@ -207,7 +201,6 @@ export function canAccessLead(user: SessionUser | null, leadBdId: string, leadTe
   if (user.role === 'BD' && user.id === leadBdId) {
     return true
   }
-  */
 
   return false
 }

@@ -238,13 +238,22 @@ export default function PatientDetailsPage() {
     retry: false,
   })
 
-  const { data: kypSubmission, isLoading: isLoadingKYP } = useQuery<KYPSubmission | null>({
+    const { data: kypSubmission, isLoading: isLoadingKYP } = useQuery<KYPSubmission | null>({
     queryKey: ['kyp-submission', leadId],
     queryFn: async () => {
-      const submissions = await apiGet<KYPSubmission[]>('/api/kyp')
-      return submissions.find((s) => s.leadId === leadId) || null
+      try {
+        const submissions = await apiGet<KYPSubmission[]>('/api/kyp')
+        if (!Array.isArray(submissions)) {
+          console.error('Expected array from /api/kyp, got:', submissions)
+          return null
+        }
+        return submissions.find((s) => s.leadId === leadId) || null
+      } catch (e) {
+        console.error('Error fetching KYP submission:', e)
+        return null
+      }
     },
-    enabled: !!leadId && !!lead?.kypSubmission,
+    enabled: !!leadId,
   })
 
   const { data: stageHistory } = useQuery<any[]>({
