@@ -1,44 +1,35 @@
 'use client'
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
-import { useAuth } from '@/hooks/use-auth'
-import { useState, useMemo } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet } from '@/lib/api-client'
-import { useLeads, Lead } from '@/hooks/use-leads'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { StageProgress } from '@/components/case/stage-progress'
+import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Search,
-  Filter,
-  TrendingUp,
-  FileText,
-  Phone,
-  MapPin,
-  Building2,
-  Calendar as CalendarIcon,
-  DollarSign,
-  Target,
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
-import { ALL_LEAD_STATUSES } from '@/components/kanban-board'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useAuth } from '@/hooks/use-auth'
+import { useLeads } from '@/hooks/use-leads'
+import { apiGet } from '@/lib/api-client'
+import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { getStatusColor } from '@/lib/lead-status-colors'
 import { mapStatusCode } from '@/lib/mysql-code-mappings'
-import { Progress } from '@/components/ui/progress'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
-import { UserPlus, Eye, Plus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { CaseStage } from '@prisma/client'
-import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
-import { StageProgress } from '@/components/case/stage-progress'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { format } from 'date-fns'
+import {
+  Calendar as CalendarIcon,
+  FileText,
+  Search,
+  Target,
+  TrendingUp
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useMemo, useState } from 'react'
 
 interface Target {
   id: string
@@ -380,352 +371,353 @@ export default function BDPipelinePage() {
 
 
   return (
-    <AuthenticatedLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">My Pipeline</h1>
-            <p className="text-muted-foreground mt-1">Manage and track your leads</p>
-          </div>
-        </div>
+    // <AuthenticatedLayout>
+    //   <div className="space-y-6">
+    //     <div className="flex items-center justify-between">
+    //       <div>
+    //         <h1 className="text-3xl font-bold">My Pipeline</h1>
+    //         <p className="text-muted-foreground mt-1">Manage and track your leads</p>
+    //       </div>
+    //     </div>
 
-        {/* Status Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <Card className="border-l-4 border-l-green-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">New Leads</p>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{statusStats.new}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    //     {/* Status Cards */}
+    //     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    //       <Card className="border-l-4 border-l-green-500">
+    //         <CardContent className="pt-6">
+    //           <div className="flex items-center justify-between">
+    //             <div>
+    //               <p className="text-sm font-medium text-muted-foreground">New Leads</p>
+    //               <p className="text-2xl font-bold text-green-700 dark:text-green-300">{statusStats.new}</p>
+    //             </div>
+    //             <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center">
+    //               <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
+    //             </div>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
           
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Follow-ups</p>
-                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{statusStats.followUps}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
-                  <CalendarIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    //       <Card className="border-l-4 border-l-yellow-500">
+    //         <CardContent className="pt-6">
+    //           <div className="flex items-center justify-between">
+    //             <div>
+    //               <p className="text-sm font-medium text-muted-foreground">Follow-ups</p>
+    //               <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{statusStats.followUps}</p>
+    //             </div>
+    //             <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-950/30 flex items-center justify-center">
+    //               <CalendarIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+    //             </div>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
 
-          <Card className="border-l-4 border-l-emerald-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">IPD Done</p>
-                  <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{statusStats.ipdDone}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    //       <Card className="border-l-4 border-l-emerald-500">
+    //         <CardContent className="pt-6">
+    //           <div className="flex items-center justify-between">
+    //             <div>
+    //               <p className="text-sm font-medium text-muted-foreground">IPD Done</p>
+    //               <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{statusStats.ipdDone}</p>
+    //             </div>
+    //             <div className="h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center">
+    //               <TrendingUp className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+    //             </div>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
 
-          <Card className="border-l-4 border-l-slate-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">DNP</p>
-                  <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{statusStats.dnp}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-950/30 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-slate-600 dark:text-slate-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    //       <Card className="border-l-4 border-l-slate-500">
+    //         <CardContent className="pt-6">
+    //           <div className="flex items-center justify-between">
+    //             <div>
+    //               <p className="text-sm font-medium text-muted-foreground">DNP</p>
+    //               <p className="text-2xl font-bold text-slate-700 dark:text-slate-300">{statusStats.dnp}</p>
+    //             </div>
+    //             <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-950/30 flex items-center justify-center">
+    //               <FileText className="h-6 w-6 text-slate-600 dark:text-slate-400" />
+    //             </div>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
 
-          <Card className="border-l-4 border-l-gray-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Lost/Inactive</p>
-                  <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{statusStats.lost}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-950/30 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-gray-600 dark:text-gray-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+    //       <Card className="border-l-4 border-l-gray-500">
+    //         <CardContent className="pt-6">
+    //           <div className="flex items-center justify-between">
+    //             <div>
+    //               <p className="text-sm font-medium text-muted-foreground">Lost/Inactive</p>
+    //               <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{statusStats.lost}</p>
+    //             </div>
+    //             <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-950/30 flex items-center justify-center">
+    //               <FileText className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+    //             </div>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
 
-          <Card className="border-l-4 border-l-teal-500">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">{statusStats.completed}</p>
-                </div>
-                <div className="h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-950/30 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+    //       <Card className="border-l-4 border-l-teal-500">
+    //         <CardContent className="pt-6">
+    //           <div className="flex items-center justify-between">
+    //             <div>
+    //               <p className="text-sm font-medium text-muted-foreground">Completed</p>
+    //               <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">{statusStats.completed}</p>
+    //             </div>
+    //             <div className="h-12 w-12 rounded-full bg-teal-100 dark:bg-teal-950/30 flex items-center justify-center">
+    //               <TrendingUp className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+    //             </div>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
+    //     </div>
 
-        {/* Target Progress Card */}
-        {targetProgress && (
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Target Progress</p>
-                      <p className="text-lg font-semibold">
-                        {targetProgress.metric.replace('_', ' ')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                      {targetProgress.percentage.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {targetProgress.actual.toLocaleString()} / {targetProgress.targetValue.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-                <Progress value={targetProgress.percentage} className="h-2" />
-                <p className="text-xs text-muted-foreground">
-                  Period: {new Date(targetProgress.target.periodStartDate).toLocaleDateString()} - {new Date(targetProgress.target.periodEndDate).toLocaleDateString()}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+    //     {/* Target Progress Card */}
+    //     {targetProgress && (
+    //       <Card className="border-l-4 border-l-blue-500">
+    //         <CardContent className="pt-6">
+    //           <div className="space-y-4">
+    //             <div className="flex items-center justify-between">
+    //               <div className="flex items-center gap-2">
+    //                 <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+    //                 <div>
+    //                   <p className="text-sm font-medium text-muted-foreground">Target Progress</p>
+    //                   <p className="text-lg font-semibold">
+    //                     {targetProgress.metric.replace('_', ' ')}
+    //                   </p>
+    //                 </div>
+    //               </div>
+    //               <div className="text-right">
+    //                 <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+    //                   {targetProgress.percentage.toFixed(1)}%
+    //                 </p>
+    //                 <p className="text-xs text-muted-foreground">
+    //                   {targetProgress.actual.toLocaleString()} / {targetProgress.targetValue.toLocaleString()}
+    //                 </p>
+    //               </div>
+    //             </div>
+    //             <Progress value={targetProgress.percentage} className="h-2" />
+    //             <p className="text-xs text-muted-foreground">
+    //               Period: {new Date(targetProgress.target.periodStartDate).toLocaleDateString()} - {new Date(targetProgress.target.periodEndDate).toLocaleDateString()}
+    //             </p>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
+    //     )}
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search leads by name, ref, phone, city, hospital, or treatment..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <div className="w-full md:w-48">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      {uniqueStatuses.map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">From:</span>
-                  <Dialog open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, 'PP') : 'Pick date'}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={(date) => {
-                          setStartDate(date)
-                          setIsStartCalendarOpen(false)
-                        }}
-                        initialFocus
-                      />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">To:</span>
-                  <Dialog open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, 'PP') : 'Pick date'}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={(date) => {
-                          setEndDate(date)
-                          setIsEndCalendarOpen(false)
-                        }}
-                        initialFocus
-                      />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                {(startDate || endDate) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setStartDate(undefined)
-                      setEndDate(undefined)
-                    }}
-                    className="text-muted-foreground"
-                  >
-                    Clear dates
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+    //     {/* Filters */}
+    //     <Card>
+    //       <CardContent className="pt-6">
+    //         <div className="flex flex-col gap-4">
+    //           <div className="flex flex-col md:flex-row gap-4">
+    //             <div className="flex-1 relative">
+    //               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    //               <Input
+    //                 placeholder="Search leads by name, ref, phone, city, hospital, or treatment..."
+    //                 value={searchQuery}
+    //                 onChange={(e) => setSearchQuery(e.target.value)}
+    //                 className="pl-10"
+    //               />
+    //             </div>
+    //             <div className="w-full md:w-48">
+    //               <Select value={statusFilter} onValueChange={setStatusFilter}>
+    //                 <SelectTrigger>
+    //                   <SelectValue placeholder="Filter by status" />
+    //                 </SelectTrigger>
+    //                 <SelectContent>
+    //                   <SelectItem value="all">All Statuses</SelectItem>
+    //                   {uniqueStatuses.map((status) => (
+    //                     <SelectItem key={status} value={status}>
+    //                       {status}
+    //                     </SelectItem>
+    //                   ))}
+    //                 </SelectContent>
+    //               </Select>
+    //             </div>
+    //           </div>
+    //           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+    //             <div className="flex items-center gap-2">
+    //               <span className="text-sm text-muted-foreground whitespace-nowrap">From:</span>
+    //               <Dialog open={isStartCalendarOpen} onOpenChange={setIsStartCalendarOpen}>
+    //                 <DialogTrigger asChild>
+    //                   <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+    //                     <CalendarIcon className="mr-2 h-4 w-4" />
+    //                     {startDate ? format(startDate, 'PP') : 'Pick date'}
+    //                   </Button>
+    //                 </DialogTrigger>
+    //                 <DialogContent className="w-auto p-0">
+    //                   <Calendar
+    //                     mode="single"
+    //                     selected={startDate}
+    //                     onSelect={(date) => {
+    //                       setStartDate(date)
+    //                       setIsStartCalendarOpen(false)
+    //                     }}
+    //                     initialFocus
+    //                   />
+    //                 </DialogContent>
+    //               </Dialog>
+    //             </div>
+    //             <div className="flex items-center gap-2">
+    //               <span className="text-sm text-muted-foreground whitespace-nowrap">To:</span>
+    //               <Dialog open={isEndCalendarOpen} onOpenChange={setIsEndCalendarOpen}>
+    //                 <DialogTrigger asChild>
+    //                   <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
+    //                     <CalendarIcon className="mr-2 h-4 w-4" />
+    //                     {endDate ? format(endDate, 'PP') : 'Pick date'}
+    //                   </Button>
+    //                 </DialogTrigger>
+    //                 <DialogContent className="w-auto p-0">
+    //                   <Calendar
+    //                     mode="single"
+    //                     selected={endDate}
+    //                     onSelect={(date) => {
+    //                       setEndDate(date)
+    //                       setIsEndCalendarOpen(false)
+    //                     }}
+    //                     initialFocus
+    //                   />
+    //                 </DialogContent>
+    //               </Dialog>
+    //             </div>
+    //             {(startDate || endDate) && (
+    //               <Button
+    //                 variant="ghost"
+    //                 size="sm"
+    //                 onClick={() => {
+    //                   setStartDate(undefined)
+    //                   setEndDate(undefined)
+    //                 }}
+    //                 className="text-muted-foreground"
+    //               >
+    //                 Clear dates
+    //               </Button>
+    //             )}
+    //           </div>
+    //         </div>
+    //       </CardContent>
+    //     </Card>
 
-        {/* Main Content */}
-        {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading leads...</div>
-        ) : (
-          <Card>
-                <CardHeader>
-                  <CardTitle>Leads Table</CardTitle>
-                  <CardDescription>All your leads in a table view</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Lead Ref</TableHead>
-                      <TableHead>Patient Name</TableHead>
-                      <TableHead>Treatment</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Stage</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredLeads.length > 0 ? (
-                      filteredLeads.map((lead) => {
-                        const mappedStatus = mapStatusCode(lead.status)
-                        const statusColor = getStatusColor(mappedStatus)
-                        const kypSubmission = kypStatusMap.get(lead.id)
-                        return (
-                          <TableRow
-                            key={lead.id}
-                            onClick={() => router.push(`/patient/${lead.id}`)}
-                            className={`cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/40 transition-all duration-200 ${statusColor.bg} ${statusColor.border} border-l-4`}
-                          >
-                          <TableCell className="font-medium">{lead.leadRef}</TableCell>
-                          <TableCell>{lead.patientName}</TableCell>
-                          <TableCell>{lead.treatment}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={`${statusColor.bg} ${statusColor.border} ${statusColor.text} border`}
-                            >
-                              {mappedStatus || 'New'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                lead.pipelineStage === 'COMPLETED'
-                                  ? 'default'
-                                  : lead.pipelineStage === 'LOST'
-                                    ? 'destructive'
-                                    : 'secondary'
-                              }
-                            >
-                              {lead.pipelineStage}
-                            </Badge>
-                          </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            {lead.caseStage ? (
-                              <StageProgress
-                                currentStage={lead.caseStage}
-                                hasInitiateForm={!!(lead as any).insuranceInitiateForm?.id}
-                                hasIpdMark={!!(lead as any).admissionRecord?.ipdStatus}
-                                compact
-                              />
-                            ) : (
-                              kypSubmission?.status && (
-                                <Badge className={`border-0 ${getStatusBadgeColor(kypSubmission.status)}`}>
-                                  {getKYPStatusLabel(kypSubmission.status)}
-                                </Badge>
-                              )
-                            )}
-                          </TableCell>
-                        </TableRow>
-                        )
-                      })
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                          {searchQuery ? 'No leads found matching your search' : 'No leads found'}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+    //     {/* Main Content */}
+    //     {isLoading ? (
+    //       <div className="text-center py-8 text-muted-foreground">Loading leads...</div>
+    //     ) : (
+    //       <Card>
+    //             <CardHeader>
+    //               <CardTitle>Leads Table</CardTitle>
+    //               <CardDescription>All your leads in a table view</CardDescription>
+    //             </CardHeader>
+    //             <CardContent>
+    //               <div className="overflow-x-auto">
+    //                 <Table>
+    //               <TableHeader>
+    //                 <TableRow>
+    //                   <TableHead>Lead Ref</TableHead>
+    //                   <TableHead>Patient Name</TableHead>
+    //                   <TableHead>Treatment</TableHead>
+    //                   <TableHead>Status</TableHead>
+    //                   <TableHead>Stage</TableHead>
+    //                   <TableHead>Actions</TableHead>
+    //                 </TableRow>
+    //               </TableHeader>
+    //               <TableBody>
+    //                 {filteredLeads.length > 0 ? (
+    //                   filteredLeads.map((lead) => {
+    //                     const mappedStatus = mapStatusCode(lead.status)
+    //                     const statusColor = getStatusColor(mappedStatus)
+    //                     const kypSubmission = kypStatusMap.get(lead.id)
+    //                     return (
+    //                       <TableRow
+    //                         key={lead.id}
+    //                         onClick={() => router.push(`/patient/${lead.id}`)}
+    //                         className={`cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-950/40 transition-all duration-200 ${statusColor.bg} ${statusColor.border} border-l-4`}
+    //                       >
+    //                       <TableCell className="font-medium">{lead.leadRef}</TableCell>
+    //                       <TableCell>{lead.patientName}</TableCell>
+    //                       <TableCell>{lead.treatment}</TableCell>
+    //                       <TableCell>
+    //                         <Badge
+    //                           variant="outline"
+    //                           className={`${statusColor.bg} ${statusColor.border} ${statusColor.text} border`}
+    //                         >
+    //                           {mappedStatus || 'New'}
+    //                         </Badge>
+    //                       </TableCell>
+    //                       <TableCell>
+    //                         <Badge
+    //                           variant={
+    //                             lead.pipelineStage === 'COMPLETED'
+    //                               ? 'default'
+    //                               : lead.pipelineStage === 'LOST'
+    //                                 ? 'destructive'
+    //                                 : 'secondary'
+    //                           }
+    //                         >
+    //                           {lead.pipelineStage}
+    //                         </Badge>
+    //                       </TableCell>
+    //                       <TableCell onClick={(e) => e.stopPropagation()}>
+    //                         {lead.caseStage ? (
+    //                           <StageProgress
+    //                             currentStage={lead.caseStage}
+    //                             hasInitiateForm={!!(lead as any).insuranceInitiateForm?.id}
+    //                             hasIpdMark={!!(lead as any).admissionRecord?.ipdStatus}
+    //                             compact
+    //                           />
+    //                         ) : (
+    //                           kypSubmission?.status && (
+    //                             <Badge className={`border-0 ${getStatusBadgeColor(kypSubmission.status)}`}>
+    //                               {getKYPStatusLabel(kypSubmission.status)}
+    //                             </Badge>
+    //                           )
+    //                         )}
+    //                       </TableCell>
+    //                     </TableRow>
+    //                     )
+    //                   })
+    //                 ) : (
+    //                   <TableRow>
+    //                     <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+    //                       {searchQuery ? 'No leads found matching your search' : 'No leads found'}
+    //                     </TableCell>
+    //                   </TableRow>
+    //                 )}
+    //               </TableBody>
+    //             </Table>
+    //           </div>
+    //         </CardContent>
+    //       </Card>
+    //     )}
 
-        {/* KYP Form Dialog */}
-        <Dialog open={showKYPForm} onOpenChange={setShowKYPForm}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>KYP (Call 1 – Basic)</DialogTitle>
-              <DialogDescription>
-                Insurance card, city and area required. Insurance will then suggest hospitals.
-              </DialogDescription>
-            </DialogHeader>
-            {selectedLeadId && (() => {
-              const selectedLead = filteredLeads.find((l) => l.id === selectedLeadId)
-              return (
-                <KYPBasicForm
-                  leadId={selectedLeadId}
-                  initialPatientName={selectedLead?.patientName}
-                  initialPhone={selectedLead?.phoneNumber}
-                  onSuccess={() => {
-                    setShowKYPForm(false)
-                    setSelectedLeadId(null)
-                    queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
-                    queryClient.invalidateQueries({ queryKey: ['leads', filters] })
-                    if (selectedLeadId) {
-                      router.push(`/patient/${selectedLeadId}`)
-                    }
-                  }}
-                  onCancel={() => setShowKYPForm(false)}
-                />
-              )
-            })()}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </AuthenticatedLayout>
+    //     {/* KYP Form Dialog */}
+    //     <Dialog open={showKYPForm} onOpenChange={setShowKYPForm}>
+    //       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    //         <DialogHeader>
+    //           <DialogTitle>KYP (Call 1 – Basic)</DialogTitle>
+    //           <DialogDescription>
+    //             Insurance card, city and area required. Insurance will then suggest hospitals.
+    //           </DialogDescription>
+    //         </DialogHeader>
+    //         {selectedLeadId && (() => {
+    //           const selectedLead = filteredLeads.find((l) => l.id === selectedLeadId)
+    //           return (
+    //             <KYPBasicForm
+    //               leadId={selectedLeadId}
+    //               initialPatientName={selectedLead?.patientName}
+    //               initialPhone={selectedLead?.phoneNumber}
+    //               onSuccess={() => {
+    //                 setShowKYPForm(false)
+    //                 setSelectedLeadId(null)
+    //                 queryClient.invalidateQueries({ queryKey: ['kyp-submissions'] })
+    //                 queryClient.invalidateQueries({ queryKey: ['leads', filters] })
+    //                 if (selectedLeadId) {
+    //                   router.push(`/patient/${selectedLeadId}`)
+    //                 }
+    //               }}
+    //               onCancel={() => setShowKYPForm(false)}
+    //             />
+    //           )
+    //         })()}
+    //       </DialogContent>
+    //     </Dialog>
+    //   </div>
+    // </AuthenticatedLayout>
+    <p>Temporarily disabled</p>
   )
 }
 

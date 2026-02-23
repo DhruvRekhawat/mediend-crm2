@@ -5,6 +5,8 @@ import { IPDCashForm } from '@/components/admission/ipd-cash-form'
 import { IPDMarkComponent } from '@/components/admission/ipd-mark-component'
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
+import { InitiateFormCard } from '@/components/insurance/initiate-form-card'
+import { IPDDetailsCard } from '@/components/admission/ipd-details-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -45,6 +47,7 @@ import {
   canRevertCashMode,
   canFillIPDCashForm,
   canFillCashDischarge,
+  canViewInitiateForm,
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { getPhoneDisplay } from '@/lib/phone-utils'
@@ -1270,6 +1273,16 @@ export default function PatientDetailsPage() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Initiate Form Details */}
+        {initiateFormData?.initiateForm && canViewInitiateForm(user as any, lead) && (
+          <InitiateFormCard initiateForm={initiateFormData.initiateForm} />
+        )}
+
+        {/* IPD Details Section */}
+        {lead.admissionRecord && (
+          <IPDDetailsCard admissionRecord={lead.admissionRecord} />
         )}
 
         {/* Discharge Sheet Link */}
