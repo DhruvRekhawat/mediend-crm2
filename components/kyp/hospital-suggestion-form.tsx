@@ -254,6 +254,9 @@ export function HospitalSuggestionForm({
                   <Label>Hospital Name *</Label>
                   <Input
                     required
+                    value={h.hospitalName}
+                    onChange={(e) => updateHospital(index, 'hospitalName', e.target.value)}
+                    placeholder="Enter hospital name"
                   />
                 </div>
                 <div className="col-span-2">
