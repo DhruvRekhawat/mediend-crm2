@@ -238,49 +238,49 @@ export default function InsuranceDashboardPage() {
 
   // ── Components ─────────────────────────────────────────────────────────────
   const getStageBadge = (stage: CaseStage) => {
-    const badgeConfig: Record<CaseStage, { className: string }> = {
-      [CaseStage.NEW_LEAD]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-      [CaseStage.KYP_BASIC_PENDING]: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-      [CaseStage.KYP_BASIC_COMPLETE]: { className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' },
-      [CaseStage.KYP_DETAILED_PENDING]: { className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' },
-      [CaseStage.KYP_DETAILED_COMPLETE]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-      [CaseStage.KYP_PENDING]: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
-      [CaseStage.KYP_COMPLETE]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-      [CaseStage.HOSPITALS_SUGGESTED]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-      [CaseStage.PREAUTH_RAISED]: { className: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' },
-      [CaseStage.PREAUTH_COMPLETE]: { className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' },
-      [CaseStage.INITIATED]: { className: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300' },
-      [CaseStage.ADMITTED]: { className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' },
-      [CaseStage.DISCHARGED]: { className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
-      [CaseStage.IPD_DONE]: { className: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300' },
-      [CaseStage.PL_PENDING]: { className: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300' },
-      [CaseStage.OUTSTANDING]: { className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
+    const badgeConfig: Record<CaseStage, { className: string; label?: string }> = {
+      [CaseStage.NEW_LEAD]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300', label: 'New Lead' },
+      [CaseStage.KYP_BASIC_PENDING]: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300', label: 'Card Details Pending' },
+      [CaseStage.KYP_BASIC_COMPLETE]: { className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300', label: 'Card Details Added' },
+      [CaseStage.KYP_DETAILED_PENDING]: { className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300', label: 'Detailed Form Pending' },
+      [CaseStage.KYP_DETAILED_COMPLETE]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300', label: 'Detailed Form Complete' },
+      [CaseStage.KYP_PENDING]: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300', label: 'Card Details Pending' },
+      [CaseStage.KYP_COMPLETE]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300', label: 'Card Details Added' },
+      [CaseStage.HOSPITALS_SUGGESTED]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300', label: 'Hospitals Suggested' },
+      [CaseStage.PREAUTH_RAISED]: { className: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300', label: 'Pre-Auth Raised' },
+      [CaseStage.PREAUTH_COMPLETE]: { className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300', label: 'Pre-Auth Approved' },
+      [CaseStage.INITIATED]: { className: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300', label: 'IPD Details Added' },
+      [CaseStage.ADMITTED]: { className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300', label: 'IPD Marked' },
+      [CaseStage.DISCHARGED]: { className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300', label: 'Discharged' },
+      [CaseStage.IPD_DONE]: { className: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300', label: 'IPD Done' },
+      [CaseStage.PL_PENDING]: { className: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300', label: 'PL Pending' },
+      [CaseStage.OUTSTANDING]: { className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300', label: 'Outstanding' },
       // Cash Flow Stages
-      [CaseStage.CASH_IPD_PENDING]: { className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' },
-      [CaseStage.CASH_IPD_SUBMITTED]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' },
-      [CaseStage.CASH_APPROVED]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' },
-      [CaseStage.CASH_ON_HOLD]: { className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' },
-      [CaseStage.CASH_DISCHARGED]: { className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' },
+      [CaseStage.CASH_IPD_PENDING]: { className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300', label: 'Cash IPD Pending' },
+      [CaseStage.CASH_IPD_SUBMITTED]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300', label: 'Cash IPD Submitted' },
+      [CaseStage.CASH_APPROVED]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300', label: 'Cash Approved' },
+      [CaseStage.CASH_ON_HOLD]: { className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300', label: 'Cash On Hold' },
+      [CaseStage.CASH_DISCHARGED]: { className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300', label: 'Cash Discharged' },
     }
-    const config = badgeConfig[stage] || { className: 'bg-gray-100 text-gray-700' }
-    return <Badge variant="secondary" className={config.className}>{stage.replace(/_/g, ' ')}</Badge>
+    const config = badgeConfig[stage] || { className: 'bg-gray-100 text-gray-700', label: stage.replace(/_/g, ' ') }
+    return <Badge variant="secondary" className={config.className}>{config.label || stage.replace(/_/g, ' ')}</Badge>
   }
 
   const tabs: { id: TabKey; label: string; icon: React.FC<{ className?: string }>; value: number; gradient: string; bgGradient: string; iconColor: string; borderColor: string }[] = [
-    { id: 'kyp-review', label: 'KYP Review', icon: FileText, value: stats.kypReview, gradient: 'from-blue-500 to-cyan-500', bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950', iconColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-blue-200 dark:border-blue-800' },
+    { id: 'kyp-review', label: 'Card Details', icon: FileText, value: stats.kypReview, gradient: 'from-blue-500 to-cyan-500', bgGradient: 'from-blue-50 to-cyan-50 dark:from-blue-950 dark:to-cyan-950', iconColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-blue-200 dark:border-blue-800' },
     { id: 'preauth-raised', label: 'Pre-Auth Raised', icon: ArrowRight, value: stats.preAuthRaised, gradient: 'from-purple-500 to-pink-500', bgGradient: 'from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950', iconColor: 'text-purple-600 dark:text-purple-400', borderColor: 'border-purple-200 dark:border-purple-800' },
-    { id: 'preauth-complete', label: 'Pre-Auth Complete', icon: CheckCircle2, value: stats.preAuthComplete, gradient: 'from-green-500 to-emerald-500', bgGradient: 'from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950', iconColor: 'text-green-600 dark:text-green-400', borderColor: 'border-green-200 dark:border-green-800' },
-    { id: 'admitted', label: 'Admitted', icon: Activity, value: stats.admitted, gradient: 'from-indigo-500 to-blue-500', bgGradient: 'from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950', iconColor: 'text-indigo-600 dark:text-indigo-400', borderColor: 'border-indigo-200 dark:border-indigo-800' },
+    { id: 'preauth-complete', label: 'Pre-Auth Approved', icon: CheckCircle2, value: stats.preAuthComplete, gradient: 'from-green-500 to-emerald-500', bgGradient: 'from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950', iconColor: 'text-green-600 dark:text-green-400', borderColor: 'border-green-200 dark:border-green-800' },
+    { id: 'admitted', label: 'IPD / Admitted', icon: Activity, value: stats.admitted, gradient: 'from-indigo-500 to-blue-500', bgGradient: 'from-indigo-50 to-blue-50 dark:from-indigo-950 dark:to-blue-950', iconColor: 'text-indigo-600 dark:text-indigo-400', borderColor: 'border-indigo-200 dark:border-indigo-800' },
     { id: 'discharge-pending', label: 'Discharge Pending', icon: Receipt, value: stats.dischargePending, gradient: 'from-orange-500 to-amber-500', bgGradient: 'from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950', iconColor: 'text-orange-600 dark:text-orange-400', borderColor: 'border-orange-200 dark:border-orange-800' },
     { id: 'ipd-done', label: 'IPD Done', icon: Shield, value: stats.ipdDone, gradient: 'from-teal-500 to-cyan-500', bgGradient: 'from-teal-50 to-cyan-50 dark:from-teal-950 dark:to-cyan-950', iconColor: 'text-teal-600 dark:text-teal-400', borderColor: 'border-teal-200 dark:border-teal-800' },
     { id: 'all-patients', label: 'All Patients', icon: LayoutList, value: stats.allPatients, gradient: 'from-slate-500 to-gray-500', bgGradient: 'from-slate-50 to-gray-50 dark:from-slate-950 dark:to-gray-950', iconColor: 'text-slate-600 dark:text-slate-400', borderColor: 'border-slate-200 dark:border-slate-800' },
   ]
 
   const tabLabels: Record<TabKey, string> = {
-    'kyp-review': '📋 KYP Review Queue',
+    'kyp-review': '📋 Card Details & Hospitals',
     'preauth-raised': '🚀 Pre-Auth Raised',
-    'preauth-complete': '✅ Pre-Auth Complete',
-    'admitted': '🏥 Admitted Patients',
+    'preauth-complete': '✅ Pre-Auth Approved',
+    'admitted': '🏥 IPD / Admitted',
     'discharge-pending': '📄 Discharge Pending',
     'ipd-done': '🛡️ IPD Done',
     'all-patients': '📊 All Patients',

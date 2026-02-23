@@ -116,6 +116,12 @@ export function PreAuthInlineApproval({
     lead?.caseStage === 'INITIATED' ||
     lead?.caseStage === 'ADMITTED' ||
     lead?.caseStage === 'DISCHARGED'
+  const isLocked = 
+    lead?.caseStage === 'PREAUTH_COMPLETE' ||
+    lead?.caseStage === 'INITIATED' ||
+    lead?.caseStage === 'ADMITTED' ||
+    lead?.caseStage === 'DISCHARGED'
+
   const shouldForceHospitalForm = !hasAnyHospitalData
 
   useEffect(() => {
@@ -518,15 +524,15 @@ export function PreAuthInlineApproval({
             {/* Suggested hospitals read-only display */}
             {hospitalSuggestionsJsx}
 
-            {/* Modify button only before pre-auth is raised */}
-            {!isPreAuthRaised && (
+            {/* Modify button only before pre-auth is completed */}
+            {!isLocked && (
               <Button onClick={() => setShowHospitalForm(true)} variant="outline" size="sm">
                 Modify Hospital Suggestions
               </Button>
             )}
-            {isPreAuthRaised && (
+            {isLocked && (
               <p className="text-xs text-muted-foreground">
-                Hospital suggestions are locked — pre-authorization has been raised by BD.
+                Hospital suggestions are locked — pre-authorization is complete.
               </p>
             )}
           </div>

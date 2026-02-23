@@ -177,6 +177,28 @@ export async function POST(request: NextRequest) {
         return errorResponse('Sum insured is required when suggesting hospitals', 400)
       }
 
+      // If we are updating hospitals, we should ensure the stage is HOSPITALS_SUGGESTED
+      // This is important if the case was already in PREAUTH_RAISED (e.g. BD selected a hospital, but Insurance is now changing the options)
+      // We want to force the BD to re-select from the new list.
+      if (caseStage !== CaseStage.HOSPITALS_SUGGESTED) {
+        await prisma.lead.update({
+          where: { id: kypSubmission.lead.id },
+          data: {
+            caseStage: CaseStage.HOSPITALS_SUGGESTED,
+          },
+        })
+
+        await prisma.caseStageHistory.create({
+          data: {
+            leadId: kypSubmission.lead.id,
+            fromStage: caseStage,
+            toStage: CaseStage.HOSPITALS_SUGGESTED,
+            changedById: user.id,
+            note: 'Insurance updated hospital suggestions - reverting stage to allow BD re-selection',
+          },
+        })
+      }
+
       const preAuth = await prisma.preAuthorization.upsert({
         where: { kypSubmissionId: data.kypSubmissionId },
         create: {
@@ -190,6 +212,7 @@ export async function POST(request: NextRequest) {
           handledById: user.id,
           handledAt: new Date(),
           bdSuggestedHospital: null, // Clear any pending suggestion
+          preAuthRaisedAt: null, // Clear raised status so BD can raise again
         },
         update: {
           sumInsured: data.sumInsured,
@@ -201,6 +224,7 @@ export async function POST(request: NextRequest) {
           handledById: user.id,
           handledAt: new Date(),
           bdSuggestedHospital: null, // Clear any pending suggestion
+          preAuthRaisedAt: null, // Clear raised status so BD can raise again
         },
       })
 

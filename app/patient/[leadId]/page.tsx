@@ -439,7 +439,14 @@ export default function PatientDetailsPage() {
     processFiles(kyp.otherFiles, 'Document')
     processFiles(kyp.preAuthData?.diseaseImages, 'Disease image')
     
-    return items
+    // Deduplicate items based on URL
+    const uniqueItems = items.filter((item, index, self) =>
+      index === self.findIndex((t) => (
+        t.url === item.url
+      ))
+    )
+    
+    return uniqueItems
   })()
 
   return (
