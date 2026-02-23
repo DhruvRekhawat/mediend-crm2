@@ -11,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/use-auth'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle, Wallet, RefreshCw, Calendar as CalendarIcon } from 'lucide-react'
+import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle, Wallet, RefreshCw, Calendar as CalendarIcon, Building2 } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
 
 import { ActivityTimeline } from '@/components/case/activity-timeline'
 import { StageProgress } from '@/components/case/stage-progress'
@@ -86,59 +87,74 @@ interface Lead {
   month?: string | null
   profession?: string | null
   teamLeadId?: number | null
-  kypSubmission?: {
-    id: string
-    status: string
-    submittedAt: string
-    location?: string | null
-    area?: string | null
-    aadhar?: string | null
-    pan?: string | null
-    insuranceCard?: string | null
-    disease?: string | null
-    remark?: string | null
-    patientConsent?: boolean
-    aadharFileUrl?: string | null
-    panFileUrl?: string | null
-    insuranceCardFileUrl?: string | null
-    prescriptionFileUrl?: string | null
-    diseasePhotos?: Array<{ name: string; url: string }> | null
-    otherFiles?: Array<{ name: string; url: string }> | null
-    submittedBy: {
+    kypSubmission?: {
       id: string
-      name: string
-    }
-    preAuthData?: {
-      id: string
-      sumInsured: string | null
-      roomRent: string | null
-      capping: string | null
-      copay: string | null
-      icu: string | null
-      hospitalNameSuggestion: string | null
-      hospitalSuggestions?: string[] | null
-      roomTypes?: Array<{ name: string; rent: string }> | null
-      insurance: string | null
-      tpa: string | null
-      requestedHospitalName?: string | null
-      requestedRoomType?: string | null
-      diseaseDescription?: string | null
-      diseaseImages?: Array<{ name: string; url: string }> | null
-      preAuthRaisedAt?: string | null
-      handledAt?: string | null
-      handledBy?: {
+      status: string
+      submittedAt: string
+      location?: string | null
+      area?: string | null
+      aadhar?: string | null
+      pan?: string | null
+      insuranceCard?: string | null
+      disease?: string | null
+      remark?: string | null
+      patientConsent?: boolean
+      aadharFileUrl?: string | null
+      panFileUrl?: string | null
+      insuranceCardFileUrl?: string | null
+      prescriptionFileUrl?: string | null
+      diseasePhotos?: Array<{ name: string; url: string }> | null
+      otherFiles?: Array<{ name: string; url: string }> | null
+      submittedBy: {
         id: string
         name: string
-      } | null
-      preAuthRaisedBy?: {
+      }
+      preAuthData?: {
         id: string
-        name: string
+        sumInsured: string | null
+        balanceInsured: string | null
+        roomRent: string | null
+        capping: number | null
+        copay: string | null
+        icu: string | null
+        hospitalNameSuggestion: string | null
+        hospitalSuggestions?: string[] | null
+        roomTypes?: Array<{ name: string; rent: string }> | null
+        suggestedHospitals?: Array<{
+          id: string
+          hospitalName: string
+          suggestedDoctor?: string | null
+          tentativeBill?: number | null
+          roomRentGeneral?: number | null
+          roomRentSingle?: number | null
+          roomRentDeluxe?: number | null
+          roomRentSemiPrivate?: number | null
+          notes?: string | null
+        }> | null
+        insurance: string | null
+        tpa: string | null
+        requestedHospitalName?: string | null
+        requestedRoomType?: string | null
+        diseaseDescription?: string | null
+        diseaseImages?: Array<{ name: string; url: string }> | null
+        preAuthRaisedAt?: string | null
+        handledAt?: string | null
+        approvalStatus?: string | null
+        approvalNotes?: string | null
+        rejectionReason?: string | null
+        handledBy?: {
+          id: string
+          name: string
+        } | null
+        preAuthRaisedBy?: {
+          id: string
+          name: string
+        } | null
+      } | null
+      followUpData?: {
+        id: string
       } | null
     } | null
-    followUpData?: {
-      id: string
-    } | null
-  } | null
   dischargeSheet?: {
     id: string
   } | null
@@ -184,6 +200,7 @@ interface KYPSubmission {
   preAuthData?: {
     id: string
     sumInsured: string | null
+    balanceInsured?: string | null
     roomRent: string | null
     capping: string | null
     copay: string | null
@@ -194,6 +211,7 @@ interface KYPSubmission {
     suggestedHospitals?: Array<{
       id: string
       hospitalName: string
+      suggestedDoctor?: string | null
       tentativeBill?: number | null
       roomRentGeneral?: number | null
       roomRentSingle?: number | null
@@ -209,6 +227,9 @@ interface KYPSubmission {
     diseaseImages?: Array<{ name: string; url: string }> | null
     preAuthRaisedAt?: string | null
     handledAt?: string | null
+    approvalStatus?: string | null
+    approvalNotes?: string | null
+    rejectionReason?: string | null
     handledBy?: {
       id: string
       name: string
@@ -254,12 +275,12 @@ export default function PatientDetailsPage() {
     queryKey: ['kyp-submission', leadId],
     queryFn: async () => {
       try {
-        const submissions = await apiGet<KYPSubmission[]>('/api/kyp')
+        const submissions = await apiGet<KYPSubmission[]>(`/api/kyp?leadId=${leadId}`)
         if (!Array.isArray(submissions)) {
           console.error('Expected array from /api/kyp, got:', submissions)
           return null
         }
-        return submissions.find((s) => s.leadId === leadId) || null
+        return submissions[0] || null
       } catch (e) {
         console.error('Error fetching KYP submission:', e)
         return null
@@ -386,23 +407,38 @@ export default function PatientDetailsPage() {
   // Collect all uploaded documents for grid (KYP + PreAuth)
   const uploadedDocuments = (() => {
     const items: { title: string; url: string; isImage: boolean }[] = []
-    const kyp = lead?.kypSubmission
+    // Prefer the separately fetched kypSubmission as it might have more details (e.g. preAuthData)
+    const kyp = kypSubmission || lead?.kypSubmission
     if (!kyp) return items
+    
     const add = (title: string, url: string) => {
-      const u = url?.toLowerCase() || ''
+      if (!url) return
+      const u = url.toLowerCase()
       const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(u) || u.includes('jpg') || u.includes('png')
       items.push({ title, url, isImage })
     }
+
     if (kyp.insuranceCardFileUrl) add('Insurance Card', kyp.insuranceCardFileUrl)
     if (kyp.aadharFileUrl) add('Aadhar', kyp.aadharFileUrl)
     if (kyp.panFileUrl) add('PAN', kyp.panFileUrl)
     if (kyp.prescriptionFileUrl) add('Prescription', kyp.prescriptionFileUrl)
-    const diseasePhotos = (kyp.diseasePhotos as Array<{ name: string; url: string }>) || []
-    diseasePhotos.forEach((p) => add(p.name || 'Disease photo', p.url))
-    const otherFiles = (kyp.otherFiles as Array<{ name: string; url: string }>) || []
-    otherFiles.forEach((f) => add(f.name || 'Document', f.url))
-    const diseaseImages = (kyp.preAuthData?.diseaseImages as Array<{ name: string; url: string }>) || []
-    diseaseImages.forEach((p) => add(p.name || 'Disease image', p.url))
+
+    const processFiles = (files: any, defaultName: string) => {
+      if (!files) return
+      const fileList = Array.isArray(files) ? files : []
+      fileList.forEach((p: any) => {
+        if (typeof p === 'string') {
+           add(defaultName, p)
+        } else if (p && typeof p === 'object' && p.url) {
+           add(p.name || defaultName, p.url)
+        }
+      })
+    }
+
+    processFiles(kyp.diseasePhotos, 'Disease photo')
+    processFiles(kyp.otherFiles, 'Document')
+    processFiles(kyp.preAuthData?.diseaseImages, 'Disease image')
+    
     return items
   })()
 
@@ -1059,8 +1095,175 @@ export default function PatientDetailsPage() {
           </Card>
         )}
 
+        {/* Insurance & Pre-Auth Details Section */}
+        {kypSubmission?.preAuthData && (
+          <Card className="border-2 shadow-sm">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-b">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <CardTitle>Insurance & Pre-Auth Details</CardTitle>
+                  {kypSubmission.preAuthData.approvalStatus && (
+                    <Badge className={cn(
+                      "border-0",
+                      kypSubmission.preAuthData.approvalStatus === 'APPROVED' ? "bg-green-100 text-green-700" :
+                      kypSubmission.preAuthData.approvalStatus === 'REJECTED' ? "bg-red-100 text-red-700" :
+                      "bg-amber-100 text-amber-700"
+                    )}>
+                      {kypSubmission.preAuthData.approvalStatus}
+                    </Badge>
+                  )}
+                </div>
+                {kypSubmission.preAuthData.handledAt && (
+                  <div className="text-xs text-muted-foreground">
+                    Processed by <span className="font-semibold">{kypSubmission.preAuthData.handledBy?.name || 'Insurance Team'}</span> on {format(new Date(kypSubmission.preAuthData.handledAt), 'PPp')}
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* Policy Information */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    Policy Information
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Insurance Co.</Label>
+                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.insurance || lead.insuranceName || '-'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">TPA</Label>
+                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.tpa || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Sum Insured</Label>
+                        <p className="text-sm font-semibold">₹{Number(kypSubmission.preAuthData.sumInsured || 0).toLocaleString('en-IN')}</p>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Balance Insured</Label>
+                        <p className="text-sm font-semibold">₹{Number(kypSubmission.preAuthData.balanceInsured || 0).toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Co-pay %</Label>
+                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.copay || '0'}%</p>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Capping</Label>
+                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.capping ? `₹${Number(kypSubmission.preAuthData.capping).toLocaleString('en-IN')}` : 'No'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Selection & Request */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    Selected Request
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <Label className="text-[10px] uppercase text-gray-500 font-bold">Selected Hospital</Label>
+                      <p className="text-sm font-bold text-blue-700 dark:text-blue-400">{kypSubmission.preAuthData.requestedHospitalName || '-'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Room Category</Label>
+                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.requestedRoomType || '-'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Room Rent Limit</Label>
+                        <p className="text-sm font-semibold">₹{Number(kypSubmission.preAuthData.roomRent || 0).toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                    {kypSubmission.preAuthData.preAuthRaisedAt && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Raised On</Label>
+                        <p className="text-sm font-semibold">{format(new Date(kypSubmission.preAuthData.preAuthRaisedAt), 'PPp')}</p>
+                        <p className="text-[10px] text-muted-foreground">By {kypSubmission.preAuthData.preAuthRaisedBy?.name}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
+                {/* Hospital Suggestions */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                    <Building2 className="w-4 h-4 text-amber-600" />
+                    All Suggestions
+                  </h3>
+                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
+                    {kypSubmission.preAuthData.suggestedHospitals && kypSubmission.preAuthData.suggestedHospitals.length > 0 ? (
+                      kypSubmission.preAuthData.suggestedHospitals.map((hosp, idx) => (
+                        <div key={hosp.id} className={cn(
+                          "p-2 rounded border text-xs space-y-1",
+                          hosp.hospitalName === kypSubmission.preAuthData?.requestedHospitalName 
+                            ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 ring-1 ring-blue-500" 
+                            : "bg-gray-50 border-gray-100 dark:bg-gray-900 dark:border-gray-800"
+                        )}>
+                          <div className="flex justify-between font-bold">
+                            <span className="truncate pr-2">{hosp.hospitalName}</span>
+                            <span className="text-blue-600 dark:text-blue-400 shrink-0">₹{Number(hosp.tentativeBill || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                          {hosp.suggestedDoctor && (
+                            <div className="text-muted-foreground">Dr. {hosp.suggestedDoctor}</div>
+                          )}
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] pt-1 border-t border-gray-200 dark:border-gray-700 mt-1">
+                            {hosp.roomRentSingle && <span>Sgl: ₹{hosp.roomRentSingle}</span>}
+                            {hosp.roomRentSemiPrivate && <span>Semi: ₹{hosp.roomRentSemiPrivate}</span>}
+                            {hosp.roomRentDeluxe && <span>Dlx: ₹{hosp.roomRentDeluxe}</span>}
+                            {hosp.roomRentGeneral && <span>Gen: ₹{hosp.roomRentGeneral}</span>}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">No suggestions provided yet.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Remarks & Notes */}
+              {(kypSubmission.preAuthData.approvalNotes || kypSubmission.preAuthData.rejectionReason || kypSubmission.preAuthData.diseaseDescription) && (
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {kypSubmission.preAuthData.diseaseDescription && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Disease Description (from BD)</Label>
+                        <p className="text-sm mt-1 bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                          {kypSubmission.preAuthData.diseaseDescription}
+                        </p>
+                      </div>
+                    )}
+                    {(kypSubmission.preAuthData.approvalNotes || kypSubmission.preAuthData.rejectionReason) && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">
+                          {kypSubmission.preAuthData.approvalStatus === 'REJECTED' ? 'Rejection Reason' : 'Insurance Remarks'}
+                        </Label>
+                        <p className={cn(
+                          "text-sm mt-1 p-3 rounded-lg border italic",
+                          kypSubmission.preAuthData.approvalStatus === 'REJECTED' 
+                            ? "bg-red-50 border-red-100 text-red-700 dark:bg-red-950/10 dark:border-red-900/20" 
+                            : "bg-amber-50 border-amber-100 text-amber-700 dark:bg-amber-950/10 dark:border-amber-900/20"
+                        )}>
+                          &quot;{kypSubmission.preAuthData.rejectionReason || kypSubmission.preAuthData.approvalNotes}&quot;
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Discharge Sheet Link */}
         {lead.dischargeSheet && (

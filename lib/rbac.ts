@@ -79,7 +79,6 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'leads:assign',
     'targets:read',
     'analytics:read',
-    'users:read',
   ],
   INSURANCE_HEAD: [
     'leads:read',

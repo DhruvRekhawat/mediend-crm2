@@ -20,8 +20,13 @@ export async function GET(request: NextRequest) {
 
     // Filter by role
     if (user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'SALES_HEAD') {
-      // Sales team sees their own submissions
-      where.submittedById = user.id
+      // Sales team sees their own submissions OR submissions for their leads
+      delete where.submittedById; // Remove the strict check
+      where.OR = [
+        { submittedById: user.id },
+        { lead: { bdId: user.id } }
+      ];
+      
       // If status is provided, use it (for follow-up view)
       if (status) {
         where.status = status as any

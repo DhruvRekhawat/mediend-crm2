@@ -98,48 +98,50 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
-        kypSubmission: {
+    kypSubmission: {
+      select: {
+        id: true,
+        status: true,
+        submittedAt: true,
+        preAuthData: {
           select: {
             id: true,
-            status: true,
-            submittedAt: true,
-            preAuthData: {
+            requestedHospitalName: true,
+            requestedRoomType: true,
+            diseaseDescription: true,
+            diseaseImages: true,
+            preAuthRaisedAt: true,
+            sumInsured: true,
+            balanceInsured: true,
+            roomRent: true,
+            capping: true,
+            copay: true,
+            icu: true,
+            insurance: true,
+            tpa: true,
+            hospitalNameSuggestion: true,
+            hospitalSuggestions: true,
+            roomTypes: true,
+            handledAt: true,
+            approvalStatus: true,
+            rejectionReason: true,
+            suggestedHospitals: true,
+            handledBy: {
               select: {
                 id: true,
-                requestedHospitalName: true,
-                requestedRoomType: true,
-                diseaseDescription: true,
-                diseaseImages: true,
-                preAuthRaisedAt: true,
-                sumInsured: true,
-                roomRent: true,
-                capping: true,
-                copay: true,
-                icu: true,
-                insurance: true,
-                tpa: true,
-                hospitalNameSuggestion: true,
-                hospitalSuggestions: true,
-                roomTypes: true,
-                handledAt: true,
-                approvalStatus: true,
-                rejectionReason: true,
-                handledBy: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
-                preAuthRaisedBy: {
-                  select: {
-                    id: true,
-                    name: true,
-                  },
-                },
+                name: true,
+              },
+            },
+            preAuthRaisedBy: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
         },
+      },
+    },
         admissionRecord: {
           select: {
             id: true,
