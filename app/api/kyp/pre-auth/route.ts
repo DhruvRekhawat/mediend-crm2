@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'INSURANCE_HEAD' && user.role !== 'ADMIN' && user.role !== 'INSURANCE') {
+    if (user.role !== 'INSURANCE_HEAD' && user.role !== 'ADMIN') {
       return errorResponse('Forbidden', 403)
     }
 
