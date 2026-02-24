@@ -1,18 +1,9 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
-import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { postCaseChatSystemMessage } from '@/lib/case-chat'
-import { uploadFileToS3 } from '@/lib/s3-client'
+import { errorResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import puppeteer from 'puppeteer'
-import path from 'path'
-import fs from 'fs'
 import { maskPhoneNumber } from '@/lib/phone-utils'
-
-const generatePDFSchema = z.object({
-  recipients: z.array(z.string()).optional(),
-})
 
 function isImageUrl(url: string): boolean {
   const u = url.toLowerCase()
@@ -42,7 +33,6 @@ function escapeHtml(s: string): string {
 }
 
 function buildPreAuthHtml(params: {
-  logoDataUrl: string | null
   lead: { patientName: string; leadRef: string; phoneNumber: string; city: string; treatment: string | null; category: string | null }
   kyp: { aadhar: string | null; pan: string | null; insuranceCard: string | null; location: string | null; area: string | null; disease: string | null; patientConsent: boolean; remark: string | null }
   preAuth: {
@@ -59,7 +49,7 @@ function buildPreAuthHtml(params: {
   }
   imageDataUrls: Array<{ data: string; mime: string }>
 }): string {
-  const { logoDataUrl, lead, kyp, preAuth, imageDataUrls } = params
+  const { lead, kyp, preAuth, imageDataUrls } = params
   const v = (s: string | null | undefined) => (s && String(s).trim()) || '—'
   const cityDisplay = v(kyp.location) !== '—' ? v(kyp.location) : v(lead.city)
   const diseaseDisplay = v(preAuth.diseaseDescription) !== '—' ? preAuth.diseaseDescription! : v(kyp.disease)
@@ -107,12 +97,12 @@ function buildPreAuthHtml(params: {
 <html>
 <head>
   <meta charset="utf-8">
+  <title>Patient & Pre-Authorization Summary</title>
   <style>
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, sans-serif; font-size: 11px; line-height: 1.4; color: #1a1a1a; margin: 0; padding: 0; }
     .header-strip { background: #2563eb; padding: 16px 24px; margin: 0 0 24px 0; }
-    .logo { height: 40px; width: auto; display: block; }
-    .logo-fallback { font-size: 20px; font-weight: 700; color: #fff; }
+    .header-title { font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
     h1 { font-size: 18px; font-weight: 700; margin: 0 0 20px 0; color: #0f172a; padding: 0 24px; }
     h2 { font-size: 13px; font-weight: 600; margin: 16px 0 8px 0; color: #334155; }
     .section { margin-bottom: 20px; padding: 0 24px; }
@@ -123,16 +113,22 @@ function buildPreAuthHtml(params: {
     thead th { background: #f1f5f9; }
     .page-break { page-break-before: always; padding-top: 24px; }
     .doc-image { max-width: 100%; height: auto; display: block; }
-    @media print { body { padding: 0; } .header-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page-break { page-break-before: always; } }
+    .print-button-container { padding: 16px 24px; text-align: center; }
+    .print-button { padding: 10px 20px; font-size: 14px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .print-button:hover { background: #1d4ed8; }
+    @media print { 
+      body { padding: 0; } 
+      .header-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+      .page-break { page-break-before: always; }
+      .print-button-container { display: none; }
+    }
   </style>
 </head>
 <body>
   <div class="header-strip">
-    ${logoDataUrl ? `<img src="${logoDataUrl}" class="logo" alt="Mediend" />` : '<div class="logo-fallback">Mediend</div>'}
+    <p class="header-title">Patient & Pre-Authorization Summary</p>
   </div>
   <div class="content">
-  <h1>Patient & Pre-Authorization Summary</h1>
-
   <div class="section">
     <h2>Patient & Lead Details</h2>
     <table>
@@ -157,29 +153,28 @@ function buildPreAuthHtml(params: {
   ${imageDataUrls.length > 0 ? '<h2 style="margin-top:20px;">Documents & Images</h2>' : ''}
   ${imagePages}
   </div>
+  <div class="print-button-container">
+    <button class="print-button" onclick="window.print()">Print / Save as PDF</button>
+  </div>
 </body>
 </html>`
 }
 
-export async function POST(
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null
-
   try {
     const user = getSessionFromRequest(request)
     if (!user) {
       return unauthorizedResponse()
     }
 
-    if (!['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)) {
-      return errorResponse('Forbidden: Only Insurance can generate PDFs', 403)
+    if (!['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)) {
+      return errorResponse('Forbidden: Only Insurance can view pre-auth print', 403)
     }
 
     const { id: leadId } = await params
-    const body = await request.json().catch(() => ({}))
-    const data = generatePDFSchema.parse(body)
 
     const lead = await prisma.lead.findUnique({
       where: { id: leadId },
@@ -198,33 +193,6 @@ export async function POST(
 
     const kyp = lead.kypSubmission
     const preAuth = kyp.preAuthData!
-
-    const latestPDF = await prisma.preAuthPDF.findFirst({
-      where: { preAuthorizationId: preAuth.id },
-      orderBy: { version: 'desc' },
-    })
-
-    // If a PDF was already generated, return its URL (open existing from bucket)
-    if (latestPDF?.pdfUrl) {
-      return successResponse(
-        { pdfUrl: latestPDF.pdfUrl, version: latestPDF.version, existing: true },
-        'Existing PDF'
-      )
-    }
-
-    const nextVersion = (latestPDF?.version ?? 0) + 1
-
-    // Logo as data URL
-    let logoDataUrl: string | null = null
-    try {
-      const logoPath = path.join(process.cwd(), 'public', 'logo-mediend.png')
-      if (fs.existsSync(logoPath)) {
-        const logoBase64 = fs.readFileSync(logoPath).toString('base64')
-        logoDataUrl = `data:image/png;base64,${logoBase64}`
-      }
-    } catch {
-      // no logo
-    }
 
     // Collect and fetch document images
     const docUrls: string[] = []
@@ -249,7 +217,6 @@ export async function POST(
     const phoneDisplay = canViewPhone ? (lead.phoneNumber || '—') : maskPhoneNumber(lead.phoneNumber)
 
     const html = buildPreAuthHtml({
-      logoDataUrl,
       lead: {
         patientName: lead.patientName || '—',
         leadRef: lead.leadRef || '—',
@@ -283,46 +250,14 @@ export async function POST(
       imageDataUrls,
     })
 
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    })
-
-    const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-    const pdfBuffer = Buffer.from(await page.pdf({ format: 'A4', margin: { top: '16px', right: '16px', bottom: '16px', left: '16px' } }))
-    await browser.close()
-    browser = null
-
-    const fileName = `preauth-${lead.leadRef}-v${nextVersion}.pdf`
-    const { url: pdfUrl } = await uploadFileToS3(pdfBuffer, fileName, 'preauth-pdf')
-
-    const pdfRecord = await prisma.preAuthPDF.create({
-      data: {
-        preAuthorizationId: preAuth.id,
-        version: nextVersion,
-        pdfUrl,
-        recipients: data.recipients || [],
-        sentAt: data.recipients && data.recipients.length > 0 ? new Date() : null,
-        createdById: user.id,
+    return new Response(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
       },
     })
-
-    await postCaseChatSystemMessage(leadId, 'Pre-auth PDF generated.')
-
-    return successResponse(pdfRecord, 'PDF generated successfully')
   } catch (error) {
-    if (browser) {
-      try {
-        await browser.close()
-      } catch {
-        // ignore
-      }
-    }
-    if (error instanceof z.ZodError) {
-      return errorResponse('Invalid request data', 400)
-    }
-    console.error('Error generating PDF:', error)
-    return errorResponse('Failed to generate PDF', 500)
+    console.error('Error generating pre-auth print view:', error)
+    return errorResponse('Failed to generate pre-auth print view', 500)
   }
 }

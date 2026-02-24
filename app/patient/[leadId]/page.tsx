@@ -331,7 +331,6 @@ export default function PatientDetailsPage() {
   const [showIPDMarkModal, setShowIPDMarkModal] = useState(false)
   const [showMarkLostDialog, setShowMarkLostDialog] = useState(false)
   const [markLostReason, setMarkLostReason] = useState<string>('')
-  const [pdfDownloading, setPdfDownloading] = useState(false)
   const [markLostDetail, setMarkLostDetail] = useState('')
   const [markLostSubmitting, setMarkLostSubmitting] = useState(false)
   const [switchingMode, setSwitchingMode] = useState(false)
@@ -1021,31 +1020,20 @@ export default function PatientDetailsPage() {
                   <Button
                     variant="outline"
                     className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 border-2"
-                    disabled={pdfDownloading}
-                    onClick={async () => {
-                      const win = window.open('', '_blank')
-                      setPdfDownloading(true)
-                      try {
-                        const result = await apiPost<{ pdfUrl: string }>(`/api/leads/${leadId}/preauth-pdf`, { recipients: [] })
-                        const pdfUrl = result?.pdfUrl
-                        if (pdfUrl) {
-                          if (win) win.location.href = pdfUrl
-                          else window.open(pdfUrl, '_blank', 'noopener,noreferrer')
-                          toast.success('PDF ready')
-                        } else {
-                          if (win) win.close()
-                          toast.error('Failed to generate PDF')
-                        }
-                      } catch (e) {
-                        if (win) win.close()
-                        toast.error(e instanceof Error ? e.message : 'Error generating PDF')
-                      } finally {
-                        setPdfDownloading(false)
-                      }
-                    }}
+                    onClick={() => window.open(`/api/leads/${leadId}/preauth-pdf`, '_blank', 'noopener,noreferrer')}
                   >
-                    {pdfDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-                    {pdfDownloading ? 'Generating…' : 'Download PDF'}
+                    <FileDown className="h-4 w-4" />
+                    Print / Save as PDF
+                  </Button>
+                )}
+                {lead.admissionRecord && ['BD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role) && (
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 border-2"
+                    onClick={() => window.open(`/patient/${leadId}/print/ipd`, '_blank', 'noopener,noreferrer')}
+                  >
+                    <FileDown className="h-4 w-4" />
+                    Print IPD
                   </Button>
                 )}
                 {canFillDischargeForm && (
