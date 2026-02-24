@@ -107,20 +107,31 @@ export function IPDCashForm({
   onCancel,
 }: IPDCashFormProps) {
   const [formData, setFormData] = useState({
+    // Patient info (prefilled, editable)
+    patientName: patientName || '',
+    age: age != null ? String(age) : '',
+    sex: sex || '',
+    circle: circle || '',
+    city: city || '',
+    // Treatment (prefilled, editable)
+    category: category || '',
+    treatment: treatment || '',
+    quantityGrade: quantityGrade,
+    anesthesia: anesthesia,
+    // Surgeon (prefilled, editable)
+    surgeonName: surgeonName || '',
+    surgeonType: surgeonType,
+    // Hospital (prefilled, editable)
+    hospitalName: hospitalName || '',
+    // Alternate contact (editable)
+    alternateContactName: attendantName,
+    alternateContactNumber: alternateNumber,
     admissionDate: '',
     admissionTime: '',
     surgeryDate: '',
     surgeryTime: '',
     hospitalAddress: '',
     googleMapLocation: '',
-    // Alternate contact (editable)
-    alternateContactName: attendantName,
-    alternateContactNumber: alternateNumber,
-    // Treatment overrides (editable)
-    quantityGrade: quantityGrade,
-    anesthesia: anesthesia,
-    // Surgeon overrides
-    surgeonType: surgeonType,
     // Implants & Consumables
     implantText: '',
     implantAmount: '',
@@ -136,6 +147,8 @@ export function IPDCashForm({
     deduction: '',
     approvedAmount: '', // Approved / Cash Package
     collectedAmount: '', // Cash / Deduction Collected
+    collectedByMediend: '',
+    collectedByHospital: '',
     finalBillAmount: '',
     // EMI specific
     emiAmount: '',
@@ -148,9 +161,6 @@ export function IPDCashForm({
   // Pre-fill data if in edit mode
   useEffect(() => {
     if (initialData && isEditMode) {
-      // Parse implants/instruments if they were combined
-      // This is a simplification; ideally we'd parse the strings back
-      // For now, we'll just populate the main fields
       setFormData(prev => ({
         ...prev,
         admissionDate: initialData.admissionDate ? new Date(initialData.admissionDate).toISOString().split('T')[0] : '',
@@ -160,11 +170,8 @@ export function IPDCashForm({
         hospitalAddress: initialData.hospitalAddress || '',
         googleMapLocation: initialData.googleMapLocation || '',
         notes: initialData.notes || '',
-        // Financials would need to be passed in initialData if we store them in AdmissionRecord
-        // Currently schema doesn't have all these fields on AdmissionRecord, 
-        // they might be on Lead or we need to add them.
-        // Assuming we'll store them on Lead or a new CashAdmissionRecord.
-        // For now, let's assume they come in initialData.
+        collectedByMediend: initialData.collectedByMediend != null ? String(initialData.collectedByMediend) : '',
+        collectedByHospital: initialData.collectedByHospital != null ? String(initialData.collectedByHospital) : '',
       }))
     }
   }, [initialData, isEditMode])
@@ -238,7 +245,7 @@ export function IPDCashForm({
       const payload = {
         admissionDate: formData.admissionDate,
         admissionTime: formData.admissionTime.trim(),
-        admittingHospital: hospitalName,
+        admittingHospital: formData.hospitalName.trim() || 'N/A',
         hospitalAddress: formData.hospitalAddress.trim() || 'N/A',
         googleMapLocation: formData.googleMapLocation.trim() || undefined,
         surgeryDate: formData.surgeryDate,
@@ -259,6 +266,8 @@ export function IPDCashForm({
         deduction: parseFloat(formData.deduction) || 0,
         approvedAmount: parseFloat(formData.approvedAmount) || 0,
         collectedAmount: parseFloat(formData.collectedAmount) || 0,
+        collectedByMediend: parseFloat(formData.collectedByMediend) || 0,
+        collectedByHospital: parseFloat(formData.collectedByHospital) || 0,
         finalBillAmount: parseFloat(formData.finalBillAmount) || 0,
         
         // EMI specific
@@ -286,8 +295,6 @@ export function IPDCashForm({
     }
   }
 
-  const fmt = (v?: string | number | null) => (v != null && v !== '' ? String(v) : undefined)
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -299,10 +306,39 @@ export function IPDCashForm({
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3">
-            <ReadOnlyField label="Patient Name" value={patientName} />
+            <div>
+              <Label htmlFor="patientName">Patient Name</Label>
+              <Input
+                id="patientName"
+                value={formData.patientName}
+                onChange={(e) => set('patientName', e.target.value)}
+                placeholder="Patient name"
+                className="mt-1"
+              />
+            </div>
             <ReadOnlyField label="Patient ID / Ref" value={leadRef} />
-            <ReadOnlyField label="Age" value={fmt(age)} />
-            <ReadOnlyField label="Gender" value={sex} />
+            <div>
+              <Label htmlFor="age">Age</Label>
+              <Input
+                id="age"
+                type="number"
+                min={0}
+                value={formData.age}
+                onChange={(e) => set('age', e.target.value)}
+                placeholder="Age"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="sex">Gender</Label>
+              <Input
+                id="sex"
+                value={formData.sex}
+                onChange={(e) => set('sex', e.target.value)}
+                placeholder="e.g. Male, Female"
+                className="mt-1"
+              />
+            </div>
           </div>
 
           {/* Alternate Contact — editable inputs */}
@@ -334,8 +370,26 @@ export function IPDCashForm({
 
           <div className="border-t pt-3">
             <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <ReadOnlyField label="Circle" value={circle} />
-              <ReadOnlyField label="City" value={city} />
+              <div>
+                <Label htmlFor="circle">Circle</Label>
+                <Input
+                  id="circle"
+                  value={formData.circle}
+                  onChange={(e) => set('circle', e.target.value)}
+                  placeholder="Circle"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => set('city', e.target.value)}
+                  placeholder="City"
+                  className="mt-1"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -348,13 +402,29 @@ export function IPDCashForm({
         color="border-purple-500"
       >
         <div className="space-y-4">
-          {/* Auto-fetched read-only fields */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-            <ReadOnlyField label="Category" value={category} />
-            <ReadOnlyField label="Treatment Name" value={treatment} />
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={formData.category}
+                onChange={(e) => set('category', e.target.value)}
+                placeholder="Category"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="treatment">Treatment Name</Label>
+              <Input
+                id="treatment"
+                value={formData.treatment}
+                onChange={(e) => set('treatment', e.target.value)}
+                placeholder="Treatment name"
+                className="mt-1"
+              />
+            </div>
           </div>
-          {/* Editable text fields */}
-          <div className="border-t pt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="quantityGrade">Quantity / Grade</Label>
               <Input
@@ -379,14 +449,23 @@ export function IPDCashForm({
         </div>
       </Section>
 
-      {/* Section 3: Surgeon Details — Auto-fetched */}
+      {/* Section 3: Surgeon Details */}
       <Section
         title="3. Surgeon Details"
         icon={<User className="h-4 w-4 text-teal-600" />}
         color="border-teal-500"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ReadOnlyField label="Surgeon Name" value={surgeonName} />
+          <div>
+            <Label htmlFor="surgeonName">Surgeon Name</Label>
+            <Input
+              id="surgeonName"
+              value={formData.surgeonName}
+              onChange={(e) => set('surgeonName', e.target.value)}
+              placeholder="Surgeon name"
+              className="mt-1"
+            />
+          </div>
           <div>
             <Label htmlFor="surgeonType">Surgeon Type</Label>
             <Input
@@ -398,9 +477,6 @@ export function IPDCashForm({
             />
           </div>
         </div>
-        {!surgeonName && (
-          <p className="text-xs text-muted-foreground mt-2">Auto-fetched from patient KYP details.</p>
-        )}
       </Section>
 
       {/* Section 4: Hospital / Clinic Details */}
@@ -410,9 +486,27 @@ export function IPDCashForm({
         color="border-orange-500"
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-            <ReadOnlyField label="Hospital / Clinic Name" value={hospitalName} />
-            <ReadOnlyField label="Location (City)" value={city} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="hospitalName">Hospital / Clinic Name</Label>
+              <Input
+                id="hospitalName"
+                value={formData.hospitalName}
+                onChange={(e) => set('hospitalName', e.target.value)}
+                placeholder="Hospital or clinic name"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="hospitalCity">Location (City)</Label>
+              <Input
+                id="hospitalCity"
+                value={formData.city}
+                onChange={(e) => set('city', e.target.value)}
+                placeholder="City"
+                className="mt-1"
+              />
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -503,6 +597,33 @@ export function IPDCashForm({
                 className={`mt-1 ${errors.finalBillAmount ? 'border-destructive' : ''}`}
               />
               {errors.finalBillAmount && <p className="text-xs text-destructive mt-1">{errors.finalBillAmount}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="collectedByMediend">Collected by Mediend (amount)</Label>
+              <Input
+                id="collectedByMediend"
+                type="number"
+                min="0"
+                value={formData.collectedByMediend}
+                onChange={(e) => set('collectedByMediend', e.target.value)}
+                placeholder="₹ Amount"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="collectedByHospital">Collected by Hospital (amount)</Label>
+              <Input
+                id="collectedByHospital"
+                type="number"
+                min="0"
+                value={formData.collectedByHospital}
+                onChange={(e) => set('collectedByHospital', e.target.value)}
+                placeholder="₹ Amount"
+                className="mt-1"
+              />
             </div>
           </div>
 

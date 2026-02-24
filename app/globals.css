@@ -216,3 +216,18 @@
   font-size: 0.75rem;
   color: oklch(0.552 0.016 285.938);
 }
+
+/* Print: hide app layout (sidebar, top bar, bottom nav) so only page content prints */
+@media print {
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"],
+  [data-sidebar="sidebar"] {
+    display: none !important;
+  }
+  main[data-slot="sidebar-inset"] > header {
+    display: none !important;
+  }
+  nav.fixed.bottom-0 {
+    display: none !important;
+  }
+}

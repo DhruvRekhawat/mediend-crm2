@@ -1548,8 +1548,8 @@ export default function PatientDetailsPage() {
                 hospitalName={lead.hospitalName}
                 bdName={lead.bd?.name}
                 bdManagerName={lead.bd?.manager?.name ?? undefined}
-                // Pass existing data if editing (e.g. from admissionRecord if it exists)
-                initialData={lead.admissionRecord}
+                // Pass existing data if editing (admissionRecord + lead financials for collected amounts)
+                initialData={lead.admissionRecord ? { ...lead.admissionRecord, collectedByMediend: lead.collectedByMediend, collectedByHospital: lead.collectedByHospital } : undefined}
                 isEditMode={lead.caseStage === CaseStage.CASH_ON_HOLD}
                 onSuccess={() => {
                   setShowIPDCashModal(false)

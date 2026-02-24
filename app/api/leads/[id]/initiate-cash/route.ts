@@ -29,6 +29,8 @@ const initiateCashSchema = z.object({
   deduction: z.number().optional(),
   approvedAmount: z.number(),
   collectedAmount: z.number().optional(),
+  collectedByMediend: z.number().optional(),
+  collectedByHospital: z.number().optional(),
   finalBillAmount: z.number(),
   
   // EMI specific
@@ -117,6 +119,8 @@ export async function POST(
         // Schema: billAmount (Hospital bill), settledTotal (Settled total)
         billAmount: validatedData.finalBillAmount,
         settledTotal: validatedData.approvedAmount, // "Settled (Sum of Package/Approved)"
+        collectedByMediend: validatedData.collectedByMediend ?? 0,
+        collectedByHospital: validatedData.collectedByHospital ?? 0,
         
         // We don't have dedicated fields for collectedAmount, emiAmount etc in Lead schema yet.
         // We might need to store them in remarks or add new fields.
@@ -257,6 +261,8 @@ export async function PATCH(
         deduction: validatedData.deduction,
         billAmount: validatedData.finalBillAmount,
         settledTotal: validatedData.approvedAmount,
+        collectedByMediend: validatedData.collectedByMediend ?? 0,
+        collectedByHospital: validatedData.collectedByHospital ?? 0,
         
         // Append remarks again? Better to replace the cash section if possible, but regex is risky.
         // Just appending updated info.

@@ -42,21 +42,22 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
   const { user, isLoading } = useAuth()
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   
-  // Don't show sidebar on login page, payslip page, or document view page
+  // Don't show sidebar on login page, payslip page, document view page, or print pages
   const isLoginPage = pathname === '/login'
   const isPayslipPage = pathname?.includes('/payroll/') && pathname?.includes('/slip')
   const isDocumentViewPage = pathname?.includes('/documents/') && pathname?.includes('/view')
+  const isPrintPage = pathname?.includes('/print/')
   const isMdOrAdmin = user?.role === 'MD' || user?.role === 'ADMIN'
   // Show bottom nav for USER and BD roles
   const isUserOrBd = user?.role === 'USER' || user?.role === 'BD'
   // Show sidebar if user is authenticated and not on special pages
-  const shouldShowSidebar = !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage
+  const shouldShowSidebar = !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage && !isPrintPage
   // Show MD bottom nav on all pages for MD/ADMIN users (except special pages)
   const showMdBottomNav = isMdOrAdmin && shouldShowSidebar
   // Show USER bottom nav on all pages for USER and BD roles (except special pages)
   const showUserBottomNav = isUserOrBd && shouldShowSidebar
 
-  if (isLoginPage || isPayslipPage || isDocumentViewPage) {
+  if (isLoginPage || isPayslipPage || isDocumentViewPage || isPrintPage) {
     return <>{children}</>
   }
 

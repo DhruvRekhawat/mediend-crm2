@@ -399,6 +399,9 @@ model Lead {
   othersShare     Float         @default(0)
   netProfit       Float         @default(0)
   ticketSize      Float         @default(0)
+  // Cash flow: who collected the amount
+  collectedByMediend Float      @default(0)
+  collectedByHospital Float     @default(0)
 
   // Additional MySQL fields
   month              String?
