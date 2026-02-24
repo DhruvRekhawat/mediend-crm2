@@ -85,6 +85,8 @@ interface Lead {
   pipelineStage: string
   caseStage: CaseStage
   flowType?: FlowType | null
+  collectedByMediend?: number | null
+  collectedByHospital?: number | null
   bd?: { name?: string; manager?: { name?: string } | null } | null
   leadEntryDate?: string | null
   createdDate?: string | null
