@@ -31,7 +31,7 @@ export async function POST(
     const body = await request.json()
     const data = approveSchema.parse(body)
 
-    // Get KYP submission with lead and pre-auth data
+    // Get KYP submission with lead and pre-auth data (including suggested hospitals for ipdDrName)
     const kypSubmission = await prisma.kYPSubmission.findUnique({
       where: { id: kypSubmissionId },
       include: {
@@ -44,7 +44,7 @@ export async function POST(
             caseStage: true,
           },
         },
-        preAuthData: true,
+        preAuthData: { include: { suggestedHospitals: true } },
       },
     })
 
@@ -112,9 +112,21 @@ export async function POST(
         data: { status: 'PRE_AUTH_COMPLETE' },
       })
 
+      // Set lead.ipdDrName from selected hospital's suggestedDoctor (BD's requested hospital)
+      const requestedName = kypSubmission.preAuthData.requestedHospitalName?.trim()
+      const selectedHospital = requestedName && kypSubmission.preAuthData.suggestedHospitals
+        ? kypSubmission.preAuthData.suggestedHospitals.find(
+            (h) => h.hospitalName.trim().toLowerCase() === requestedName.toLowerCase()
+          )
+        : null
+      const ipdDrNameFromPreAuth = selectedHospital?.suggestedDoctor?.trim() || null
+
       await prisma.lead.update({
         where: { id: kypSubmission.lead.id },
-        data: { caseStage: CaseStage.PREAUTH_COMPLETE },
+        data: {
+          caseStage: CaseStage.PREAUTH_COMPLETE,
+          ...(ipdDrNameFromPreAuth ? { ipdDrName: ipdDrNameFromPreAuth } : {}),
+        },
       })
 
       await prisma.caseStageHistory.create({

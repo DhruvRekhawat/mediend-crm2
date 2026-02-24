@@ -1,25 +1,24 @@
 'use client'
 
-import { IPDDetailsForm } from '@/components/admission/ipd-details-form'
 import { IPDCashForm } from '@/components/admission/ipd-cash-form'
+import { IPDDetailsCard } from '@/components/admission/ipd-details-card'
+import { IPDDetailsForm } from '@/components/admission/ipd-details-form'
 import { IPDMarkComponent } from '@/components/admission/ipd-mark-component'
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
-import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 import { InitiateFormCard } from '@/components/insurance/initiate-form-card'
-import { IPDDetailsCard } from '@/components/admission/ipd-details-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/hooks/use-auth'
-import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle, Wallet, RefreshCw, Calendar as CalendarIcon, Building2, Clock } from 'lucide-react'
-import { useParams, useRouter } from 'next/navigation'
+import { apiGet, apiPatch, apiPost } from '@/lib/api-client'
 import { cn } from '@/lib/utils'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Activity, ArrowLeft, Building2, Calendar as CalendarIcon, CheckCircle2, Clock, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Plus, Receipt, RefreshCw, Shield, Stethoscope, Tag, User, Wallet, XCircle } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
 
 import { ActivityTimeline } from '@/components/case/activity-timeline'
-import { StageProgress } from '@/components/case/stage-progress'
 import { CashStageProgress } from '@/components/case/cash-stage-progress'
+import { StageProgress } from '@/components/case/stage-progress'
 import {
   Dialog,
   DialogContent,
@@ -34,24 +33,22 @@ import {
   canCompletePreAuth,
   canEditDischargeSheet,
   canEditKYP,
+  canFillCashDischarge,
   canFillInitiateForm,
+  canFillIPDCashForm,
   canGeneratePDF,
   canInitiate,
   canMarkIPD,
   canMarkLost,
-  canRaisePreAuth,
-  canSuggestHospitals,
   canModifyHospitals,
-  canViewPhoneNumber,
-  isDischargeBlockedByInitiateForm,
-  canStartCashMode,
+  canRaisePreAuth,
   canRevertCashMode,
-  canFillIPDCashForm,
-  canFillCashDischarge,
+  canStartCashMode,
+  canSuggestHospitals,
   canViewInitiateForm,
+  isDischargeBlockedByInitiateForm
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
-import { getPhoneDisplay } from '@/lib/phone-utils'
 import { CaseStage, FlowType } from '@prisma/client'
 import { format, formatDistanceToNow } from 'date-fns'
 import { Loader2 } from 'lucide-react'
@@ -927,7 +924,7 @@ export default function PatientDetailsPage() {
                   >
                     <Link href={`/patient/${leadId}/kyp/basic`}>
                       <Plus className="h-4 w-4" />
-                      Start KYP
+                      Fill Card Details
                     </Link>
                   </Button>
                 )}
@@ -1387,7 +1384,7 @@ export default function PatientDetailsPage() {
                             <span className="text-blue-600 dark:text-blue-400 shrink-0">₹{Number(hosp.tentativeBill || 0).toLocaleString('en-IN')}</span>
                           </div>
                           {hosp.suggestedDoctor && (
-                            <div className="text-muted-foreground">Dr. {hosp.suggestedDoctor}</div>
+                            <div className="text-muted-foreground">{hosp.suggestedDoctor}</div>
                           )}
                           <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] pt-1 border-t border-gray-200 dark:border-gray-700 mt-1">
                             {hosp.roomRentSingle && <span>Sgl: ₹{hosp.roomRentSingle}</span>}
@@ -1445,7 +1442,7 @@ export default function PatientDetailsPage() {
 
         {/* IPD Details Section */}
         {lead.admissionRecord && (
-          <IPDDetailsCard admissionRecord={lead.admissionRecord} />
+          <IPDDetailsCard admissionRecord={lead.admissionRecord} lead={lead} />
         )}
 
         {/* Discharge Sheet Link — hidden from BD and TL */}

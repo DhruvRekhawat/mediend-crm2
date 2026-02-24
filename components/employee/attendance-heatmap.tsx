@@ -126,22 +126,6 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
 
   return (
     <div className="space-y-4">
-      {/* Header rows with full dates */}
-      {rows.map((row, rowIndex) => (
-        <div key={`header-${rowIndex}`} className="overflow-x-auto -mx-6 px-6">
-          <div className="inline-flex gap-1 min-w-fit">
-            {row.map((cell) => (
-              <div
-                key={cell.dateKey}
-                className="w-12 text-center text-xs text-muted-foreground font-medium shrink-0"
-              >
-                {format(cell.date, 'MMM d')}
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-
       {/* Heatmap rows */}
       {rows.map((row, rowIndex) => (
         <div key={`heatmap-${rowIndex}`} className="overflow-x-auto -mx-6 px-6">

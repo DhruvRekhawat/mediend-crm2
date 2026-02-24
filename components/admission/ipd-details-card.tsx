@@ -1,13 +1,64 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { User, Stethoscope, Building2, Shield, Calendar, Package, MapPin, Clock } from 'lucide-react'
 import { format } from 'date-fns'
+import { Building2, Calendar, MapPin, Shield, User, Stethoscope, Wallet } from 'lucide-react'
+
+/** Minimal lead shape for displaying form data on the card (optional). */
+interface LeadForCard {
+  patientName?: string | null
+  leadRef?: string | null
+  age?: number | null
+  sex?: string | null
+  phoneNumber?: string | null
+  alternateNumber?: string | null
+  attendantName?: string | null
+  circle?: string | null
+  city?: string | null
+  treatment?: string | null
+  category?: string | null
+  quantityGrade?: string | null
+  anesthesia?: string | null
+  surgeonName?: string | null
+  ipdDrName?: string | null
+  surgeonType?: string | null
+  hospitalName?: string | null
+  insuranceName?: string | null
+  flowType?: string | null
+  modeOfPayment?: string | null
+  discount?: number | null
+  copay?: number | null
+  deduction?: number | null
+  settledTotal?: number | null
+  billAmount?: number | null
+  collectedByMediend?: number | null
+  collectedByHospital?: number | null
+  bd?: { name?: string | null; manager?: { name?: string | null } | null } | null
+  kypSubmission?: {
+    insuranceType?: string | null
+    preAuthData?: {
+      sumInsured?: string | null
+      copay?: string | null
+      capping?: number | string | null
+      roomRent?: string | null
+      requestedRoomType?: string | null
+      tpa?: string | null
+    } | null
+  } | null
+}
 
 interface IPDDetailsCardProps {
   admissionRecord: any
+  lead?: LeadForCard | null
 }
 
-export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
+function fmtCurr(v: number | string | null | undefined) {
+  if (v == null || v === '') return undefined
+  const n = typeof v === 'number' ? v : Number(v)
+  if (Number.isNaN(n)) return undefined
+  return `₹${n.toLocaleString('en-IN')}`
+}
+
+export function IPDDetailsCard({ admissionRecord, lead }: IPDDetailsCardProps) {
   if (!admissionRecord) return null
 
   const formatDate = (dateStr: string | null) => {
@@ -19,9 +70,13 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
     }
   }
 
+  const tpa = admissionRecord.tpa ?? lead?.kypSubmission?.preAuthData?.tpa ?? '-'
+  const isCash = lead?.flowType === 'CASH'
+  const preAuth = lead?.kypSubmission?.preAuthData
+
   return (
     <Card className="border-2 shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 border-b">
+      <CardHeader className="bg-linear-to-r from-teal-50 to-emerald-50 dark:from-teal-950/20 dark:to-emerald-950/20 border-b">
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
           <CardTitle>IPD Admission Details</CardTitle>
@@ -29,6 +84,98 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
       </CardHeader>
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Patient Information (from form) */}
+          {lead && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                <User className="w-4 h-4 text-blue-600" />
+                Patient Information
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Patient Name</Label>
+                    <p className="text-sm font-semibold">{lead.patientName ?? '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Patient ID / Ref</Label>
+                    <p className="text-sm font-semibold">{lead.leadRef ?? '-'}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Age</Label>
+                    <p className="text-sm font-semibold">{lead.age != null ? lead.age : '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Gender</Label>
+                    <p className="text-sm font-semibold">{lead.sex ?? '-'}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Alternate Contact</Label>
+                  <p className="text-sm font-semibold">{lead.attendantName || lead.alternateNumber ? `${lead.attendantName ?? '-'} / ${lead.alternateNumber ?? '-'}` : '-'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Circle</Label>
+                    <p className="text-sm font-semibold">{lead.circle ?? '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">City</Label>
+                    <p className="text-sm font-semibold">{lead.city ?? '-'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Treatment & Procedure (from form) */}
+          {lead && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                <Stethoscope className="w-4 h-4 text-purple-600" />
+                Treatment & Procedure
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Treatment</Label>
+                  <p className="text-sm font-semibold">{lead.treatment ?? '-'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Quantity / Grade</Label>
+                    <p className="text-sm font-semibold">{lead.quantityGrade ?? '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Anaesthesia</Label>
+                    <p className="text-sm font-semibold">{lead.anesthesia ?? '-'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Surgeon (from form) */}
+          {lead && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                <User className="w-4 h-4 text-teal-600" />
+                Surgeon Details
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Surgeon Name</Label>
+                  <p className="text-sm font-semibold">{lead.ipdDrName ?? lead.surgeonName ?? '-'}</p>
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Surgeon Type</Label>
+                  <p className="text-sm font-semibold">{lead.surgeonType ?? '-'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Admission & Surgery */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
@@ -103,7 +250,7 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
             <div className="grid grid-cols-1 gap-3">
               <div>
                 <Label className="text-[10px] uppercase text-gray-500 font-bold">Admitting Hospital</Label>
-                <p className="text-sm font-semibold">{admissionRecord.admittingHospital || '-'}</p>
+                <p className="text-sm font-semibold">{admissionRecord.admittingHospital || lead?.hospitalName || '-'}</p>
               </div>
               <div>
                 <Label className="text-[10px] uppercase text-gray-500 font-bold">Address</Label>
@@ -127,17 +274,143 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
             </div>
           </div>
 
-          {/* Medical & Insurance */}
+          {/* Insurance & Billing (insurance flow) */}
+          {lead && !isCash && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                <Shield className="w-4 h-4 text-green-600" />
+                Insurance & Billing
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Insurance Type</Label>
+                    <p className="text-sm font-semibold">{lead.kypSubmission?.insuranceType != null ? String(lead.kypSubmission.insuranceType).replace(/_/g, ' ') : '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Insurance Company</Label>
+                    <p className="text-sm font-semibold">{lead.insuranceName ?? '-'}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">TPA</Label>
+                  <p className="text-sm font-semibold">{tpa}</p>
+                </div>
+                {(preAuth?.sumInsured != null || preAuth?.copay != null || preAuth?.requestedRoomType != null || preAuth?.capping != null || preAuth?.roomRent != null) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {preAuth?.sumInsured != null && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Sum Insured</Label>
+                        <p className="text-sm font-semibold">{typeof preAuth.sumInsured === 'string' ? preAuth.sumInsured : fmtCurr(preAuth.sumInsured) ?? '-'}</p>
+                      </div>
+                    )}
+                    {preAuth?.copay != null && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Co-pay</Label>
+                        <p className="text-sm font-semibold">{preAuth.copay}%</p>
+                      </div>
+                    )}
+                    {preAuth?.requestedRoomType != null && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Room Type</Label>
+                        <p className="text-sm font-semibold">{preAuth.requestedRoomType}</p>
+                      </div>
+                    )}
+                    {preAuth?.capping != null && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Capping</Label>
+                        <p className="text-sm font-semibold">{fmtCurr(Number(preAuth.capping)) ?? '-'}</p>
+                      </div>
+                    )}
+                    {preAuth?.roomRent != null && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Room Rent</Label>
+                        <p className="text-sm font-semibold">{typeof preAuth.roomRent === 'string' ? preAuth.roomRent : fmtCurr(preAuth.roomRent) ?? '-'}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Payment & Billing (cash flow) */}
+          {lead && isCash && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
+                <Wallet className="w-4 h-4 text-green-600" />
+                Payment & Billing
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                {lead.modeOfPayment && (
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Mode of Payment</Label>
+                    <p className="text-sm font-semibold">{lead.modeOfPayment}</p>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  {(lead.settledTotal != null && lead.settledTotal > 0) && (
+                    <div>
+                      <Label className="text-[10px] uppercase text-gray-500 font-bold">Approved / Package</Label>
+                      <p className="text-sm font-semibold">{fmtCurr(lead.settledTotal)}</p>
+                    </div>
+                  )}
+                  {(lead.billAmount != null && lead.billAmount > 0) && (
+                    <div>
+                      <Label className="text-[10px] uppercase text-gray-500 font-bold">Final Bill Amount</Label>
+                      <p className="text-sm font-semibold">{fmtCurr(lead.billAmount)}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {(lead.collectedByMediend != null && lead.collectedByMediend > 0) && (
+                    <div>
+                      <Label className="text-[10px] uppercase text-gray-500 font-bold">Collected by Mediend</Label>
+                      <p className="text-sm font-semibold">{fmtCurr(lead.collectedByMediend)}</p>
+                    </div>
+                  )}
+                  {(lead.collectedByHospital != null && lead.collectedByHospital > 0) && (
+                    <div>
+                      <Label className="text-[10px] uppercase text-gray-500 font-bold">Collected by Hospital</Label>
+                      <p className="text-sm font-semibold">{fmtCurr(lead.collectedByHospital)}</p>
+                    </div>
+                  )}
+                </div>
+                {(lead.discount != null && lead.discount > 0) && (
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Discount</Label>
+                    <p className="text-sm font-semibold">{fmtCurr(lead.discount)}</p>
+                  </div>
+                )}
+                {(lead.copay != null && lead.copay > 0) && (
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Copay</Label>
+                    <p className="text-sm font-semibold">{fmtCurr(lead.copay)}</p>
+                  </div>
+                )}
+                {(lead.deduction != null && lead.deduction > 0) && (
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Deduction</Label>
+                    <p className="text-sm font-semibold">{fmtCurr(lead.deduction)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Medical & Insurance (TPA when cash or no insurance section) */}
           <div className="space-y-4">
             <h3 className="text-sm font-bold flex items-center gap-2 text-gray-700 dark:text-gray-300 border-b pb-2">
               <Shield className="w-4 h-4 text-green-600" />
-              Medical & Insurance
+              Medical & Implants
             </h3>
             <div className="grid grid-cols-1 gap-3">
-              <div>
-                <Label className="text-[10px] uppercase text-gray-500 font-bold">TPA</Label>
-                <p className="text-sm font-semibold">{admissionRecord.tpa || '-'}</p>
-              </div>
+              {(isCash || !lead) && (
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">TPA</Label>
+                  <p className="text-sm font-semibold">{tpa}</p>
+                </div>
+              )}
               {(admissionRecord.implantConsumables || admissionRecord.instrument) && (
                 <div className="space-y-2">
                    {admissionRecord.implantConsumables && (
@@ -158,6 +431,18 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
                 <div>
                   <Label className="text-[10px] uppercase text-gray-500 font-bold">Notes</Label>
                   <p className="text-sm italic text-muted-foreground">{admissionRecord.notes}</p>
+                </div>
+              )}
+              {lead?.bd && (lead.bd.name || lead.bd.manager?.name) && (
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">BD Name</Label>
+                    <p className="text-sm font-semibold">{lead.bd.name ?? '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-[10px] uppercase text-gray-500 font-bold">BD Manager</Label>
+                    <p className="text-sm font-semibold">{lead.bd.manager?.name ?? '-'}</p>
+                  </div>
                 </div>
               )}
             </div>

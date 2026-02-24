@@ -39,7 +39,7 @@ export async function GET(
     try {
       bd = await prisma.user.findUnique({
         where: { id: lead.bdId },
-        include: { team: true }
+        include: { team: { include: { salesHead: { select: { id: true, name: true } } } } }
       });
       console.log('[DEBUG] BD relation fetched successfully');
     } catch (e) {
