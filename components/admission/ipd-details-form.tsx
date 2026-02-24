@@ -155,7 +155,8 @@ export function IPDDetailsForm({
     if (!formData.admissionTime.trim()) e.admissionTime = 'Required'
     if (!formData.surgeryDate) e.surgeryDate = 'Required'
     if (!formData.surgeryTime.trim()) e.surgeryTime = 'Required'
-    if (!formData.tpa.trim()) e.tpa = 'Required'
+    const tpaVal = (tpaProp ?? '').toString().trim()
+    if (!tpaVal) e.tpa = 'Required'
     return e
   }
 
@@ -188,7 +189,7 @@ export function IPDDetailsForm({
         googleMapLocation: formData.googleMapLocation.trim() || undefined,
         surgeryDate: formData.surgeryDate,
         surgeryTime: formData.surgeryTime.trim(),
-        tpa: formData.tpa.trim(),
+        tpa: (tpaProp ?? formData.tpa).toString().trim(),
         instrument,
         implantConsumables,
         notes: formData.notes.trim() || undefined,
@@ -277,9 +278,7 @@ export function IPDDetailsForm({
         color="border-purple-500"
       >
         <div className="space-y-4">
-          {/* Auto-fetched read-only fields */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-            <ReadOnlyField label="Category" value={category} />
             <ReadOnlyField label="Treatment Name" value={treatment} />
           </div>
           {/* Editable text fields */}
@@ -376,9 +375,9 @@ export function IPDDetailsForm({
         color="border-green-500"
       >
         <div className="space-y-4">
-          {/* Auto-fetched insurance type */}
+          {/* Auto-fetched insurance (type and company) */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-            <ReadOnlyField label="Insurance Type" value={insuranceType} />
+            <ReadOnlyField label="Insurance Type" value={insuranceType != null && insuranceType !== '' ? String(insuranceType).replace(/_/g, ' ') : undefined} />
             <ReadOnlyField label="Insurance Company" value={insuranceName} />
           </div>
           <div className="border-t pt-3">
@@ -387,23 +386,11 @@ export function IPDDetailsForm({
               <ReadOnlyField label="Co-pay %" value={copay != null ? `${copay}%` : undefined} />
               <ReadOnlyField label="Sum Insured" value={sumInsured != null ? `₹${Number(sumInsured).toLocaleString('en-IN')}` : undefined} />
               <ReadOnlyField label="Room Type" value={roomType} />
-              {/* Room rent fetched based on selected room type */}
-              <ReadOnlyField label="Room Rent Limit" value={getRoomRentDisplay()} />
               <ReadOnlyField label="Capping" value={capping != null && capping !== '' ? `₹${Number(capping).toLocaleString('en-IN')}` : 'No'} />
             </div>
           </div>
           <div className="border-t pt-3">
-            <Label htmlFor="tpa">
-              TPA Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="tpa"
-              value={formData.tpa}
-              onChange={(e) => set('tpa', e.target.value)}
-              placeholder="Third Party Administrator name"
-              className={`mt-1 ${errors.tpa ? 'border-destructive' : ''}`}
-            />
-            {errors.tpa && <p className="text-xs text-destructive mt-1">{errors.tpa}</p>}
+            <ReadOnlyField label="TPA Name" value={tpaProp || formData.tpa} />
           </div>
         </div>
       </Section>

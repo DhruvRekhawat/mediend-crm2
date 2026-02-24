@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'INSURANCE_HEAD' && user.role !== 'ADMIN') {
+    if (user.role !== 'INSURANCE_HEAD' && user.role !== 'ADMIN' && user.role !== 'TESTER') {
       return errorResponse('Forbidden', 403)
     }
 
@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
         data: {
           caseStage: CaseStage.HOSPITALS_SUGGESTED,
           pipelineStage: 'INSURANCE',
+          ...(data.insuranceName?.trim() ? { insuranceName: data.insuranceName.trim() } : {}),
         },
       })
 
@@ -242,6 +243,16 @@ export async function POST(request: NextRequest) {
             roomRentSemiPrivate: h.roomRentSemiPrivate ?? undefined,
             notes: h.notes ?? undefined,
             suggestedDoctor: h.suggestedDoctor ?? undefined,
+          },
+        })
+      }
+
+      // Sync insurance name to Lead so it updates everywhere (patient page, pre-auth overview)
+      if (data.insuranceName !== undefined) {
+        await prisma.lead.update({
+          where: { id: kypSubmission.lead.id },
+          data: {
+            insuranceName: data.insuranceName?.trim() || null,
           },
         })
       }

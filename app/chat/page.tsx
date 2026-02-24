@@ -7,20 +7,25 @@ import { ChatList } from '@/components/chat/chat-list'
 import { useEffect } from 'react'
 
 export default function ChatPage() {
-  const { user } = useAuth()
+  const { user, isTester } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     // If no user, redirect will happen via AuthenticatedLayout
     if (!user) return
 
-    // Role-based access check
-    const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN']
+    // Role-based access check - disable for BD unless TESTER
+    const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
+    if (user.role === 'BD' && !isTester) {
+      // BD users can't access unless they are TESTERs
+      router.push('/')
+      return
+    }
     if (!allowedRoles.includes(user.role)) {
       router.push('/')
       return
     }
-  }, [user, router])
+  }, [user, router, isTester])
 
   if (!user) {
     return (
@@ -32,8 +37,17 @@ export default function ChatPage() {
     )
   }
 
-  // Role-based access check
-  const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN']
+  // Role-based access check - disable for BD unless TESTER
+  const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
+  if (user.role === 'BD' && !isTester) {
+    return (
+      <AuthenticatedLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-muted-foreground">You don&apos;t have access to chat</div>
+        </div>
+      </AuthenticatedLayout>
+    )
+  }
   if (!allowedRoles.includes(user.role)) {
     return (
       <AuthenticatedLayout>
@@ -45,27 +59,26 @@ export default function ChatPage() {
   }
 
   return (
-    // <AuthenticatedLayout>
-    //   <div className="h-[calc(100vh-4rem)] flex">
-    //     {/* Left Sidebar - Chat List */}
-    //     <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-    //       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-    //         <h2 className="text-lg font-semibold">Chats</h2>
-    //       </div>
-    //       <div className="flex-1 overflow-y-auto">
-    //         <ChatList />
-    //       </div>
-    //     </div>
+    <AuthenticatedLayout>
+      <div className="h-[calc(100vh-4rem)] flex">
+        {/* Left Sidebar - Chat List */}
+        <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 className="text-lg font-semibold">Chats</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ChatList />
+          </div>
+                  </div>
 
-    //     {/* Center - Empty State */}
-    //     <div className="flex-1 flex items-center justify-center">
-    //       <div className="text-center">
-    //         <p className="text-muted-foreground mb-2">Select a conversation to start chatting</p>
-    //         <p className="text-sm text-muted-foreground">Choose a patient from the list on the left</p>
-    //       </div>
-    //     </div>
-    //   </div>
-    // </AuthenticatedLayout>
-    <p>Temporarily disabled</p>
+        {/* Center - Empty State */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-2">Select a conversation to start chatting</p>
+            <p className="text-sm text-muted-foreground">Choose a patient from the list on the left</p>
+          </div>
+        </div>
+      </div>
+    </AuthenticatedLayout>
   )
 }

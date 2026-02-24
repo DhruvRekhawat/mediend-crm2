@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is the BD assigned to this lead or has admin permissions
-    if (lead.bdId !== user.id && user.role !== 'ADMIN' && user.role !== 'SALES_HEAD') {
+    if (lead.bdId !== user.id && user.role !== 'ADMIN' && user.role !== 'SALES_HEAD' && user.role !== 'TESTER') {
       return errorResponse('You do not have permission to submit KYP for this lead', 403)
     }
 
@@ -153,11 +153,11 @@ export async function POST(request: NextRequest) {
         fromStage: previousStage,
         toStage: targetStage,
         changedById: user.id,
-        note: 'KYP (Basic) submitted',
+        note: 'Card Details submitted',
       },
     })
 
-    await postCaseChatSystemMessage(data.leadId, 'BD submitted KYP (Basic).')
+    await postCaseChatSystemMessage(data.leadId, 'BD submitted Card Details.')
 
     const insuranceUsers = await prisma.user.findMany({
       where: {

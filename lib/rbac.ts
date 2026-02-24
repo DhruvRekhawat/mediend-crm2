@@ -177,6 +177,39 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:payroll:read',
     'hrms:employees:read',
   ],
+  TESTER: [
+    'leads:read',
+    'leads:write',
+    'leads:assign',
+    'targets:read',
+    'targets:write',
+    'analytics:read',
+    'users:read',
+    'users:write',
+    'insurance:read',
+    'insurance:write',
+    'pl:read',
+    'pl:write',
+    'reports:export',
+    'hrms:read',
+    'hrms:write',
+    'hrms:attendance:read',
+    'hrms:attendance:write',
+    'hrms:leaves:read',
+    'hrms:leaves:write',
+    'hrms:payroll:read',
+    'hrms:payroll:write',
+    'hrms:employees:read',
+    'hrms:employees:write',
+    'finance:read',
+    'finance:write',
+    'finance:masters:write',
+    'finance:approve',
+    'departments:create',
+    'departments:assign_head',
+    'users:create_tl',
+    'users:create_user',
+  ],
 }
 
 export function hasPermission(user: SessionUser | null, permission: Permission): boolean {
@@ -188,8 +221,8 @@ export function hasPermission(user: SessionUser | null, permission: Permission):
 export function canAccessLead(user: SessionUser | null, leadBdId: string, leadTeamId?: string | null): boolean {
   if (!user) return false
 
-  // MD, Sales Head, Insurance Head, PL Head can access all leads
-  if (['MD', 'SALES_HEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'ADMIN'].includes(user.role)) {
+  // MD, Sales Head, Insurance Head, PL Head, Admin, Tester can access all leads
+  if (['MD', 'SALES_HEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'ADMIN', 'TESTER'].includes(user.role)) {
     return true
   }
 
@@ -209,7 +242,7 @@ export function canAccessLead(user: SessionUser | null, leadBdId: string, leadTe
 export function canManageTeam(user: SessionUser | null, teamSalesHeadId?: string): boolean {
   if (!user) return false
 
-  if (['MD', 'ADMIN'].includes(user.role)) {
+  if (['MD', 'ADMIN', 'TESTER'].includes(user.role)) {
     return true
   }
 
@@ -268,9 +301,9 @@ export function getAvailableRolesForCreator(user: SessionUser | null): UserRole[
   if (!user) return []
 
   // MD cannot be created
-  const allRolesExceptMD: UserRole[] = ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER']
+  const allRolesExceptMD: UserRole[] = ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER', 'TESTER']
 
-  if (user.role === 'MD' || user.role === 'ADMIN') {
+  if (user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER') {
     return allRolesExceptMD
   }
 

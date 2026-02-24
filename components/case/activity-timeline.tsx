@@ -29,13 +29,13 @@ interface ActivityTimelineProps {
 
 const STAGE_LABELS: Record<CaseStage, string> = {
   [CaseStage.NEW_LEAD]: 'New Lead',
-  [CaseStage.KYP_BASIC_PENDING]: 'KYP Basic',
-  [CaseStage.KYP_BASIC_COMPLETE]: 'Hospitals Suggested',
+  [CaseStage.KYP_BASIC_PENDING]: 'Card Details Pending',
+  [CaseStage.KYP_BASIC_COMPLETE]: 'Card Details Submitted',
   [CaseStage.HOSPITALS_SUGGESTED]: 'Hospitals Suggested',
   [CaseStage.KYP_DETAILED_PENDING]: 'KYP Detailed',
   [CaseStage.KYP_DETAILED_COMPLETE]: 'KYP Complete',
-  [CaseStage.KYP_PENDING]: 'KYP Pending',
-  [CaseStage.KYP_COMPLETE]: 'KYP Complete',
+  [CaseStage.KYP_PENDING]: 'Card Details Pending',
+  [CaseStage.KYP_COMPLETE]: 'Card Details Submitted',
   [CaseStage.PREAUTH_RAISED]: 'Pre-Auth Raised',
   [CaseStage.PREAUTH_COMPLETE]: 'Pre-Auth Complete',
   [CaseStage.INITIATED]: 'Admitted',

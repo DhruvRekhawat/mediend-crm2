@@ -172,7 +172,7 @@ export function KYPBasicForm({
         panFileUrl: panFile?.url,
         remark: formData.remark.trim() || undefined,
       })
-      toast.success('KYP (Basic) submitted. Insurance will suggest hospitals.')
+      toast.success('Card Details submitted. Insurance will suggest hospitals.')
       onSuccess?.()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to submit KYP')
@@ -180,7 +180,7 @@ export function KYPBasicForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 ">
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="patientName">Patient Name *</Label>
@@ -450,7 +450,7 @@ export function KYPBasicForm({
           </Button>
         )}
         <Button type="submit" disabled={uploading}>
-          {uploading ? 'Uploading...' : 'Submit KYP (Basic)'}
+          {uploading ? 'Uploading...' : 'Submit Card Details'}
         </Button>
       </div>
     </form>

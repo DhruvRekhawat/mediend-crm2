@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { CheckCircle2, XCircle, Clock, Loader2, Hospital, FileText } from 'lucide-react'
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
+import { InitiateFormCard } from '@/components/insurance/initiate-form-card'
 
 interface PreAuthInlineApprovalProps {
   leadId: string
@@ -73,6 +74,7 @@ export function PreAuthInlineApproval({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showHospitalForm, setShowHospitalForm] = useState(false)
   const [showInitiateForm, setShowInitiateForm] = useState(false)
+  const [initiateFormEditMode, setInitiateFormEditMode] = useState(false)
 
   const queryClient = useQueryClient()
   const searchParams = useSearchParams()
@@ -137,7 +139,7 @@ export function PreAuthInlineApproval({
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
-  const handleApprove = async (status: 'APPROVED' | 'TEMP_APPROVED') => {
+  const handleApprove = async (status: 'APPROVED' | 'TEMP_APPROVED', payload?: { approvedAmount: number; approvalNotes?: string }) => {
     if (!hasAnyHospitalData) {
       toast.error('Please suggest hospitals before approving')
       return
@@ -146,17 +148,28 @@ export function PreAuthInlineApproval({
       toast.error('Please fill the Insurance Initial Form before giving full approval')
       return
     }
-    if (!approvedAmount || isNaN(Number(approvedAmount)) || Number(approvedAmount) < 0) {
-      toast.error('Please enter a valid approved amount')
-      return
+    // Amount and notes required only for temporary approval
+    if (status === 'TEMP_APPROVED') {
+      if (!approvedAmount || isNaN(Number(approvedAmount)) || Number(approvedAmount) < 0) {
+        toast.error('Please enter a valid approved amount')
+        return
+      }
     }
+
+    // Full approval: use Total Authorized Amount from initiate form; temp approval: use form input
+    const approvedAmountToSend = payload?.approvedAmount ?? (
+      status === 'TEMP_APPROVED'
+        ? Number(approvedAmount)
+        : (Number(initiateForm?.totalAuthorizedAmount) || 0)
+    )
+    const approvalNotesToSend = payload?.approvalNotes ?? (status === 'TEMP_APPROVED' ? approvalNotes.trim() || undefined : undefined)
 
     setIsSubmitting(true)
     try {
       await apiPost(`/api/pre-auth/${kypSubmissionId}/approve`, {
         approvalStatus: status,
-        approvedAmount: Number(approvedAmount),
-        approvalNotes: approvalNotes.trim() || undefined,
+        approvedAmount: approvedAmountToSend,
+        approvalNotes: approvalNotesToSend,
       })
       const label = status === 'TEMP_APPROVED' ? 'temporarily approved' : 'approved'
       toast.success(`Pre-authorization ${label} successfully`)
@@ -170,6 +183,11 @@ export function PreAuthInlineApproval({
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleFullApprovalConfirm = () => {
+    const authorizedAmount = Number(initiateForm?.totalAuthorizedAmount) || 0
+    handleApprove('APPROVED', { approvedAmount: authorizedAmount })
   }
 
   const handleReject = async () => {
@@ -256,14 +274,34 @@ export function PreAuthInlineApproval({
     </Card>
   ) : null
 
-  // ─── Shared: approval detail form (amount + notes + confirm button) ──────────
-  // isTemp controls labels and button colour; targetStatus drives the API call.
-  const approvalDetailJsx = (isTemp: boolean) => (
+  // ─── Full approval: simple confirm (no amount/notes — those are in the initiate form) ─
+  const fullApprovalConfirmJsx = (
     <div className="space-y-4 rounded-lg border p-4">
       <div className="flex items-center justify-between">
-        <p className="font-medium">
-          {isTemp ? 'Temporary Approval Details' : 'Approval Details'}
-        </p>
+        <p className="font-medium">Confirm full approval</p>
+        <Button variant="ghost" size="sm" onClick={() => setAction(null)}>
+          Cancel
+        </Button>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        You have filled the Insurance Initial Form. Confirm to mark pre-authorization as fully approved.
+      </p>
+      <Button
+        onClick={handleFullApprovalConfirm}
+        disabled={isSubmitting}
+        className="w-full bg-green-600 hover:bg-green-700 text-white"
+      >
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Confirm Approval
+      </Button>
+    </div>
+  )
+
+  // ─── Temporary approval only: form with approved amount + notes ─────────────────
+  const tempApprovalDetailJsx = (
+    <div className="space-y-4 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <p className="font-medium">Temporary Approval Details</p>
         <Button variant="ghost" size="sm" onClick={() => setAction(null)}>
           Cancel
         </Button>
@@ -292,34 +330,25 @@ export function PreAuthInlineApproval({
 
       <div>
         <Label htmlFor="approvalNotes">
-          {isTemp ? 'Conditions / Notes' : 'Approval Notes'}{' '}
-          <span className="text-muted-foreground text-xs">(optional)</span>
+          Conditions / Notes <span className="text-muted-foreground text-xs">(optional)</span>
         </Label>
         <Textarea
           id="approvalNotes"
           value={approvalNotes}
           onChange={(e) => setApprovalNotes(e.target.value)}
-          placeholder={
-            isTemp
-              ? 'Specify conditions for temporary approval…'
-              : 'Any notes for the BD team…'
-          }
+          placeholder="Specify conditions for temporary approval…"
           rows={3}
           className="mt-1"
         />
       </div>
 
       <Button
-        onClick={() => handleApprove(isTemp ? 'TEMP_APPROVED' : 'APPROVED')}
+        onClick={() => handleApprove('TEMP_APPROVED')}
         disabled={isSubmitting}
-        className={
-          isTemp
-            ? 'w-full bg-amber-500 hover:bg-amber-600 text-white'
-            : 'w-full bg-green-600 hover:bg-green-700 text-white'
-        }
+        className="w-full bg-amber-500 hover:bg-amber-600 text-white"
       >
         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {isTemp ? 'Confirm Temporary Approval' : 'Confirm Approval'}
+        Confirm Temporary Approval
       </Button>
     </div>
   )
@@ -386,16 +415,7 @@ export function PreAuthInlineApproval({
         {hospitalSuggestionsJsx}
 
         {initiateForm && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold px-1">Insurance Initiate Form Details</h3>
-            <InsuranceInitiateForm
-              leadId={leadId}
-              initialData={initiateForm}
-              onSuccess={() => {}}
-              embedded
-              readOnly={true}
-            />
-          </div>
+          <InitiateFormCard initiateForm={initiateForm} />
         )}
       </div>
     )
@@ -438,18 +458,39 @@ export function PreAuthInlineApproval({
 
         {hospitalSuggestionsJsx}
 
-        {/* Insurance Initiate Form — editable at PREAUTH_COMPLETE */}
+        {/* Insurance Initiate Form — show readonly card when filled, else editable form */}
         <div className="space-y-4">
-          <h3 className="text-lg font-bold px-1">Insurance Initial Form</h3>
-          <InsuranceInitiateForm
-            leadId={leadId}
-            initialData={initiateFormData?.initiateForm}
-            onSuccess={() => {
-              queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-            }}
-            embedded
-          />
+          {initiateForm && isInitiateFormFilled && !initiateFormEditMode ? (
+            <>
+              <InitiateFormCard initiateForm={initiateForm} />
+              <Button
+                variant="outline"
+                onClick={() => setInitiateFormEditMode(true)}
+                className="gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Edit Initial Form
+              </Button>
+            </>
+          ) : (
+            <>
+              {initiateForm && isInitiateFormFilled && (
+                <Button variant="ghost" size="sm" onClick={() => setInitiateFormEditMode(false)} className="mb-2">
+                  ← Back to view
+                </Button>
+              )}
+              <InsuranceInitiateForm
+                leadId={leadId}
+                initialData={initiateFormData?.initiateForm}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                  setInitiateFormEditMode(false)
+                }}
+                embedded
+              />
+            </>
+          )}
         </div>
 
         {/* Confirm full approval */}
@@ -476,7 +517,7 @@ export function PreAuthInlineApproval({
                 Give Full Approval
               </Button>
             )}
-            {action === 'approve' && approvalDetailJsx(false)}
+            {action === 'approve' && fullApprovalConfirmJsx}
           </CardContent>
         </Card>
       </div>
@@ -513,6 +554,7 @@ export function PreAuthInlineApproval({
             onSuccess={() => {
               setShowHospitalForm(false)
               queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
+              queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
             }}
             onCancel={shouldForceHospitalForm ? undefined : () => setShowHospitalForm(false)}
           />
@@ -526,7 +568,7 @@ export function PreAuthInlineApproval({
 
             {/* Modify button only before pre-auth is completed */}
             {!isLocked && (
-              <Button onClick={() => setShowHospitalForm(true)} variant="outline" size="sm">
+              <Button onClick={() => setShowHospitalForm(true)} variant="default" size="sm">
                 Modify Hospital Suggestions
               </Button>
             )}
@@ -547,25 +589,48 @@ export function PreAuthInlineApproval({
               </Button>
             )}
 
-            {/* Insurance Initiate Form */}
+            {/* Insurance Initiate Form — readonly card when saved, else editable form */}
             {showInitiateForm && (
               <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">Insurance Initiate Form</h3>
-                  <Button variant="ghost" size="sm" onClick={() => setShowInitiateForm(false)}>
+                  <Button variant="ghost" size="sm" onClick={() => { setShowInitiateForm(false); setInitiateFormEditMode(false) }}>
                     Close
                   </Button>
                 </div>
-                <InsuranceInitiateForm
-                  leadId={leadId}
-                  initialData={initiateFormData?.initiateForm}
-                  onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-                    queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                    setShowInitiateForm(false)
-                  }}
-                  embedded
-                />
+                {initiateForm && isInitiateFormFilled && !initiateFormEditMode ? (
+                  <>
+                    <InitiateFormCard initiateForm={initiateForm} />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInitiateFormEditMode(true)}
+                      className="gap-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Edit form
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {initiateForm && isInitiateFormFilled && (
+                      <Button variant="ghost" size="sm" onClick={() => setInitiateFormEditMode(false)} className="mb-2">
+                        ← Back to view
+                      </Button>
+                    )}
+                    <InsuranceInitiateForm
+                      leadId={leadId}
+                      initialData={initiateFormData?.initiateForm}
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                        queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                        setShowInitiateForm(false)
+                        setInitiateFormEditMode(false)
+                      }}
+                      embedded
+                    />
+                  </>
+                )}
               </div>
             )}
 
@@ -611,10 +676,10 @@ export function PreAuthInlineApproval({
 
 
             {/* Approve detail form */}
-            {action === 'approve' && approvalDetailJsx(false)}
+            {action === 'approve' && fullApprovalConfirmJsx}
 
             {/* Temp approve detail form */}
-            {action === 'temp_approve' && approvalDetailJsx(true)}
+            {action === 'temp_approve' && tempApprovalDetailJsx}
 
             {/* Reject form */}
             {action === 'reject' && (

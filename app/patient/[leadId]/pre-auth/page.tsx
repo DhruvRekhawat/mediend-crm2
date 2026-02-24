@@ -1,19 +1,18 @@
 'use client'
 
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
-import { useAuth } from '@/hooks/use-auth'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { apiGet } from '@/lib/api-client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { ArrowLeft, Phone, MapPin, Stethoscope, Tag, User } from 'lucide-react'
-import { useRouter, useParams } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
+import { apiGet } from '@/lib/api-client'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, MapPin, Shield, Stethoscope, Tag, User } from 'lucide-react'
+import { useParams, useRouter } from 'next/navigation'
 
 import { PreAuthInlineApproval } from '@/components/insurance/pre-auth-inline-approval'
-import { CaseStage, PreAuthStatus } from '@prisma/client'
-import { canCompletePreAuth, canViewPhoneNumber } from '@/lib/case-permissions'
-import { getPhoneDisplay } from '@/lib/phone-utils'
+import { canCompletePreAuth } from '@/lib/case-permissions'
+import { PreAuthStatus } from '@prisma/client'
 
 interface KYPSubmission {
   id: string
@@ -152,15 +151,28 @@ export default function PreAuthPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                {lead.age && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Age</Label>
+                      <p className="text-sm font-medium">{lead.age}</p>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Phone</Label>
-                    <p className="text-sm font-medium">{getPhoneDisplay(lead.phoneNumber, canViewPhoneNumber(user ? { role: user.role } : null))}</p>
+                )}
+                {lead.sex && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                      <User className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Sex</Label>
+                      <p className="text-sm font-medium">{lead.sex}</p>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-teal-50 dark:bg-teal-950/30 rounded-lg border border-teal-200 dark:border-teal-800">
                     <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -212,6 +224,28 @@ export default function PreAuthPage() {
                     </div>
                   </div>
                 )}
+                {lead.kypSubmission?.insuranceType && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <Shield className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Insurance Type</Label>
+                      <p className="text-sm font-medium">{lead.kypSubmission.insuranceType}</p>
+                    </div>
+                  </div>
+                )}
+                {lead.insuranceName && (
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-800">
+                      <Shield className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Insurance Name</Label>
+                      <p className="text-sm font-medium">{lead.insuranceName}</p>
+                    </div>
+                  </div>
+                )}
                 {lead.category && (
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-700">
@@ -230,17 +264,20 @@ export default function PreAuthPage() {
 
         {/* Hospital Suggestion and Pre-auth Approval */}
         {kypSubmission && (
-          lead?.caseStage === 'KYP_PENDING' || 
-          lead?.caseStage === 'KYP_BASIC_COMPLETE' || 
-          lead?.caseStage === 'KYP_BASIC_PENDING' ||
-          lead?.caseStage === 'KYP_DETAILED_PENDING' ||
-          lead?.caseStage === 'KYP_DETAILED_COMPLETE' ||
-          lead?.caseStage === 'PREAUTH_RAISED' ||
-          lead?.caseStage === 'PREAUTH_COMPLETE' ||
-          lead?.caseStage === 'INITIATED' ||
-          lead?.caseStage === 'ADMITTED' ||
-          lead?.caseStage === 'DISCHARGED' ||
-          canComplete
+          (
+            lead?.caseStage === 'KYP_PENDING' || 
+            lead?.caseStage === 'KYP_BASIC_COMPLETE' || 
+            lead?.caseStage === 'KYP_BASIC_PENDING' ||
+            lead?.caseStage === 'KYP_DETAILED_PENDING' ||
+            lead?.caseStage === 'KYP_DETAILED_COMPLETE' ||
+            lead?.caseStage === 'HOSPITALS_SUGGESTED' ||
+            lead?.caseStage === 'PREAUTH_RAISED' ||
+            lead?.caseStage === 'PREAUTH_COMPLETE' ||
+            lead?.caseStage === 'INITIATED' ||
+            lead?.caseStage === 'ADMITTED' ||
+            lead?.caseStage === 'DISCHARGED' ||
+            canComplete
+          )
         ) && (
           <PreAuthInlineApproval
             leadId={leadId}

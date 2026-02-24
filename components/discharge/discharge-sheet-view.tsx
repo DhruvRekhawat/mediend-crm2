@@ -18,6 +18,7 @@ interface DischargeSheetViewProps {
     hospitalName?: string | null
     doctorName?: string | null
     tentativeAmount?: number | null
+    finalAmount?: number | null
     copayPct?: number | null
     dischargeSummaryUrl?: string | null
     otNotesUrl?: string | null
@@ -29,6 +30,7 @@ interface DischargeSheetViewProps {
     investigationAmount?: number
     consumablesAmount?: number
     implantsAmount?: number
+    instrumentsAmount?: number | null
     totalFinalBill?: number
     finalApprovedAmount?: number
     deductionAmount?: number
@@ -41,8 +43,11 @@ interface DischargeSheetViewProps {
     remarks?: string | null
     plRecord?: { id: string } | null
     lead?: {
+      surgeonName?: string | null
+      ipdDrName?: string | null
+      copay?: number | null
       kypSubmission?: {
-        preAuthData?: { sumInsured?: string | null; roomRent?: string | null } | null
+        preAuthData?: { sumInsured?: string | null; roomRent?: string | null; copay?: string | null } | null
       } | null
     } | null
     [key: string]: unknown
@@ -80,18 +85,35 @@ export function DischargeSheetView({ dischargeSheet }: DischargeSheetViewProps) 
     }
   }
 
-  const billHeads = [
+  const billHeads: { label: string; value: number }[] = [
     { label: 'Room Rent', value: dischargeSheet.roomRentAmount ?? 0 },
     { label: 'Pharmacy', value: dischargeSheet.pharmacyAmount ?? 0 },
     { label: 'Investigation', value: dischargeSheet.investigationAmount ?? 0 },
     { label: 'Consumables', value: dischargeSheet.consumablesAmount ?? 0 },
     { label: 'Implants', value: dischargeSheet.implantsAmount ?? 0 },
+    ...(dischargeSheet.instrumentsAmount != null && dischargeSheet.instrumentsAmount > 0
+      ? [{ label: 'Instruments', value: dischargeSheet.instrumentsAmount }]
+      : []),
     { label: 'Total Final Bill', value: dischargeSheet.totalFinalBill ?? 0 },
   ]
 
   const preAuth = dischargeSheet.lead?.kypSubmission?.preAuthData
   const sumInsured = preAuth?.sumInsured ?? null
   const roomRentCap = preAuth?.roomRent ?? null
+  const leadRef = dischargeSheet.lead as { surgeonName?: string | null; ipdDrName?: string | null; copay?: number | null } | undefined
+  const doctorDisplay =
+    dischargeSheet.doctorName ||
+    leadRef?.surgeonName ||
+    leadRef?.ipdDrName ||
+    '—'
+  const leadCopay = leadRef?.copay
+  const preAuthCopayStr = (preAuth as { copay?: string | null } | undefined)?.copay
+  const preAuthCopayNum =
+    preAuthCopayStr != null && preAuthCopayStr !== '' ? parseFloat(String(preAuthCopayStr)) : null
+  const copayValue =
+    dischargeSheet.copayPct ??
+    (leadCopay != null && leadCopay !== 0 ? leadCopay : null) ??
+    (preAuthCopayNum != null && !Number.isNaN(preAuthCopayNum) ? preAuthCopayNum : null)
 
   const approvalItems = [
     { label: 'Final Approved Amount', value: dischargeSheet.finalApprovedAmount ?? 0 },
@@ -119,21 +141,17 @@ export function DischargeSheetView({ dischargeSheet }: DischargeSheetViewProps) 
             <p className="text-sm font-medium mt-1">{dischargeSheet.hospitalName || '—'}</p>
           </div>
           <div>
-            <Label className="text-muted-foreground">Room Rent (Cap)</Label>
-            <p className="text-sm font-medium mt-1">{roomRentCap ?? '—'}</p>
-          </div>
-          <div>
             <Label className="text-muted-foreground">Copay %</Label>
-            <p className="text-sm font-medium mt-1">{dischargeSheet.copayPct != null ? `${dischargeSheet.copayPct}%` : '—'}</p>
+            <p className="text-sm font-medium mt-1">{copayValue != null ? `${Number(copayValue)}%` : '—'}</p>
           </div>
           <div>
             <Label className="text-muted-foreground">Doctor Name</Label>
-            <p className="text-sm font-medium mt-1">{dischargeSheet.doctorName || '—'}</p>
+            <p className="text-sm font-medium mt-1">{doctorDisplay}</p>
           </div>
           <div>
-            <Label className="text-muted-foreground">Tentative Amount</Label>
+            <Label className="text-muted-foreground">Final Amount</Label>
             <p className="text-sm font-medium mt-1">
-              {dischargeSheet.tentativeAmount != null ? `₹${Number(dischargeSheet.tentativeAmount).toLocaleString()}` : '—'}
+              {dischargeSheet.finalAmount != null ? `₹${Number(dischargeSheet.finalAmount).toLocaleString()}` : dischargeSheet.tentativeAmount != null ? `₹${Number(dischargeSheet.tentativeAmount).toLocaleString()}` : '—'}
             </p>
           </div>
           {dischargeSheet.dischargeDate && (

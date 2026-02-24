@@ -38,7 +38,7 @@ export function canRaisePreAuth(user: User, lead: Lead): boolean {
 export function canAddKYPDetails(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const isKYPBasicComplete = lead.caseStage === CaseStage.KYP_BASIC_COMPLETE
   
   return isInsurance && isKYPBasicComplete
@@ -48,7 +48,7 @@ export function canAddKYPDetails(user: User, lead: Lead): boolean {
 export function canCompletePreAuth(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const isPreAuthRaised = lead.caseStage === CaseStage.PREAUTH_RAISED
   
   return isInsurance && isPreAuthRaised
@@ -91,7 +91,7 @@ export function canMarkIPD(user: User, lead: Lead): boolean {
 export function canGeneratePDF(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
 
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const afterPreAuthRaised =
     lead.caseStage === CaseStage.PREAUTH_RAISED || lead.caseStage === CaseStage.PREAUTH_COMPLETE
 
@@ -145,14 +145,25 @@ export function canMarkLost(user: User, lead: Lead): boolean {
 // Insurance can suggest hospitals when BD has submitted KYP Basic (KYP_BASIC_COMPLETE)
 export function canSuggestHospitals(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   return isInsurance && lead.caseStage === CaseStage.KYP_BASIC_COMPLETE
+}
+
+// Insurance can modify hospital suggestions after they've been suggested until pre-auth is complete
+export function canModifyHospitals(user: User, lead: Lead): boolean {
+  if (!user || !lead) return false
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
+  const canModifyStages: CaseStage[] = [
+    CaseStage.HOSPITALS_SUGGESTED,
+    CaseStage.PREAUTH_RAISED,
+  ]
+  return isInsurance && canModifyStages.includes(lead.caseStage)
 }
 
 // Insurance can access insurance actions (pre-auth page) after KYP basic is submitted (pending or later)
 export function canShowInsuranceActions(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const canAccessStages: CaseStage[] = [
     CaseStage.KYP_BASIC_COMPLETE,
     CaseStage.HOSPITALS_SUGGESTED,
@@ -188,7 +199,7 @@ export function canViewPhoneNumber(user: { role: string } | null | undefined): b
 export function canFillInitiateForm(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const isValidStage = lead.caseStage === CaseStage.PREAUTH_RAISED || lead.caseStage === CaseStage.PREAUTH_COMPLETE
   
   return isInsurance && isValidStage
@@ -261,7 +272,7 @@ export function canFillIPDCashForm(user: User, lead: Lead): boolean {
 export function canReviewCashCase(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const isCash = lead.flowType === FlowType.CASH
   // Can review if submitted or on hold (to re-review or change decision)
   const allowedStages: CaseStage[] = [CaseStage.CASH_IPD_SUBMITTED, CaseStage.CASH_ON_HOLD]
@@ -273,7 +284,7 @@ export function canReviewCashCase(user: User, lead: Lead): boolean {
 export function canFillCashDischarge(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN'].includes(user.role)
+  const isInsurance = ['INSURANCE', 'INSURANCE_HEAD', 'ADMIN', 'TESTER'].includes(user.role)
   const isCash = lead.flowType === FlowType.CASH
   const isApproved = lead.caseStage === CaseStage.CASH_APPROVED
   

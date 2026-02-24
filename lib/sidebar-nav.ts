@@ -313,6 +313,7 @@ export function getDashboardUrl(role: string): string {
     HR_HEAD: '/hr/users',
     FINANCE_HEAD: '/finance/ledger',
     ADMIN: '/md/sales',
+    TESTER: '/md/sales',
   }
   return routes[role] ?? '/dashboard'
 }
@@ -335,7 +336,7 @@ function filterNavItems(user: SessionUser | null): NavItem[] {
     if (item.title.startsWith('My ') || item.title.startsWith('Svc ')) {
       return true
     }
-    if (user.role === 'ADMIN') {
+    if (user.role === 'ADMIN' || user.role === 'TESTER') {
       return true
     }
     if (item.roles) {

@@ -48,9 +48,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
 import logo from '@/public/logo-mediend.png'
+import { UserRole } from '@prisma/client'
 
 export function AppSidebar() {
-  const { user, logout } = useAuth()
+  const { user, logout, isTester, setActiveRole } = useAuth()
   const pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
 
@@ -78,7 +79,7 @@ export function AppSidebar() {
 
   const itemsWithUrls = getFilteredNavItemsWithUrls(user)
   const navigationItems =
-    user.role === 'MD' || user.role === 'ADMIN'
+    user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER'
       ? itemsWithUrls.filter(
           (item) =>
             item.title === 'Sales Dashboard' ||
@@ -135,7 +136,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {user.role !== 'ADMIN' && (
+        {user.role !== 'ADMIN' && user.role !== 'TESTER' && (
           <SidebarGroup className="pb-1">
             <button
               onClick={() => toggleSection('myHrms')}
@@ -181,7 +182,7 @@ export function AppSidebar() {
             </div>
           </SidebarGroup>
         )}
-        {user.role !== 'ADMIN' && itemsWithUrls.some((item) => item.title.startsWith('Svc ')) && (
+        {user.role !== 'ADMIN' && user.role !== 'TESTER' && itemsWithUrls.some((item) => item.title.startsWith('Svc ')) && (
           <SidebarGroup className="pb-1">
             <button
               onClick={() => toggleSection('services')}
@@ -227,7 +228,7 @@ export function AppSidebar() {
               </div>
             </SidebarGroup>
         )}
-        {user.role !== 'ADMIN' && user.role !== 'USER' && itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
+        {user.role !== 'ADMIN' && user.role !== 'TESTER' && user.role !== 'USER' && itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
           <SidebarGroup className="pb-1">
             <button
               onClick={() => toggleSection('hrManagement')}
@@ -319,7 +320,7 @@ export function AppSidebar() {
             </div>
           </SidebarGroup>
         )}
-        {(user.role === 'MD' || user.role === 'ADMIN') && (
+        {(user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER') && (
           <SidebarGroup className="pb-1">
             <button
               onClick={() => toggleSection('mdPortal')}
@@ -368,6 +369,31 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
+          {isTester && (
+            <SidebarMenuItem>
+              <div className="px-2 py-2 space-y-1">
+                <p className="text-[10px] uppercase text-muted-foreground font-bold">View as role</p>
+                <select
+                  value={user?.role ?? 'TESTER'}
+                  onChange={(e) => setActiveRole(e.target.value as UserRole)}
+                  className="w-full text-xs border rounded px-2 py-1 bg-background text-foreground"
+                >
+                  <option value="TESTER">— TESTER (default) —</option>
+                  <option value="MD">MD</option>
+                  <option value="SALES_HEAD">SALES_HEAD</option>
+                  <option value="TEAM_LEAD">TEAM_LEAD</option>
+                  <option value="BD">BD</option>
+                  <option value="INSURANCE_HEAD">INSURANCE_HEAD</option>
+                  <option value="PL_HEAD">PL_HEAD</option>
+                  <option value="OUTSTANDING_HEAD">OUTSTANDING_HEAD</option>
+                  <option value="HR_HEAD">HR_HEAD</option>
+                  <option value="FINANCE_HEAD">FINANCE_HEAD</option>
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="USER">USER</option>
+                </select>
+              </div>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Profile">
               <Link href="/profile" onClick={closeSidebarOnMobile}>

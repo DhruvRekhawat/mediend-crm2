@@ -36,6 +36,15 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
               Admission & Surgery
             </h3>
             <div className="grid grid-cols-1 gap-3">
+              {admissionRecord.ipdStatus && (
+                <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">IPD Status</Label>
+                  <p className="text-sm font-bold text-purple-600 dark:text-purple-400">{admissionRecord.ipdStatus.replace(/_/g, ' ')}</p>
+                  {admissionRecord.ipdStatusUpdatedAt && (
+                    <p className="text-xs text-muted-foreground mt-0.5">Updated {format(new Date(admissionRecord.ipdStatusUpdatedAt), 'dd MMM yyyy, HH:mm')}</p>
+                  )}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-[10px] uppercase text-gray-500 font-bold">Admission Date</Label>
@@ -48,7 +57,9 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Surgery Date</Label>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">
+                    {admissionRecord.ipdStatus === 'POSTPONED' && admissionRecord.newSurgeryDate ? 'Original surgery date' : 'Surgery Date'}
+                  </Label>
                   <p className="text-sm font-semibold">{formatDate(admissionRecord.surgeryDate)}</p>
                 </div>
                 <div>
@@ -56,10 +67,28 @@ export function IPDDetailsCard({ admissionRecord }: IPDDetailsCardProps) {
                   <p className="text-sm font-semibold">{admissionRecord.surgeryTime || '-'}</p>
                 </div>
               </div>
-              {admissionRecord.ipdStatus && (
+              {admissionRecord.ipdStatus === 'POSTPONED' && admissionRecord.newSurgeryDate && (
                 <div>
-                  <Label className="text-[10px] uppercase text-gray-500 font-bold">IPD Status</Label>
-                  <p className="text-sm font-bold text-purple-600 dark:text-purple-400">{admissionRecord.ipdStatus.replace(/_/g, ' ')}</p>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">New surgery date</Label>
+                  <p className="text-sm font-bold text-amber-600 dark:text-amber-400">{formatDate(admissionRecord.newSurgeryDate)}</p>
+                </div>
+              )}
+              {admissionRecord.ipdStatus === 'DISCHARGED' && admissionRecord.ipdDischargeDate && (
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Discharge date</Label>
+                  <p className="text-sm font-semibold">{formatDate(admissionRecord.ipdDischargeDate)}</p>
+                </div>
+              )}
+              {admissionRecord.ipdStatusReason && (
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Reason</Label>
+                  <p className="text-sm text-muted-foreground">{admissionRecord.ipdStatusReason}</p>
+                </div>
+              )}
+              {admissionRecord.ipdStatusNotes && (
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Status notes</Label>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">{admissionRecord.ipdStatusNotes}</p>
                 </div>
               )}
             </div>

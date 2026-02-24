@@ -15,7 +15,7 @@ import { format } from 'date-fns'
 import { Eye, Plus } from 'lucide-react'
 import { useLeads } from '@/hooks/use-leads'
 import { useRouter } from 'next/navigation'
-import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
+import { getCaseStageBadgeConfig } from '@/lib/case-stage-labels'
 
 interface KYPSubmission {
   id: string
@@ -26,7 +26,7 @@ interface KYPSubmission {
   disease: string | null
   location: string | null
   remark: string | null
-  status: 'PENDING' | 'KYP_DETAILS_ADDED' | 'PRE_AUTH_COMPLETE' | 'FOLLOW_UP_COMPLETE' | 'COMPLETED'
+  status: string
   submittedAt: string
   lead: {
     id: string
@@ -35,6 +35,7 @@ interface KYPSubmission {
     phoneNumber: string
     city: string
     hospitalName: string
+    caseStage: string
   }
   preAuthData: {
     id: string
@@ -80,19 +81,9 @@ export default function KYPPage() {
 
   const { leads } = useLeads({ bdId: user?.id })
 
-  const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      PENDING: 'default',
-      KYP_DETAILS_ADDED: 'default',
-      PRE_AUTH_COMPLETE: 'default',
-      FOLLOW_UP_COMPLETE: 'default',
-      COMPLETED: 'default',
-    }
-    return (
-      <Badge variant={variants[status] || 'secondary'}>
-        {getKYPStatusLabel(status)}
-      </Badge>
-    )
+  const getStageBadge = (caseStage: string) => {
+    const { className, label } = getCaseStageBadgeConfig(caseStage)
+    return <Badge variant="secondary" className={className}>{label}</Badge>
   }
 
   return (
@@ -126,7 +117,7 @@ export default function KYPPage() {
                       <TableHead>Patient Name</TableHead>
                       <TableHead>Location</TableHead>
                       <TableHead>Disease</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Stage</TableHead>
                       <TableHead>Submitted</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -139,7 +130,7 @@ export default function KYPPage() {
                           <TableCell>{kyp.lead.patientName}</TableCell>
                           <TableCell>{kyp.location || kyp.lead.city}</TableCell>
                           <TableCell>{kyp.disease || '-'}</TableCell>
-                          <TableCell>{getStatusBadge(kyp.status)}</TableCell>
+                          <TableCell>{getStageBadge(kyp.lead.caseStage)}</TableCell>
                           <TableCell>
                             {format(new Date(kyp.submittedAt), 'MMM d, yyyy')}
                           </TableCell>
@@ -174,7 +165,7 @@ export default function KYPPage() {
           <Dialog open={showKYPForm} onOpenChange={setShowKYPForm}>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>KYP (Call 1 – Basic)</DialogTitle>
+                <DialogTitle>Submit Card Details</DialogTitle>
                 <DialogDescription>Select a lead, then submit insurance card, city and area. Insurance will suggest hospitals.</DialogDescription>
               </DialogHeader>
               {!selectedLeadId ? (

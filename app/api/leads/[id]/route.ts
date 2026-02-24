@@ -172,8 +172,35 @@ export async function GET(
     try {
       admissionRecord = await (prisma as any).admissionRecord.findUnique({
         where: { leadId: id },
-        select: { id: true, ipdStatus: true }
+        select: {
+          id: true,
+          admissionDate: true,
+          admissionTime: true,
+          surgeryDate: true,
+          surgeryTime: true,
+          admittingHospital: true,
+          hospitalAddress: true,
+          googleMapLocation: true,
+          tpa: true,
+          instrument: true,
+          implantConsumables: true,
+          notes: true,
+          ipdStatus: true,
+          ipdStatusReason: true,
+          ipdStatusNotes: true,
+          newSurgeryDate: true,
+          ipdDischargeDate: true,
+          ipdStatusUpdatedAt: true,
+        }
       });
+      if (admissionRecord) {
+        const r = admissionRecord as any
+        r.admissionDate = r.admissionDate?.toISOString?.() ?? r.admissionDate
+        r.surgeryDate = r.surgeryDate?.toISOString?.() ?? r.surgeryDate
+        r.newSurgeryDate = r.newSurgeryDate?.toISOString?.() ?? r.newSurgeryDate
+        r.ipdDischargeDate = r.ipdDischargeDate?.toISOString?.() ?? r.ipdDischargeDate
+        r.ipdStatusUpdatedAt = r.ipdStatusUpdatedAt?.toISOString?.() ?? r.ipdStatusUpdatedAt
+      }
       console.log('[DEBUG] admissionRecord relation fetched successfully');
     } catch (e) {
       console.error('[DEBUG] Error fetching admissionRecord relation:', e);

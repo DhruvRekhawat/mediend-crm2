@@ -74,21 +74,21 @@ export default function KYPBasicSubmitPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">KYP (Call 1 – Basic)</h1>
+            <h1 className="text-3xl font-bold">Card Details</h1>
             <p className="text-muted-foreground">
               {lead.leadRef} - {lead.patientName}
             </p>
           </div>
         </div>
 
-        <Card>
+        <Card className="">
           <CardHeader>
-            <CardTitle>Submit KYP Basic</CardTitle>
+            <CardTitle>Submit Card Details</CardTitle>
             <CardDescription>
               Insurance card, city and area required. Insurance will then suggest hospitals.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="">
             <KYPBasicForm
               leadId={leadId}
               initialPatientName={lead.patientName}

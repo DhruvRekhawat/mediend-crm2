@@ -100,6 +100,17 @@ export default function DischargeSheetPage() {
   })
 
   const isInsurance = user?.role === 'INSURANCE_HEAD' || user?.role === 'ADMIN'
+  const needForm = !dischargeSheet && isInsurance
+
+  const { data: lead } = useQuery<{ admissionRecord?: { ipdDischargeDate?: string | null } | null } | null>({
+    queryKey: ['lead', leadId],
+    queryFn: () => apiGet(`/api/leads/${leadId}`),
+    enabled: !!leadId && needForm,
+  })
+
+  const initialDischargeDate = lead?.admissionRecord?.ipdDischargeDate
+    ? lead.admissionRecord.ipdDischargeDate.slice(0, 10)
+    : undefined
 
   if (isLoading) {
     return (
@@ -124,9 +135,6 @@ export default function DischargeSheetPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Discharge Sheet</h1>
-            <p className="text-muted-foreground">
-              {dischargeSheet?.lead.leadRef || 'Loading...'} - {dischargeSheet?.lead.patientName || 'Loading...'}
-            </p>
           </div>
         </div>
 
@@ -135,6 +143,7 @@ export default function DischargeSheetPage() {
         ) : isInsurance ? (
           <DischargeSheetForm
             leadId={leadId}
+            initialDischargeDate={initialDischargeDate}
             onSuccess={async () => {
               await queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
               router.push(`/patient/${leadId}`)

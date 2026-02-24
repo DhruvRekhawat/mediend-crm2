@@ -105,12 +105,16 @@ export async function GET(request: NextRequest) {
             patientName: true,
             phoneNumber: true,
             hospitalName: true,
+            surgeonName: true,
+            ipdDrName: true,
+            copay: true,
             kypSubmission: {
               select: {
                 preAuthData: {
                   select: {
                     sumInsured: true,
                     roomRent: true,
+                    copay: true,
                   },
                 },
               },

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const where: Prisma.KYPSubmissionWhereInput = {}
 
     // Filter by role
-    if (user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'SALES_HEAD') {
+    if (user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'SALES_HEAD' || user.role === 'TESTER') {
       // Sales team sees their own submissions OR submissions for their leads
       delete where.submittedById; // Remove the strict check
       where.OR = [

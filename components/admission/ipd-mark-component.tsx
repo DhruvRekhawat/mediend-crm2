@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
-import { CheckCircle, Pause, XCircle, LogOut, AlertCircle } from 'lucide-react'
+import { CheckCircle, Pause, XCircle, LogOut, ArrowLeft } from 'lucide-react'
 
 interface IPDStatusHistory {
   status: string
@@ -24,6 +24,8 @@ interface IPDMarkComponentProps {
   onCancel?: () => void
 }
 
+type Step = 'select' | 'details'
+
 export function IPDMarkComponent({
   leadId,
   currentStatus,
@@ -31,6 +33,7 @@ export function IPDMarkComponent({
   onSuccess,
   onCancel,
 }: IPDMarkComponentProps) {
+  const [step, setStep] = useState<Step>('select')
   const [selectedStatus, setSelectedStatus] = useState<'ADMITTED_DONE' | 'POSTPONED' | 'CANCELLED' | 'DISCHARGED' | null>(null)
   const [formData, setFormData] = useState({
     reason: '',
@@ -40,7 +43,6 @@ export function IPDMarkComponent({
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
 
   const statusOptions = [
     {
@@ -54,7 +56,7 @@ export function IPDMarkComponent({
       value: 'POSTPONED' as const,
       label: 'Postponed',
       icon: Pause,
-      color: 'bg-yellow-100 dark:bg-yellow-900 border-yellow-300',
+      color: 'bg-yellow-100 dark:bg-yellow-900 ',
       description: 'Surgery has been postponed to a later date',
     },
     {
@@ -114,7 +116,7 @@ export function IPDMarkComponent({
       })
 
       toast.success(`IPD status marked as ${selectedStatus}`)
-      setShowConfirm(false)
+      setStep('select')
       setSelectedStatus(null)
       setFormData({ reason: '', newSurgeryDate: '', dischargeDate: '', notes: '' })
       onSuccess?.()
@@ -125,45 +127,155 @@ export function IPDMarkComponent({
     }
   }
 
-  if (showConfirm && selectedStatus) {
-    const option = statusOptions.find(o => o.value === selectedStatus)
+  const option = selectedStatus ? statusOptions.find(o => o.value === selectedStatus) : null
+
+  // Step 2: Details form for selected status (after clicking a card)
+  if (step === 'details' && selectedStatus && option) {
+    const Icon = option.icon
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-900 rounded-lg max-w-md p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="h-6 w-6 text-yellow-600" />
-            <h3 className="text-lg font-semibold">Confirm IPD Status Change</h3>
-          </div>
-          
-          <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded mb-4">
-            <p className="text-sm">
-              <span className="font-medium">Status: </span>
-              <span>{option?.label}</span>
-            </p>
-            {selectedStatus === 'POSTPONED' && (
-              <>
-                <p className="text-sm mt-2"><span className="font-medium">Reason: </span>{formData.reason}</p>
-                <p className="text-sm"><span className="font-medium">New Surgery Date: </span>{formData.newSurgeryDate}</p>
-              </>
-            )}
-            {selectedStatus === 'CANCELLED' && (
-              <p className="text-sm mt-2"><span className="font-medium">Reason: </span>{formData.reason}</p>
-            )}
-            {selectedStatus === 'DISCHARGED' && (
-              <p className="text-sm mt-2"><span className="font-medium">Discharge Date: </span>{formData.dischargeDate}</p>
-            )}
-            {formData.notes && (
-              <p className="text-sm mt-2"><span className="font-medium">Notes: </span>{formData.notes}</p>
-            )}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setStep('select')
+              setErrors({})
+            }}
+            className="gap-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
+        <div className={`p-4 rounded-lg border-2 ${option.color} border-current`}>
+          <div className="flex items-center gap-2 mb-4">
+            <Icon className="h-5 w-5 shrink-0" />
+            <h3 className="text-lg font-semibold">{option.label}</h3>
           </div>
 
-          <div className="flex gap-2 justify-end">
+          {selectedStatus === 'ADMITTED_DONE' && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Any remarks or observations"
+                  rows={2}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          {selectedStatus === 'POSTPONED' && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="reason">Reason for Postponement *</Label>
+                <Textarea
+                  id="reason"
+                  value={formData.reason}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  placeholder="Explain why surgery is being postponed"
+                  required
+                  rows={2}
+                  className="mt-1"
+                />
+                {errors.reason && <p className="text-xs text-destructive mt-1">{errors.reason}</p>}
+              </div>
+              <div>
+                <Label htmlFor="newSurgeryDate">New Surgery Date *</Label>
+                <Input
+                  id="newSurgeryDate"
+                  type="date"
+                  value={formData.newSurgeryDate}
+                  onChange={(e) => setFormData({ ...formData, newSurgeryDate: e.target.value })}
+                  required
+                  className="mt-1"
+                />
+                {errors.newSurgeryDate && <p className="text-xs text-destructive mt-1">{errors.newSurgeryDate}</p>}
+              </div>
+              <div>
+                <Label htmlFor="notes2">Additional Notes (Optional)</Label>
+                <Textarea
+                  id="notes2"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Any additional information"
+                  rows={2}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          {selectedStatus === 'CANCELLED' && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="cancelReason">Reason for Cancellation *</Label>
+                <Textarea
+                  id="cancelReason"
+                  value={formData.reason}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  placeholder="Explain why surgery is being cancelled"
+                  required
+                  rows={2}
+                  className="mt-1"
+                />
+                {errors.reason && <p className="text-xs text-destructive mt-1">{errors.reason}</p>}
+              </div>
+              <div>
+                <Label htmlFor="cancelNotes">Additional Notes (Optional)</Label>
+                <Textarea
+                  id="cancelNotes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Any additional information"
+                  rows={2}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          {selectedStatus === 'DISCHARGED' && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="dischargeDate">Discharge Date *</Label>
+                <Input
+                  id="dischargeDate"
+                  type="date"
+                  value={formData.dischargeDate}
+                  onChange={(e) => setFormData({ ...formData, dischargeDate: e.target.value })}
+                  required
+                  className="mt-1"
+                />
+                {errors.dischargeDate && <p className="text-xs text-destructive mt-1">{errors.dischargeDate}</p>}
+              </div>
+              <div>
+                <Label htmlFor="dischargeNotes">Additional Notes (Optional)</Label>
+                <Textarea
+                  id="dischargeNotes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="Any remarks or observations"
+                  rows={2}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t">
             <Button
+              type="button"
               variant="outline"
-              onClick={() => setShowConfirm(false)}
-              disabled={isSubmitting}
+              onClick={() => { setStep('select'); setErrors({}) }}
             >
-              Cancel
+              Back
             </Button>
             <Button
               onClick={handleSubmit}
@@ -177,10 +289,12 @@ export function IPDMarkComponent({
     )
   }
 
+  // Step 1: Select status (cards only)
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold mb-4">Select IPD Status</h3>
+        <p className="text-sm text-muted-foreground mb-4">Choose the status to update. You will fill in details on the next step.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {statusOptions.map((option) => {
             const Icon = option.icon
@@ -191,6 +305,8 @@ export function IPDMarkComponent({
                 onClick={() => {
                   setSelectedStatus(option.value)
                   setFormData({ reason: '', newSurgeryDate: '', dischargeDate: '', notes: '' })
+                  setErrors({})
+                  setStep('details')
                 }}
                 className={`p-4 rounded-lg border-2 transition-all text-left ${
                   selectedStatus === option.value
@@ -199,7 +315,7 @@ export function IPDMarkComponent({
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                  <Icon className="h-5 w-5 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-semibold">{option.label}</p>
                     <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{option.description}</p>
@@ -209,146 +325,12 @@ export function IPDMarkComponent({
             )
           })}
         </div>
-        {errors.status && <p className="text-xs text-destructive mt-2">{errors.status}</p>}
       </div>
-
-      {selectedStatus === 'ADMITTED_DONE' && (
-        <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-          <h4 className="font-semibold mb-2">Surgery Completed</h4>
-          <div>
-            <Label htmlFor="notes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any remarks or observations"
-              rows={2}
-            />
-          </div>
-        </div>
-      )}
-
-      {selectedStatus === 'POSTPONED' && (
-        <div className="bg-yellow-50 dark:bg-yellow-950 p-4 rounded-lg space-y-4">
-          <h4 className="font-semibold">Surgery Postponed Details</h4>
-          <div>
-            <Label htmlFor="reason">Reason for Postponement *</Label>
-            <Textarea
-              id="reason"
-              value={formData.reason}
-              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              placeholder="Explain why surgery is being postponed"
-              required
-              rows={2}
-            />
-            {errors.reason && <p className="text-xs text-destructive mt-1">{errors.reason}</p>}
-          </div>
-          <div>
-            <Label htmlFor="newSurgeryDate">New Surgery Date *</Label>
-            <Input
-              id="newSurgeryDate"
-              type="date"
-              value={formData.newSurgeryDate}
-              onChange={(e) => setFormData({ ...formData, newSurgeryDate: e.target.value })}
-              required
-            />
-            {errors.newSurgeryDate && <p className="text-xs text-destructive mt-1">{errors.newSurgeryDate}</p>}
-          </div>
-          <div>
-            <Label htmlFor="notes2">Additional Notes (Optional)</Label>
-            <Textarea
-              id="notes2"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any additional information"
-              rows={2}
-            />
-          </div>
-        </div>
-      )}
-
-      {selectedStatus === 'CANCELLED' && (
-        <div className="bg-red-50 dark:bg-red-950 p-4 rounded-lg space-y-4">
-          <h4 className="font-semibold">Cancellation Details</h4>
-          <div>
-            <Label htmlFor="cancelReason">Reason for Cancellation *</Label>
-            <Textarea
-              id="cancelReason"
-              value={formData.reason}
-              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-              placeholder="Explain why surgery is being cancelled"
-              required
-              rows={2}
-            />
-            {errors.reason && <p className="text-xs text-destructive mt-1">{errors.reason}</p>}
-          </div>
-          <div>
-            <Label htmlFor="cancelNotes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="cancelNotes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any additional information"
-              rows={2}
-            />
-          </div>
-        </div>
-      )}
-
-      {selectedStatus === 'DISCHARGED' && (
-        <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg space-y-4">
-          <h4 className="font-semibold">Discharge Details</h4>
-          <div>
-            <Label htmlFor="dischargeDate">Discharge Date *</Label>
-            <Input
-              id="dischargeDate"
-              type="date"
-              value={formData.dischargeDate}
-              onChange={(e) => setFormData({ ...formData, dischargeDate: e.target.value })}
-              required
-            />
-            {errors.dischargeDate && <p className="text-xs text-destructive mt-1">{errors.dischargeDate}</p>}
-          </div>
-          <div>
-            <Label htmlFor="dischargeNotes">Additional Notes (Optional)</Label>
-            <Textarea
-              id="dischargeNotes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any remarks or observations"
-              rows={2}
-            />
-          </div>
-        </div>
-      )}
-
-      {statusHistory && statusHistory.length > 0 && (
-        <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-          <h4 className="font-semibold mb-3">Status History</h4>
-          <div className="space-y-2">
-            {statusHistory.map((record, idx) => (
-              <div key={idx} className="text-sm border-l-2 border-gray-300 pl-3 py-1">
-                <p className="font-medium">{record.status}</p>
-                <p className="text-gray-600 dark:text-gray-400">{record.date}</p>
-                {record.reason && <p className="text-xs">{record.reason}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
-          </Button>
-        )}
-        {selectedStatus && (
-          <Button
-            onClick={() => setShowConfirm(true)}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Updating...' : 'Continue'}
           </Button>
         )}
       </div>

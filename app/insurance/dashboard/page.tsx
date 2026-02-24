@@ -18,9 +18,17 @@ import {
 } from 'lucide-react'
 import { PreAuthStatus } from '@prisma/client'
 import { useAuth } from '@/hooks/use-auth'
+import { getCaseStageBadgeConfig } from '@/lib/case-stage-labels'
 import { canViewPhoneNumber } from '@/lib/case-permissions'
 import { getPhoneDisplay } from '@/lib/phone-utils'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   ChartContainer,
   ChartTooltip,
@@ -68,10 +76,26 @@ interface LeadWithStage {
       preAuthRaisedBy?: { id: string; name: string } | null
     } | null
   } | null
-  admissionRecord?: { id: string; admissionDate: string; admittingHospital: string } | null
+  admissionRecord?: {
+    id: string
+    admissionDate: string
+    admittingHospital: string
+    ipdStatus?: string | null
+    ipdStatusUpdatedAt?: string | null
+  } | null
   dischargeSheet?: { id: string } | null
   insuranceInitiateForm?: { id: string } | null
 }
+
+const IPD_MARK_OPTIONS = [
+  { value: '', label: 'All marks' },
+  { value: 'ADMITTED_DONE', label: 'Surgery Done' },
+  { value: 'POSTPONED', label: 'Postponed' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+  { value: 'DISCHARGED', label: 'Discharged' },
+  { value: 'NONE', label: 'Not set' },
+] as const
+type IpdMarkFilterValue = '' | 'ADMITTED_DONE' | 'POSTPONED' | 'CANCELLED' | 'DISCHARGED' | 'NONE'
 
 type TabKey =
   | 'kyp-review'
@@ -102,11 +126,33 @@ function getPriorityTier(lead: LeadWithStage): 0 | 1 | 2 | 3 {
   return 0
 }
 
+function getIpdMarkBadgeClass(status: string | null | undefined): string {
+  switch (status) {
+    case 'ADMITTED_DONE': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800'
+    case 'POSTPONED': return 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800'
+    case 'CANCELLED': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800'
+    case 'DISCHARGED': return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800'
+    default: return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+  }
+}
+
+function getIpdMarkLabel(status: string | null | undefined): string {
+  if (!status) return '–'
+  switch (status) {
+    case 'ADMITTED_DONE': return 'Surgery Done'
+    case 'POSTPONED': return 'Postponed'
+    case 'CANCELLED': return 'Cancelled'
+    case 'DISCHARGED': return 'Discharged'
+    default: return status.replace(/_/g, ' ')
+  }
+}
+
 export default function InsuranceDashboardPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabKey>('kyp-review')
   const [searchQuery, setSearchQuery] = useState('')
+  const [ipdMarkFilter, setIpdMarkFilter] = useState<IpdMarkFilterValue>('')
 
   const { data: leads, isLoading, error } = useQuery<LeadWithStage[]>({
     queryKey: ['leads', 'insurance'],
@@ -216,6 +262,12 @@ export default function InsuranceDashboardPage() {
       )
     }
 
+    if (ipdMarkFilter === 'NONE') {
+      result = result.filter(l => !l.admissionRecord?.ipdStatus)
+    } else if (ipdMarkFilter) {
+      result = result.filter(l => l.admissionRecord?.ipdStatus === ipdMarkFilter)
+    }
+
     // Priority sort: tier 3 > tier 1 > tier 2 > rest, then by date
     return result.sort((a, b) => {
       const tierA = getPriorityTier(a)
@@ -225,7 +277,7 @@ export default function InsuranceDashboardPage() {
       const dateB = new Date(b.updatedDate || b.createdDate).getTime()
       return dateB - dateA
     })
-  }, [leads, activeTab, searchQuery])
+  }, [leads, activeTab, searchQuery, ipdMarkFilter])
 
   // ── Pending Hospital Suggestions ───────────────────────────────────────────
   const pendingSuggestions = useMemo(() => {
@@ -238,32 +290,8 @@ export default function InsuranceDashboardPage() {
 
   // ── Components ─────────────────────────────────────────────────────────────
   const getStageBadge = (stage: CaseStage) => {
-    const badgeConfig: Record<CaseStage, { className: string; label?: string }> = {
-      [CaseStage.NEW_LEAD]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300', label: 'New Lead' },
-      [CaseStage.KYP_BASIC_PENDING]: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300', label: 'Card Details Pending' },
-      [CaseStage.KYP_BASIC_COMPLETE]: { className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300', label: 'Card Details Added' },
-      [CaseStage.KYP_DETAILED_PENDING]: { className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300', label: 'Detailed Form Pending' },
-      [CaseStage.KYP_DETAILED_COMPLETE]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300', label: 'Detailed Form Complete' },
-      [CaseStage.KYP_PENDING]: { className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300', label: 'Card Details Pending' },
-      [CaseStage.KYP_COMPLETE]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300', label: 'Card Details Added' },
-      [CaseStage.HOSPITALS_SUGGESTED]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300', label: 'Hospitals Suggested' },
-      [CaseStage.PREAUTH_RAISED]: { className: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300', label: 'Pre-Auth Raised' },
-      [CaseStage.PREAUTH_COMPLETE]: { className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300', label: 'Pre-Auth Approved' },
-      [CaseStage.INITIATED]: { className: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300', label: 'IPD Details Added' },
-      [CaseStage.ADMITTED]: { className: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300', label: 'IPD Marked' },
-      [CaseStage.DISCHARGED]: { className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300', label: 'Discharged' },
-      [CaseStage.IPD_DONE]: { className: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300', label: 'IPD Done' },
-      [CaseStage.PL_PENDING]: { className: 'bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300', label: 'PL Pending' },
-      [CaseStage.OUTSTANDING]: { className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300', label: 'Outstanding' },
-      // Cash Flow Stages
-      [CaseStage.CASH_IPD_PENDING]: { className: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300', label: 'Cash IPD Pending' },
-      [CaseStage.CASH_IPD_SUBMITTED]: { className: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300', label: 'Cash IPD Submitted' },
-      [CaseStage.CASH_APPROVED]: { className: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300', label: 'Cash Approved' },
-      [CaseStage.CASH_ON_HOLD]: { className: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300', label: 'Cash On Hold' },
-      [CaseStage.CASH_DISCHARGED]: { className: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300', label: 'Cash Discharged' },
-    }
-    const config = badgeConfig[stage] || { className: 'bg-gray-100 text-gray-700', label: stage.replace(/_/g, ' ') }
-    return <Badge variant="secondary" className={config.className}>{config.label || stage.replace(/_/g, ' ')}</Badge>
+    const { className, label } = getCaseStageBadgeConfig(stage)
+    return <Badge variant="secondary" className={className}>{label}</Badge>
   }
 
   const tabs: { id: TabKey; label: string; icon: React.FC<{ className?: string }>; value: number; gradient: string; bgGradient: string; iconColor: string; borderColor: string }[] = [
@@ -464,14 +492,31 @@ export default function InsuranceDashboardPage() {
                     )}
                   </CardDescription>
                 </div>
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                  <Input
-                    placeholder="Search patient, ref, hospital..."
-                    className="pl-8 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus:ring-blue-500"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Select
+                    value={ipdMarkFilter === '' ? 'all' : ipdMarkFilter}
+                    onValueChange={(v) => setIpdMarkFilter((v === 'all' ? '' : v) as IpdMarkFilterValue)}
+                  >
+                    <SelectTrigger className="w-[140px] bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                      <SelectValue placeholder="IPD mark" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {IPD_MARK_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value || 'all'} value={opt.value || 'all'}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                    <Input
+                      placeholder="Search patient, ref, hospital..."
+                      className="pl-8 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus:ring-blue-500"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -509,6 +554,7 @@ export default function InsuranceDashboardPage() {
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Hospital</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Treatment</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Stage</TableHead>
+                        <TableHead className="font-bold text-gray-700 dark:text-gray-300">IPD Mark</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Last Modified</TableHead>
                         <TableHead className="font-bold text-gray-700 dark:text-gray-300">Actions</TableHead>
                       </TableRow>
@@ -575,6 +621,15 @@ export default function InsuranceDashboardPage() {
                             <TableCell className="text-gray-700 dark:text-gray-300">{lead.hospitalName}</TableCell>
                             <TableCell className="text-gray-700 dark:text-gray-300">{lead.treatment || <span className="text-gray-400">-</span>}</TableCell>
                             <TableCell>{getStageBadge(lead.caseStage)}</TableCell>
+                            <TableCell>
+                              {lead.admissionRecord?.ipdStatus ? (
+                                <Badge variant="outline" className={getIpdMarkBadgeClass(lead.admissionRecord.ipdStatus)}>
+                                  {getIpdMarkLabel(lead.admissionRecord.ipdStatus)}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">–</span>
+                              )}
+                            </TableCell>
                             <TableCell className="text-gray-600 dark:text-gray-400">
                               {lead.updatedDate || lead.createdDate
                                 ? format(new Date(lead.updatedDate || lead.createdDate), 'MMM dd, HH:mm')

@@ -21,6 +21,7 @@ enum UserRole {
   FINANCE_HEAD
   ADMIN
   USER
+  TESTER
 }
 
 enum Circle {

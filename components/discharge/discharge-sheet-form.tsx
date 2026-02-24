@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,8 @@ interface DischargeSheetFormProps {
   roomRent?: string
   copayPct?: number
   doctorName?: string
+  /** Prefill from IPD mark when BD selected Discharged; YYYY-MM-DD, still editable */
+  initialDischargeDate?: string
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -34,6 +36,7 @@ export function DischargeSheetForm({
   roomRent = '',
   copayPct = 0,
   doctorName = '',
+  initialDischargeDate = '',
   onSuccess,
   onCancel,
 }: DischargeSheetFormProps) {
@@ -45,7 +48,7 @@ export function DischargeSheetForm({
   })
 
   const [formData, setFormData] = useState({
-    dischargeDate: '',
+    dischargeDate: initialDischargeDate,
     finalAmount: '',
     // Documents
     dischargeSummaryUrl: '',
@@ -78,6 +81,14 @@ export function DischargeSheetForm({
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const hasAppliedInitialDischargeDate = useRef(false)
+
+  useEffect(() => {
+    if (initialDischargeDate && !hasAppliedInitialDischargeDate.current) {
+      hasAppliedInitialDischargeDate.current = true
+      setFormData(prev => ({ ...prev, dischargeDate: initialDischargeDate }))
+    }
+  }, [initialDischargeDate])
 
   const handleFileUpload = async (field: keyof typeof files, file: File) => {
     const result = await uploadFile(file)

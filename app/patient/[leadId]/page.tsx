@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/use-auth'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle, Wallet, RefreshCw, Calendar as CalendarIcon, Building2 } from 'lucide-react'
+import { Activity, ArrowLeft, CheckCircle2, ExternalLink, File, FileDown, FileText, MapPin, MessageCircle, Phone, Plus, Receipt, Shield, Stethoscope, Tag, User, XCircle, Wallet, RefreshCw, Calendar as CalendarIcon, Building2, Clock } from 'lucide-react'
 import { useParams, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
@@ -41,6 +41,7 @@ import {
   canMarkLost,
   canRaisePreAuth,
   canSuggestHospitals,
+  canModifyHospitals,
   canViewPhoneNumber,
   isDischargeBlockedByInitiateForm,
   canStartCashMode,
@@ -52,7 +53,7 @@ import {
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { getPhoneDisplay } from '@/lib/phone-utils'
 import { CaseStage, FlowType } from '@prisma/client'
-import { format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
@@ -94,6 +95,7 @@ interface Lead {
       id: string
       status: string
       submittedAt: string
+      insuranceType?: string | null
       location?: string | null
       area?: string | null
       aadhar?: string | null
@@ -140,6 +142,8 @@ interface Lead {
         requestedRoomType?: string | null
         diseaseDescription?: string | null
         diseaseImages?: Array<{ name: string; url: string }> | null
+        investigationFileUrls?: Array<{ name: string; url: string }> | null
+        prescriptionFiles?: Array<{ name: string; url: string }> | null
         preAuthRaisedAt?: string | null
         handledAt?: string | null
         approvalStatus?: string | null
@@ -167,6 +171,22 @@ interface Lead {
   admissionRecord?: {
     id: string
     ipdStatus?: string | null
+    ipdStatusReason?: string | null
+    ipdStatusNotes?: string | null
+    ipdStatusUpdatedAt?: string | null
+    newSurgeryDate?: string | null
+    ipdDischargeDate?: string | null
+    admissionDate?: string
+    admissionTime?: string | null
+    surgeryDate?: string | null
+    surgeryTime?: string | null
+    admittingHospital?: string | null
+    hospitalAddress?: string | null
+    googleMapLocation?: string | null
+    tpa?: string | null
+    instrument?: string | null
+    implantConsumables?: string | null
+    notes?: string | null
   } | null
 }
 
@@ -228,6 +248,8 @@ interface KYPSubmission {
     requestedRoomType?: string | null
     diseaseDescription?: string | null
     diseaseImages?: Array<{ name: string; url: string }> | null
+    investigationFileUrls?: Array<{ name: string; url: string }> | null
+    prescriptionFiles?: Array<{ name: string; url: string }> | null
     preAuthRaisedAt?: string | null
     handledAt?: string | null
     approvalStatus?: string | null
@@ -398,9 +420,43 @@ export default function PatientDetailsPage() {
   const canFillDischargeForm = user && canEditDischargeSheet(user as any, lead)
   const showMarkLost = user && canMarkLost(user as any, lead)
   const showSuggestHospitals = user && canSuggestHospitals(user as any, lead)
+  const showModifyHospitals = user && canModifyHospitals(user as any, lead)
   const canFillInitiate = user && canFillInitiateForm(user as any, lead)
   const isDischargeBlocked = user && isDischargeBlockedByInitiateForm(user as any, lead)
-  
+  const initiateForm = initiateFormData?.initiateForm
+  const isInitiateFormFilled =
+    initiateForm &&
+    (initiateForm.totalBillAmount != null && Number(initiateForm.totalBillAmount) > 0) &&
+    initiateForm.copay !== null &&
+    typeof initiateForm.copay === 'number'
+
+  // Room rent from selected hospital + room type in pre-auth (previous stage)
+  const roomRentFromPreAuth = (() => {
+    const preAuth = lead?.kypSubmission?.preAuthData
+    const hospitals = preAuth?.suggestedHospitals as Array<{
+      hospitalName: string
+      roomRentGeneral?: number | null
+      roomRentSingle?: number | null
+      roomRentDeluxe?: number | null
+      roomRentSemiPrivate?: number | null
+    }> | undefined
+    const requestedName = preAuth?.requestedHospitalName?.trim()
+    const requestedRoom = preAuth?.requestedRoomType?.trim()?.toLowerCase()
+    if (!hospitals?.length || !requestedName || !requestedRoom) return undefined
+    const hospital = hospitals.find(
+      (h) => h.hospitalName?.trim()?.toLowerCase() === requestedName.toLowerCase()
+    )
+    if (!hospital) return undefined
+    const key = requestedRoom.replace(/\s*-\s*/, '').replace(/\s+/g, '')
+    const rent =
+      key === 'general' ? hospital.roomRentGeneral :
+      key === 'single' ? hospital.roomRentSingle :
+      key === 'deluxe' ? hospital.roomRentDeluxe :
+      (key === 'semiprivate' || key === 'semi-private') ? hospital.roomRentSemiPrivate :
+      undefined
+    return rent != null ? rent : undefined
+  })()
+
   // Cash Flow Permissions
   const canStartCash = user && canStartCashMode(user as any, lead)
   const canRevertCash = user && canRevertCashMode(user as any, lead)
@@ -426,22 +482,23 @@ export default function PatientDetailsPage() {
     if (kyp.panFileUrl) add('PAN', kyp.panFileUrl)
     if (kyp.prescriptionFileUrl) add('Prescription', kyp.prescriptionFileUrl)
 
-    const processFiles = (files: any, defaultName: string) => {
+    const processFiles = (files: any, typeLabel: string) => {
       if (!files) return
       const fileList = Array.isArray(files) ? files : []
-      fileList.forEach((p: any) => {
-        if (typeof p === 'string') {
-           add(defaultName, p)
-        } else if (p && typeof p === 'object' && p.url) {
-           add(p.name || defaultName, p.url)
-        }
+      fileList.forEach((p: any, index: number) => {
+        const url = typeof p === 'string' ? p : p?.url
+        if (!url) return
+        const title = fileList.length > 1 ? `${typeLabel} ${index + 1}` : typeLabel
+        add(title, url)
       })
     }
 
     processFiles(kyp.diseasePhotos, 'Disease photo')
-    processFiles(kyp.otherFiles, 'Document')
+    processFiles(kyp.otherFiles, 'Additional document')
     processFiles(kyp.preAuthData?.diseaseImages, 'Disease image')
-    
+    processFiles(kyp.preAuthData?.investigationFileUrls, 'Investigation')
+    processFiles(kyp.preAuthData?.prescriptionFiles, 'Prescription')
+
     // Deduplicate items based on URL
     const uniqueItems = items.filter((item, index, self) =>
       index === self.findIndex((t) => (
@@ -497,21 +554,125 @@ export default function PatientDetailsPage() {
                 </div>
               </div>
 
+              {/* Surgery / IPD status banner — updates when postponed, cancelled, or discharged */}
+              {lead.admissionRecord && (() => {
+                const rec = lead.admissionRecord
+                const status = rec.ipdStatus
+
+                if (status === 'CANCELLED') {
+                  return (
+                    <Card className="border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
+                      <CardContent className="py-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50">
+                            <Clock className="h-5 w-5 text-red-600 dark:text-red-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-red-800 dark:text-red-200">Surgery cancelled</p>
+                            {rec.ipdStatusReason && (
+                              <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{rec.ipdStatusReason}</p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                }
+
+                if (status === 'ADMITTED_DONE') {
+                  const surgeryStr = rec.surgeryDate
+                    ? `${format(new Date(rec.surgeryDate), 'dd MMM yyyy')}${rec.surgeryTime ? ` at ${rec.surgeryTime}` : ''}`
+                    : '—'
+                  return (
+                    <Card className="border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30">
+                      <CardContent className="py-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+                            <Clock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                              Surgery completed — {surgeryStr}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                }
+
+                if (status === 'DISCHARGED') {
+                  const dischargeStr = rec.ipdDischargeDate
+                    ? format(new Date(rec.ipdDischargeDate), 'EEEE, dd MMM yyyy')
+                    : '—'
+                  return (
+                    <Card className="border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30">
+                      <CardContent className="py-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+                            <Clock className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                              Discharged on {dischargeStr}
+                            </p>
+                            {rec.ipdStatusReason && (
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">{rec.ipdStatusReason}</p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                }
+
+                const effectiveDate = (status === 'POSTPONED' && rec.newSurgeryDate) ? rec.newSurgeryDate : rec.surgeryDate
+                const surgeryTime = rec.surgeryTime ?? ''
+                if (!effectiveDate) return null
+                let surgeryDateTime: Date
+                try {
+                  surgeryDateTime = new Date(effectiveDate)
+                  if (surgeryTime && status !== 'POSTPONED') {
+                    const [h, m] = surgeryTime.trim().split(/[:\s]/).map(Number)
+                    if (!isNaN(h)) surgeryDateTime.setHours(isNaN(m) ? h : h, isNaN(m) ? 0 : m, 0, 0)
+                  }
+                } catch {
+                  return null
+                }
+                const now = new Date()
+                const isPast = surgeryDateTime.getTime() < now.getTime()
+                const countdown = isPast
+                  ? `Was ${format(surgeryDateTime, 'dd MMM yyyy')}${surgeryTime && status !== 'POSTPONED' ? ` at ${surgeryTime}` : ''}`
+                  : `in ${formatDistanceToNow(surgeryDateTime, { addSuffix: false })}`
+                const isRescheduled = status === 'POSTPONED'
+                return (
+                  <Card className="border-2 border-teal-200 dark:border-teal-800 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-950/30 dark:to-emerald-950/30">
+                    <CardContent className="py-4">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="p-2 rounded-lg bg-teal-100 dark:bg-teal-900/50">
+                          <Clock className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-teal-800 dark:text-teal-200">
+                            {isRescheduled ? 'Surgery rescheduled' : isPast ? 'Surgery was scheduled' : 'Surgery scheduled'} — {format(surgeryDateTime, 'EEEE, dd MMM yyyy')}
+                            {surgeryTime && status !== 'POSTPONED' ? ` at ${surgeryTime}` : ''}
+                          </p>
+                          <p className="text-xs text-teal-600 dark:text-teal-400 mt-0.5">
+                            {isPast ? countdown : `${countdown} from now`}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
+
               {/* Patient Info Grid */}
               {(() => {
                 const city = lead.kypSubmission?.location?.trim() || lead.city
                 const area = lead.kypSubmission?.area?.trim() || null
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Phone</p>
-                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{getPhoneDisplay(lead.phoneNumber, canViewPhoneNumber(user))}</p>
-                      </div>
-                    </div>
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-teal-50 dark:bg-teal-950/30 rounded-lg border border-teal-200 dark:border-teal-800">
                         <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -811,6 +972,18 @@ export default function PatientDetailsPage() {
                     </Link>
                   </Button>
                 )}
+                {/* Insurance: Modify hospital suggestions (when hospitals have been suggested) */}
+                {showModifyHospitals && (
+                  <Button
+                    asChild
+                    className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white border-0"
+                  >
+                    <Link href={`/patient/${leadId}/pre-auth`}>
+                      <Shield className="h-4 w-4" />
+                      Modify Hospital Suggestions
+                    </Link>
+                  </Button>
+                )}
                 {canAddDetails && !showSuggestHospitals && (
                   <Button
                     asChild
@@ -840,7 +1013,7 @@ export default function PatientDetailsPage() {
                   >
                     <Link href={`/patient/${leadId}/pre-auth?initiate=true`}>
                       <FileText className="h-4 w-4" />
-                      Fill Initial Form
+                      {isInitiateFormFilled ? 'View Initial Form' : 'Fill Initial Form'}
                     </Link>
                   </Button>
                 )}
@@ -1285,8 +1458,8 @@ export default function PatientDetailsPage() {
           <IPDDetailsCard admissionRecord={lead.admissionRecord} />
         )}
 
-        {/* Discharge Sheet Link */}
-        {lead.dischargeSheet && (
+        {/* Discharge Sheet Link — hidden from BD and TL */}
+        {lead.dischargeSheet && user?.role !== 'BD' && user?.role !== 'TEAM_LEAD' && (
           <Card>
             <CardHeader>
               <CardTitle>Discharge Sheet</CardTitle>
@@ -1336,13 +1509,13 @@ export default function PatientDetailsPage() {
                 surgeonType={lead.surgeonType ?? undefined}
                 hospitalName={lead.hospitalName}
                 insuranceName={lead.insuranceName ?? undefined}
-                insuranceType={lead.insuranceType ?? undefined}
+                insuranceType={lead.kypSubmission?.insuranceType ?? lead.insuranceType ?? undefined}
                 tpa={lead.kypSubmission?.preAuthData?.tpa ?? undefined}
                 sumInsured={lead.kypSubmission?.preAuthData?.sumInsured ?? undefined}
                 copay={lead.kypSubmission?.preAuthData?.copay ?? undefined}
                 capping={lead.kypSubmission?.preAuthData?.capping ?? undefined}
                 roomType={lead.kypSubmission?.preAuthData?.requestedRoomType ?? undefined}
-                roomRent={lead.kypSubmission?.preAuthData?.roomRent ?? undefined}
+                roomRent={roomRentFromPreAuth ?? lead.kypSubmission?.preAuthData?.roomRent ?? undefined}
                 bdName={lead.bd?.name}
                 bdManagerName={lead.bd?.manager?.name ?? undefined}
                 onSuccess={() => {

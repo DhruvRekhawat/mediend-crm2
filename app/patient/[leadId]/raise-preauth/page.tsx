@@ -53,6 +53,7 @@ interface KYPSubmission {
     leadRef: string
     patientName: string
     surgeonName?: string | null
+    ipdDrName?: string | null
     insuranceName?: string | null
     city?: string | null
   }
@@ -261,6 +262,7 @@ export default function RaisePreAuthPage() {
                 kypData={{
                   disease: kypSubmission.disease,
                   surgeonName: kypSubmission.lead?.surgeonName,
+                  doctorName: kypSubmission.lead?.ipdDrName,
                   insuranceType: kypSubmission.insuranceType
                     ? String(kypSubmission.insuranceType)
                     : undefined,

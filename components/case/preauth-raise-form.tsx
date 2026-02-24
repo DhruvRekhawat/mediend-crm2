@@ -61,6 +61,7 @@ export interface PreAuthRaiseFormProps {
   kypData?: {
     disease?: string | null
     surgeonName?: string | null
+    doctorName?: string | null
     insuranceType?: string | null
     aadhar?: string | null
     pan?: string | null
@@ -282,6 +283,7 @@ export function PreAuthRaiseForm({
   const hasAutoFills =
     kypData?.disease ||
     kypData?.surgeonName ||
+    kypData?.doctorName ||
     kypData?.insuranceType ||
     preAuthMeta?.insurance ||
     preAuthMeta?.sumInsured ||
@@ -458,6 +460,7 @@ export function PreAuthRaiseForm({
               <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
                 <AutoFillBadge label="Disease / Treatment" value={kypData?.disease} />
                 <AutoFillBadge label="Surgeon Name" value={kypData?.surgeonName} />
+                <AutoFillBadge label="Doctor Name" value={kypData?.doctorName} />
                 <AutoFillBadge label="Insurance Name" value={preAuthMeta?.insurance} />
                 <AutoFillBadge label="Insurance Type" value={kypData?.insuranceType} />
                 <AutoFillBadge label="Sum Insured" value={preAuthMeta?.sumInsured ? `₹${preAuthMeta.sumInsured}` : undefined} />
