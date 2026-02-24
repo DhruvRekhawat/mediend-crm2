@@ -7,25 +7,19 @@ import { ChatList } from '@/components/chat/chat-list'
 import { useEffect } from 'react'
 
 export default function ChatPage() {
-  const { user, isTester } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     // If no user, redirect will happen via AuthenticatedLayout
     if (!user) return
 
-    // Role-based access check - disable for BD unless TESTER
-    const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
-    if (user.role === 'BD' && !isTester) {
-      // BD users can't access unless they are TESTERs
-      router.push('/')
-      return
-    }
+    const allowedRoles = ['BD', 'TEAM_LEAD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
     if (!allowedRoles.includes(user.role)) {
       router.push('/')
       return
     }
-  }, [user, router, isTester])
+  }, [user, router])
 
   if (!user) {
     return (
@@ -37,17 +31,7 @@ export default function ChatPage() {
     )
   }
 
-  // Role-based access check - disable for BD unless TESTER
-  const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
-  if (user.role === 'BD' && !isTester) {
-    return (
-      <AuthenticatedLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-muted-foreground">You don&apos;t have access to chat</div>
-        </div>
-      </AuthenticatedLayout>
-    )
-  }
+  const allowedRoles = ['BD', 'TEAM_LEAD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
   if (!allowedRoles.includes(user.role)) {
     return (
       <AuthenticatedLayout>
