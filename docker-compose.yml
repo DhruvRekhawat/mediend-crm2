@@ -26,23 +26,13 @@ services:
         DEPLOY_TIME: ${DEPLOY_TIME:-unknown}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://workspace.mediend.com}
     restart: always
-    expose:
-     - "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
     env_file:
      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
-  nginx:
-    image: nginx:alpine
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - app
 
   uptime-kuma:
     image: louislam/uptime-kuma:1
