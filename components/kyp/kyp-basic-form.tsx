@@ -28,6 +28,7 @@ interface KYPBasicFormProps {
   initialPatientName?: string
   initialPhone?: string
   initialAge?: number
+  initialDob?: string
   initialSex?: string
   initialCity?: string
   initialTreatment?: string
@@ -40,6 +41,7 @@ export function KYPBasicForm({
   initialPatientName = '',
   initialPhone = '',
   initialAge,
+  initialDob = '',
   initialSex = '',
   initialCity = '',
   initialTreatment = '',
@@ -54,6 +56,7 @@ export function KYPBasicForm({
     patientName: initialPatientName,
     phone: initialPhone,
     age: initialAge || '',
+    dob: initialDob,
     sex: initialSex,
     disease: initialTreatment,
     insuranceType: '',
@@ -136,6 +139,9 @@ export function KYPBasicForm({
     if (!formData.insuranceType) {
       newErrors.insuranceType = 'Insurance Type is required'
     }
+    if (!formData.dob?.trim()) {
+      newErrors.dob = 'Date of Birth is required'
+    }
 
     if (formData.aadhar && !validateAadhaar(formData.aadhar)) {
       newErrors.aadhar = 'Invalid Aadhaar (12 digits starting with 2-9)'
@@ -158,6 +164,7 @@ export function KYPBasicForm({
         patientName: formData.patientName.trim(),
         phone: formData.phone.trim(),
         age: formData.age ? parseInt(formData.age as string) : undefined,
+        dateOfBirth: formData.dob?.trim() || undefined,
         sex: formData.sex,
         location: formData.location.trim(),
         area: formData.area.trim(),
@@ -314,6 +321,16 @@ export function KYPBasicForm({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="dob">Date of Birth *</Label>
+          <Input
+            id="dob"
+            type="date"
+            value={formData.dob}
+            onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+          />
+          {errors.dob && <p className="text-xs text-destructive mt-1">{errors.dob}</p>}
+        </div>
         <div>
           <Label htmlFor="age">Age</Label>
           <Input

@@ -289,7 +289,13 @@ export function hasPermission(user: SessionUser | null, permission: Permission):
   return permissions.includes(permission)
 }
 
-export function canAccessLead(user: SessionUser | null, leadBdId: string, leadTeamId?: string | null): boolean {
+export function canAccessLead(
+  user: SessionUser | null,
+  leadBdId: string,
+  leadTeamId?: string | null,
+  /** When provided for TEAM_LEAD, allow if leadBdId is in this list (hierarchy-based access) */
+  subordinateUserIds?: string[]
+): boolean {
   if (!user) return false
 
   // MD, Sales Head, Insurance Head, PL Head, Admin, Tester can access all leads
@@ -297,9 +303,12 @@ export function canAccessLead(user: SessionUser | null, leadBdId: string, leadTe
     return true
   }
 
-  // Team Lead can access leads from their team
-  if (user.role === 'TEAM_LEAD' && leadTeamId && user.teamId === leadTeamId) {
-    return true
+  // Team Lead: own leads + subordinates' leads (hierarchy) or legacy teamId
+  if (user.role === 'TEAM_LEAD') {
+    if (leadBdId === user.id) return true
+    if (subordinateUserIds && subordinateUserIds.includes(leadBdId)) return true
+    if (leadTeamId && user.teamId === leadTeamId) return true
+    return false
   }
 
   // BD can only access their own leads

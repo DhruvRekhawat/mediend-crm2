@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { format } from 'date-fns'
 import { Building2, Calendar, MapPin, Shield, User, Stethoscope, Wallet } from 'lucide-react'
+import { getIpdStatusLabel } from '@/lib/ipd-status-labels'
 
 /** Minimal lead shape for displaying form data on the card (optional). */
 interface LeadForCard {
@@ -186,7 +187,7 @@ export function IPDDetailsCard({ admissionRecord, lead }: IPDDetailsCardProps) {
               {admissionRecord.ipdStatus && (
                 <div className="pb-2 border-b border-gray-200 dark:border-gray-700">
                   <Label className="text-[10px] uppercase text-gray-500 font-bold">IPD Status</Label>
-                  <p className="text-sm font-bold text-purple-600 dark:text-purple-400">{admissionRecord.ipdStatus.replace(/_/g, ' ')}</p>
+                  <p className="text-sm font-bold text-purple-600 dark:text-purple-400">{getIpdStatusLabel(admissionRecord.ipdStatus)}</p>
                   {admissionRecord.ipdStatusUpdatedAt && (
                     <p className="text-xs text-muted-foreground mt-0.5">Updated {format(new Date(admissionRecord.ipdStatusUpdatedAt), 'dd MMM yyyy, HH:mm')}</p>
                   )}
@@ -316,10 +317,14 @@ export function IPDDetailsCard({ admissionRecord, lead }: IPDDetailsCardProps) {
                         <p className="text-sm font-semibold">{preAuth.requestedRoomType}</p>
                       </div>
                     )}
-                    {preAuth?.capping != null && (
+                    {preAuth?.capping != null && preAuth.capping !== '' && (
                       <div>
                         <Label className="text-[10px] uppercase text-gray-500 font-bold">Capping</Label>
-                        <p className="text-sm font-semibold">{fmtCurr(Number(preAuth.capping)) ?? '-'}</p>
+                        <p className="text-sm font-semibold">
+                          {typeof preAuth.capping === 'string' && !Number.isNaN(Number(preAuth.capping))
+                            ? (fmtCurr(Number(preAuth.capping)) ?? '-')
+                            : preAuth.capping}
+                        </p>
                       </div>
                     )}
                     {preAuth?.roomRent != null && (

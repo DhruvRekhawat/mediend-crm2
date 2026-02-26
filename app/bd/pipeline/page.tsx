@@ -701,6 +701,10 @@ export default function BDPipelinePage() {
                   leadId={selectedLeadId}
                   initialPatientName={selectedLead?.patientName}
                   initialPhone={selectedLead?.phoneNumber}
+                  initialDob={(() => {
+                    const dob = (selectedLead as { dateOfBirth?: string } | undefined)?.dateOfBirth
+                    return dob ? format(new Date(dob), 'yyyy-MM-dd') : undefined
+                  })()}
                   onSuccess={() => {
                     setShowKYPForm(false)
                     setSelectedLeadId(null)

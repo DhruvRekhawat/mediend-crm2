@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { format } from 'date-fns'
 import { PrinterIcon, ArrowLeft } from 'lucide-react'
+import { getIpdStatusLabel } from '@/lib/ipd-status-labels'
 
 interface Lead {
   id: string
@@ -317,7 +318,11 @@ export default function IPDPrintPage() {
             <div>
               <p className="text-sm font-semibold text-gray-600">Disease Capping</p>
               <p className="text-base">
-                {preAuth?.capping != null ? fmtCurr(Number(preAuth.capping)) ?? '-' : '-'}
+                {preAuth?.capping != null && preAuth.capping !== ''
+                  ? (typeof preAuth.capping === 'string' && !Number.isNaN(Number(preAuth.capping))
+                      ? fmtCurr(Number(preAuth.capping))
+                      : preAuth.capping) ?? '-'
+                  : '-'}
               </p>
             </div>
             <div>
@@ -374,7 +379,7 @@ export default function IPDPrintPage() {
         {rec.ipdStatus && (
           <div className="mb-6 p-4 rounded-lg bg-slate-100 print:bg-white print:break-inside-avoid border-l-4 border-slate-400">
             <h3 className="font-semibold mb-2 text-slate-700">IPD Status</h3>
-            <p className="text-base font-semibold text-gray-700">{rec.ipdStatus.replace(/_/g, ' ')}</p>
+            <p className="text-base font-semibold text-gray-700">{getIpdStatusLabel(rec.ipdStatus)}</p>
             {rec.ipdStatusUpdatedAt && (
               <p className="text-sm text-gray-600 mt-1">
                 Updated {format(new Date(rec.ipdStatusUpdatedAt), 'dd MMM yyyy, HH:mm')}

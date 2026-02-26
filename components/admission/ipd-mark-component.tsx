@@ -34,7 +34,7 @@ export function IPDMarkComponent({
   onCancel,
 }: IPDMarkComponentProps) {
   const [step, setStep] = useState<Step>('select')
-  const [selectedStatus, setSelectedStatus] = useState<'ADMITTED_DONE' | 'POSTPONED' | 'CANCELLED' | 'DISCHARGED' | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<'ADMITTED_DONE' | 'IPD_DONE' | 'POSTPONED' | 'CANCELLED' | 'DISCHARGED' | null>(null)
   const [formData, setFormData] = useState({
     reason: '',
     newSurgeryDate: '',
@@ -47,9 +47,16 @@ export function IPDMarkComponent({
   const statusOptions = [
     {
       value: 'ADMITTED_DONE' as const,
-      label: 'Surgery Done',
+      label: 'Admitted',
       icon: CheckCircle,
       color: 'bg-green-100 dark:bg-green-900 border-green-300',
+      description: 'Patient has been admitted',
+    },
+    {
+      value: 'IPD_DONE' as const,
+      label: 'Surgery Done',
+      icon: CheckCircle,
+      color: 'bg-teal-100 dark:bg-teal-900 border-teal-300',
       description: 'Surgery has been completed successfully',
     },
     {
@@ -155,7 +162,7 @@ export function IPDMarkComponent({
             <h3 className="text-lg font-semibold">{option.label}</h3>
           </div>
 
-          {selectedStatus === 'ADMITTED_DONE' && (
+          {(selectedStatus === 'ADMITTED_DONE' || selectedStatus === 'IPD_DONE') && (
             <div className="space-y-4">
               <div>
                 <Label htmlFor="notes">Additional Notes (Optional)</Label>

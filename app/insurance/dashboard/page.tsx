@@ -89,13 +89,14 @@ interface LeadWithStage {
 
 const IPD_MARK_OPTIONS = [
   { value: '', label: 'All marks' },
-  { value: 'ADMITTED_DONE', label: 'Surgery Done' },
+  { value: 'ADMITTED_DONE', label: 'Admitted' },
+  { value: 'IPD_DONE', label: 'Surgery Done' },
   { value: 'POSTPONED', label: 'Postponed' },
   { value: 'CANCELLED', label: 'Cancelled' },
   { value: 'DISCHARGED', label: 'Discharged' },
   { value: 'NONE', label: 'Not set' },
 ] as const
-type IpdMarkFilterValue = '' | 'ADMITTED_DONE' | 'POSTPONED' | 'CANCELLED' | 'DISCHARGED' | 'NONE'
+type IpdMarkFilterValue = '' | 'ADMITTED_DONE' | 'IPD_DONE' | 'POSTPONED' | 'CANCELLED' | 'DISCHARGED' | 'NONE'
 
 type TabKey =
   | 'kyp-review'
@@ -129,6 +130,7 @@ function getPriorityTier(lead: LeadWithStage): 0 | 1 | 2 | 3 {
 function getIpdMarkBadgeClass(status: string | null | undefined): string {
   switch (status) {
     case 'ADMITTED_DONE': return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800'
+    case 'IPD_DONE': return 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800'
     case 'POSTPONED': return 'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 border-amber-200 dark:border-amber-800'
     case 'CANCELLED': return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800'
     case 'DISCHARGED': return 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800'
@@ -139,7 +141,8 @@ function getIpdMarkBadgeClass(status: string | null | undefined): string {
 function getIpdMarkLabel(status: string | null | undefined): string {
   if (!status) return '–'
   switch (status) {
-    case 'ADMITTED_DONE': return 'Surgery Done'
+    case 'ADMITTED_DONE': return 'Admitted'
+    case 'IPD_DONE': return 'Surgery Done'
     case 'POSTPONED': return 'Postponed'
     case 'CANCELLED': return 'Cancelled'
     case 'DISCHARGED': return 'Discharged'

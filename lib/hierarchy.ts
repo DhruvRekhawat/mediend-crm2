@@ -159,6 +159,20 @@ export async function getEmployeeByUserId(userId: string) {
 }
 
 /**
+ * Get user IDs of all BDs that report to this user (for TEAM_LEAD lead access).
+ * Returns empty array if user has no employee record or no subordinates.
+ */
+export async function getSubordinateUserIdsForLeadAccess(userId: string): Promise<string[]> {
+  const employee = await prisma.employee.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  if (!employee) return []
+  const subordinates = await getSubordinates(employee.id, true)
+  return subordinates.map((s) => s.userId)
+}
+
+/**
  * Build org chart tree: root employees (no manager) and their recursive subordinates.
  */
 export async function getOrgChartRoots() {

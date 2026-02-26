@@ -65,6 +65,7 @@ export function DischargeSheetForm({
     totalFinalBill: '',
     // Deductions
     finalApprovedAmount: '',
+    paidByInsured: '',
     deductionAmount: '',
     discountAmount: '',
     waivedOffAmount: '',
@@ -129,7 +130,6 @@ export function DischargeSheetForm({
     if (!formData.dischargeDate) newErrors.dischargeDate = 'Discharge date is required'
     if (!formData.finalAmount) newErrors.finalAmount = 'Final amount is required'
     if (!files.dischargeSummary) newErrors.dischargeSummary = 'Discharge summary is required'
-    if (!files.otNotes) newErrors.otNotes = 'OT notes are required'
     if (!files.finalBill) newErrors.finalBill = 'Final bill is required'
     if (!formData.roomRentAmount) newErrors.roomRentAmount = 'Room rent amount is required'
     if (!formData.pharmacyAmount) newErrors.pharmacyAmount = 'Pharmacy amount is required'
@@ -161,6 +161,7 @@ export function DischargeSheetForm({
         instrumentsAmount: formData.instrumentsAmount ? parseFloat(formData.instrumentsAmount) : undefined,
         totalFinalBill: calculateTotals().totalBill,
         finalApprovedAmount: parseFloat(formData.finalApprovedAmount),
+        cashOrDedPaid: formData.paidByInsured ? parseFloat(formData.paidByInsured) : 0,
         deductionAmount: formData.deductionAmount ? parseFloat(formData.deductionAmount) : 0,
         discountAmount: formData.discountAmount ? parseFloat(formData.discountAmount) : 0,
         waivedOffAmount: formData.waivedOffAmount ? parseFloat(formData.waivedOffAmount) : 0,
@@ -179,7 +180,7 @@ export function DischargeSheetForm({
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
   }
 
-  const { totalBill, totalDeductions, netSettlement } = calculateTotals()
+  const { totalBill } = calculateTotals()
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -207,7 +208,7 @@ export function DischargeSheetForm({
             {errors.dischargeDate && <p className="text-xs text-destructive mt-1">{errors.dischargeDate}</p>}
           </div>
           <div>
-            <Label htmlFor="finalAmount">Final Amount (₹) *</Label>
+            <Label htmlFor="finalAmount">Final Bill Amount (₹) *</Label>
             <Input
               id="finalAmount"
               type="number"
@@ -259,7 +260,7 @@ export function DischargeSheetForm({
             </div>
 
             <div>
-              <Label>OT Notes *</Label>
+              <Label>OT Notes</Label>
               <div className="mt-2">
                 <Input
                   type="file"
@@ -281,7 +282,7 @@ export function DischargeSheetForm({
             </div>
 
             <div>
-              <Label>Final Bill *</Label>
+              <Label>Final Bill Amount (₹) *</Label>
               <div className="mt-2">
                 <Input
                   type="file"
@@ -438,7 +439,17 @@ export function DischargeSheetForm({
                 {errors.finalApprovedAmount && <p className="text-xs text-destructive">{errors.finalApprovedAmount}</p>}
               </div>
               <div>
-                <Label>Deduction (₹)</Label>
+                <Label>Paid by insured (₹)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.paidByInsured}
+                  onChange={(e) => setFormData({ ...formData, paidByInsured: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <Label>Deduction (Paid by insured) (₹)</Label>
                 <Input
                   type="number"
                   step="0.01"
@@ -473,10 +484,6 @@ export function DischargeSheetForm({
                   onChange={(e) => setFormData({ ...formData, otherDeduction: e.target.value })}
                 />
               </div>
-            </div>
-            <div className="bg-green-50 dark:bg-green-950 p-3 rounded mt-3 space-y-1">
-              <p className="text-sm"><span className="font-semibold">Total Deductions: </span>₹{totalDeductions.toFixed(2)}</p>
-              <p className="text-sm"><span className="font-semibold">Net Settlement: </span>₹{netSettlement.toFixed(2)}</p>
             </div>
           </div>
         )}

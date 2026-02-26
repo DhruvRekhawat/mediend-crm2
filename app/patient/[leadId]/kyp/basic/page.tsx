@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
+import { format } from 'date-fns'
 import { KYPBasicForm } from '@/components/kyp/kyp-basic-form'
 
 interface Lead {
@@ -17,6 +18,7 @@ interface Lead {
   phoneNumber: string
   treatment?: string
   age?: number
+  dateOfBirth?: string | null
   sex?: string
   city?: string
 }
@@ -95,6 +97,7 @@ export default function KYPBasicSubmitPage() {
               initialPhone={lead.phoneNumber}
               initialTreatment={lead.treatment}
               initialAge={lead.age}
+              initialDob={lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'yyyy-MM-dd') : undefined}
               initialSex={lead.sex}
               initialCity={lead.city}
               onSuccess={() => {

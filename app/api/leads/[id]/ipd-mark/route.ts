@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { CaseStage, IpdStatus } from '@prisma/client'
 
 const ipdMarkSchema = z.object({
-  status: z.enum(['ADMITTED_DONE', 'POSTPONED', 'CANCELLED', 'DISCHARGED']),
+  status: z.enum(['ADMITTED_DONE', 'IPD_DONE', 'POSTPONED', 'CANCELLED', 'DISCHARGED']),
   reason: z.string().optional(),
   newSurgeryDate: z.string().optional(),
   dischargeDate: z.string().optional(),
@@ -124,7 +124,8 @@ export async function POST(
 
     // Post case chat message
     const statusMessages: Record<string, string> = {
-      ADMITTED_DONE: 'Surgery confirmed done.',
+      ADMITTED_DONE: 'Patient admitted.',
+      IPD_DONE: 'Surgery confirmed done.',
       POSTPONED: `Surgery postponed - ${data.reason || 'No reason provided'}. New surgery date: ${data.newSurgeryDate}`,
       CANCELLED: `Case cancelled - ${data.reason || 'No reason provided'}`,
       DISCHARGED: `Patient discharged on ${data.dischargeDate}`,
@@ -140,7 +141,8 @@ export async function POST(
     })
 
     const titleMap: Record<string, string> = {
-      ADMITTED_DONE: 'Surgery Confirmed',
+      ADMITTED_DONE: 'Patient Admitted',
+      IPD_DONE: 'Surgery Done',
       POSTPONED: 'Surgery Postponed',
       CANCELLED: 'Case Cancelled',
       DISCHARGED: 'Patient Discharged',

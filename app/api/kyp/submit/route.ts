@@ -12,6 +12,7 @@ const submitKYPSchema = z.object({
   patientName: z.string().optional(),
   phone: z.string().optional(),
   age: z.number().optional(),
+  dateOfBirth: z.string().optional(),
   sex: z.string().optional(),
   aadhar: z.string().optional(),
   pan: z.string().optional(),
@@ -65,6 +66,9 @@ export async function POST(request: NextRequest) {
     }
     if (!data.insuranceType?.trim()) {
       return errorResponse('Insurance Type is required', 400)
+    }
+    if (!data.dateOfBirth?.trim()) {
+      return errorResponse('Date of Birth is required', 400)
     }
 
     // Check if lead exists and user has access
@@ -144,6 +148,7 @@ export async function POST(request: NextRequest) {
         ...(data.sex?.trim() ? { sex: data.sex.trim() } : {}),
         ...(data.insuranceName?.trim() ? { insuranceName: data.insuranceName.trim() } : {}),
         ...(data.doctorName?.trim() ? { ipdDrName: data.doctorName.trim() } : {}),
+        ...(data.dateOfBirth ? { dateOfBirth: new Date(data.dateOfBirth) } : {}),
       },
     })
 

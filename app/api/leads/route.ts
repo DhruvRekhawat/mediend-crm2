@@ -6,6 +6,8 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
 import { Prisma, PipelineStage } from '@prisma/client'
 import { maskPhoneNumber } from '@/lib/phone-utils'
+import { getSubordinateUserIdsForLeadAccess } from '@/lib/hierarchy'
+
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
@@ -31,14 +33,14 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate')
 
     const where: Prisma.LeadWhereInput = {}
+    let subordinateUserIds: string[] | undefined
 
     // Role-based filtering
     if (user.role === 'BD') {
       where.bdId = user.id
-    } else if (user.role === 'TEAM_LEAD' && user.teamId) {
-      where.bd = {
-        teamId: user.teamId,
-      }
+    } else if (user.role === 'TEAM_LEAD') {
+      subordinateUserIds = await getSubordinateUserIdsForLeadAccess(user.id)
+      where.bdId = { in: [user.id, ...subordinateUserIds] }
     }
     // Note: INSURANCE_HEAD can access all leads via canAccessLead, so we don't filter by bdId
 
@@ -172,7 +174,7 @@ export async function GET(request: NextRequest) {
 
     // Filter leads based on access control
     const accessibleLeads = leads.filter((lead) =>
-      canAccessLead(user, lead.bdId, lead.bd.team?.id)
+      canAccessLead(user, lead.bdId, lead.bd?.team?.id, subordinateUserIds)
     )
 
     // Debug logging for insurance users

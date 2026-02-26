@@ -203,7 +203,8 @@ enum InsuranceType {
 }
 
 enum IpdStatus {
-  ADMITTED_DONE
+  ADMITTED_DONE  // Patient has been admitted
+  IPD_DONE       // Surgery is done
   POSTPONED
   CANCELLED
   DISCHARGED
@@ -347,6 +348,7 @@ model Lead {
   leadRef         String        @unique
   patientName     String
   age             Int
+  dateOfBirth     DateTime?
   sex             String
   phoneNumber     String
   alternateNumber String?
@@ -1476,7 +1478,7 @@ model PreAuthorization {
   sumInsured             String?
   balanceInsured         String?
   roomRent               String?
-  capping                Float?
+  capping                String?
   copay                  String?
   icu                    String?
   hospitalNameSuggestion String?
@@ -1525,9 +1527,10 @@ model PreAuthorization {
   approvalStatus PreAuthStatus @default(PENDING)
   approvedAmount Float?
   approvalNotes  String?       @db.Text
-  rejectionReason String?      @db.Text
-  approvedAt      DateTime?
-  rejectedAt      DateTime?
+  rejectionReason     String?      @db.Text
+  rejectionLetterUrl  String?
+  approvedAt          DateTime?
+  rejectedAt          DateTime?
 
   // Q&A Queries (kept for backward compat; chat is primary)
   queries InsuranceQuery[]

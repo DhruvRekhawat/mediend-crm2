@@ -9,6 +9,8 @@ import { z } from 'zod'
 
 const rejectSchema = z.object({
   reason: z.string().min(1, 'Rejection reason is required'),
+  rejectionLetterUrl: z.string().url().optional(),
+  rejectionLetterName: z.string().optional(),
 })
 
 export async function POST(
@@ -79,6 +81,7 @@ export async function POST(
       data: {
         approvalStatus: PreAuthStatus.REJECTED,
         rejectionReason: data.reason,
+        rejectionLetterUrl: data.rejectionLetterUrl ?? undefined,
         handledById: user.id,
         handledAt: new Date(),
         rejectedAt: new Date(),

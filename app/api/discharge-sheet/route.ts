@@ -34,7 +34,7 @@ const createDischargeSheetSchema = z.object({
   copayPct: z.number().optional(),
   // B. Documents
   dischargeSummaryUrl: z.string().min(1, 'Discharge summary is required'),
-  otNotesUrl: z.string().min(1, 'OT notes are required'),
+  otNotesUrl: z.string().optional(),
   codesCount: z.number().optional(),
   finalBillUrl: z.string().min(1, 'Final bill is required'),
   settlementLetterUrl: z.string().optional(),

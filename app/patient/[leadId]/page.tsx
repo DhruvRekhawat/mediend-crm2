@@ -578,6 +578,28 @@ export default function PatientDetailsPage() {
                 }
 
                 if (status === 'ADMITTED_DONE') {
+                  const admitStr = rec.admissionDate
+                    ? format(new Date(rec.admissionDate), 'dd MMM yyyy')
+                    : '—'
+                  return (
+                    <Card className="border-2 border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
+                      <CardContent className="py-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/50">
+                            <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                              Patient admitted{admitStr !== '—' ? ` — ${admitStr}` : ''}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                }
+
+                if (status === 'IPD_DONE') {
                   const surgeryStr = rec.surgeryDate
                     ? `${format(new Date(rec.surgeryDate), 'dd MMM yyyy')}${rec.surgeryTime ? ` at ${rec.surgeryTime}` : ''}`
                     : '—'
@@ -1327,7 +1349,13 @@ export default function PatientDetailsPage() {
                       </div>
                       <div>
                         <Label className="text-[10px] uppercase text-gray-500 font-bold">Capping</Label>
-                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.capping ? `₹${Number(kypSubmission.preAuthData.capping).toLocaleString('en-IN')}` : 'No'}</p>
+                        <p className="text-sm font-semibold">
+                          {kypSubmission.preAuthData.capping != null && kypSubmission.preAuthData.capping !== ''
+                            ? (typeof kypSubmission.preAuthData.capping === 'string' && !Number.isNaN(Number(kypSubmission.preAuthData.capping))
+                                ? `₹${Number(kypSubmission.preAuthData.capping).toLocaleString('en-IN')}`
+                                : String(kypSubmission.preAuthData.capping))
+                            : 'No'}
+                        </p>
                       </div>
                     </div>
                   </div>

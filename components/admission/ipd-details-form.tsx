@@ -386,7 +386,7 @@ export function IPDDetailsForm({
               <ReadOnlyField label="Co-pay %" value={copay != null ? `${copay}%` : undefined} />
               <ReadOnlyField label="Sum Insured" value={sumInsured != null ? `₹${Number(sumInsured).toLocaleString('en-IN')}` : undefined} />
               <ReadOnlyField label="Room Type" value={roomType} />
-              <ReadOnlyField label="Capping" value={capping != null && capping !== '' ? `₹${Number(capping).toLocaleString('en-IN')}` : 'No'} />
+              <ReadOnlyField label="Capping" value={capping != null && capping !== '' ? (typeof capping === 'string' && !Number.isNaN(Number(capping)) ? `₹${Number(capping).toLocaleString('en-IN')}` : String(capping)) : 'No'} />
             </div>
           </div>
           <div className="border-t pt-3">

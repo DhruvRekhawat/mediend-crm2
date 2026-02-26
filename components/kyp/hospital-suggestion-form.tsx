@@ -25,7 +25,7 @@ interface HospitalSuggestionFormProps {
   initialSumInsured?: string
   initialBalanceInsured?: string
   initialCopayPercentage?: string
-  initialCapping?: number | null
+  initialCapping?: string | number | null
   initialInsuranceName?: string
   initialTpa?: string
   initialDoctorName?: string
@@ -70,7 +70,7 @@ export function HospitalSuggestionForm({
   const [sumInsured, setSumInsured] = useState(initialSumInsured)
   const [balanceInsured, setBalanceInsured] = useState(initialBalanceInsured)
   const [copayPercentage, setCopayPercentage] = useState(initialCopayPercentage)
-  const [capping, setCapping] = useState(initialCapping ? String(initialCapping) : '')
+  const [capping, setCapping] = useState(initialCapping != null ? String(initialCapping) : '')
   const [insuranceName, setInsuranceName] = useState(initialInsuranceName)
   const [tpa, setTpa] = useState(initialTpa)
   const [hospitals, setHospitals] = useState<HospitalRow[]>(() => {
@@ -143,7 +143,7 @@ export function HospitalSuggestionForm({
         sumInsured: sumInsured.trim(),
         balanceInsured: balanceInsured.trim(),
         copay: copayPercentage.trim(),
-        capping: capping ? parseFloat(capping) : undefined,
+        capping: capping.trim() || undefined,
         insuranceName: insuranceName.trim() || undefined,
         tpa: tpa.trim() || undefined,
         hospitals: list,
@@ -188,16 +188,8 @@ export function HospitalSuggestionForm({
             required
           />
         </div>
-        <div>
-          <Label htmlFor="capping">Disease Capping</Label>
-          <Input
-            id="capping"
-            type="number"
-            value={capping}
-            onChange={(e) => setCapping(e.target.value)}
-            placeholder="Optional"
-          />
-        </div>
+
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -217,6 +209,16 @@ export function HospitalSuggestionForm({
             value={tpa}
             onChange={(e) => setTpa(e.target.value)}
             placeholder="e.g. TPA Name"
+          />
+        </div>
+        <div>
+          <Label htmlFor="capping">Disease Capping</Label>
+          <Input
+            id="capping"
+            type="text"
+            value={capping}
+            onChange={(e) => setCapping(e.target.value)}
+            placeholder="Optional (e.g. amount or text)"
           />
         </div>
       </div>

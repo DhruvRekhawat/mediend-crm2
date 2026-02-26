@@ -466,7 +466,7 @@ export function PreAuthRaiseForm({
                 <AutoFillBadge label="Sum Insured" value={preAuthMeta?.sumInsured ? `₹${preAuthMeta.sumInsured}` : undefined} />
                 <AutoFillBadge label="Balance Insured" value={preAuthMeta?.balanceInsured ? `₹${preAuthMeta.balanceInsured}` : undefined} />
                 <AutoFillBadge label="Copay" value={preAuthMeta?.copay ? `${preAuthMeta.copay}%` : undefined} />
-                <AutoFillBadge label="Capping" value={preAuthMeta?.capping != null ? `₹${preAuthMeta.capping}` : undefined} />
+                <AutoFillBadge label="Capping" value={preAuthMeta?.capping != null && preAuthMeta.capping !== '' ? (typeof preAuthMeta.capping === 'string' && !Number.isNaN(Number(preAuthMeta.capping)) ? `₹${Number(preAuthMeta.capping).toLocaleString('en-IN')}` : String(preAuthMeta.capping)) : undefined} />
                 <AutoFillBadge label="Room Rent" value={preAuthMeta?.roomRent ? `₹${preAuthMeta.roomRent}` : undefined} />
                 <AutoFillBadge label="Area" value={kypData?.area} />
                 <AutoFillBadge label="City" value={kypData?.location} />

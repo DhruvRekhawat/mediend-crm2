@@ -16,6 +16,8 @@ import { CheckCircle2, XCircle, Clock, Loader2, Hospital, FileText } from 'lucid
 import { HospitalSuggestionForm } from '@/components/kyp/hospital-suggestion-form'
 import { InsuranceInitiateForm } from '@/components/insurance/insurance-initiate-form'
 import { InitiateFormCard } from '@/components/insurance/initiate-form-card'
+import { useFileUpload } from '@/hooks/use-file-upload'
+import { File } from 'lucide-react'
 
 interface PreAuthInlineApprovalProps {
   leadId: string
@@ -29,6 +31,7 @@ interface PreAuthInlineApprovalProps {
     id: string
     approvalStatus?: PreAuthStatus
     rejectionReason?: string | null
+    rejectionLetterUrl?: string | null
     approvalNotes?: string | null
     approvedAmount?: number | null
     isNewHospitalRequest?: boolean
@@ -71,7 +74,9 @@ export function PreAuthInlineApproval({
   )
   const [approvalNotes, setApprovalNotes] = useState(preAuthData?.approvalNotes || '')
   const [rejectionReason, setRejectionReason] = useState('')
+  const [rejectionLetterFile, setRejectionLetterFile] = useState<{ name: string; url: string } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { uploadFile, uploading: uploadUploading } = useFileUpload()
   const [showHospitalForm, setShowHospitalForm] = useState(false)
   const [showInitiateForm, setShowInitiateForm] = useState(false)
   const [initiateFormEditMode, setInitiateFormEditMode] = useState(false)
@@ -190,6 +195,15 @@ export function PreAuthInlineApproval({
     handleApprove('APPROVED', { approvedAmount: authorizedAmount })
   }
 
+  const handleRejectionLetterChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const result = await uploadFile(file)
+    if (result) {
+      setRejectionLetterFile({ name: file.name, url: result.url })
+    }
+  }
+
   const handleReject = async () => {
     if (!rejectionReason.trim()) {
       toast.error('Please provide a reason for rejection')
@@ -197,13 +211,18 @@ export function PreAuthInlineApproval({
     }
     setIsSubmitting(true)
     try {
-      await apiPost(`/api/pre-auth/${kypSubmissionId}/reject`, { reason: rejectionReason })
+      await apiPost(`/api/pre-auth/${kypSubmissionId}/reject`, {
+        reason: rejectionReason,
+        rejectionLetterUrl: rejectionLetterFile?.url,
+        rejectionLetterName: rejectionLetterFile?.name,
+      })
       toast.success('Pre-authorization rejected')
       queryClient.invalidateQueries({ queryKey: ['leads', 'insurance'] })
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
       queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })
       setAction(null)
       setRejectionReason('')
+      setRejectionLetterFile(null)
       onSuccess?.()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to reject pre-auth')
@@ -404,9 +423,22 @@ export function PreAuthInlineApproval({
                 </p>
               )}
               {!isApproved && preAuthData?.rejectionReason && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Reason: {preAuthData.rejectionReason}
-                </p>
+                <div className="mt-2 space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Reason: {preAuthData.rejectionReason}
+                  </p>
+                  {preAuthData?.rejectionLetterUrl && (
+                    <a
+                      href={preAuthData.rejectionLetterUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <File className="h-4 w-4" />
+                      Rejection letter
+                    </a>
+                  )}
+                </div>
               )}
             </div>
           </CardContent>
@@ -703,14 +735,29 @@ export function PreAuthInlineApproval({
                     className="mt-1"
                   />
                 </div>
+                <div>
+                  <Label>Rejection letter (optional)</Label>
+                  <Input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleRejectionLetterChange}
+                    className="mt-1"
+                  />
+                  {rejectionLetterFile && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                      <File className="h-4 w-4" />
+                      <span>{rejectionLetterFile.name}</span>
+                    </div>
+                  )}
+                </div>
                 <Button
                   variant="destructive"
                   onClick={handleReject}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || uploadUploading}
                   className="w-full"
                 >
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Confirm Rejection
+                  {(isSubmitting || uploadUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {uploadUploading ? 'Uploading...' : isSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
                 </Button>
               </div>
             )}

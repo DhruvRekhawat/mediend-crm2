@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead } from '@/lib/rbac'
+import { getSubordinateUserIdsForLeadAccess } from '@/lib/hierarchy'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { Prisma } from '@prisma/client'
 import { maskPhoneNumber } from '@/lib/phone-utils'
@@ -19,10 +20,9 @@ export async function GET(request: NextRequest) {
     // Role-based filtering
     if (user.role === 'BD') {
       where.bdId = user.id
-    } else if (user.role === 'TEAM_LEAD' && user.teamId) {
-      where.bd = {
-        teamId: user.teamId,
-      }
+    } else if (user.role === 'TEAM_LEAD') {
+      const subordinateUserIds = await getSubordinateUserIdsForLeadAccess(user.id)
+      where.bdId = { in: [user.id, ...subordinateUserIds] }
     }
     // Insurance users see leads with KYP submissions
     if (user.role === 'INSURANCE_HEAD') {
@@ -88,9 +88,10 @@ export async function GET(request: NextRequest) {
     })
 
     // Filter leads based on access control and get unread counts
+    const subordinateIds = user.role === 'TEAM_LEAD' ? await getSubordinateUserIdsForLeadAccess(user.id) : undefined
     const conversations = await Promise.all(
       leads
-        .filter((lead) => canAccessLead(user, lead.bdId, lead.bd?.team?.id))
+        .filter((lead) => canAccessLead(user, lead.bdId, lead.bd?.team?.id, subordinateIds))
         .map(async (lead) => {
           // Get unread message count (messages after user's last read or all if never read)
           // For now, we'll count all messages as potential unread
