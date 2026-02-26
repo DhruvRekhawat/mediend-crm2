@@ -72,8 +72,8 @@ services:
         condition: service_healthy
     profiles:
       - tools
-    entrypoint: ["bun", "run", "seed:employees"]
-    # Default input path in script is /app/csvjson(5).json. Mount your file there, or pass path: docker compose run --rm seed -- /app/other.json
+    entrypoint: ["bun", "run", "scripts/seed-employees-from-json.ts"]
+    # Mount JSON and run. Custom path: docker compose run --rm seed -- /app/other.json
 
 volumes:
   pgdata:
