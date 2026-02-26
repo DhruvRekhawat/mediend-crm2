@@ -15,7 +15,8 @@ import bcrypt from 'bcryptjs'
 
 const { Pool } = pkg
 
-const DEFAULT_PASSWORD = 'ChangeMe123!'
+const DEFAULT_PASSWORD = '12345678'
+const PLACEHOLDER_EMAIL = 'seed-placeholder@mediend.local'
 const BD_MAP_PATH = path.join(process.cwd(), 'lib', 'sync', 'bd-number-to-user-id.json')
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
@@ -126,12 +127,39 @@ async function main() {
   const skipped = rows.length - withEmail.length
   if (skipped > 0) console.log(`Skipped ${skipped} row(s) with no email.`)
 
+  // --- Reset: delete all users, employees, teams so seed runs clean (employeeCode = EMP ID) ---
+  console.log('Reset: creating placeholder and clearing users/employees/teams...')
+  const placeholderHash = await bcrypt.hash(DEFAULT_PASSWORD, 10)
+  const placeholder = await prisma.user.upsert({
+    where: { email: PLACEHOLDER_EMAIL },
+    create: {
+      email: PLACEHOLDER_EMAIL,
+      passwordHash: placeholderHash,
+      name: 'Seed Placeholder',
+      role: 'ADMIN',
+    },
+    update: {},
+  })
+
+  await prisma.lead.updateMany({ data: { bdId: placeholder.id, createdById: placeholder.id, updatedById: placeholder.id } })
+  await prisma.target.updateMany({ data: { createdById: placeholder.id } })
+  await prisma.user.updateMany({ data: { teamId: null } })
+  await prisma.team.deleteMany()
+  await prisma.mDWatchlistEmployee.deleteMany()
+  await prisma.leaveRequest.deleteMany()
+  await prisma.leaveBalance.deleteMany()
+  await prisma.attendanceLog.deleteMany()
+  await prisma.employee.deleteMany()
+  await prisma.user.deleteMany({ where: { id: { not: placeholder.id } } })
+  console.log('Reset: done.')
+
   const empIdToEmployeeId = new Map<number, string>()
   const bdNumberToUserId = new Map<number, string>()
   let mdUserId: string | null = null
+  let firstUserId: string | null = null
   const defaultPasswordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10)
 
-  // Pass 1: Upsert User and Employee
+  // Pass 1: Create User and Employee (clean slate; employeeCode = EMP ID)
   for (const row of withEmail) {
     const email = (row.Email as string).toString().trim().toLowerCase()
     const name = (row.BDM ?? '').toString().trim() || email
@@ -139,51 +167,21 @@ async function main() {
     const empId = row['EMP ID']
     const employeeCode = String(empId)
 
-    const user = await prisma.user.upsert({
-      where: { email },
-      create: {
+    const user = await prisma.user.create({
+      data: {
         email,
         passwordHash: defaultPasswordHash,
         name,
         role,
       },
-      update: { name, role },
     })
 
-    let employee = await prisma.employee.findUnique({
-      where: { userId: user.id },
+    const employee = await prisma.employee.create({
+      data: { userId: user.id, employeeCode },
     })
-    if (!employee) {
-      const existingByCode = await prisma.employee.findUnique({
-        where: { employeeCode },
-        select: { id: true },
-      })
-      const codeToUse = existingByCode ? `${employeeCode}_${user.id.slice(-6)}` : employeeCode
-      if (existingByCode) {
-        console.warn(`  employeeCode ${employeeCode} already taken; using ${codeToUse} for ${row.BDM} (${email})`)
-      }
-      employee = await prisma.employee.create({
-        data: { userId: user.id, employeeCode: codeToUse },
-      })
-    } else {
-      const existingByCode = await prisma.employee.findUnique({
-        where: { employeeCode },
-        select: { id: true, userId: true },
-      })
-      if (existingByCode && existingByCode.id !== employee.id) {
-        console.warn(
-          `  employeeCode ${employeeCode} already used by another employee; keeping existing code for ${row.BDM} (${email})`
-        )
-      } else if (!existingByCode || existingByCode.id === employee.id) {
-        await prisma.employee.update({
-          where: { id: employee.id },
-          data: { employeeCode },
-        })
-        employee = { ...employee, employeeCode }
-      }
-    }
 
     empIdToEmployeeId.set(empId, employee.id)
+    if (!firstUserId) firstUserId = user.id
     const bdNum = bdNumberValue(row)
     if (bdNum !== null) {
       const existing = bdNumberToUserId.get(bdNum)
@@ -194,7 +192,6 @@ async function main() {
       } else if (existing === undefined) {
         bdNumberToUserId.set(bdNum, user.id)
       }
-      // else same user, already in map — no change
     }
     if (empId === MD_EMP_ID) mdUserId = user.id
   }
@@ -296,6 +293,17 @@ async function main() {
   })
   fs.writeFileSync(BD_MAP_PATH, JSON.stringify(obj, null, 2), 'utf-8')
   console.log(`Wrote BD number map to ${BD_MAP_PATH}.`)
+
+  // Reassign leads/targets from placeholder to a real user, then remove placeholder
+  const fallbackUserId = mdUserId ?? firstUserId
+  if (fallbackUserId) {
+    await prisma.lead.updateMany({ where: { bdId: placeholder.id }, data: { bdId: fallbackUserId } })
+    await prisma.lead.updateMany({ where: { createdById: placeholder.id }, data: { createdById: fallbackUserId } })
+    await prisma.lead.updateMany({ where: { updatedById: placeholder.id }, data: { updatedById: fallbackUserId } })
+    await prisma.target.updateMany({ where: { createdById: placeholder.id }, data: { createdById: fallbackUserId } })
+  }
+  await prisma.user.delete({ where: { id: placeholder.id } })
+  console.log('Placeholder user removed.')
 
   console.log('Seed complete.')
 }
