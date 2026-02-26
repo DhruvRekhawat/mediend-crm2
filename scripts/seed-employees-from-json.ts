@@ -150,14 +150,38 @@ async function main() {
       update: { name, role },
     })
 
-    const employee = await prisma.employee.upsert({
+    let employee = await prisma.employee.findUnique({
       where: { userId: user.id },
-      create: {
-        userId: user.id,
-        employeeCode,
-      },
-      update: { employeeCode },
     })
+    if (!employee) {
+      const existingByCode = await prisma.employee.findUnique({
+        where: { employeeCode },
+        select: { id: true },
+      })
+      const codeToUse = existingByCode ? `${employeeCode}_${user.id.slice(-6)}` : employeeCode
+      if (existingByCode) {
+        console.warn(`  employeeCode ${employeeCode} already taken; using ${codeToUse} for ${row.BDM} (${email})`)
+      }
+      employee = await prisma.employee.create({
+        data: { userId: user.id, employeeCode: codeToUse },
+      })
+    } else {
+      const existingByCode = await prisma.employee.findUnique({
+        where: { employeeCode },
+        select: { id: true, userId: true },
+      })
+      if (existingByCode && existingByCode.id !== employee.id) {
+        console.warn(
+          `  employeeCode ${employeeCode} already used by another employee; keeping existing code for ${row.BDM} (${email})`
+        )
+      } else if (!existingByCode || existingByCode.id === employee.id) {
+        await prisma.employee.update({
+          where: { id: employee.id },
+          data: { employeeCode },
+        })
+        employee = { ...employee, employeeCode }
+      }
+    }
 
     empIdToEmployeeId.set(empId, employee.id)
     const bdNum = bdNumberValue(row)
