@@ -1,8 +1,10 @@
 /**
  * Seed Users and Employees from csvjson(5).json (or similar JSON).
- * Sets hierarchy (managerId) and BD number -> User id map; fixes Lead.bdId by name.
+ * Reset: points all User/Employee FKs to a placeholder, deletes employees/teams/non-placeholder users, then seeds fresh (employeeCode = EMP ID, password 12345678).
  *
- * Run: npx tsx scripts/seed-employees-from-json.ts [path/to/csvjson(5).json]
+ * Local: npx tsx scripts/seed-employees-from-json.ts [path/to/csvjson(5).json]
+ * Docker: docker compose --profile tools run --rm -v "$(pwd)/csvjson(5).json:/app/csvjson(5).json" seed
+ *         (mount your JSON at /app/csvjson(5).json or pass path: seed /app/other.json)
  */
 
 import 'dotenv/config'
@@ -127,7 +129,7 @@ async function main() {
   const skipped = rows.length - withEmail.length
   if (skipped > 0) console.log(`Skipped ${skipped} row(s) with no email.`)
 
-  // --- Reset: delete all users, employees, teams so seed runs clean (employeeCode = EMP ID) ---
+  // --- Reset: point all User FKs to placeholder, then delete employees/teams/users (except placeholder) ---
   console.log('Reset: creating placeholder and clearing users/employees/teams...')
   const placeholderHash = await bcrypt.hash(DEFAULT_PASSWORD, 10)
   const placeholder = await prisma.user.upsert({
@@ -140,17 +142,71 @@ async function main() {
     },
     update: {},
   })
+  const pid = placeholder.id
 
-  await prisma.lead.updateMany({ data: { bdId: placeholder.id, createdById: placeholder.id, updatedById: placeholder.id } })
-  await prisma.target.updateMany({ data: { createdById: placeholder.id } })
+  // Point every required User FK to placeholder so we can delete other users
+  await prisma.lead.updateMany({ data: { bdId: pid, createdById: pid, updatedById: pid } })
+  await prisma.leadStageEvent.updateMany({ data: { changedById: pid } })
+  await prisma.target.updateMany({ data: { createdById: pid } })
+  await prisma.ledgerEntry.updateMany({ data: { createdById: pid } })
+  await prisma.ledgerAuditLog.updateMany({ data: { performedById: pid } })
+  await prisma.salesEntry.updateMany({ data: { createdById: pid } })
+  await prisma.stockMovement.updateMany({ data: { createdById: pid } })
+  await prisma.purchaseTransaction.updateMany({ data: { createdById: pid } })
+  await prisma.issueTransaction.updateMany({ data: { issuedToId: pid, createdById: pid } })
+  await prisma.kYPSubmission.updateMany({ data: { submittedById: pid } })
+  await prisma.preAuthPDF.updateMany({ data: { createdById: pid } })
+  await prisma.insuranceQuery.updateMany({ data: { raisedById: pid } })
+  await prisma.admissionRecord.updateMany({ data: { initiatedById: pid } })
+  await prisma.insuranceInitiateForm.updateMany({ data: { createdById: pid } })
+  await prisma.caseStageHistory.updateMany({ data: { changedById: pid } })
+  await prisma.dischargeSheet.updateMany({ data: { createdById: pid } })
+  await prisma.task.updateMany({ data: { assigneeId: pid, createdById: pid } })
+  await prisma.taskDueDateApproval.updateMany({ data: { requestedById: pid } })
+  await prisma.mDTaskTeam.updateMany({ data: { ownerId: pid } })
+  await prisma.workLog.updateMany({ data: { employeeId: pid } }) // employeeId references User
+  await prisma.notification.updateMany({ data: { userId: pid } })
+
+  // Optional User FKs: set to null so no row points at a user we are about to delete
+  await prisma.ledgerEntry.updateMany({
+    data: { deletedById: null, editRequestedById: null, editApprovedById: null, approvedById: null },
+  })
+  await prisma.insuranceCase.updateMany({ data: { handledById: null } })
+  await prisma.leadRemark.updateMany({ data: { handledById: null } })
+  await prisma.preAuthPDF.updateMany({ data: { handledById: null } })
+  await prisma.insuranceQuery.updateMany({ data: { answeredById: null } })
+  await prisma.outstandingCase.updateMany({ data: { handledById: null } })
+  await prisma.department.updateMany({ data: { headId: null } })
+  await prisma.caseChatMessage.updateMany({ data: { senderId: null } })
+  await prisma.preAuthorization.updateMany({ data: { preAuthRaisedById: null } })
+
   await prisma.user.updateMany({ data: { teamId: null } })
-  await prisma.team.deleteMany()
+  await prisma.departmentTeam.updateMany({ data: { teamLeadId: null } })
+  await prisma.employee.updateMany({ data: { managerId: null, teamId: null } })
+
+  // Delete in dependency order: child tables first, then Employee, Team, then Users except placeholder
   await prisma.mDWatchlistEmployee.deleteMany()
+  await prisma.mDTaskTeamMember.deleteMany()
+  await prisma.taskDueDateApproval.deleteMany()
+  await prisma.task.deleteMany()
+  await prisma.mDTaskTeam.deleteMany()
+  await prisma.workLog.deleteMany()
+  await prisma.notification.deleteMany()
   await prisma.leaveRequest.deleteMany()
   await prisma.leaveBalance.deleteMany()
   await prisma.attendanceLog.deleteMany()
+  await prisma.payrollComponent.deleteMany()
+  await prisma.payrollRecord.deleteMany()
+  await prisma.employeeDocument.deleteMany()
+  await prisma.feedback.deleteMany()
+  await prisma.mDAppointment.deleteMany()
+  await prisma.mentalHealthRequest.deleteMany()
+  await prisma.supportTicket.deleteMany()
+  await prisma.incrementRequest.deleteMany()
+  await prisma.iJPApplication.deleteMany()
   await prisma.employee.deleteMany()
-  await prisma.user.deleteMany({ where: { id: { not: placeholder.id } } })
+  await prisma.team.deleteMany()
+  await prisma.user.deleteMany({ where: { id: { not: pid } } })
   console.log('Reset: done.')
 
   const empIdToEmployeeId = new Map<number, string>()
@@ -294,15 +350,30 @@ async function main() {
   fs.writeFileSync(BD_MAP_PATH, JSON.stringify(obj, null, 2), 'utf-8')
   console.log(`Wrote BD number map to ${BD_MAP_PATH}.`)
 
-  // Reassign leads/targets from placeholder to a real user, then remove placeholder
+  // Reassign all rows that still point at placeholder to a real user, then remove placeholder
   const fallbackUserId = mdUserId ?? firstUserId
   if (fallbackUserId) {
-    await prisma.lead.updateMany({ where: { bdId: placeholder.id }, data: { bdId: fallbackUserId } })
-    await prisma.lead.updateMany({ where: { createdById: placeholder.id }, data: { createdById: fallbackUserId } })
-    await prisma.lead.updateMany({ where: { updatedById: placeholder.id }, data: { updatedById: fallbackUserId } })
-    await prisma.target.updateMany({ where: { createdById: placeholder.id }, data: { createdById: fallbackUserId } })
+    await prisma.lead.updateMany({ where: { bdId: pid }, data: { bdId: fallbackUserId } })
+    await prisma.lead.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.lead.updateMany({ where: { updatedById: pid }, data: { updatedById: fallbackUserId } })
+    await prisma.leadStageEvent.updateMany({ where: { changedById: pid }, data: { changedById: fallbackUserId } })
+    await prisma.target.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.ledgerEntry.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.ledgerAuditLog.updateMany({ where: { performedById: pid }, data: { performedById: fallbackUserId } })
+    await prisma.salesEntry.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.stockMovement.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.purchaseTransaction.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.issueTransaction.updateMany({ where: { issuedToId: pid }, data: { issuedToId: fallbackUserId } })
+    await prisma.issueTransaction.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.kYPSubmission.updateMany({ where: { submittedById: pid }, data: { submittedById: fallbackUserId } })
+    await prisma.preAuthPDF.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.insuranceQuery.updateMany({ where: { raisedById: pid }, data: { raisedById: fallbackUserId } })
+    await prisma.admissionRecord.updateMany({ where: { initiatedById: pid }, data: { initiatedById: fallbackUserId } })
+    await prisma.insuranceInitiateForm.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
+    await prisma.caseStageHistory.updateMany({ where: { changedById: pid }, data: { changedById: fallbackUserId } })
+    await prisma.dischargeSheet.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
   }
-  await prisma.user.delete({ where: { id: placeholder.id } })
+  await prisma.user.delete({ where: { id: pid } })
   console.log('Placeholder user removed.')
 
   console.log('Seed complete.')
