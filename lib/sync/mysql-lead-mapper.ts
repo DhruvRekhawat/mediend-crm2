@@ -419,7 +419,7 @@ export async function mapMySQLLeadToPrisma(
   let bdInfo: { id: string; circle: Circle | null } | null = null
 
   if (isNumeric) {
-    const userIdFromMap = getUserIdByBdNumber(bdmValue)
+    const userIdFromMap = await getUserIdByBdNumber(bdmValue)
     if (userIdFromMap) {
       const user = await prisma.user.findUnique({
         where: { id: userIdFromMap },
@@ -492,6 +492,7 @@ export async function mapMySQLLeadToPrisma(
     alternateNumber: toString(mysqlRow.AlternativePhone),
     attendantName: toString(mysqlRow.AttendantName),
     bdId: bdInfo.id,
+    bdeName: bdmValue,
     status: normalizeStatus(mysqlRow.Status),
     pipelineStage: PipelineStage.SALES,
     circle: mysqlRow.Circle ? mapCircle(mysqlRow.Circle) : (bdInfo.circle || Circle.North),

@@ -1,43 +1,41 @@
 /**
  * BD number (legacy MySQL lead.BDM) -> User id mapping.
- * Populated by scripts/seed-employees-from-json.ts; used by MySQL lead mapper when BDM is numeric.
+ * Reads Employee.bdNumber from the database (populated by seed-employees-from-json).
+ * Used by mysql-lead-mapper when BDM is numeric.
  */
 
-import * as fs from 'fs'
-import * as path from 'path'
+import { prisma } from '@/lib/prisma'
 
-const BD_MAP_PATH = path.join(process.cwd(), 'lib', 'sync', 'bd-number-to-user-id.json')
+let cached: Map<string, string> | null = null
 
-let cached: Record<string, string> | null = null
-
-function loadMap(): Record<string, string> {
+async function loadMap(): Promise<Map<string, string>> {
   if (cached !== null) return cached
-  try {
-    if (fs.existsSync(BD_MAP_PATH)) {
-      const raw = fs.readFileSync(BD_MAP_PATH, 'utf-8')
-      cached = JSON.parse(raw) as Record<string, string>
-    } else {
-      cached = {}
+
+  const employees = await prisma.employee.findMany({
+    where: { bdNumber: { not: null } },
+    select: { bdNumber: true, userId: true },
+  })
+
+  cached = new Map<string, string>()
+  for (const emp of employees) {
+    if (emp.bdNumber !== null) {
+      cached.set(String(emp.bdNumber), emp.userId)
     }
-  } catch {
-    cached = {}
   }
   return cached
 }
 
 /**
- * Resolve legacy BD number to User id. Returns null if not in map or file missing.
+ * Resolve legacy BD number to User id. Returns null if not found.
  */
-export function getUserIdByBdNumber(bdNumber: number | string): string | null {
+export async function getUserIdByBdNumber(bdNumber: number | string): Promise<string | null> {
   const key = String(bdNumber).trim()
   if (!key) return null
-  const map = loadMap()
-  return map[key] ?? null
+  const map = await loadMap()
+  return map.get(key) ?? null
 }
 
-/**
- * Async form for consistency with callers that prefer Promise.
- */
-export async function getUserIdByBdNumberAsync(bdNumber: number | string): Promise<string | null> {
-  return Promise.resolve(getUserIdByBdNumber(bdNumber))
+/** Bust the in-memory cache (e.g. after re-seeding). */
+export function clearBdNumberCache(): void {
+  cached = null
 }
