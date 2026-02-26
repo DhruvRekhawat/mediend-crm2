@@ -146,35 +146,41 @@ async function main() {
   await prisma.lead.updateMany({ data: { bdId: pid, createdById: pid, updatedById: pid } })
   await prisma.target.updateMany({ data: { createdById: pid } })
 
-  // Disable FK checking so we can delete users without chasing every FK
-  await pool.query('SET session_replication_role = replica')
+  // Use a single dedicated connection so SET + DELETEs share the same session
+  const client = await pool.connect()
+  try {
+    await client.query('SET session_replication_role = replica')
 
-  // Delete Employee-dependent tables, Employees, Teams, then all Users except placeholder
-  await prisma.mDWatchlistEmployee.deleteMany()
-  await prisma.mDTaskTeamMember.deleteMany()
-  await prisma.taskDueDateApproval.deleteMany()
-  await prisma.task.deleteMany()
-  await prisma.mDTaskTeam.deleteMany()
-  await prisma.workLog.deleteMany()
-  await prisma.notification.deleteMany()
-  await prisma.leaveRequest.deleteMany()
-  await prisma.leaveBalance.deleteMany()
-  await prisma.attendanceLog.deleteMany()
-  await prisma.payrollComponent.deleteMany()
-  await prisma.payrollRecord.deleteMany()
-  await prisma.employeeDocument.deleteMany()
-  await prisma.feedback.deleteMany()
-  await prisma.mDAppointment.deleteMany()
-  await prisma.mentalHealthRequest.deleteMany()
-  await prisma.supportTicket.deleteMany()
-  await prisma.incrementRequest.deleteMany()
-  await prisma.iJPApplication.deleteMany()
-  await prisma.employee.deleteMany()
-  await prisma.team.deleteMany()
-  await prisma.user.deleteMany({ where: { id: { not: pid } } })
+    await client.query('DELETE FROM "MDWatchlistEmployee"')
+    await client.query('DELETE FROM "MDTaskTeamMember"')
+    await client.query('DELETE FROM "TaskDueDateApproval"')
+    await client.query('DELETE FROM "Task"')
+    await client.query('DELETE FROM "MDTaskTeam"')
+    await client.query('DELETE FROM "WorkLog"')
+    await client.query('DELETE FROM "Notification"')
+    await client.query('DELETE FROM "LeaveRequest"')
+    await client.query('DELETE FROM "LeaveBalance"')
+    await client.query('DELETE FROM "AttendanceLog"')
+    await client.query('DELETE FROM "PayrollComponent"')
+    await client.query('DELETE FROM "PayrollRecord"')
+    await client.query('DELETE FROM "EmployeeDocument"')
+    await client.query('DELETE FROM "Feedback"')
+    await client.query('DELETE FROM "MDAppointment"')
+    await client.query('DELETE FROM "MentalHealthRequest"')
+    await client.query('DELETE FROM "SupportTicket"')
+    await client.query('DELETE FROM "IncrementRequest"')
+    await client.query('DELETE FROM "IJPApplication"')
+    await client.query('DELETE FROM "PreAuthPDF"')
+    await client.query('DELETE FROM "PreAuthorization"')
+    await client.query('DELETE FROM "PLRecord"')
+    await client.query('DELETE FROM "Employee"')
+    await client.query('DELETE FROM "Team"')
+    await client.query('DELETE FROM "User" WHERE id != $1', [pid])
 
-  // Re-enable FK checking
-  await pool.query('SET session_replication_role = DEFAULT')
+    await client.query('SET session_replication_role = DEFAULT')
+  } finally {
+    client.release()
+  }
   console.log('Reset: done.')
 
   const empIdToEmployeeId = new Map<number, string>()
@@ -335,10 +341,15 @@ async function main() {
     await prisma.lead.updateMany({ where: { updatedById: pid }, data: { updatedById: fallbackUserId } })
     await prisma.target.updateMany({ where: { createdById: pid }, data: { createdById: fallbackUserId } })
   }
-  // Disable FK checks to remove placeholder (other tables may have dangling refs from deleted users)
-  await pool.query('SET session_replication_role = replica')
-  await prisma.user.delete({ where: { id: pid } })
-  await pool.query('SET session_replication_role = DEFAULT')
+  // Remove placeholder using a single connection with FK checks disabled
+  const client2 = await pool.connect()
+  try {
+    await client2.query('SET session_replication_role = replica')
+    await client2.query('DELETE FROM "User" WHERE id = $1', [pid])
+    await client2.query('SET session_replication_role = DEFAULT')
+  } finally {
+    client2.release()
+  }
   console.log('Placeholder user removed.')
 
   console.log('Seed complete.')
