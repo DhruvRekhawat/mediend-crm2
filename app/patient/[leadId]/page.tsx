@@ -938,8 +938,8 @@ export default function PatientDetailsPage() {
                   </Button>
                 )}
 
-                {/* BD Actions (Insurance Flow) */}
-                {lead.flowType !== FlowType.CASH && !lead.kypSubmission && (user.role === 'BD' || user.role === 'ADMIN') && (
+                {/* BD Actions (Insurance Flow) — show when at Card Details step (NEW_LEAD or KYP_BASIC_PENDING) */}
+                {lead.flowType !== FlowType.CASH && (user.role === 'BD' || user.role === 'ADMIN') && (lead.caseStage === CaseStage.NEW_LEAD || lead.caseStage === CaseStage.KYP_BASIC_PENDING) && (
                   <Button
                     asChild
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
