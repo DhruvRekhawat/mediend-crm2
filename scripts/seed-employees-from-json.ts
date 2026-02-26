@@ -172,13 +172,12 @@ async function main() {
     data: { deletedById: null, editRequestedById: null, editApprovedById: null, approvedById: null },
   })
   await prisma.insuranceCase.updateMany({ data: { handledById: null } })
-  await prisma.leadRemark.updateMany({ data: { handledById: null } })
-  await prisma.preAuthPDF.updateMany({ data: { handledById: null } })
+  await prisma.pLRecord.updateMany({ data: { handledById: null } })
+  await prisma.preAuthorization.updateMany({ data: { preAuthRaisedById: null, handledById: null } })
   await prisma.insuranceQuery.updateMany({ data: { answeredById: null } })
   await prisma.outstandingCase.updateMany({ data: { handledById: null } })
   await prisma.department.updateMany({ data: { headId: null } })
   await prisma.caseChatMessage.updateMany({ data: { senderId: null } })
-  await prisma.preAuthorization.updateMany({ data: { preAuthRaisedById: null } })
 
   await prisma.user.updateMany({ data: { teamId: null } })
   await prisma.departmentTeam.updateMany({ data: { teamLeadId: null } })
