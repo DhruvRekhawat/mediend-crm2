@@ -3,8 +3,6 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { maskPhoneNumber } from '@/lib/phone-utils'
-
 function isImageUrl(url: string): boolean {
   const u = url.toLowerCase()
   return u.includes('.png') || u.includes('.jpg') || u.includes('.jpeg') || u.includes('.gif') || u.includes('.webp')
@@ -32,9 +30,40 @@ function escapeHtml(s: string): string {
     .replace(/"/g, '&quot;')
 }
 
+type SuggestedHospital = {
+  hospitalName: string
+  requestedRoomType?: string | null
+  roomRentSingle?: number | null
+  roomRentSemiPrivate?: number | null
+  roomRentDeluxe?: number | null
+  roomRentGeneral?: number | null
+}
+
+function getSelectedHospitalRoomRent(
+  suggestedHospitals: SuggestedHospital[] | null | undefined,
+  requestedHospitalName: string | null | undefined,
+  requestedRoomType: string | null | undefined
+): string | null {
+  if (!requestedHospitalName?.trim() || !suggestedHospitals?.length) return null
+  const selected = suggestedHospitals.find(
+    (h) => h.hospitalName?.trim() === requestedHospitalName.trim()
+  )
+  if (!selected) return null
+  const rt = (requestedRoomType || '').toLowerCase().replace(/\s+/g, ' ')
+  if (rt.includes('single') && selected.roomRentSingle != null) return String(selected.roomRentSingle)
+  if ((rt.includes('semi') || rt.includes('private')) && selected.roomRentSemiPrivate != null) return String(selected.roomRentSemiPrivate)
+  if (rt.includes('deluxe') && selected.roomRentDeluxe != null) return String(selected.roomRentDeluxe)
+  if (rt.includes('general') && selected.roomRentGeneral != null) return String(selected.roomRentGeneral)
+  return selected.roomRentSingle != null ? String(selected.roomRentSingle)
+    : selected.roomRentSemiPrivate != null ? String(selected.roomRentSemiPrivate)
+    : selected.roomRentDeluxe != null ? String(selected.roomRentDeluxe)
+    : selected.roomRentGeneral != null ? String(selected.roomRentGeneral)
+    : null
+}
+
 function buildPreAuthHtml(params: {
-  lead: { patientName: string; leadRef: string; phoneNumber: string; city: string; treatment: string | null; category: string | null }
-  kyp: { aadhar: string | null; pan: string | null; insuranceCard: string | null; location: string | null; area: string | null; disease: string | null; patientConsent: boolean; remark: string | null }
+  lead: { patientName: string; leadRef: string; city: string; treatment: string | null; category: string | null }
+  kyp: { aadhar: string | null; pan: string | null; insuranceCard: string | null; insuranceCardFileUrl: string | null; insuranceName: string | null; location: string | null; area: string | null; disease: string | null; patientConsent: boolean; remark: string | null }
   preAuth: {
     insurance: string | null
     tpa: string | null
@@ -57,7 +86,6 @@ function buildPreAuthHtml(params: {
   const patientRows = [
     ['Patient Name', escapeHtml(lead.patientName)],
     ['Lead Ref', escapeHtml(lead.leadRef)],
-    ['Phone', escapeHtml(lead.phoneNumber)],
     ['City', escapeHtml(cityDisplay)],
     ['Area', escapeHtml(kyp.area || '—')],
     ['Treatment', escapeHtml(lead.treatment || '—')],
@@ -67,17 +95,20 @@ function buildPreAuthHtml(params: {
   const kypRows = [
     ['Aadhar', escapeHtml(v(kyp.aadhar))],
     ['PAN', escapeHtml(v(kyp.pan))],
-    ['Insurance Card', escapeHtml(v(kyp.insuranceCard))],
+    ['Insurance Name', escapeHtml(v(kyp.insuranceName))],
+    ['Insurance Card (text)', escapeHtml(v(kyp.insuranceCard))],
+    ['Insurance Card (file URL)', escapeHtml(v(kyp.insuranceCardFileUrl))],
     ['Disease / Treatment', escapeHtml(v(kyp.disease))],
     ['Patient Consent', kyp.patientConsent ? 'Yes' : 'No'],
     ['Remark', escapeHtml(v(kyp.remark))],
   ]
 
+  const roomRentDisplay = v(preAuth.roomRent)
   const preAuthRows = [
     ['Insurance', escapeHtml(v(preAuth.insurance))],
     ['TPA', escapeHtml(v(preAuth.tpa))],
     ['Sum Insured', escapeHtml(v(preAuth.sumInsured))],
-    ['Room Rent', escapeHtml(v(preAuth.roomRent))],
+    ['Room Rent (selected hospital)', escapeHtml(roomRentDisplay)],
     ['Capping', escapeHtml(v(preAuth.capping))],
     ['Copay', escapeHtml(v(preAuth.copay))],
     ['ICU', escapeHtml(v(preAuth.icu))],
@@ -181,7 +212,7 @@ export async function GET(
       include: {
         kypSubmission: {
           include: {
-            preAuthData: true,
+            preAuthData: { include: { suggestedHospitals: true } },
           },
         },
       },
@@ -212,15 +243,23 @@ export async function GET(
       if (img) imageDataUrls.push(img)
     }
 
-    // Mask phone number if user is not INSURANCE_HEAD or ADMIN
-    const canViewPhone = user.role === 'INSURANCE_HEAD' || user.role === 'ADMIN'
-    const phoneDisplay = canViewPhone ? (lead.phoneNumber || '—') : maskPhoneNumber(lead.phoneNumber)
+    const suggestedHospitals = preAuth.suggestedHospitals ?? []
+    const selectedRoomRent = getSelectedHospitalRoomRent(
+      suggestedHospitals,
+      preAuth.requestedHospitalName,
+      preAuth.requestedRoomType
+    )
+    const roomRentDisplay = selectedRoomRent != null
+      ? `₹${Number(selectedRoomRent).toLocaleString('en-IN')}`
+      : (preAuth.roomRent != null && preAuth.roomRent !== ''
+          ? (Number.isNaN(Number(preAuth.roomRent)) ? String(preAuth.roomRent) : `₹${Number(preAuth.roomRent).toLocaleString('en-IN')}`)
+          : null)
+    const insuranceName = (preAuth.insurance || lead.insuranceName || kyp.insuranceCard || null) ?? null
 
     const html = buildPreAuthHtml({
       lead: {
         patientName: lead.patientName || '—',
         leadRef: lead.leadRef || '—',
-        phoneNumber: phoneDisplay,
         city: lead.city || '—',
         treatment: lead.treatment ?? null,
         category: lead.category ?? null,
@@ -229,6 +268,8 @@ export async function GET(
         aadhar: kyp.aadhar ?? null,
         pan: kyp.pan ?? null,
         insuranceCard: kyp.insuranceCard ?? null,
+        insuranceCardFileUrl: kyp.insuranceCardFileUrl ?? null,
+        insuranceName,
         location: kyp.location ?? null,
         area: kyp.area ?? null,
         disease: kyp.disease ?? null,
@@ -239,7 +280,7 @@ export async function GET(
         insurance: preAuth.insurance ?? null,
         tpa: preAuth.tpa ?? null,
         sumInsured: preAuth.sumInsured ?? null,
-        roomRent: preAuth.roomRent ?? null,
+        roomRent: roomRentDisplay,
         capping: preAuth.capping ? String(preAuth.capping) : null,
         copay: preAuth.copay ?? null,
         icu: preAuth.icu ?? null,

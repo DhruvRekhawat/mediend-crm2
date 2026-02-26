@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
       return errorResponse('Lead not found', 404)
     }
 
-    // Check if user is the BD assigned to this lead or has admin permissions
-    if (lead.bdId !== user.id && user.role !== 'ADMIN' && user.role !== 'SALES_HEAD' && user.role !== 'TESTER') {
+    // Check if user is the BD assigned to this lead or has TL/admin permissions
+    if (lead.bdId !== user.id && user.role !== 'ADMIN' && user.role !== 'TEAM_LEAD' && user.role !== 'SALES_HEAD' && user.role !== 'TESTER') {
       return errorResponse('You do not have permission to submit KYP for this lead', 403)
     }
 

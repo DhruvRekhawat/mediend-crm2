@@ -15,8 +15,8 @@ export async function POST(
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'BD' && user.role !== 'ADMIN') {
-      return errorResponse('Forbidden: Only BD can mark discharge', 403)
+    if (user.role !== 'BD' && user.role !== 'TEAM_LEAD' && user.role !== 'ADMIN') {
+      return errorResponse('Forbidden: Only BD / TL can mark discharge', 403)
     }
 
     const { id: leadId } = await params

@@ -204,7 +204,7 @@ export function KYPDetailsView({ kypSubmission }: KYPDetailsViewProps) {
                 </div>
                 <div className="flex-1">
                   <Label className="text-xs text-gray-500 dark:text-gray-400">Submitted By</Label>
-                  <p className="text-sm text-gray-900 dark:text-gray-100">{kypSubmission.submittedBy.name}</p>
+                  <p className="text-sm text-gray-900 dark:text-gray-100">{kypSubmission.submittedBy?.name ?? 'Unknown'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">

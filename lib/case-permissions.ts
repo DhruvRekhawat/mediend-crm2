@@ -54,37 +54,37 @@ export function canCompletePreAuth(user: User, lead: Lead): boolean {
   return isInsurance && isPreAuthRaised
 }
 
-// BD can edit KYP when it's in basic complete or hospitals suggested states
+// BD / TL can edit KYP when it's in basic complete or hospitals suggested states
 export function canEditKYP(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isBD = user.role === 'BD' || user.role === 'ADMIN'
+  const isBDOrTL = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
   const canEditStages: CaseStage[] = [
     CaseStage.KYP_BASIC_COMPLETE,
     CaseStage.HOSPITALS_SUGGESTED
   ]
   
-  return isBD && canEditStages.includes(lead.caseStage)
+  return isBDOrTL && canEditStages.includes(lead.caseStage)
 }
 
-// BD can mark admitted when pre-auth is complete
+// BD / TL can mark admitted when pre-auth is complete
 export function canInitiate(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isBD = user.role === 'BD' || user.role === 'ADMIN'
+  const isBDOrTL = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
   const isPreAuthComplete = lead.caseStage === CaseStage.PREAUTH_COMPLETE
   
-  return isBD && isPreAuthComplete
+  return isBDOrTL && isPreAuthComplete
 }
 
-// BD can mark IPD when initiated
+// BD / TL can mark IPD when initiated
 export function canMarkIPD(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
   
-  const isBD = user.role === 'BD' || user.role === 'ADMIN'
+  const isBDOrTL = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
   const isInitiated = lead.caseStage === CaseStage.INITIATED
   
-  return isBD && isInitiated
+  return isBDOrTL && isInitiated
 }
 
 // Insurance can generate/download PDF after pre-auth is raised
@@ -109,12 +109,12 @@ export function canEditDischargeSheet(user: User, lead: Lead): boolean {
   return isInsuranceOrPL && isDischarged && hasInitiateForm
 }
 
-// BD can mark case as lost only after KYP1 and up until Mark Admitted (not before KYP1, not after admitted)
+// BD / TL can mark case as lost only after KYP1 and up until Mark Admitted (not before KYP1, not after admitted)
 export function canMarkLost(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
 
-  const isBD = user.role === 'BD' || user.role === 'ADMIN'
-  if (!isBD) return false
+  const isBDOrTL = user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN'
+  if (!isBDOrTL) return false
 
   // Not allowed: before KYP1 (basic complete) or after admission
   const beforeKYP1: CaseStage[] = [CaseStage.NEW_LEAD]

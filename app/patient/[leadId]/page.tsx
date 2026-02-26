@@ -819,13 +819,26 @@ export default function PatientDetailsPage() {
                     key={`${doc.url}-${index}`}
                     className="flex flex-col rounded-lg border-2 border-gray-200 dark:border-gray-800 overflow-hidden hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md transition-all"
                   >
-                    <div className="w-full h-[200px] shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-900">
-                      <iframe
-                        src={doc.url}
-                        title={doc.title}
-                        className="w-full h-full border-0 pointer-events-none select-none"
-                        style={{ overflow: 'hidden' }}
-                      />
+                    <div className="w-full h-[200px] shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+                      {doc.isImage ? (
+                        <iframe
+                          src={doc.url}
+                          title={doc.title}
+                          className="w-full h-full border-0 pointer-events-none select-none"
+                          style={{ overflow: 'hidden' }}
+                        />
+                      ) : (
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex flex-col items-center justify-center gap-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 p-4 no-underline"
+                        >
+                          <FileText className="w-12 h-12" />
+                          <span className="text-xs text-center line-clamp-2">{doc.title}</span>
+                          <span className="text-xs font-medium">Open in new tab</span>
+                        </a>
+                      )}
                     </div>
                     <div className="p-2 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shrink-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" title={doc.title}>
@@ -938,8 +951,8 @@ export default function PatientDetailsPage() {
                   </Button>
                 )}
 
-                {/* BD Actions (Insurance Flow) — show when at Card Details step (NEW_LEAD or KYP_BASIC_PENDING) */}
-                {lead.flowType !== FlowType.CASH && (user.role === 'BD' || user.role === 'ADMIN') && (lead.caseStage === CaseStage.NEW_LEAD || lead.caseStage === CaseStage.KYP_BASIC_PENDING) && (
+                {/* BD / TL Actions (Insurance Flow) — show when at Card Details step (NEW_LEAD or KYP_BASIC_PENDING) */}
+                {lead.flowType !== FlowType.CASH && (user.role === 'BD' || user.role === 'TEAM_LEAD' || user.role === 'ADMIN') && (lead.caseStage === CaseStage.NEW_LEAD || lead.caseStage === CaseStage.KYP_BASIC_PENDING) && (
                   <Button
                     asChild
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white border-0"
@@ -1114,7 +1127,7 @@ export default function PatientDetailsPage() {
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Submitted by <span className="font-semibold">{kypSubmission.submittedBy.name}</span> on {format(new Date(kypSubmission.submittedAt), 'PPp')}
+                  Submitted by <span className="font-semibold">{kypSubmission.submittedBy?.name ?? 'Unknown'}</span> on {format(new Date(kypSubmission.submittedAt), 'PPp')}
                 </div>
               </div>
               {/* Follow-up / KYP status details row */}
@@ -1213,7 +1226,7 @@ export default function PatientDetailsPage() {
                       </div>
                     </div>
                     <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Treating Doctor</Label>
+                      <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Suggested Doctor by BD</Label>
                       <p className="text-sm font-semibold mt-1">{lead.ipdDrName || '-'}</p>
                     </div>
                   </div>
@@ -1325,12 +1338,22 @@ export default function PatientDetailsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-[10px] uppercase text-gray-500 font-bold">Insurance Co.</Label>
-                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.insurance || lead.insuranceName || '-'}</p>
+                        <p className="text-sm font-semibold">{kypSubmission.preAuthData.insurance || lead.insuranceName || kypSubmission.insuranceCard || '-'}</p>
                       </div>
                       <div>
                         <Label className="text-[10px] uppercase text-gray-500 font-bold">TPA</Label>
                         <p className="text-sm font-semibold">{kypSubmission.preAuthData.tpa || '-'}</p>
                       </div>
+                      {kypSubmission.insuranceCardFileUrl && (
+                        <div className="col-span-2">
+                          <Label className="text-[10px] uppercase text-gray-500 font-bold">Insurance Card (file)</Label>
+                          <p className="text-sm font-semibold">
+                            <a href={kypSubmission.insuranceCardFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline truncate block">
+                              {kypSubmission.insuranceCardFileUrl}
+                            </a>
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -1348,7 +1371,7 @@ export default function PatientDetailsPage() {
                         <p className="text-sm font-semibold">{kypSubmission.preAuthData.copay || '0'}%</p>
                       </div>
                       <div>
-                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Capping</Label>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Disease Capping</Label>
                         <p className="text-sm font-semibold">
                           {kypSubmission.preAuthData.capping != null && kypSubmission.preAuthData.capping !== ''
                             ? (typeof kypSubmission.preAuthData.capping === 'string' && !Number.isNaN(Number(kypSubmission.preAuthData.capping))
@@ -1378,8 +1401,24 @@ export default function PatientDetailsPage() {
                         <p className="text-sm font-semibold">{kypSubmission.preAuthData.requestedRoomType || '-'}</p>
                       </div>
                       <div>
-                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Room Rent Limit</Label>
-                        <p className="text-sm font-semibold">₹{Number(kypSubmission.preAuthData.roomRent || 0).toLocaleString('en-IN')}</p>
+                        <Label className="text-[10px] uppercase text-gray-500 font-bold">Room Rent (selected)</Label>
+                        <p className="text-sm font-semibold">
+                          {(() => {
+                            const requestedName = kypSubmission.preAuthData.requestedHospitalName?.trim()
+                            const requestedRoom = (kypSubmission.preAuthData.requestedRoomType || '').toLowerCase().replace(/\s+/g, ' ')
+                            const selectedHosp = requestedName && kypSubmission.preAuthData.suggestedHospitals?.length
+                              ? kypSubmission.preAuthData.suggestedHospitals.find((h) => h.hospitalName?.trim() === requestedName)
+                              : null
+                            const rent = selectedHosp
+                              ? (requestedRoom.includes('single') && selectedHosp.roomRentSingle != null ? selectedHosp.roomRentSingle
+                                : (requestedRoom.includes('semi') || requestedRoom.includes('private')) && selectedHosp.roomRentSemiPrivate != null ? selectedHosp.roomRentSemiPrivate
+                                : requestedRoom.includes('deluxe') && selectedHosp.roomRentDeluxe != null ? selectedHosp.roomRentDeluxe
+                                : requestedRoom.includes('general') && selectedHosp.roomRentGeneral != null ? selectedHosp.roomRentGeneral
+                                : selectedHosp.roomRentSingle ?? selectedHosp.roomRentSemiPrivate ?? selectedHosp.roomRentDeluxe ?? selectedHosp.roomRentGeneral ?? null)
+                              : null
+                            return rent != null ? `₹${Number(rent).toLocaleString('en-IN')}` : '-'
+                          })()}
+                        </p>
                       </div>
                     </div>
                     {kypSubmission.preAuthData.preAuthRaisedAt && (

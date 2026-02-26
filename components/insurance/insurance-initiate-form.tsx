@@ -72,45 +72,40 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
   const [submitting, setSubmitting] = useState(false)
   const initializedRef = useRef(false)
 
-  // Update form data when lead becomes available
+  // When initialData is provided (edit mode), always pre-fill from it — takes precedence over lead
   useEffect(() => {
-    if (!lead || initializedRef.current) return
+    if (!initialData) return
+    setFormData({
+      totalBillAmount: initialData.totalBillAmount != null ? String(initialData.totalBillAmount) : '',
+      discount: initialData.discount != null ? String(initialData.discount) : '',
+      otherReductions: initialData.otherReductions != null ? String(initialData.otherReductions) : '',
+      copay: initialData.copay != null ? String(initialData.copay) : '',
+      copayBuffer: initialData.copayBuffer != null ? String(initialData.copayBuffer) : '',
+      deductible: initialData.deductible != null ? String(initialData.deductible) : '',
+      exceedsPolicyLimit: initialData.exceedsPolicyLimit ?? '',
+      policyDeductibleAmount: initialData.policyDeductibleAmount != null ? String(initialData.policyDeductibleAmount) : '',
+      totalAuthorizedAmount: initialData.totalAuthorizedAmount != null ? String(initialData.totalAuthorizedAmount) : '',
+      amountToBePaidByInsurance: initialData.amountToBePaidByInsurance != null ? String(initialData.amountToBePaidByInsurance) : '',
+      roomCategory: initialData.roomCategory ?? '',
+      initialApprovalByHospitalUrl: initialData.initialApprovalByHospitalUrl ?? '',
+    })
+  }, [initialData?.id])
 
+  // When no initialData (create mode), pre-fill copay/room from lead pre-auth once
+  useEffect(() => {
+    if (!lead || initialData || initializedRef.current) return
     const preAuth = lead.kypSubmission?.preAuthData
-    const copayFromPreAuth = preAuth?.copay != null && preAuth.copay !== '' 
-      ? String(preAuth.copay).replace(/%/g, '').trim() 
+    const copayFromPreAuth = preAuth?.copay != null && preAuth.copay !== ''
+      ? String(preAuth.copay).replace(/%/g, '').trim()
       : ''
     const roomCategoryFromPreAuth = preAuth?.requestedRoomType || ''
-
     setFormData((prev) => ({
       ...prev,
       copay: copayFromPreAuth || prev.copay,
       roomCategory: roomCategoryFromPreAuth || prev.roomCategory,
     }))
-
     initializedRef.current = true
-  }, [lead])
-
-  // Update form data when initialData is provided (for editing)
-  useEffect(() => {
-    if (initialData && !initializedRef.current) {
-      setFormData({
-        totalBillAmount: initialData.totalBillAmount != null ? String(initialData.totalBillAmount) : '',
-        discount: initialData.discount != null ? String(initialData.discount) : '',
-        otherReductions: initialData.otherReductions != null ? String(initialData.otherReductions) : '',
-        copay: initialData.copay != null ? String(initialData.copay) : '',
-        copayBuffer: initialData.copayBuffer != null ? String(initialData.copayBuffer) : '',
-        deductible: initialData.deductible != null ? String(initialData.deductible) : '',
-        exceedsPolicyLimit: initialData.exceedsPolicyLimit || '',
-        policyDeductibleAmount: initialData.policyDeductibleAmount != null ? String(initialData.policyDeductibleAmount) : '',
-        totalAuthorizedAmount: initialData.totalAuthorizedAmount != null ? String(initialData.totalAuthorizedAmount) : '',
-        amountToBePaidByInsurance: initialData.amountToBePaidByInsurance != null ? String(initialData.amountToBePaidByInsurance) : '',
-        roomCategory: initialData.roomCategory || '',
-        initialApprovalByHospitalUrl: initialData.initialApprovalByHospitalUrl || '',
-      })
-      initializedRef.current = true
-    }
-  }, [initialData])
+  }, [lead, initialData])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,7 +128,7 @@ export function InsuranceInitiateForm({ leadId, onSuccess, initialData, embedded
         initialApprovalByHospitalUrl: formData.initialApprovalByHospitalUrl || undefined,
       }
 
-      if (initialData) {
+      if (initialData?.id) {
         await apiPatch(`/api/insurance-initiate-form/${initialData.id}`, payload)
         toast.success('Initiate form updated successfully')
       } else {

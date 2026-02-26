@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
           fromStage: CaseStage.KYP_BASIC_COMPLETE,
           toStage: CaseStage.HOSPITALS_SUGGESTED,
           changedById: user.id,
-          note: `Insurance suggested ${data.hospitals.length} hospital(s)`,
+          note: `Insurance suggested hospitals. BD can now choose and raise pre-auth.`,
         },
       })
 
