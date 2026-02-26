@@ -79,7 +79,6 @@ export function PreAuthInlineApproval({
   const { uploadFile, uploading: uploadUploading } = useFileUpload()
   const [showHospitalForm, setShowHospitalForm] = useState(false)
   const [showInitiateForm, setShowInitiateForm] = useState(false)
-  const [initiateFormEditMode, setInitiateFormEditMode] = useState(false)
 
   const queryClient = useQueryClient()
   const searchParams = useSearchParams()
@@ -490,38 +489,20 @@ export function PreAuthInlineApproval({
 
         {hospitalSuggestionsJsx}
 
-        {/* Insurance Initiate Form — show readonly card when filled, else editable form */}
+        {/* Insurance Initiate Form — show readonly card when filled, else editable form (edit disabled for now) */}
         <div className="space-y-4">
-          {initiateForm && isInitiateFormFilled && !initiateFormEditMode ? (
-            <>
-              <InitiateFormCard initiateForm={initiateForm} />
-              <Button
-                variant="outline"
-                onClick={() => setInitiateFormEditMode(true)}
-                className="gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Edit Initial Form
-              </Button>
-            </>
+          {initiateForm && isInitiateFormFilled ? (
+            <InitiateFormCard initiateForm={initiateForm} />
           ) : (
-            <>
-              {initiateForm && isInitiateFormFilled && (
-                <Button variant="ghost" size="sm" onClick={() => setInitiateFormEditMode(false)} className="mb-2">
-                  ← Back to view
-                </Button>
-              )}
-              <InsuranceInitiateForm
-                leadId={leadId}
-                initialData={initiateFormData?.initiateForm}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-                  queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                  setInitiateFormEditMode(false)
-                }}
-                embedded
-              />
-            </>
+            <InsuranceInitiateForm
+              leadId={leadId}
+              initialData={initiateFormData?.initiateForm}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+              }}
+              embedded
+            />
           )}
         </div>
 
@@ -621,47 +602,28 @@ export function PreAuthInlineApproval({
               </Button>
             )}
 
-            {/* Insurance Initiate Form — readonly card when saved, else editable form */}
+            {/* Insurance Initiate Form — readonly card when saved, else editable form (edit disabled for now) */}
             {showInitiateForm && (
               <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">Insurance Initiate Form</h3>
-                  <Button variant="ghost" size="sm" onClick={() => { setShowInitiateForm(false); setInitiateFormEditMode(false) }}>
+                  <Button variant="ghost" size="sm" onClick={() => { setShowInitiateForm(false) }}>
                     Close
                   </Button>
                 </div>
-                {initiateForm && isInitiateFormFilled && !initiateFormEditMode ? (
-                  <>
-                    <InitiateFormCard initiateForm={initiateForm} />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setInitiateFormEditMode(true)}
-                      className="gap-2"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Edit form
-                    </Button>
-                  </>
+                {initiateForm && isInitiateFormFilled ? (
+                  <InitiateFormCard initiateForm={initiateForm} />
                 ) : (
-                  <>
-                    {initiateForm && isInitiateFormFilled && (
-                      <Button variant="ghost" size="sm" onClick={() => setInitiateFormEditMode(false)} className="mb-2">
-                        ← Back to view
-                      </Button>
-                    )}
-                    <InsuranceInitiateForm
-                      leadId={leadId}
-                      initialData={initiateFormData?.initiateForm}
-                      onSuccess={() => {
-                        queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
-                        queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
-                        setShowInitiateForm(false)
-                        setInitiateFormEditMode(false)
-                      }}
-                      embedded
-                    />
-                  </>
+                  <InsuranceInitiateForm
+                    leadId={leadId}
+                    initialData={initiateFormData?.initiateForm}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({ queryKey: ['insurance-initiate-form', leadId] })
+                      queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
+                      setShowInitiateForm(false)
+                    }}
+                    embedded
+                  />
                 )}
               </div>
             )}
@@ -700,7 +662,7 @@ export function PreAuthInlineApproval({
                     className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
                   >
                     <FileText className="w-4 h-4 mr-2" />
-                    {isInitiateFormFilled ? 'Edit Initial Form' : 'Fill Initial Form'}
+                    {isInitiateFormFilled ? 'View Initial Form' : 'Fill Initial Form'}
                   </Button>
                 )}
               </div>
