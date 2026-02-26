@@ -1,8 +1,8 @@
 /**
  * Historic Attendance Sync Script
- * 
- * This script syncs attendance data from December 1st to today.
- * Run once to populate historic data: npx tsx scripts/sync-historic-attendance.ts
+ *
+ * Syncs attendance data from January 1st (or --from YYYY-MM-DD) to today.
+ * Usage: bun run scripts/sync-historic-attendance.ts [--from YYYY-MM-DD]
  */
 
 // Load environment variables first
@@ -40,11 +40,22 @@ async function syncHistoricAttendance() {
     const adapter = new PrismaPg(pool)
     prisma = new PrismaClient({ adapter })
 
-    // Calculate date range: December 1st to today
+    // Parse optional --from YYYY-MM-DD; default to January 1st of current year
+    let startDate: Date
+    const fromIdx = process.argv.indexOf('--from')
+    if (fromIdx !== -1 && fromIdx + 1 < process.argv.length) {
+      startDate = new Date(process.argv[fromIdx + 1] + 'T00:00:00Z')
+      if (isNaN(startDate.getTime())) {
+        console.error(`Invalid --from date: ${process.argv[fromIdx + 1]}  (expected YYYY-MM-DD)`)
+        process.exit(1)
+      }
+    } else {
+      const today = new Date()
+      startDate = new Date(today.getFullYear(), 0, 1) // January 1st
+    }
+
     const today = new Date()
-    const decemberFirst = new Date(today.getFullYear(), 11, 1) // Month is 0-indexed, so 11 = December
-    
-    const fromDate = format(decemberFirst, 'yyyy-MM-dd')
+    const fromDate = format(startDate, 'yyyy-MM-dd')
     const toDate = format(today, 'yyyy-MM-dd')
 
     console.log(`🔄 Starting historic attendance sync from ${fromDate} to ${toDate}`)
