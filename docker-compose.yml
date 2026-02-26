@@ -75,6 +75,38 @@ services:
     entrypoint: ["bun", "run", "scripts/seed-employees-from-json.ts"]
     # Mount JSON and run. Custom path: docker compose run --rm seed -- /app/other.json
 
+  # One-off: sync leads from MySQL
+  # Usage: docker compose --profile tools run --rm sync-leads -- --from 2025-01-01
+  sync-leads:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/sync-mysql-leads.ts"]
+
+  # One-off: sync historic attendance
+  # Usage: docker compose --profile tools run --rm sync-attendance -- --from 2025-01-01
+  sync-attendance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/sync-historic-attendance.ts"]
+
 volumes:
   pgdata:
   uptime-kuma-data:
