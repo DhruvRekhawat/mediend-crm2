@@ -161,7 +161,17 @@ async function main() {
 
     empIdToEmployeeId.set(empId, employee.id)
     const bdNum = bdNumberValue(row)
-    if (bdNum !== null) bdNumberToUserId.set(bdNum, user.id)
+    if (bdNum !== null) {
+      const existing = bdNumberToUserId.get(bdNum)
+      if (existing !== undefined && existing !== user.id) {
+        console.warn(
+          `  BD number ${bdNum} already mapped to another user; keeping first (row: ${row.BDM}, emp ${empId})`
+        )
+      } else if (existing === undefined) {
+        bdNumberToUserId.set(bdNum, user.id)
+      }
+      // else same user, already in map — no change
+    }
     if (empId === MD_EMP_ID) mdUserId = user.id
   }
 

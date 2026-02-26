@@ -57,6 +57,24 @@ services:
     profiles:
       - tools
 
+  # One-off: seed users/employees from JSON and update BD number map
+  # Usage: docker compose --profile tools run --rm -v "$(pwd)/csvjson(5).json:/app/csvjson(5).json" seed
+  # Or with custom path: docker compose --profile tools run --rm -v "$(pwd)/path/to/file.json:/app/employees.json" seed npx tsx scripts/seed-employees-from-json.ts /app/employees.json
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["npx", "tsx", "scripts/seed-employees-from-json.ts"]
+    # Default input path in script is /app/csvjson(5).json. Mount your file there, or pass path: docker compose run --rm seed /app/other.json
+
 volumes:
   pgdata:
   uptime-kuma-data:
