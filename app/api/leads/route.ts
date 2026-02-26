@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
-import { Prisma, PipelineStage } from '@prisma/client'
+import { FlowType, Prisma, PipelineStage } from '@prisma/client'
 import { maskPhoneNumber } from '@/lib/phone-utils'
 import { getSubordinateUserIdsForLeadAccess } from '@/lib/hierarchy'
 
@@ -44,11 +44,12 @@ export async function GET(request: NextRequest) {
     }
     // Note: INSURANCE_HEAD can access all leads via canAccessLead, so we don't filter by bdId
 
-    // For insurance users, only show leads that have KYP submissions or are in insurance-related stages
+    // For insurance users: show leads with KYP (insurance flow), insurance-related stages, or any cash flow lead (for cash cases page)
     if (user.role === 'INSURANCE_HEAD') {
       where.OR = [
         { kypSubmission: { isNot: null } },
         { caseStage: { in: ['KYP_PENDING', 'KYP_COMPLETE', 'PREAUTH_RAISED', 'PREAUTH_COMPLETE', 'INITIATED', 'ADMITTED', 'DISCHARGED', 'IPD_DONE'] } },
+        { flowType: FlowType.CASH },
       ]
     }
 
