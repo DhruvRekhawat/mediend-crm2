@@ -58,7 +58,7 @@ export default function HRDepartmentsPage() {
       const users = await apiGet<any[]>('/api/users')
       // Filter for department head roles
       return users.filter((u: any) => 
-        ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD'].includes(u.role)
+        ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD'].includes(u.role)
       )
     },
   })
@@ -284,7 +284,7 @@ function DepartmentForm({
     newHeadName: '',
     newHeadEmail: '',
     newHeadPassword: '',
-    newHeadRole: 'INSURANCE_HEAD' as 'INSURANCE_HEAD' | 'PL_HEAD' | 'SALES_HEAD' | 'HR_HEAD' | 'FINANCE_HEAD',
+    newHeadRole: 'INSURANCE_HEAD' as 'INSURANCE_HEAD' | 'PL_HEAD' | 'SALES_HEAD' | 'HR_HEAD' | 'FINANCE_HEAD' | 'OUTSTANDING_HEAD' | 'DIGITAL_MARKETING_HEAD',
   })
 
   // Get users who are not already heads of other departments
@@ -453,6 +453,8 @@ function DepartmentForm({
                             <SelectItem value="SALES_HEAD">Sales Head</SelectItem>
                             <SelectItem value="HR_HEAD">HR Head</SelectItem>
                             <SelectItem value="FINANCE_HEAD">Finance Head</SelectItem>
+                            <SelectItem value="OUTSTANDING_HEAD">Outstanding Head</SelectItem>
+                            <SelectItem value="DIGITAL_MARKETING_HEAD">Digital Marketing Head</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

@@ -4,6 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { calculateLeaveDays, validateLeaveBalance, checkDateConflict } from '@/lib/hrms/leave-utils'
 import { ensureLeaveBalance } from '@/lib/hrms/leave-balance-utils'
+import { findLeaveApprover } from '@/lib/hierarchy'
 import { z } from 'zod'
 
 const applyLeaveSchema = z.object({
@@ -100,6 +101,12 @@ export async function POST(request: NextRequest) {
       return errorResponse('Leave request conflicts with existing approved/pending leave', 400)
     }
 
+    // Compute target approver from hierarchy (immediate manager or next available if on leave)
+    const targetApprover = await findLeaveApprover(employee.id, {
+      leaveStartDate: startDate,
+      leaveEndDate: endDate,
+    })
+
     // Create leave request
     const leaveRequest = await prisma.leaveRequest.create({
       data: {
@@ -109,9 +116,15 @@ export async function POST(request: NextRequest) {
         endDate,
         days,
         reason,
+        targetApproverId: targetApprover?.id ?? null,
       },
       include: {
         leaveType: true,
+        targetApprover: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        },
       },
     })
 

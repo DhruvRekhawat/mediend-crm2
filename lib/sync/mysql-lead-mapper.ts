@@ -2,6 +2,7 @@ import { Circle, PipelineStage, UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'
+import { getUserIdByBdNumber } from '@/lib/sync/bd-number-map'
 
 /**
  * MySQL Lead row structure (based on DESCRIBE lead output)
@@ -412,14 +413,34 @@ export async function mapMySQLLeadToPrisma(
     throw new Error(`Lead ${mysqlRow.id} has no BDM specified`)
   }
 
-  // Determine BDM name - if it's numeric, try both formats
+  // Determine BDM name - if it's numeric, try BD number map first (from seed-employees-from-json)
   const isNumeric = /^\d+$/.test(bdmValue)
   let bdmName = bdmValue // Default to original value
-  
-  // Try finding BD user - check both numeric value and "BD-{number}" format
-  let bdInfo = await findBDByName(bdmValue)
-  
-  // If numeric and not found, also try "BD-{number}" format
+  let bdInfo: { id: string; circle: Circle | null } | null = null
+
+  if (isNumeric) {
+    const userIdFromMap = getUserIdByBdNumber(bdmValue)
+    if (userIdFromMap) {
+      const user = await prisma.user.findUnique({
+        where: { id: userIdFromMap },
+        include: {
+          team: { select: { circle: true } },
+        },
+      })
+      if (user) {
+        bdInfo = {
+          id: user.id,
+          circle: user.team?.circle ?? null,
+        }
+      }
+    }
+  }
+
+  if (!bdInfo) {
+    bdInfo = await findBDByName(bdmValue)
+  }
+
+  // If numeric and still not found, also try "BD-{number}" format
   if (!bdInfo && isNumeric) {
     bdmName = `BD-${bdmValue}`
     bdInfo = await findBDByName(bdmName)

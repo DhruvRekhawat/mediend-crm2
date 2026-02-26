@@ -33,6 +33,10 @@ export type Permission =
   | 'departments:assign_head'
   | 'users:create_tl'
   | 'users:create_user'
+  | 'hierarchy:read'
+  | 'hierarchy:write'
+  | 'hierarchy:team:read'
+  | 'hierarchy:leave:approve'
 
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
@@ -51,6 +55,17 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'users:create_user',
     'hrms:attendance:read',
     'hrms:employees:read',
+    'hierarchy:read',
+    'hierarchy:write',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
+  ],
+  EXECUTIVE_ASSISTANT: [
+    'hrms:read',
+    'hrms:attendance:read',
+    'hrms:leaves:read',
+    'hrms:employees:read',
+    'hierarchy:read',
   ],
   SALES_HEAD: [
     'leads:read',
@@ -65,6 +80,29 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:create',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
+  ],
+  CATEGORY_MANAGER: [
+    'leads:read',
+    'leads:write',
+    'leads:assign',
+    'targets:read',
+    'analytics:read',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
+  ],
+  ASSISTANT_CATEGORY_MANAGER: [
+    'leads:read',
+    'leads:write',
+    'leads:assign',
+    'targets:read',
+    'analytics:read',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   TEAM_LEAD: [
     'leads:read',
@@ -72,6 +110,9 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'leads:assign',
     'targets:read',
     'analytics:read',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   BD: [
     'leads:read',
@@ -89,6 +130,9 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:create',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   PL_HEAD: [
     'leads:read',
@@ -99,6 +143,9 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:create',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   HR_HEAD: [
     'users:read',
@@ -117,6 +164,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:create',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:write',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   FINANCE_HEAD: [
     'analytics:read',
@@ -126,6 +177,15 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:create',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
+  ],
+  DIGITAL_MARKETING_HEAD: [
+    'analytics:read',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   OUTSTANDING_HEAD: [
     'leads:read',
@@ -136,6 +196,9 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:create',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   ADMIN: [
     'leads:read',
@@ -169,6 +232,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:assign_head',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:write',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
   USER: [
     'hrms:read',
@@ -209,6 +276,10 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'departments:assign_head',
     'users:create_tl',
     'users:create_user',
+    'hierarchy:read',
+    'hierarchy:write',
+    'hierarchy:team:read',
+    'hierarchy:leave:approve',
   ],
 }
 
@@ -255,7 +326,7 @@ export function canManageTeam(user: SessionUser | null, teamSalesHeadId?: string
 
 // Hierarchy validation functions
 
-const DEPT_HEAD_ROLES: UserRole[] = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']
+const DEPT_HEAD_ROLES: UserRole[] = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD']
 
 export function isDepartmentHead(role: UserRole): boolean {
   return DEPT_HEAD_ROLES.includes(role)
@@ -286,7 +357,7 @@ export function canCreateRole(user: SessionUser | null, targetRole: UserRole): b
 
   // HR_HEAD can create department head roles when creating departments
   if (user.role === 'HR_HEAD') {
-    return isDepartmentHead(targetRole) || targetRole === 'TEAM_LEAD' || targetRole === 'USER' || targetRole === 'BD'
+    return isDepartmentHead(targetRole) || targetRole === 'EXECUTIVE_ASSISTANT' || targetRole === 'CATEGORY_MANAGER' || targetRole === 'ASSISTANT_CATEGORY_MANAGER' || targetRole === 'TEAM_LEAD' || targetRole === 'USER' || targetRole === 'BD'
   }
 
   // Department heads can create TL and USER/BD
@@ -301,7 +372,7 @@ export function getAvailableRolesForCreator(user: SessionUser | null): UserRole[
   if (!user) return []
 
   // MD cannot be created
-  const allRolesExceptMD: UserRole[] = ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER', 'TESTER']
+  const allRolesExceptMD: UserRole[] = ['EXECUTIVE_ASSISTANT', 'SALES_HEAD', 'CATEGORY_MANAGER', 'ASSISTANT_CATEGORY_MANAGER', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'DIGITAL_MARKETING_HEAD', 'ADMIN', 'USER', 'TESTER']
 
   if (user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER') {
     return allRolesExceptMD
@@ -309,7 +380,7 @@ export function getAvailableRolesForCreator(user: SessionUser | null): UserRole[
 
   // HR_HEAD can create department head roles
   if (user.role === 'HR_HEAD') {
-    return ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'TEAM_LEAD', 'USER', 'BD']
+    return ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'EXECUTIVE_ASSISTANT', 'CATEGORY_MANAGER', 'ASSISTANT_CATEGORY_MANAGER', 'TEAM_LEAD', 'USER', 'BD']
   }
 
   if (isDepartmentHead(user.role)) {

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { isManagerOf } from '@/lib/hierarchy'
 import { z } from 'zod'
 
 const approveSchema = z.object({
@@ -20,7 +21,9 @@ export async function PATCH(
       return unauthorizedResponse()
     }
 
-    if (!hasPermission(user, 'hrms:leaves:write')) {
+    const canOverride = hasPermission(user, 'hrms:leaves:write')
+    const canApproveByHierarchy = hasPermission(user, 'hierarchy:leave:approve')
+    if (!canOverride && !canApproveByHierarchy) {
       return errorResponse('Forbidden', 403)
     }
 
@@ -43,6 +46,20 @@ export async function PATCH(
 
     if (leaveRequest.status !== 'PENDING') {
       return errorResponse('Leave request is not pending', 400)
+    }
+
+    // If not HR/MD override, verify approver is in the applicant's management chain
+    if (!canOverride && canApproveByHierarchy) {
+      const approverEmployee = await prisma.employee.findUnique({
+        where: { userId: user.id },
+      })
+      if (!approverEmployee) {
+        return errorResponse('Employee record not found for approver', 403)
+      }
+      const inChain = await isManagerOf(approverEmployee.id, leaveRequest.employeeId)
+      if (!inChain) {
+        return errorResponse('You can only approve leave for your direct or indirect reports', 403)
+      }
     }
 
     // Update leave request

@@ -150,6 +150,12 @@ export const navItems: NavItem[] = [
     roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
   },
   {
+    title: 'My Team',
+    url: '/employee/my-team',
+    icon: Users,
+    permission: 'hierarchy:team:read',
+  },
+  {
     title: 'HR Attendance',
     url: '/hr/attendance',
     icon: Clock,
@@ -178,6 +184,12 @@ export const navItems: NavItem[] = [
     url: '/hr/departments',
     icon: Building2,
     permission: 'hrms:employees:read',
+  },
+  {
+    title: 'Org Chart',
+    url: '/hr/org-chart',
+    icon: FolderTree,
+    roles: ['ADMIN', 'HR_HEAD'],
   },
   {
     title: 'Leave Types',
@@ -356,7 +368,7 @@ function mapItemUrls(items: NavItem[], role: string): (NavItem & { url: string }
     }
     if (item.title === 'Pipeline') {
       if (role === 'BD') return { ...item, url: '/bd/pipeline' }
-      if (role === 'TEAM_LEAD') return { ...item, url: '/team-lead/pipeline' }
+      if (role === 'TEAM_LEAD') return { ...item, url: '/bd/pipeline' }
       if (role === 'ADMIN') return { ...item, url: '/bd/pipeline' }
     }
     return item

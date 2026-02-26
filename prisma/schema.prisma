@@ -11,7 +11,10 @@ datasource db {
 
 enum UserRole {
   MD
+  EXECUTIVE_ASSISTANT
   SALES_HEAD
+  CATEGORY_MANAGER
+  ASSISTANT_CATEGORY_MANAGER
   TEAM_LEAD
   BD
   INSURANCE_HEAD
@@ -19,6 +22,7 @@ enum UserRole {
   OUTSTANDING_HEAD
   HR_HEAD
   FINANCE_HEAD
+  DIGITAL_MARKETING_HEAD
   ADMIN
   USER
   TESTER
@@ -684,6 +688,9 @@ model Employee {
   teamId       String?     // DepartmentTeam ID
   team         DepartmentTeam? @relation("DepartmentTeamMembers", fields: [teamId], references: [id])
   teamLeadOf   DepartmentTeam? @relation("DepartmentTeamLead") // Employee is team lead of this team
+  managerId    String?
+  manager      Employee?   @relation("EmployeeHierarchy", fields: [managerId], references: [id])
+  subordinates Employee[]  @relation("EmployeeHierarchy")
   dateOfBirth  DateTime?
   aadharNumber String?
   panNumber    String?
@@ -694,6 +701,7 @@ model Employee {
 
   attendanceLogs       AttendanceLog[]
   leaveRequests        LeaveRequest[]
+  leaveRequestsTargetApprover LeaveRequest[] @relation("LeaveTargetApprover")
   leaveBalances        LeaveBalance[]
   payrollRecords       PayrollRecord[]
   documents            EmployeeDocument[]
@@ -710,6 +718,7 @@ model Employee {
   @@index([employeeCode])
   @@index([departmentId])
   @@index([teamId])
+  @@index([managerId])
 }
 
 model AttendanceLog {
@@ -744,27 +753,30 @@ model LeaveTypeMaster {
 }
 
 model LeaveRequest {
-  id           String             @id @default(cuid())
-  employeeId   String
-  employee     Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  leaveTypeId  String
-  leaveType    LeaveTypeMaster    @relation(fields: [leaveTypeId], references: [id])
-  startDate    DateTime
-  endDate      DateTime
-  days         Int
-  reason       String?
-  status       LeaveRequestStatus @default(PENDING)
-  approvedById String?
-  approvedBy   User?              @relation("LeaveApprover", fields: [approvedById], references: [id])
-  approvedAt   DateTime?
-  remarks      String?
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id                String             @id @default(cuid())
+  employeeId        String
+  employee          Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveTypeId       String
+  leaveType         LeaveTypeMaster    @relation(fields: [leaveTypeId], references: [id])
+  startDate         DateTime
+  endDate           DateTime
+  days              Int
+  reason            String?
+  status            LeaveRequestStatus @default(PENDING)
+  targetApproverId  String?
+  targetApprover    Employee?          @relation("LeaveTargetApprover", fields: [targetApproverId], references: [id])
+  approvedById      String?
+  approvedBy        User?              @relation("LeaveApprover", fields: [approvedById], references: [id])
+  approvedAt        DateTime?
+  remarks           String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@index([employeeId])
   @@index([status])
   @@index([startDate])
   @@index([leaveTypeId])
+  @@index([targetApproverId])
 }
 
 model LeaveBalance {
