@@ -111,7 +111,7 @@ export function AppSidebar() {
               priority
             />
           </div>
-          <p className="text-md text-white font-bold">Workspace</p>
+          <p className="text-md text-white font-bold">Workspace Beta</p>
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-1">
