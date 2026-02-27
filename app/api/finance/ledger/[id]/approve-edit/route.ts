@@ -167,101 +167,94 @@ export async function POST(
       updateData.toPaymentModeId = changes.toPaymentModeId
     }
 
-    // Note: Balance recalculations for amount/payment mode changes should be handled
-    // by a separate background job or manual recalculation process for data integrity
-
-    // Apply the changes, increment editCount, and clear edit request fields
-    const updatedEntry = await prisma.ledgerEntry.update({
-      where: { id },
-      data: {
-        ...updateData,
-        editCount: entry.editCount + 1,
-        // Clear edit request fields after applying
-        editRequestStatus: null,
-        editRequestReason: null,
-        editRequestData: Prisma.JsonNull,
-        editRequestedById: null,
-        editRequestedAt: null,
-        editApprovalReason: reason?.trim() || null,
-        editApprovedById: user.id,
-        editApprovedAt: new Date(),
-      },
-      include: {
-        party: true,
-        head: true,
-        paymentType: true,
-        paymentMode: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    const updatedEntry = await prisma.$transaction(async (tx) => {
+      const updated = await tx.ledgerEntry.update({
+        where: { id },
+        data: {
+          ...updateData,
+          editCount: entry.editCount + 1,
+          editRequestStatus: null,
+          editRequestReason: null,
+          editRequestData: Prisma.JsonNull,
+          editRequestedById: null,
+          editRequestedAt: null,
+          editApprovalReason: reason?.trim() || null,
+          editApprovedById: user.id,
+          editApprovedAt: new Date(),
+        },
+        include: {
+          party: true,
+          head: true,
+          paymentType: true,
+          paymentMode: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    // Recalculate balances if the original entry was approved
-    if (entry.status === LedgerStatus.APPROVED) {
-      // Calculate new state from the updated entry
-      const newState = {
-        transactionType: updatedEntry.transactionType,
-        paymentAmount: updatedEntry.paymentAmount,
-        receivedAmount: updatedEntry.receivedAmount,
-        transferAmount: updatedEntry.transferAmount,
-        paymentModeId: updatedEntry.paymentModeId,
-        fromPaymentModeId: updatedEntry.fromPaymentModeId,
-        toPaymentModeId: updatedEntry.toPaymentModeId,
+      if (entry.status === LedgerStatus.APPROVED) {
+        const newState = {
+          transactionType: updated.transactionType,
+          paymentAmount: updated.paymentAmount,
+          receivedAmount: updated.receivedAmount,
+          transferAmount: updated.transferAmount,
+          paymentModeId: updated.paymentModeId,
+          fromPaymentModeId: updated.fromPaymentModeId,
+          toPaymentModeId: updated.toPaymentModeId,
+        }
+
+        if (entry.transactionType === TransactionType.CREDIT) {
+          await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.CREDIT, entry.receivedAmount || 0, tx)
+        } else if (entry.transactionType === TransactionType.DEBIT) {
+          await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.DEBIT, entry.paymentAmount || 0, tx)
+        } else if (entry.transactionType === TransactionType.SELF_TRANSFER) {
+          await reverseBalanceUpdate(entry.fromPaymentModeId!, TransactionType.DEBIT, entry.transferAmount || 0, tx)
+          await reverseBalanceUpdate(entry.toPaymentModeId!, TransactionType.CREDIT, entry.transferAmount || 0, tx)
+        }
+
+        if (newState.transactionType === TransactionType.CREDIT) {
+          await updatePaymentModeBalance(newState.paymentModeId!, TransactionType.CREDIT, newState.receivedAmount || 0, tx)
+        } else if (newState.transactionType === TransactionType.DEBIT) {
+          await updatePaymentModeBalance(newState.paymentModeId!, TransactionType.DEBIT, newState.paymentAmount || 0, tx)
+        } else if (newState.transactionType === TransactionType.SELF_TRANSFER) {
+          await updatePaymentModeBalance(newState.fromPaymentModeId!, TransactionType.DEBIT, newState.transferAmount || 0, tx)
+          await updatePaymentModeBalance(newState.toPaymentModeId!, TransactionType.CREDIT, newState.transferAmount || 0, tx)
+        }
       }
 
-      // Reverse the old balance impact
-      if (entry.transactionType === TransactionType.CREDIT) {
-        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.CREDIT, entry.receivedAmount || 0)
-      } else if (entry.transactionType === TransactionType.DEBIT) {
-        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.DEBIT, entry.paymentAmount || 0)
-      } else if (entry.transactionType === TransactionType.SELF_TRANSFER) {
-        await reverseBalanceUpdate(entry.fromPaymentModeId!, TransactionType.DEBIT, entry.transferAmount || 0)
-        await reverseBalanceUpdate(entry.toPaymentModeId!, TransactionType.CREDIT, entry.transferAmount || 0)
-      }
-
-      // Apply the new balance impact
-      if (newState.transactionType === TransactionType.CREDIT) {
-        await updatePaymentModeBalance(newState.paymentModeId!, TransactionType.CREDIT, newState.receivedAmount || 0)
-      } else if (newState.transactionType === TransactionType.DEBIT) {
-        await updatePaymentModeBalance(newState.paymentModeId!, TransactionType.DEBIT, newState.paymentAmount || 0)
-      } else if (newState.transactionType === TransactionType.SELF_TRANSFER) {
-        await updatePaymentModeBalance(newState.fromPaymentModeId!, TransactionType.DEBIT, newState.transferAmount || 0)
-        await updatePaymentModeBalance(newState.toPaymentModeId!, TransactionType.CREDIT, newState.transferAmount || 0)
-      }
-    }
-
-    // Create audit log for approval
-    await prisma.ledgerAuditLog.create({
-      data: {
-        ledgerEntryId: entry.id,
-        action: LedgerAuditAction.EDIT_APPROVED,
-        previousData: {
-          editRequestStatus: LedgerStatus.PENDING,
+      await tx.ledgerAuditLog.create({
+        data: {
+          ledgerEntryId: entry.id,
+          action: LedgerAuditAction.EDIT_APPROVED,
+          previousData: {
+            editRequestStatus: LedgerStatus.PENDING,
+          },
+          newData: {
+            editRequestStatus: LedgerStatus.APPROVED,
+            editApprovalReason: reason?.trim() || null,
+          },
+          reason: reason?.trim() || null,
+          performedById: user.id,
         },
-        newData: {
-          editRequestStatus: LedgerStatus.APPROVED,
-          editApprovalReason: reason?.trim() || null,
-        },
-        reason: reason?.trim() || null,
-        performedById: user.id,
-      },
-    })
+      })
 
-    // Create audit log for the update
-    await prisma.ledgerAuditLog.create({
-      data: {
-        ledgerEntryId: entry.id,
-        action: LedgerAuditAction.UPDATED,
-        previousData: previousData as Prisma.InputJsonValue,
-        newData: updateData as Prisma.InputJsonValue,
-        reason: `Applied approved edit request${reason?.trim() ? `: ${reason.trim()}` : ''}`,
-        performedById: user.id,
-      },
+      await tx.ledgerAuditLog.create({
+        data: {
+          ledgerEntryId: entry.id,
+          action: LedgerAuditAction.UPDATED,
+          previousData: previousData as Prisma.InputJsonValue,
+          newData: updateData as Prisma.InputJsonValue,
+          reason: `Applied approved edit request${reason?.trim() ? `: ${reason.trim()}` : ''}`,
+          performedById: user.id,
+        },
+      })
+
+      return updated
     })
 
     return successResponse(updatedEntry, 'Edit request approved and applied successfully')

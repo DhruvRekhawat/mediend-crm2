@@ -1,5 +1,10 @@
-import { TransactionType, LedgerStatus } from '@prisma/client'
+import { TransactionType, LedgerStatus, PrismaClient } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
+
+export type PrismaTransactionClient = Omit<
+  PrismaClient,
+  '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+>
 
 /**
  * Calculate the new balance after a transaction
@@ -19,8 +24,11 @@ export function calculateNewBalance(
 /**
  * Get the current balance for a payment mode
  */
-export async function getPaymentModeBalance(paymentModeId: string): Promise<number> {
-  const paymentMode = await prisma.paymentModeMaster.findUnique({
+export async function getPaymentModeBalance(
+  paymentModeId: string,
+  tx: PrismaTransactionClient = prisma
+): Promise<number> {
+  const paymentMode = await tx.paymentModeMaster.findUnique({
     where: { id: paymentModeId },
     select: { currentBalance: true },
   })
@@ -35,11 +43,12 @@ export async function getPaymentModeBalance(paymentModeId: string): Promise<numb
 export async function updatePaymentModeBalance(
   paymentModeId: string,
   transactionType: TransactionType,
-  amount: number
+  amount: number,
+  tx: PrismaTransactionClient = prisma
 ): Promise<number> {
   const increment = transactionType === TransactionType.CREDIT ? amount : -amount
 
-  const updated = await prisma.paymentModeMaster.update({
+  const updated = await tx.paymentModeMaster.update({
     where: { id: paymentModeId },
     data: {
       currentBalance: {
@@ -58,12 +67,12 @@ export async function updatePaymentModeBalance(
 export async function reverseBalanceUpdate(
   paymentModeId: string,
   transactionType: TransactionType,
-  amount: number
+  amount: number,
+  tx: PrismaTransactionClient = prisma
 ): Promise<number> {
-  // Reverse is the opposite of the original transaction
   const increment = transactionType === TransactionType.CREDIT ? -amount : amount
 
-  const updated = await prisma.paymentModeMaster.update({
+  const updated = await tx.paymentModeMaster.update({
     where: { id: paymentModeId },
     data: {
       currentBalance: {
@@ -100,19 +109,21 @@ export async function previewBalanceImpact(
 }
 
 /**
- * Get totals for a payment mode (all approved transactions)
+ * Get totals for a payment mode (all approved, non-deleted transactions)
+ * Includes self-transfers where this mode is the source (debit) or destination (credit)
  */
 export async function getPaymentModeTotals(paymentModeId: string): Promise<{
   totalCredits: number
   totalDebits: number
   netChange: number
 }> {
-  const [credits, debits] = await Promise.all([
+  const [credits, debits, selfTransferOut, selfTransferIn] = await Promise.all([
     prisma.ledgerEntry.aggregate({
       where: {
         paymentModeId,
         transactionType: TransactionType.CREDIT,
         status: LedgerStatus.APPROVED,
+        isDeleted: false,
       },
       _sum: {
         receivedAmount: true,
@@ -123,15 +134,38 @@ export async function getPaymentModeTotals(paymentModeId: string): Promise<{
         paymentModeId,
         transactionType: TransactionType.DEBIT,
         status: LedgerStatus.APPROVED,
+        isDeleted: false,
       },
       _sum: {
         paymentAmount: true,
       },
     }),
+    prisma.ledgerEntry.aggregate({
+      where: {
+        fromPaymentModeId: paymentModeId,
+        transactionType: TransactionType.SELF_TRANSFER,
+        status: LedgerStatus.APPROVED,
+        isDeleted: false,
+      },
+      _sum: {
+        transferAmount: true,
+      },
+    }),
+    prisma.ledgerEntry.aggregate({
+      where: {
+        toPaymentModeId: paymentModeId,
+        transactionType: TransactionType.SELF_TRANSFER,
+        status: LedgerStatus.APPROVED,
+        isDeleted: false,
+      },
+      _sum: {
+        transferAmount: true,
+      },
+    }),
   ])
 
-  const totalCredits = credits._sum.receivedAmount ?? 0
-  const totalDebits = debits._sum.paymentAmount ?? 0
+  const totalCredits = (credits._sum.receivedAmount ?? 0) + (selfTransferIn._sum.transferAmount ?? 0)
+  const totalDebits = (debits._sum.paymentAmount ?? 0) + (selfTransferOut._sum.transferAmount ?? 0)
   const netChange = totalCredits - totalDebits
 
   return { totalCredits, totalDebits, netChange }

@@ -213,10 +213,10 @@ export function isDischargeBlockedByInitiateForm(user: User, lead: Lead): boolea
   return isInsuranceOrPL && isDischarged && !lead.insuranceInitiateForm?.id
 }
 
-// Insurance, PL, Outstanding, Admin can view initiate form details
+// Insurance, PL, Outstanding, BD, Admin can view initiate form details
 export function canViewInitiateForm(user: User, lead: Lead): boolean {
   if (!user || !lead) return false
-  const allowedRoles = ['INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'OUTSTANDING_HEAD', 'ADMIN', 'FINANCE_HEAD']
+  const allowedRoles = ['INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'OUTSTANDING_HEAD', 'ADMIN', 'FINANCE_HEAD', 'BD', 'TEAM_LEAD']
   return allowedRoles.includes(user.role)
 }
 

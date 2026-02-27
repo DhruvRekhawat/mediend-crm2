@@ -22,3 +22,5 @@ export {
   verifyBalanceIntegrity,
 } from './balance-utils'
 
+export type { PrismaTransactionClient } from './balance-utils'
+

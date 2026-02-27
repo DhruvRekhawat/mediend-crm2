@@ -16,7 +16,6 @@ export async function DELETE(
       return unauthorizedResponse()
     }
 
-    // Only ADMIN or MD can delete ledger entries
     if (!hasPermission(user, 'finance:approve')) {
       return errorResponse('Only Admin/MD can delete ledger entries', 403)
     }
@@ -48,66 +47,64 @@ export async function DELETE(
       return errorResponse('Ledger entry is already deleted', 400)
     }
 
-    // Soft delete the entry
-    const deletedEntry = await prisma.ledgerEntry.update({
-      where: { id },
-      data: {
-        isDeleted: true,
-        deletedAt: new Date(),
-        deletedById: user.id,
-        deletedReason: reason.trim(),
-      },
-      include: {
-        party: true,
-        head: true,
-        paymentType: true,
-        paymentMode: true,
-        deletedBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    })
-
-    // Reverse balance updates for approved entries
-    if (entry.status === LedgerStatus.APPROVED) {
-      if (entry.transactionType === TransactionType.CREDIT) {
-        // Reverse credit: decrease balance
-        const amount = entry.receivedAmount || 0
-        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.CREDIT, amount)
-      } else if (entry.transactionType === TransactionType.DEBIT) {
-        // Reverse debit: increase balance
-        const amount = entry.paymentAmount || 0
-        await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.DEBIT, amount)
-      } else if (entry.transactionType === TransactionType.SELF_TRANSFER) {
-        // Reverse self-transfer: reverse both sides
-        const amount = entry.transferAmount || 0
-        await reverseBalanceUpdate(entry.fromPaymentModeId!, TransactionType.DEBIT, amount)
-        await reverseBalanceUpdate(entry.toPaymentModeId!, TransactionType.CREDIT, amount)
-      }
-    }
-
-    // Create audit log
-    await prisma.ledgerAuditLog.create({
-      data: {
-        ledgerEntryId: entry.id,
-        action: LedgerAuditAction.DELETED,
-        previousData: {
-          isDeleted: false,
-          status: entry.status,
-          serialNumber: entry.serialNumber,
-        },
-        newData: {
+    const deletedEntry = await prisma.$transaction(async (tx) => {
+      const deleted = await tx.ledgerEntry.update({
+        where: { id },
+        data: {
           isDeleted: true,
-          deletedAt: deletedEntry.deletedAt,
+          deletedAt: new Date(),
+          deletedById: user.id,
           deletedReason: reason.trim(),
         },
-        reason: reason.trim(),
-        performedById: user.id,
-      },
+        include: {
+          party: true,
+          head: true,
+          paymentType: true,
+          paymentMode: true,
+          deletedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      })
+
+      if (entry.status === LedgerStatus.APPROVED) {
+        if (entry.transactionType === TransactionType.CREDIT) {
+          const amount = entry.receivedAmount || 0
+          await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.CREDIT, amount, tx)
+        } else if (entry.transactionType === TransactionType.DEBIT) {
+          const amount = entry.paymentAmount || 0
+          await reverseBalanceUpdate(entry.paymentModeId!, TransactionType.DEBIT, amount, tx)
+        } else if (entry.transactionType === TransactionType.SELF_TRANSFER) {
+          const amount = entry.transferAmount || 0
+          await reverseBalanceUpdate(entry.fromPaymentModeId!, TransactionType.DEBIT, amount, tx)
+          await reverseBalanceUpdate(entry.toPaymentModeId!, TransactionType.CREDIT, amount, tx)
+        }
+      }
+
+      await tx.ledgerAuditLog.create({
+        data: {
+          ledgerEntryId: entry.id,
+          action: LedgerAuditAction.DELETED,
+          previousData: {
+            isDeleted: false,
+            status: entry.status,
+            serialNumber: entry.serialNumber,
+          },
+          newData: {
+            isDeleted: true,
+            deletedAt: deleted.deletedAt,
+            deletedReason: reason.trim(),
+          },
+          reason: reason.trim(),
+          performedById: user.id,
+        },
+      })
+
+      return deleted
     })
 
     return successResponse(deletedEntry, 'Ledger entry deleted successfully')
