@@ -4,13 +4,29 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
 
-const MANAGER_NORMALIZATION_LIMIT_PER_EMPLOYEE_PER_MONTH = 5
-
 const bodySchema = z.object({
   employeeId: z.string(),
-  date: z.string().transform((s) => new Date(s)),
+  dates: z.array(z.string().transform((s) => new Date(s))).min(1),
   reason: z.string().optional(),
 })
+
+function toDayStart(d: Date): Date {
+  const [y, m, day] = d.toISOString().split('T')[0].split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, day, 0, 0, 0, 0))
+}
+
+/** Deadline for applying normalization for a given month: end of 5th of next month. */
+function getNormalizationDeadline(monthDate: Date): Date {
+  const y = monthDate.getUTCFullYear()
+  const m = monthDate.getUTCMonth()
+  return new Date(Date.UTC(y, m + 1, 5, 23, 59, 59, 999))
+}
+
+function isWithinApplicationWindow(date: Date, now: Date): boolean {
+  const monthStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0))
+  const deadline = getNormalizationDeadline(monthStart)
+  return now <= deadline
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { employeeId, date, reason } = bodySchema.parse(body)
+    const { employeeId, dates, reason } = bodySchema.parse(body)
 
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
@@ -42,60 +58,63 @@ export async function POST(request: NextRequest) {
       return errorResponse('You can only normalize attendance for your direct reports', 403)
     }
 
-    const dateKey = date.toISOString().split('T')[0]
-    const [y, m, d] = dateKey.split('-').map(Number)
-    const dayStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
-    const monthStart = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0))
-    const monthEnd = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999))
+    const dayStarts = [...new Set(dates.map(toDayStart).map((d) => d.getTime()))].map(
+      (t) => new Date(t)
+    )
 
-    const countThisMonth = await prisma.attendanceNormalization.count({
-      where: {
-        employeeId: employee.id,
-        type: 'MANAGER',
-        status: 'APPROVED',
-        date: { gte: monthStart, lte: monthEnd },
-      },
-    })
-
-    if (countThisMonth >= MANAGER_NORMALIZATION_LIMIT_PER_EMPLOYEE_PER_MONTH) {
+    const now = new Date()
+    const outOfWindow = dayStarts.filter((d) => !isWithinApplicationWindow(d, now))
+    if (outOfWindow.length > 0) {
+      const d = outOfWindow[0]
+      const monthStart = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0))
+      const deadline = getNormalizationDeadline(monthStart)
+      const monthKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+      const deadlineStr = `${deadline.getUTCDate()}/${deadline.getUTCMonth() + 1}/${deadline.getUTCFullYear()}`
       return errorResponse(
-        `Manager normalization limit for this employee reached (${MANAGER_NORMALIZATION_LIMIT_PER_EMPLOYEE_PER_MONTH} per month)`,
+        `Cannot apply for ${monthKey} after the 5th of the next month (deadline was ${deadlineStr}). Remove out-of-window dates and try again.`,
         400
       )
     }
 
-    const existing = await prisma.attendanceNormalization.findUnique({
+    const existingNorm = await prisma.attendanceNormalization.findMany({
       where: {
-        employeeId_date: { employeeId: employee.id, date: dayStart },
+        employeeId: employee.id,
+        date: { in: dayStarts },
       },
+      select: { date: true },
+    })
+    const existingSet = new Set(
+      existingNorm.map((n) => n.date.toISOString().split('T')[0])
+    )
+
+    const toCreate = dayStarts.filter((d) => {
+      const key = d.toISOString().split('T')[0]
+      return !existingSet.has(key)
     })
 
-    if (existing) {
-      return errorResponse('This day is already normalized for the employee', 400)
+    if (toCreate.length === 0) {
+      return successResponse(
+        { created: 0, skipped: dayStarts.length, message: 'All selected days already have an application or are normalized' },
+        'No new applications created'
+      )
     }
 
-    const normalization = await prisma.attendanceNormalization.create({
-      data: {
+    await prisma.attendanceNormalization.createMany({
+      data: toCreate.map((date) => ({
         employeeId: employee.id,
-        date: dayStart,
+        date,
         type: 'MANAGER',
         requestedById: manager.id,
-        approvedById: manager.id,
-        status: 'APPROVED',
+        approvedById: null,
+        status: 'PENDING',
         reason: reason ?? null,
-      },
-      include: {
-        employee: {
-          select: {
-            id: true,
-            employeeCode: true,
-            user: { select: { name: true, email: true } },
-          },
-        },
-      },
+      })),
     })
 
-    return successResponse(normalization, 'Attendance normalized successfully')
+    return successResponse(
+      { created: toCreate.length, skipped: dayStarts.length - toCreate.length },
+      `Applied for normalization of ${toCreate.length} day(s). Pending HR approval.`
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return errorResponse('Invalid request data', 400)

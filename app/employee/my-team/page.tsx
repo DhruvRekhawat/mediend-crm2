@@ -1,6 +1,10 @@
 'use client'
 
-import { AttendanceHeatmap } from '@/components/employee/attendance-heatmap'
+import {
+  AttendanceHeatmap,
+  type AttendanceDay,
+} from '@/components/employee/attendance-heatmap'
+import { SelectableAttendanceHeatmap } from '@/components/employee/selectable-attendance-heatmap'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,9 +22,9 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { apiGet, apiPatch, apiPost } from '@/lib/api-client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { format } from 'date-fns'
+import { format, eachDayOfInterval } from 'date-fns'
 import { Calendar, Check, Clock, Users, X, UserCheck } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 interface AttendanceEntry {
@@ -28,12 +32,7 @@ interface AttendanceEntry {
   name: string
   email: string
   role: string
-  attendance: Array<{
-    date: Date
-    inTime: Date | null
-    outTime: Date | null
-    isLate: boolean
-  }>
+  attendance: AttendanceDay[]
 }
 
 interface TeamAttendanceResponse {
@@ -76,7 +75,6 @@ interface NormalizationRecord {
 interface TeamNormalizationResponse {
   list: NormalizationRecord[]
   subordinates: { id: string; employeeCode: string; name: string; email: string }[]
-  managerLimitPerEmployee: number
 }
 
 export default function MyTeamPage() {
@@ -90,8 +88,8 @@ export default function MyTeamPage() {
   const [remarks, setRemarks] = useState('')
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [normEmployeeId, setNormEmployeeId] = useState('')
-  const [normDate, setNormDate] = useState('')
   const [normReason, setNormReason] = useState('')
+  const [selectedNormDates, setSelectedNormDates] = useState<Set<string>>(new Set())
 
   const { data: attendanceData, isLoading: attendanceLoading } = useQuery<TeamAttendanceResponse>({
     queryKey: ['hierarchy', 'my-team', 'attendance', fromDate, toDate],
@@ -116,14 +114,16 @@ export default function MyTeamPage() {
   })
 
   const normalizeMutation = useMutation({
-    mutationFn: (payload: { employeeId: string; date: string; reason?: string }) =>
-      apiPost('/api/attendance/normalize/manager', payload),
-    onSuccess: () => {
+    mutationFn: (payload: { employeeId: string; dates: string[]; reason?: string }) =>
+      apiPost<{ created?: number; skipped?: number }>('/api/attendance/normalize/manager', payload),
+    onSuccess: (data: { created?: number; skipped?: number }) => {
       queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team'] })
-      setNormEmployeeId('')
-      setNormDate('')
-      setNormReason('')
-      toast.success('Attendance normalized')
+      queryClient.invalidateQueries({ queryKey: ['hierarchy', 'my-team', 'attendance'] })
+      setSelectedNormDates(new Set())
+      const created = data?.created ?? 0
+      const skipped = data?.skipped ?? 0
+      if (created > 0) toast.success(`Normalized ${created} day(s)${skipped > 0 ? ` (${skipped} already normalized)` : ''}`)
+      else if (skipped > 0) toast.info('All selected days were already normalized')
     },
     onError: (e: Error) => toast.error(e.message || 'Failed to normalize'),
   })
@@ -162,6 +162,25 @@ export default function MyTeamPage() {
   const leaves = leavesData?.leaves ?? []
   const from = attendanceData?.fromDate ?? fromDate
   const to = attendanceData?.toDate ?? toDate
+
+  /** Deadline for applying for a month: end of 5th of next month (UTC). */
+  const normalizationDisabledDateKeys = useMemo(() => {
+    const [sy, sm, sd] = from.split('-').map(Number)
+    const [ey, em, ed] = to.split('-').map(Number)
+    const start = new Date(sy, sm - 1, sd)
+    const end = new Date(ey, em - 1, ed)
+    const now = new Date()
+    const disabled = new Set<string>()
+    eachDayOfInterval({ start, end }).forEach((d) => {
+      const y = d.getFullYear()
+      const m = d.getMonth() + 1
+      const deadline = new Date(Date.UTC(y, m, 5, 23, 59, 59, 999))
+      if (now > deadline) {
+        disabled.add(format(d, 'yyyy-MM-dd'))
+      }
+    })
+    return disabled
+  }, [from, to])
 
   return (
     <div className="space-y-6">
@@ -369,19 +388,39 @@ export default function MyTeamPage() {
             <CardHeader>
               <CardTitle>Normalize attendance</CardTitle>
               <CardDescription>
-                Mark a team member&apos;s day as full day. Max 5 days per employee per month.
+                Select a team member and date range, then click days on the heatmap to apply for normalization. You can apply for a month until the 5th of the next month. Applications go to HR for approval.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="flex flex-wrap items-end gap-4">
+                <div>
+                  <Label>Date range</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input
+                      type="date"
+                      value={fromDate}
+                      onChange={(e) => setFromDate(e.target.value)}
+                      className="w-[140px]"
+                    />
+                    <Input
+                      type="date"
+                      value={toDate}
+                      onChange={(e) => setToDate(e.target.value)}
+                      className="w-[140px]"
+                    />
+                  </div>
+                </div>
                 <div>
                   <Label>Employee</Label>
                   <select
-                    className="mt-1 flex h-9 w-[200px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                    className="mt-1 flex h-9 w-[220px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
                     value={normEmployeeId}
-                    onChange={(e) => setNormEmployeeId(e.target.value)}
+                    onChange={(e) => {
+                      setNormEmployeeId(e.target.value)
+                      setSelectedNormDates(new Set())
+                    }}
                   >
-                    <option value="">Select...</option>
+                    <option value="">Select team member...</option>
                     {(normData?.subordinates ?? []).map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.employeeCode})
@@ -389,35 +428,60 @@ export default function MyTeamPage() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <Label>Date</Label>
-                  <Input
-                    type="date"
-                    value={normDate}
-                    onChange={(e) => setNormDate(e.target.value)}
-                    className="mt-1 w-[160px]"
-                  />
-                </div>
-                <Button
-                  onClick={() => {
-                    if (normEmployeeId && normDate) {
-                      normalizeMutation.mutate({
-                        employeeId: normEmployeeId,
-                        date: normDate,
-                        reason: normReason || undefined,
-                      })
-                    } else {
-                      toast.error('Select employee and date')
-                    }
-                  }}
-                  disabled={!normEmployeeId || !normDate || normalizeMutation.isPending}
-                >
-                  {normalizeMutation.isPending ? 'Normalizing...' : 'Normalize'}
-                </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Remaining this month: 5 per employee (see list below).
-              </p>
+
+              {normEmployeeId && (
+                <>
+                  <SelectableAttendanceHeatmap
+                    attendance={
+                      (attendanceData?.entries ?? []).find((e) => e.employeeId === normEmployeeId)
+                        ?.attendance ?? []
+                    }
+                    fromDate={from}
+                    toDate={to}
+                    selectedDates={selectedNormDates}
+                    onSelectionChange={setSelectedNormDates}
+                    disabledDateKeys={normalizationDisabledDateKeys}
+                  />
+
+                  <div className="flex flex-wrap items-center gap-3 pt-2 border-t">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Reason (optional)</Label>
+                      <Input
+                        value={normReason}
+                        onChange={(e) => setNormReason(e.target.value)}
+                        placeholder="e.g. Official travel"
+                        className="mt-1 max-w-xs"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        if (selectedNormDates.size === 0) {
+                          toast.error('Select at least one day on the heatmap')
+                          return
+                        }
+                        normalizeMutation.mutate({
+                          employeeId: normEmployeeId,
+                          dates: Array.from(selectedNormDates),
+                          reason: normReason || undefined,
+                        })
+                      }}
+                      disabled={selectedNormDates.size === 0 || normalizeMutation.isPending}
+                      className="mt-6"
+                    >
+                      {normalizeMutation.isPending
+                        ? 'Applying...'
+                        : `Apply for ${selectedNormDates.size} day(s)`}
+                    </Button>
+                  </div>
+                </>
+              )}
+
+              {!normEmployeeId && (
+                <p className="text-sm text-muted-foreground py-4">
+                  Select an employee to see their attendance and choose days to normalize.
+                </p>
+              )}
             </CardContent>
           </Card>
 

@@ -254,7 +254,7 @@ export function AppSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenu>
                   {itemsWithUrls
-                    .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments' || item.title === 'Leave Types' || item.title === 'Leave Balances')
+                    .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments' || item.title === 'Leave Types' || item.title === 'Leave Balances' || item.title === 'Normalizations')
                     .map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.url || pathname.startsWith(item.url + '/')

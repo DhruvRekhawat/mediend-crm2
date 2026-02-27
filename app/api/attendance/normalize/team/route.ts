@@ -81,7 +81,6 @@ export async function GET(request: NextRequest) {
         name: s.user.name,
         email: s.user.email,
       })),
-      managerLimitPerEmployee: 5,
     })
   } catch (error) {
     console.error('Error fetching team normalizations:', error)

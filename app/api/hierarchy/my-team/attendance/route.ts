@@ -91,12 +91,12 @@ export async function GET(request: NextRequest) {
       prisma.attendanceNormalization.findMany({
         where: {
           employeeId: { in: subordinateIds },
-          status: 'APPROVED',
+          status: { in: ['APPROVED', 'PENDING'] },
           ...(rangeStart && rangeEnd
             ? { date: { gte: rangeStart, lte: rangeEnd } }
             : {}),
         },
-        select: { employeeId: true, date: true },
+        select: { employeeId: true, date: true, status: true },
       }),
     ])
 
@@ -105,13 +105,17 @@ export async function GET(request: NextRequest) {
       timingByEmployeeId.set(emp.id, getDepartmentTiming(emp.department))
     })
 
-    const normByEmployee = new Map<string, Set<string>>()
+    const approvedByEmployee = new Map<string, Set<string>>()
+    const pendingByEmployee = new Map<string, Set<string>>()
     normalizations.forEach((n) => {
       const key = n.date.toISOString().split('T')[0]
-      if (!normByEmployee.has(n.employeeId)) {
-        normByEmployee.set(n.employeeId, new Set())
+      if (n.status === 'APPROVED') {
+        if (!approvedByEmployee.has(n.employeeId)) approvedByEmployee.set(n.employeeId, new Set())
+        approvedByEmployee.get(n.employeeId)!.add(key)
+      } else {
+        if (!pendingByEmployee.has(n.employeeId)) pendingByEmployee.set(n.employeeId, new Set())
+        pendingByEmployee.get(n.employeeId)!.add(key)
       }
-      normByEmployee.get(n.employeeId)!.add(key)
     })
 
     const byEmployee = new Map<string, typeof logs>()
@@ -125,10 +129,15 @@ export async function GET(request: NextRequest) {
       const emp = empLogs[0]?.employee
       const timing = timingByEmployeeId.get(empId) ?? DEFAULT_DEPARTMENT_TIMING
       const grouped = groupAttendanceByDate(empLogs, timing)
-      const normDates = normByEmployee.get(empId) ?? new Set<string>()
+      const approvedDates = approvedByEmployee.get(empId) ?? new Set<string>()
+      const pendingDates = pendingByEmployee.get(empId) ?? new Set<string>()
       const attendanceWithNorm = grouped.map((day) => {
         const dateKey = day.date.toISOString().split('T')[0]
-        return { ...day, isNormalized: normDates.has(dateKey) }
+        return {
+          ...day,
+          isNormalized: approvedDates.has(dateKey),
+          isPendingNormalization: pendingDates.has(dateKey),
+        }
       })
       return {
         employeeId: empId,

@@ -9,45 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-
-export type AttendanceStatusType =
-  | 'on-time'
-  | 'grace-1'
-  | 'grace-2'
-  | 'late-penalty'
-  | 'half-day'
-  | 'present'
-  | 'late'
-  | 'absent'
-  | 'holiday'
-  | 'normalized'
-  | 'pending-normalization'
-  | 'paid-leave'
-  | 'unpaid-leave'
-
-export interface AttendanceDay {
-  date: Date
-  inTime: Date | null
-  outTime: Date | null
-  isLate: boolean
-  status?: AttendanceStatusType
-  penalty?: number
-  isHalfDay?: boolean
-  isNormalized?: boolean
-  isPendingNormalization?: boolean
-}
-
-export interface LeaveDay {
-  date: string
-  isUnpaid: boolean
-}
-
-interface AttendanceHeatmapProps {
-  attendance: AttendanceDay[]
-  fromDate: string
-  toDate: string
-  leaveDays?: LeaveDay[]
-}
+import type { AttendanceDay, AttendanceStatusType, LeaveDay } from './attendance-heatmap'
 
 function formatTime(date: Date | string | null) {
   if (!date) return 'N/A'
@@ -95,28 +57,13 @@ function getStatusConfig(
     const status = attendanceRecord.status
     const entryExit = `Entry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`
     if (status === 'on-time') {
-      return {
-        status: 'on-time',
-        bgColor: 'bg-green-600',
-        textColor: 'text-white',
-        tooltipText: `${dateKey} - On time\n${entryExit}`,
-      }
+      return { status: 'on-time', bgColor: 'bg-green-600', textColor: 'text-white', tooltipText: `${dateKey} - On time\n${entryExit}` }
     }
     if (status === 'grace-1') {
-      return {
-        status: 'grace-1',
-        bgColor: 'bg-green-600',
-        textColor: 'text-white',
-        tooltipText: `${dateKey} - On time\n${entryExit}`,
-      }
+      return { status: 'grace-1', bgColor: 'bg-green-600', textColor: 'text-white', tooltipText: `${dateKey} - On time\n${entryExit}` }
     }
     if (status === 'grace-2') {
-      return {
-        status: 'grace-2',
-        bgColor: 'bg-green-400',
-        textColor: 'text-white',
-        tooltipText: `${dateKey} - Grace\n${entryExit}`,
-      }
+      return { status: 'grace-2', bgColor: 'bg-green-400', textColor: 'text-white', tooltipText: `${dateKey} - Grace\n${entryExit}` }
     }
     if (status === 'late-penalty') {
       return {
@@ -127,64 +74,45 @@ function getStatusConfig(
       }
     }
     if (status === 'half-day' || attendanceRecord.isHalfDay) {
-      return {
-        status: 'half-day',
-        bgColor: 'bg-pink-400',
-        textColor: 'text-white',
-        tooltipText: `${dateKey} - Half day\n${entryExit}`,
-      }
+      return { status: 'half-day', bgColor: 'bg-pink-400', textColor: 'text-white', tooltipText: `${dateKey} - Half day\n${entryExit}` }
     }
     if (attendanceRecord.isLate) {
-      return {
-        status: 'late',
-        bgColor: 'bg-yellow-500',
-        textColor: 'text-gray-900',
-        tooltipText: `${dateKey} - Late\n${entryExit}`,
-      }
+      return { status: 'late', bgColor: 'bg-yellow-500', textColor: 'text-gray-900', tooltipText: `${dateKey} - Late\n${entryExit}` }
     }
-    return {
-      status: 'present',
-      bgColor: 'bg-green-600',
-      textColor: 'text-white',
-      tooltipText: `${dateKey} - Present\n${entryExit}`,
-    }
+    return { status: 'present', bgColor: 'bg-green-600', textColor: 'text-white', tooltipText: `${dateKey} - Present\n${entryExit}` }
   }
-
   if (leaveInfo) {
     if (leaveInfo.isUnpaid) {
-      return {
-        status: 'unpaid-leave',
-        bgColor: 'bg-red-500',
-        textColor: 'text-white',
-        tooltipText: `${dateKey} - Unpaid leave`,
-      }
+      return { status: 'unpaid-leave', bgColor: 'bg-red-500', textColor: 'text-white', tooltipText: `${dateKey} - Unpaid leave` }
     }
-    return {
-      status: 'paid-leave',
-      bgColor: 'bg-blue-400',
-      textColor: 'text-white',
-      tooltipText: `${dateKey} - Paid leave`,
-    }
+    return { status: 'paid-leave', bgColor: 'bg-blue-400', textColor: 'text-white', tooltipText: `${dateKey} - Paid leave` }
   }
-
   if (isSunday) {
-    return {
-      status: 'holiday',
-      bgColor: 'bg-purple-300',
-      textColor: 'text-purple-900',
-      tooltipText: `${dateKey} - Sunday (Holiday)`,
-    }
+    return { status: 'holiday', bgColor: 'bg-purple-300', textColor: 'text-purple-900', tooltipText: `${dateKey} - Sunday (Holiday)` }
   }
-
-  return {
-    status: 'absent',
-    bgColor: 'bg-gray-200',
-    textColor: 'text-gray-500',
-    tooltipText: `${dateKey} - Absent`,
-  }
+  return { status: 'absent', bgColor: 'bg-gray-200', textColor: 'text-gray-500', tooltipText: `${dateKey} - Absent` }
 }
 
-export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = [] }: AttendanceHeatmapProps) {
+export interface SelectableAttendanceHeatmapProps {
+  attendance: AttendanceDay[]
+  fromDate: string
+  toDate: string
+  leaveDays?: LeaveDay[]
+  selectedDates: Set<string>
+  onSelectionChange: (dates: Set<string>) => void
+  /** Date keys (yyyy-MM-dd) past the application deadline (5th of next month); these days are not selectable. */
+  disabledDateKeys?: Set<string>
+}
+
+export function SelectableAttendanceHeatmap({
+  attendance,
+  fromDate,
+  toDate,
+  leaveDays = [],
+  selectedDates,
+  onSelectionChange,
+  disabledDateKeys,
+}: SelectableAttendanceHeatmapProps) {
   const attendanceMap = useMemo(() => {
     const map = new Map<string, AttendanceDay>()
     attendance.forEach((day) => {
@@ -221,6 +149,11 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = []
         isSunday,
         format(date, 'PPP')
       )
+      const isNormalized = attendanceRecord?.isNormalized
+      const isPending = attendanceRecord?.isPendingNormalization
+      const isPastDeadline = disabledDateKeys?.has(dateKey)
+      const hasAttendance = !!attendanceRecord
+      const isSelectable = hasAttendance && !isNormalized && !isPending && !isPastDeadline
       return {
         date,
         dateKey,
@@ -228,9 +161,23 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = []
         dayAbbr: format(date, 'EEE').slice(0, 3),
         dateNum: format(date, 'd'),
         fullDate: format(date, 'PPP'),
+        isSelectable,
+        isPastDeadline: !!isPastDeadline,
+        isSelected: selectedDates.has(dateKey),
       }
     })
-  }, [allDates, attendanceMap, leaveMap])
+  }, [allDates, attendanceMap, leaveMap, selectedDates, disabledDateKeys])
+
+  const handleCellClick = (dateKey: string, isSelectable: boolean) => {
+    if (!isSelectable) return
+    const next = new Set(selectedDates)
+    if (next.has(dateKey)) {
+      next.delete(dateKey)
+    } else {
+      next.add(dateKey)
+    }
+    onSelectionChange(next)
+  }
 
   if (heatmapCells.length === 0) {
     return (
@@ -251,6 +198,9 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = []
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Click days with attendance to select for normalization. Already normalized or applied (pending) days cannot be selected.
+      </p>
       {rows.map((row, rowIndex) => (
         <div key={`heatmap-${rowIndex}`} className="overflow-x-auto -mx-6 px-6">
           <div className="inline-flex gap-1 min-w-fit">
@@ -258,11 +208,17 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = []
               {row.map((cell) => (
                 <Tooltip key={cell.dateKey}>
                   <TooltipTrigger asChild>
-                    <div
+                    <button
+                      type="button"
+                      onClick={() => handleCellClick(cell.dateKey, cell.isSelectable)}
                       className={cn(
-                        'w-12 h-12 rounded-md flex flex-col items-center justify-center text-xs font-medium transition-colors cursor-pointer hover:opacity-80 shrink-0 relative overflow-hidden',
+                        'w-12 h-12 rounded-md flex flex-col items-center justify-center text-xs font-medium transition-all shrink-0 relative overflow-hidden',
                         !('pendingNormalization' in cell && cell.pendingNormalization) && cell.bgColor,
-                        cell.textColor
+                        cell.textColor,
+                        cell.isSelectable && 'cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-1',
+                        !cell.isSelectable && 'cursor-default opacity-90',
+                        cell.isPastDeadline && 'opacity-50',
+                        cell.isSelected && 'ring-2 ring-primary ring-offset-1'
                       )}
                     >
                       {'pendingNormalization' in cell && cell.pendingNormalization ? (
@@ -278,12 +234,25 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = []
                         <>
                           <span className="text-[10px] opacity-80">{cell.dayAbbr}</span>
                           <span className="font-semibold text-sm">{cell.dateNum}</span>
+                          {cell.isSelected && (
+                            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-primary flex items-center justify-center z-10">
+                              <span className="text-[8px] text-primary-foreground">✓</span>
+                            </span>
+                          )}
                         </>
                       )}
-                    </div>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <div className="whitespace-pre-line text-sm">{cell.tooltipText}</div>
+                    {cell.isPastDeadline && (
+                      <div className="mt-1 text-xs opacity-80">Past application deadline (apply by 5th of next month)</div>
+                    )}
+                    {cell.isSelectable && !cell.isPastDeadline && (
+                      <div className="mt-1 text-xs opacity-80">
+                        {cell.isSelected ? 'Click to deselect' : 'Click to select for normalization'}
+                      </div>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               ))}

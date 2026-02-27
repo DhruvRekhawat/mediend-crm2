@@ -81,12 +81,12 @@ export async function GET(request: NextRequest) {
       prisma.attendanceNormalization.findMany({
         where: {
           employeeId: employee.id,
-          status: 'APPROVED',
+          status: { in: ['APPROVED', 'PENDING'] },
           ...(rangeStart && rangeEnd
             ? { date: { gte: rangeStart, lte: rangeEnd } }
             : {}),
         },
-        select: { date: true },
+        select: { date: true, status: true },
       }),
       prisma.leaveRequest.findMany({
         where: {
@@ -109,15 +109,19 @@ export async function GET(request: NextRequest) {
 
     const grouped = groupAttendanceByDate(logs, timing)
 
-    const normDates = new Set(
-      normalizations.map((n) => n.date.toISOString().split('T')[0])
+    const approvedDates = new Set(
+      normalizations.filter((n) => n.status === 'APPROVED').map((n) => n.date.toISOString().split('T')[0])
+    )
+    const pendingDates = new Set(
+      normalizations.filter((n) => n.status === 'PENDING').map((n) => n.date.toISOString().split('T')[0])
     )
 
     const attendanceWithNormalized = grouped.map((day) => {
       const dateKey = day.date.toISOString().split('T')[0]
       return {
         ...day,
-        isNormalized: normDates.has(dateKey),
+        isNormalized: approvedDates.has(dateKey),
+        isPendingNormalization: pendingDates.has(dateKey),
       }
     })
 

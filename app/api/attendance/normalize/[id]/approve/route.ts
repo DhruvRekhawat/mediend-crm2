@@ -1,0 +1,104 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
+import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { z } from 'zod'
+
+const bodySchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED']),
+  remarks: z.string().optional(),
+})
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return unauthorizedResponse()
+    }
+
+    if (!hasPermission(user, 'hrms:attendance:write') && !hasPermission(user, 'hrms:employees:write')) {
+      return errorResponse('Forbidden', 403)
+    }
+
+    const { id } = await params
+    const body = await request.json()
+    const { status } = bodySchema.parse(body)
+
+    const normalization = await prisma.attendanceNormalization.findUnique({
+      where: { id },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            employeeCode: true,
+            user: { select: { name: true, email: true } },
+          },
+        },
+      },
+    })
+
+    if (!normalization) {
+      return errorResponse('Normalization request not found', 404)
+    }
+
+    if (normalization.status !== 'PENDING') {
+      return errorResponse('This request is not pending', 400)
+    }
+
+    if (normalization.type !== 'MANAGER') {
+      return errorResponse('Only manager-initiated normalizations can be approved by HR', 400)
+    }
+
+    const hrEmployee = await prisma.employee.findUnique({
+      where: { userId: user.id },
+    })
+
+    if (!hrEmployee) {
+      return errorResponse('Employee record not found for approver', 404)
+    }
+
+    const updated = await prisma.attendanceNormalization.update({
+      where: { id },
+      data: {
+        status,
+        approvedById: status === 'APPROVED' ? hrEmployee.id : null,
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            employeeCode: true,
+            user: { select: { name: true, email: true } },
+          },
+        },
+        requestedBy: {
+          select: {
+            id: true,
+            user: { select: { name: true } },
+          },
+        },
+        approvedBy: {
+          select: {
+            id: true,
+            user: { select: { name: true } },
+          },
+        },
+      },
+    })
+
+    return successResponse(
+      updated,
+      status === 'APPROVED' ? 'Normalization approved' : 'Normalization rejected'
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse('Invalid request data', 400)
+    }
+    console.error('Error approving normalization:', error)
+    return errorResponse('Failed to update normalization', 500)
+  }
+}

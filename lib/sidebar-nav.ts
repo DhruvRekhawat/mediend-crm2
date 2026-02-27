@@ -25,6 +25,7 @@ import {
   Target,
   Ticket,
   TrendingUp,
+  UserCheck,
   UserCircle,
   Users,
   Wallet,
@@ -202,6 +203,12 @@ export const navItems: NavItem[] = [
     url: '/hr/leave-balances',
     icon: CalendarCheck,
     permission: 'hrms:leaves:write',
+  },
+  {
+    title: 'Normalizations',
+    url: '/hr/normalizations',
+    icon: UserCheck,
+    permission: 'hrms:attendance:write',
   },
   {
     title: 'HR Documents',
