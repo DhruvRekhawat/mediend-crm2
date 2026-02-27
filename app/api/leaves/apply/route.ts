@@ -82,9 +82,7 @@ export async function POST(request: NextRequest) {
     })
 
     const balanceValidation = validateLeaveBalance(balance, days)
-    if (!balanceValidation.valid) {
-      return errorResponse(balanceValidation.error || 'Invalid leave balance', 400)
-    }
+    const isUnpaid = !balanceValidation.valid
 
     // Check for date conflicts
     const existingLeaves = await prisma.leaveRequest.findMany({
@@ -107,7 +105,7 @@ export async function POST(request: NextRequest) {
       leaveEndDate: endDate,
     })
 
-    // Create leave request
+    // Create leave request (allow unpaid when balance insufficient)
     const leaveRequest = await prisma.leaveRequest.create({
       data: {
         employeeId: employee.id,
@@ -116,6 +114,7 @@ export async function POST(request: NextRequest) {
         endDate,
         days,
         reason,
+        isUnpaid,
         targetApproverId: targetApprover?.id ?? null,
       },
       include: {

@@ -4,7 +4,30 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { getEmployeeByUserId, getSubordinates } from '@/lib/hierarchy'
-import { groupAttendanceByDate } from '@/lib/hrms/attendance-utils'
+import {
+  groupAttendanceByDate,
+  DEFAULT_DEPARTMENT_TIMING,
+  type DepartmentTiming,
+} from '@/lib/hrms/attendance-utils'
+
+function getDepartmentTiming(department: {
+  shiftStartHour: number
+  shiftStartMinute: number
+  grace1Minutes: number
+  grace2Minutes: number
+  penaltyMinutes: number
+  penaltyAmount: number
+} | null): DepartmentTiming {
+  if (!department) return DEFAULT_DEPARTMENT_TIMING
+  return {
+    shiftStartHour: department.shiftStartHour,
+    shiftStartMinute: department.shiftStartMinute,
+    grace1Minutes: department.grace1Minutes,
+    grace2Minutes: department.grace2Minutes,
+    penaltyMinutes: department.penaltyMinutes,
+    penaltyAmount: department.penaltyAmount,
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,28 +55,63 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get('fromDate')
     const toDate = searchParams.get('toDate')
 
+    let rangeStart: Date | null = null
+    let rangeEnd: Date | null = null
     const where: { employeeId: { in: string[] }; logDate?: { gte?: Date; lte?: Date } } = {
       employeeId: { in: subordinateIds },
     }
     if (fromDate) {
       const [y, m, d] = fromDate.split('-').map(Number)
-      where.logDate = { ...where.logDate, gte: new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0)) }
+      rangeStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
+      where.logDate = { ...where.logDate, gte: rangeStart }
     }
     if (toDate) {
       const [y, m, d] = toDate.split('-').map(Number)
-      where.logDate = { ...where.logDate, lte: new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)) }
+      rangeEnd = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
+      where.logDate = { ...where.logDate, lte: rangeEnd }
     }
 
-    const logs = await prisma.attendanceLog.findMany({
-      where,
-      orderBy: { logDate: 'desc' },
-      include: {
-        employee: {
-          include: {
-            user: { select: { id: true, name: true, email: true, role: true } },
+    const [logs, employeesWithDept, normalizations] = await Promise.all([
+      prisma.attendanceLog.findMany({
+        where,
+        orderBy: { logDate: 'desc' },
+        include: {
+          employee: {
+            include: {
+              user: { select: { id: true, name: true, email: true, role: true } },
+              department: true,
+            },
           },
         },
-      },
+      }),
+      prisma.employee.findMany({
+        where: { id: { in: subordinateIds } },
+        include: { department: true },
+      }),
+      prisma.attendanceNormalization.findMany({
+        where: {
+          employeeId: { in: subordinateIds },
+          status: 'APPROVED',
+          ...(rangeStart && rangeEnd
+            ? { date: { gte: rangeStart, lte: rangeEnd } }
+            : {}),
+        },
+        select: { employeeId: true, date: true },
+      }),
+    ])
+
+    const timingByEmployeeId = new Map<string, DepartmentTiming>()
+    employeesWithDept.forEach((emp) => {
+      timingByEmployeeId.set(emp.id, getDepartmentTiming(emp.department))
+    })
+
+    const normByEmployee = new Map<string, Set<string>>()
+    normalizations.forEach((n) => {
+      const key = n.date.toISOString().split('T')[0]
+      if (!normByEmployee.has(n.employeeId)) {
+        normByEmployee.set(n.employeeId, new Set())
+      }
+      normByEmployee.get(n.employeeId)!.add(key)
     })
 
     const byEmployee = new Map<string, typeof logs>()
@@ -65,13 +123,19 @@ export async function GET(request: NextRequest) {
 
     const entries = Array.from(byEmployee.entries()).map(([empId, empLogs]) => {
       const emp = empLogs[0]?.employee
-      const grouped = groupAttendanceByDate(empLogs)
+      const timing = timingByEmployeeId.get(empId) ?? DEFAULT_DEPARTMENT_TIMING
+      const grouped = groupAttendanceByDate(empLogs, timing)
+      const normDates = normByEmployee.get(empId) ?? new Set<string>()
+      const attendanceWithNorm = grouped.map((day) => {
+        const dateKey = day.date.toISOString().split('T')[0]
+        return { ...day, isNormalized: normDates.has(dateKey) }
+      })
       return {
         employeeId: empId,
         name: emp?.user.name ?? '',
         email: emp?.user.email ?? '',
         role: emp?.user.role ?? '',
-        attendance: grouped,
+        attendance: attendanceWithNorm,
       }
     })
 

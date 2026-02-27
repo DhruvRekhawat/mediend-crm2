@@ -16,21 +16,32 @@ interface AttendanceDay {
   inTime: Date | null
   outTime: Date | null
   isLate: boolean
-  logs: Array<{
+  status?: string
+  penalty?: number
+  isHalfDay?: boolean
+  isNormalized?: boolean
+  logs?: Array<{
     id: string
     logDate: Date
     punchDirection: string
   }>
 }
 
+interface AttendanceMyResponse {
+  attendance: AttendanceDay[]
+  leaveDays: { date: string; isUnpaid: boolean }[]
+}
+
 export default function EmployeeAttendancePage() {
   const [fromDate, setFromDate] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd'))
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'))
 
-  const { data: attendance, isLoading } = useQuery<AttendanceDay[]>({
+  const { data: attendanceData, isLoading } = useQuery<AttendanceMyResponse>({
     queryKey: ['attendance', 'my', fromDate, toDate],
-    queryFn: () => apiGet<AttendanceDay[]>(`/api/attendance/my?fromDate=${fromDate}&toDate=${toDate}`),
+    queryFn: () => apiGet<AttendanceMyResponse>(`/api/attendance/my?fromDate=${fromDate}&toDate=${toDate}`),
   })
+
+  const attendance = attendanceData?.attendance ?? []
 
   const formatTime = (date: Date | string | null) => {
     if (!date) return 'N/A'
@@ -107,7 +118,7 @@ export default function EmployeeAttendancePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attendance?.map((day) => (
+                {attendance.map((day) => (
                   <TableRow key={day.date.toString()}>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -128,10 +139,17 @@ export default function EmployeeAttendancePage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {day.isLate ? (
+                      {day.isNormalized ? (
+                        <Badge variant="secondary">Normalized</Badge>
+                      ) : day.isHalfDay ? (
                         <Badge variant="destructive" className="flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
-                          Late
+                          Half day
+                        </Badge>
+                      ) : day.isLate ? (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {day.status === 'late-penalty' ? `Late (₹${day.penalty ?? 0})` : 'Late'}
                         </Badge>
                       ) : (
                         <Badge variant="default">On Time</Badge>
@@ -139,7 +157,7 @@ export default function EmployeeAttendancePage() {
                     </TableCell>
                   </TableRow>
                 ))}
-                {(!attendance || attendance.length === 0) && (
+                {attendance.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       No attendance records found

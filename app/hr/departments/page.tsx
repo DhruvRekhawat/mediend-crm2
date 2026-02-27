@@ -28,6 +28,12 @@ interface Department {
     email: string
     role: string
   } | null
+  shiftStartHour?: number
+  shiftStartMinute?: number
+  grace1Minutes?: number
+  grace2Minutes?: number
+  penaltyMinutes?: number
+  penaltyAmount?: number
   _count: {
     employees: number
   }
@@ -77,8 +83,19 @@ export default function HRDepartmentsPage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string | null } }) =>
-      apiPatch<Department>(`/api/departments/${id}`, data),
+    mutationFn: ({ id, data }: {
+      id: string
+      data: {
+        name?: string
+        description?: string | null
+        shiftStartHour?: number
+        shiftStartMinute?: number
+        grace1Minutes?: number
+        grace2Minutes?: number
+        penaltyMinutes?: number
+        penaltyAmount?: number
+      }
+    }) => apiPatch<Department>(`/api/departments/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] })
       setIsDialogOpen(false)
@@ -143,7 +160,19 @@ export default function HRDepartmentsPage() {
               deptHeadUsers={deptHeadUsers || []}
               onSubmit={(data) => {
                 if (editingDept) {
-                  updateMutation.mutate({ id: editingDept.id, data })
+                  updateMutation.mutate({
+                    id: editingDept.id,
+                    data: {
+                      name: data.name,
+                      description: data.description,
+                      shiftStartHour: data.shiftStartHour,
+                      shiftStartMinute: data.shiftStartMinute,
+                      grace1Minutes: data.grace1Minutes,
+                      grace2Minutes: data.grace2Minutes,
+                      penaltyMinutes: data.penaltyMinutes,
+                      penaltyAmount: data.penaltyAmount,
+                    },
+                  })
                 } else {
                   createMutation.mutate(data)
                 }
@@ -268,7 +297,18 @@ function DepartmentForm({
 }: {
   department: Department | null
   deptHeadUsers: DepartmentHeadUser[]
-  onSubmit: (data: { name: string; description?: string; headId?: string; newHead?: any }) => void
+  onSubmit: (data: {
+    name: string
+    description?: string
+    headId?: string
+    newHead?: any
+    shiftStartHour?: number
+    shiftStartMinute?: number
+    grace1Minutes?: number
+    grace2Minutes?: number
+    penaltyMinutes?: number
+    penaltyAmount?: number
+  }) => void
   isLoading: boolean
 }) {
   const { user: currentUser } = useAuth()
@@ -280,7 +320,12 @@ function DepartmentForm({
     name: department?.name || '',
     description: department?.description || '',
     headId: department?.head?.id || '',
-    // New head creation fields
+    shiftStartHour: department?.shiftStartHour ?? 10,
+    shiftStartMinute: department?.shiftStartMinute ?? 0,
+    grace1Minutes: department?.grace1Minutes ?? 15,
+    grace2Minutes: department?.grace2Minutes ?? 15,
+    penaltyMinutes: department?.penaltyMinutes ?? 30,
+    penaltyAmount: department?.penaltyAmount ?? 200,
     newHeadName: '',
     newHeadEmail: '',
     newHeadPassword: '',
@@ -304,11 +349,22 @@ function DepartmentForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const submitData: { name: string; description?: string; headId?: string; newHead?: any } = {
+    const submitData: {
+      name: string
+      description?: string
+      headId?: string
+      newHead?: any
+      shiftStartHour?: number
+      shiftStartMinute?: number
+      grace1Minutes?: number
+      grace2Minutes?: number
+      penaltyMinutes?: number
+      penaltyAmount?: number
+    } = {
       name: formData.name,
       description: formData.description || undefined,
     }
-    
+
     // Only include headId or newHead when creating (not editing)
     if (!department) {
       if (headSelectionMode === 'new' && canCreateHead) {
@@ -330,13 +386,27 @@ function DepartmentForm({
         return
       }
     }
-    
+
+    if (department) {
+      submitData.shiftStartHour = formData.shiftStartHour
+      submitData.shiftStartMinute = formData.shiftStartMinute
+      submitData.grace1Minutes = formData.grace1Minutes
+      submitData.grace2Minutes = formData.grace2Minutes
+      submitData.penaltyMinutes = formData.penaltyMinutes
+      submitData.penaltyAmount = formData.penaltyAmount
+    }
     onSubmit(submitData)
     if (!department) {
       setFormData({ 
         name: '', 
         description: '', 
         headId: '',
+        shiftStartHour: 10,
+        shiftStartMinute: 0,
+        grace1Minutes: 15,
+        grace2Minutes: 15,
+        penaltyMinutes: 30,
+        penaltyAmount: 200,
         newHeadName: '',
         newHeadEmail: '',
         newHeadPassword: '',
@@ -506,6 +576,75 @@ function DepartmentForm({
           <p className="text-xs text-muted-foreground mt-1">
             Department head cannot be changed after creation. Contact MD/Admin to reassign.
           </p>
+        </div>
+      )}
+      {department && (
+        <div className="space-y-4 border-t pt-4">
+          <h4 className="font-medium">Attendance shift timing</h4>
+          <p className="text-xs text-muted-foreground">
+            Used for late/grace/penalty classification. E.g. 10:00 start = grace 1 until 10:15, grace 2 until 10:30, penalty until 11:00; after that = half-day.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Shift start (hour)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={23}
+                value={formData.shiftStartHour}
+                onChange={(e) => setFormData({ ...formData, shiftStartHour: parseInt(e.target.value, 10) || 0 })}
+              />
+            </div>
+            <div>
+              <Label>Shift start (minute)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={59}
+                value={formData.shiftStartMinute}
+                onChange={(e) => setFormData({ ...formData, shiftStartMinute: parseInt(e.target.value, 10) || 0 })}
+              />
+            </div>
+            <div>
+              <Label>Grace 1 (minutes)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={60}
+                value={formData.grace1Minutes}
+                onChange={(e) => setFormData({ ...formData, grace1Minutes: parseInt(e.target.value, 10) || 0 })}
+              />
+            </div>
+            <div>
+              <Label>Grace 2 (minutes)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={60}
+                value={formData.grace2Minutes}
+                onChange={(e) => setFormData({ ...formData, grace2Minutes: parseInt(e.target.value, 10) || 0 })}
+              />
+            </div>
+            <div>
+              <Label>Penalty window (minutes)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={120}
+                value={formData.penaltyMinutes}
+                onChange={(e) => setFormData({ ...formData, penaltyMinutes: parseInt(e.target.value, 10) || 0 })}
+              />
+            </div>
+            <div>
+              <Label>Penalty amount (₹)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={formData.penaltyAmount}
+                onChange={(e) => setFormData({ ...formData, penaltyAmount: parseInt(e.target.value, 10) || 0 })}
+              />
+            </div>
+          </div>
         </div>
       )}
       <div className="flex justify-end gap-2">

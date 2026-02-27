@@ -10,17 +10,41 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 
-interface AttendanceDay {
+export type AttendanceStatusType =
+  | 'on-time'
+  | 'grace-1'
+  | 'grace-2'
+  | 'late-penalty'
+  | 'half-day'
+  | 'present'
+  | 'late'
+  | 'absent'
+  | 'holiday'
+  | 'normalized'
+  | 'paid-leave'
+  | 'unpaid-leave'
+
+export interface AttendanceDay {
   date: Date
   inTime: Date | null
   outTime: Date | null
   isLate: boolean
+  status?: AttendanceStatusType
+  penalty?: number
+  isHalfDay?: boolean
+  isNormalized?: boolean
+}
+
+export interface LeaveDay {
+  date: string
+  isUnpaid: boolean
 }
 
 interface AttendanceHeatmapProps {
   attendance: AttendanceDay[]
-  fromDate: string // YYYY-MM-DD format
-  toDate: string // YYYY-MM-DD format
+  fromDate: string
+  toDate: string
+  leaveDays?: LeaveDay[]
 }
 
 function formatTime(date: Date | string | null) {
@@ -35,8 +59,114 @@ function formatTime(date: Date | string | null) {
   }).format(d)
 }
 
-export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHeatmapProps) {
-  // Create a map of attendance by date string (YYYY-MM-DD)
+function getStatusConfig(
+  attendanceRecord: AttendanceDay | undefined,
+  leaveInfo: LeaveDay | undefined,
+  isSunday: boolean,
+  dateKey: string
+): { status: AttendanceStatusType; bgColor: string; textColor: string; tooltipText: string } {
+  if (attendanceRecord) {
+    if (attendanceRecord.isNormalized) {
+      return {
+        status: 'normalized',
+        bgColor: 'bg-blue-500',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Normalized (Full day)\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`,
+      }
+    }
+    const status = attendanceRecord.status
+    const entryExit = `Entry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`
+    if (status === 'on-time') {
+      return {
+        status: 'on-time',
+        bgColor: 'bg-green-500',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - On time\n${entryExit}`,
+      }
+    }
+    if (status === 'grace-1') {
+      return {
+        status: 'grace-1',
+        bgColor: 'bg-green-400',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Grace period 1\n${entryExit}`,
+      }
+    }
+    if (status === 'grace-2') {
+      return {
+        status: 'grace-2',
+        bgColor: 'bg-amber-400',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Grace period 2\n${entryExit}`,
+      }
+    }
+    if (status === 'late-penalty') {
+      return {
+        status: 'late-penalty',
+        bgColor: 'bg-orange-500',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Late (penalty ₹${attendanceRecord.penalty ?? 0})\n${entryExit}`,
+      }
+    }
+    if (status === 'half-day' || attendanceRecord.isHalfDay) {
+      return {
+        status: 'half-day',
+        bgColor: 'bg-red-400',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Half day\n${entryExit}`,
+      }
+    }
+    if (attendanceRecord.isLate) {
+      return {
+        status: 'late',
+        bgColor: 'bg-yellow-500',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Late\n${entryExit}`,
+      }
+    }
+    return {
+      status: 'present',
+      bgColor: 'bg-green-500',
+      textColor: 'text-white',
+      tooltipText: `${dateKey} - Present\n${entryExit}`,
+    }
+  }
+
+  if (leaveInfo) {
+    if (leaveInfo.isUnpaid) {
+      return {
+        status: 'unpaid-leave',
+        bgColor: 'bg-rose-400',
+        textColor: 'text-white',
+        tooltipText: `${dateKey} - Unpaid leave`,
+      }
+    }
+    return {
+      status: 'paid-leave',
+      bgColor: 'bg-blue-400',
+      textColor: 'text-white',
+      tooltipText: `${dateKey} - Paid leave`,
+    }
+  }
+
+  if (isSunday) {
+    return {
+      status: 'holiday',
+      bgColor: 'bg-purple-300',
+      textColor: 'text-purple-900',
+      tooltipText: `${dateKey} - Sunday (Holiday)`,
+    }
+  }
+
+  return {
+    status: 'absent',
+    bgColor: 'bg-gray-200',
+    textColor: 'text-gray-500',
+    tooltipText: `${dateKey} - Absent`,
+  }
+}
+
+export function AttendanceHeatmap({ attendance, fromDate, toDate, leaveDays = [] }: AttendanceHeatmapProps) {
   const attendanceMap = useMemo(() => {
     const map = new Map<string, AttendanceDay>()
     attendance.forEach((day) => {
@@ -46,7 +176,12 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
     return map
   }, [attendance])
 
-  // Generate all dates in the range
+  const leaveMap = useMemo(() => {
+    const map = new Map<string, LeaveDay>()
+    leaveDays.forEach((ld) => map.set(ld.date, ld))
+    return map
+  }, [leaveDays])
+
   const allDates = useMemo(() => {
     const [startYear, startMonth, startDay] = fromDate.split('-').map(Number)
     const [endYear, endMonth, endDay] = toDate.split('-').map(Number)
@@ -55,56 +190,29 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
     return eachDayOfInterval({ start, end })
   }, [fromDate, toDate])
 
-  // Process each date to determine cell color and status
   const heatmapCells = useMemo(() => {
     return allDates.map((date) => {
       const dateKey = format(date, 'yyyy-MM-dd')
       const dayOfWeek = getDay(date)
       const isSunday = dayOfWeek === 0
       const attendanceRecord = attendanceMap.get(dateKey)
-
-      let status: 'present' | 'late' | 'absent' | 'holiday'
-      let bgColor: string
-      let textColor: string
-      let tooltipText: string
-
-      if (isSunday) {
-        status = 'holiday'
-        bgColor = 'bg-purple-300'
-        textColor = 'text-purple-900'
-        tooltipText = `${format(date, 'PPP')} - Sunday (Holiday)`
-      } else if (attendanceRecord) {
-        if (attendanceRecord.isLate) {
-          status = 'late'
-          bgColor = 'bg-yellow-500'
-          textColor = 'text-white'
-          tooltipText = `${format(date, 'PPP')} - Late\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`
-        } else {
-          status = 'present'
-          bgColor = 'bg-green-500'
-          textColor = 'text-white'
-          tooltipText = `${format(date, 'PPP')} - Present\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`
-        }
-      } else {
-        status = 'absent'
-        bgColor = 'bg-gray-200'
-        textColor = 'text-gray-500'
-        tooltipText = `${format(date, 'PPP')} - Absent`
-      }
-
+      const leaveInfo = leaveMap.get(dateKey)
+      const config = getStatusConfig(
+        attendanceRecord,
+        leaveInfo,
+        isSunday,
+        format(date, 'PPP')
+      )
       return {
         date,
         dateKey,
-        status,
-        bgColor,
-        textColor,
-        tooltipText,
-        dayAbbr: format(date, 'EEE').slice(0, 3), // Mon, Tue, etc.
-        dateNum: format(date, 'd'), // Day number
+        ...config,
+        dayAbbr: format(date, 'EEE').slice(0, 3),
+        dateNum: format(date, 'd'),
         fullDate: format(date, 'PPP'),
       }
     })
-  }, [allDates, attendanceMap])
+  }, [allDates, attendanceMap, leaveMap])
 
   if (heatmapCells.length === 0) {
     return (
@@ -114,7 +222,6 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
     )
   }
 
-  // Split heatmap cells into rows of max 10 entries
   const MAX_ENTRIES_PER_ROW = 10
   const rows = useMemo(() => {
     const result: typeof heatmapCells[] = []
@@ -126,7 +233,6 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
 
   return (
     <div className="space-y-4">
-      {/* Heatmap rows */}
       {rows.map((row, rowIndex) => (
         <div key={`heatmap-${rowIndex}`} className="overflow-x-auto -mx-6 px-6">
           <div className="inline-flex gap-1 min-w-fit">
@@ -155,22 +261,45 @@ export function AttendanceHeatmap({ attendance, fromDate, toDate }: AttendanceHe
         </div>
       ))}
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500"></div>
-          <span>Present</span>
+          <div className="w-4 h-4 rounded bg-green-500" />
+          <span>On time</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-yellow-500"></div>
-          <span>Late</span>
+          <div className="w-4 h-4 rounded bg-green-400" />
+          <span>Grace 1</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-200"></div>
+          <div className="w-4 h-4 rounded bg-amber-400" />
+          <span>Grace 2</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-orange-500" />
+          <span>Late (penalty)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-red-400" />
+          <span>Half day</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-blue-500" />
+          <span>Normalized</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-blue-400" />
+          <span>Paid leave</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-rose-400" />
+          <span>Unpaid leave</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-gray-200" />
           <span>Absent</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-purple-300"></div>
+          <div className="w-4 h-4 rounded bg-purple-300" />
           <span>Holiday</span>
         </div>
       </div>

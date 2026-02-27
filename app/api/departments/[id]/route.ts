@@ -10,6 +10,12 @@ const updateDepartmentSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
   headId: z.string().optional().nullable(),
+  shiftStartHour: z.number().int().min(0).max(23).optional(),
+  shiftStartMinute: z.number().int().min(0).max(59).optional(),
+  grace1Minutes: z.number().int().min(0).max(60).optional(),
+  grace2Minutes: z.number().int().min(0).max(60).optional(),
+  penaltyMinutes: z.number().int().min(0).max(120).optional(),
+  penaltyAmount: z.number().int().min(0).optional(),
 })
 
 export async function PATCH(
@@ -47,6 +53,12 @@ export async function PATCH(
     const updateData: Prisma.DepartmentUpdateInput = {}
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description
+    if (data.shiftStartHour !== undefined) updateData.shiftStartHour = data.shiftStartHour
+    if (data.shiftStartMinute !== undefined) updateData.shiftStartMinute = data.shiftStartMinute
+    if (data.grace1Minutes !== undefined) updateData.grace1Minutes = data.grace1Minutes
+    if (data.grace2Minutes !== undefined) updateData.grace2Minutes = data.grace2Minutes
+    if (data.penaltyMinutes !== undefined) updateData.penaltyMinutes = data.penaltyMinutes
+    if (data.penaltyAmount !== undefined) updateData.penaltyAmount = data.penaltyAmount
     
     // Handle head assignment/reassignment (only for HR_HEAD, MD, ADMIN)
     if (data.headId !== undefined) {

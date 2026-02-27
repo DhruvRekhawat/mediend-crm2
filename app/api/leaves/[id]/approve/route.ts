@@ -73,8 +73,8 @@ export async function PATCH(
       },
     })
 
-    // Update leave balance if approved
-    if (status === 'APPROVED') {
+    // Update leave balance if approved and not unpaid leave (unpaid leave does not deduct balance)
+    if (status === 'APPROVED' && !leaveRequest.isUnpaid) {
       const balance = await prisma.leaveBalance.findUnique({
         where: {
           employeeId_leaveTypeId: {
@@ -101,7 +101,7 @@ export async function PATCH(
           },
           data: {
             used: newUsed,
-            remaining: Math.max(0, newRemaining), // Prevent negative balance
+            remaining: Math.max(0, newRemaining),
           },
         })
       } else {

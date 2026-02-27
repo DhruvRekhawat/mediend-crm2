@@ -198,6 +198,12 @@ export const navItems: NavItem[] = [
     permission: 'hrms:leaves:read',
   },
   {
+    title: 'Leave Balances',
+    url: '/hr/leave-balances',
+    icon: CalendarCheck,
+    permission: 'hrms:leaves:write',
+  },
+  {
     title: 'HR Documents',
     url: '/hr/documents',
     icon: FileText,

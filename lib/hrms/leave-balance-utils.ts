@@ -1,20 +1,34 @@
 import { prisma } from '@/lib/prisma'
 
+const PROBATION_MONTHS = 6
+
+function isInProbation(joinDate: Date | null): boolean {
+  if (!joinDate) return false
+  const sixMonthsAgo = new Date()
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - PROBATION_MONTHS)
+  return new Date(joinDate) > sixMonthsAgo
+}
+
 /**
- * Initialize leave balances for an employee
- * Creates leave balance records for all active leave types with maxDays as allocated
+ * Initialize leave balances for an employee.
+ * First 6 months (probation): allocated = 0, remaining = 0.
+ * After probation: allocated = leaveType.maxDays, remaining = maxDays.
  */
 export async function initializeLeaveBalances(employeeId: string): Promise<void> {
-  // Get all active leave types
-  const leaveTypes = await prisma.leaveTypeMaster.findMany({
-    where: {
-      isActive: true,
-    },
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: { joinDate: true },
   })
 
-  // Create leave balance for each leave type
+  const inProbation = isInProbation(employee?.joinDate ?? null)
+  const allocated = inProbation ? 0 : undefined
+  const remaining = inProbation ? 0 : undefined
+
+  const leaveTypes = await prisma.leaveTypeMaster.findMany({
+    where: { isActive: true },
+  })
+
   for (const leaveType of leaveTypes) {
-    // Check if balance already exists
     const existing = await prisma.leaveBalance.findUnique({
       where: {
         employeeId_leaveTypeId: {
@@ -29,9 +43,9 @@ export async function initializeLeaveBalances(employeeId: string): Promise<void>
         data: {
           employeeId,
           leaveTypeId: leaveType.id,
-          allocated: leaveType.maxDays,
+          allocated: allocated ?? leaveType.maxDays,
           used: 0,
-          remaining: leaveType.maxDays,
+          remaining: remaining ?? leaveType.maxDays,
         },
       })
     }
@@ -39,7 +53,8 @@ export async function initializeLeaveBalances(employeeId: string): Promise<void>
 }
 
 /**
- * Ensure leave balance exists, create if missing
+ * Ensure leave balance exists, create if missing.
+ * Probation (first 6 months): allocated and remaining = 0.
  */
 export async function ensureLeaveBalance(
   employeeId: string,
@@ -55,19 +70,27 @@ export async function ensureLeaveBalance(
   })
 
   if (!balance) {
-    // Get leave type to get maxDays
-    const leaveType = await prisma.leaveTypeMaster.findUnique({
-      where: { id: leaveTypeId },
-    })
+    const [employee, leaveType] = await Promise.all([
+      prisma.employee.findUnique({
+        where: { id: employeeId },
+        select: { joinDate: true },
+      }),
+      prisma.leaveTypeMaster.findUnique({
+        where: { id: leaveTypeId },
+      }),
+    ])
 
     if (leaveType) {
+      const inProbation = isInProbation(employee?.joinDate ?? null)
+      const allocated = inProbation ? 0 : leaveType.maxDays
+      const remaining = inProbation ? 0 : leaveType.maxDays
       await prisma.leaveBalance.create({
         data: {
           employeeId,
           leaveTypeId,
-          allocated: leaveType.maxDays,
+          allocated,
           used: 0,
-          remaining: leaveType.maxDays,
+          remaining,
         },
       })
     }

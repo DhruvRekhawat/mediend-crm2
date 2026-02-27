@@ -95,7 +95,8 @@ export function AppSidebar() {
             !item.title.startsWith('MD ') &&
             !item.title.startsWith('Fin ') &&
             item.title !== 'Departments' &&
-            item.title !== 'Leave Types'
+            item.title !== 'Leave Types' &&
+            item.title !== 'Leave Balances'
         )
 
   return (
@@ -253,7 +254,7 @@ export function AppSidebar() {
                 <SidebarGroupContent>
                   <SidebarMenu>
                   {itemsWithUrls
-                    .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments' || item.title === 'Leave Types')
+                    .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments' || item.title === 'Leave Types' || item.title === 'Leave Balances')
                     .map((item) => {
                       const Icon = item.icon
                       const isActive = pathname === item.url || pathname.startsWith(item.url + '/')

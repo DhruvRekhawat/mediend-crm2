@@ -2,8 +2,31 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { groupAttendanceByDate } from '@/lib/hrms/attendance-utils'
+import {
+  groupAttendanceByDate,
+  DEFAULT_DEPARTMENT_TIMING,
+  type DepartmentTiming,
+} from '@/lib/hrms/attendance-utils'
 import { Prisma } from '@prisma/client'
+
+function getDepartmentTiming(department: {
+  shiftStartHour: number
+  shiftStartMinute: number
+  grace1Minutes: number
+  grace2Minutes: number
+  penaltyMinutes: number
+  penaltyAmount: number
+} | null): DepartmentTiming {
+  if (!department) return DEFAULT_DEPARTMENT_TIMING
+  return {
+    shiftStartHour: department.shiftStartHour,
+    shiftStartMinute: department.shiftStartMinute,
+    grace1Minutes: department.grace1Minutes,
+    grace2Minutes: department.grace2Minutes,
+    penaltyMinutes: department.penaltyMinutes,
+    penaltyAmount: department.penaltyAmount,
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,9 +35,11 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    // Get employee record for user
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
+      include: {
+        department: true,
+      },
     })
 
     if (!employee) {
@@ -29,31 +54,98 @@ export async function GET(request: NextRequest) {
       employeeId: employee.id,
     }
 
+    let rangeStart: Date | null = null
+    let rangeEnd: Date | null = null
+
     if (fromDate || toDate) {
       where.logDate = {}
       if (fromDate) {
         const [y, m, d] = fromDate.split('-').map(Number)
-        where.logDate.gte = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
+        rangeStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0))
+        where.logDate.gte = rangeStart
       }
       if (toDate) {
         const [y, m, d] = toDate.split('-').map(Number)
-        where.logDate.lte = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
+        rangeEnd = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999))
+        where.logDate.lte = rangeEnd
       }
     }
 
-    const logs = await prisma.attendanceLog.findMany({
-      where,
-      orderBy: {
-        logDate: 'desc',
-      },
+    const timing = getDepartmentTiming(employee.department)
+
+    const [logs, normalizations, leaves] = await Promise.all([
+      prisma.attendanceLog.findMany({
+        where,
+        orderBy: { logDate: 'desc' },
+      }),
+      prisma.attendanceNormalization.findMany({
+        where: {
+          employeeId: employee.id,
+          status: 'APPROVED',
+          ...(rangeStart && rangeEnd
+            ? { date: { gte: rangeStart, lte: rangeEnd } }
+            : {}),
+        },
+        select: { date: true },
+      }),
+      prisma.leaveRequest.findMany({
+        where: {
+          employeeId: employee.id,
+          status: 'APPROVED',
+          ...(rangeStart && rangeEnd
+            ? {
+                OR: [
+                  {
+                    startDate: { lte: rangeEnd },
+                    endDate: { gte: rangeStart },
+                  },
+                ],
+              }
+            : {}),
+        },
+        select: { startDate: true, endDate: true, isUnpaid: true },
+      }),
+    ])
+
+    const grouped = groupAttendanceByDate(logs, timing)
+
+    const normDates = new Set(
+      normalizations.map((n) => n.date.toISOString().split('T')[0])
+    )
+
+    const attendanceWithNormalized = grouped.map((day) => {
+      const dateKey = day.date.toISOString().split('T')[0]
+      return {
+        ...day,
+        isNormalized: normDates.has(dateKey),
+      }
     })
 
-    const grouped = groupAttendanceByDate(logs)
+    const leaveDays: { date: string; isUnpaid: boolean }[] = []
+    const rangeStartStr = rangeStart?.toISOString().split('T')[0]
+    const rangeEndStr = rangeEnd?.toISOString().split('T')[0]
+    for (const leave of leaves) {
+      const start = new Date(leave.startDate)
+      const end = new Date(leave.endDate)
+      start.setUTCHours(0, 0, 0, 0)
+      end.setUTCHours(0, 0, 0, 0)
+      for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+        const dateKey = d.toISOString().split('T')[0]
+        if (
+          (!rangeStartStr || dateKey >= rangeStartStr) &&
+          (!rangeEndStr || dateKey <= rangeEndStr)
+        ) {
+          leaveDays.push({ date: dateKey, isUnpaid: leave.isUnpaid })
+        }
+      }
+    }
 
-    return successResponse(grouped)
+    return successResponse({
+      attendance: attendanceWithNormalized,
+      leaveDays,
+    })
   } catch (error) {
     console.error('Error fetching attendance:', error)
     return errorResponse('Failed to fetch attendance', 500)
   }
 }
-

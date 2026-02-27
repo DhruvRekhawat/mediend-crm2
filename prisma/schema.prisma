@@ -647,13 +647,19 @@ model IncomingLead {
 // HRMS Models
 
 model Department {
-  id          String   @id @default(cuid())
-  name        String   
-  description String?
-  headId      String?
-  head        User?    @relation("DepartmentHead", fields: [headId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  headId           String?
+  head             User?    @relation("DepartmentHead", fields: [headId], references: [id])
+  shiftStartHour   Int      @default(10)
+  shiftStartMinute Int      @default(0)
+  grace1Minutes    Int      @default(15)
+  grace2Minutes    Int      @default(15)
+  penaltyMinutes  Int      @default(30)
+  penaltyAmount   Int      @default(200)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   employees      Employee[]
   teams          DepartmentTeam[]
@@ -703,6 +709,9 @@ model Employee {
   updatedAt    DateTime    @updatedAt
 
   attendanceLogs       AttendanceLog[]
+  attendanceNormalizationsAsSubject AttendanceNormalization[] @relation("NormalizationSubject")
+  attendanceNormalizationsRequested AttendanceNormalization[] @relation("NormalizationRequester")
+  attendanceNormalizationsApproved  AttendanceNormalization[] @relation("NormalizationApprover")
   leaveRequests        LeaveRequest[]
   leaveRequestsTargetApprover LeaveRequest[] @relation("LeaveTargetApprover")
   leaveBalances        LeaveBalance[]
@@ -741,6 +750,38 @@ model AttendanceLog {
   @@index([punchDirection])
 }
 
+enum NormalizationType {
+  SELF
+  MANAGER
+}
+
+enum NormalizationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AttendanceNormalization {
+  id            String              @id @default(cuid())
+  employeeId    String
+  employee      Employee            @relation("NormalizationSubject", fields: [employeeId], references: [id], onDelete: Cascade)
+  date          DateTime
+  type          NormalizationType
+  requestedById String
+  requestedBy   Employee            @relation("NormalizationRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  approvedById  String?
+  approvedBy    Employee?           @relation("NormalizationApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  status        NormalizationStatus @default(APPROVED)
+  reason        String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([approvedById])
+  @@index([requestedById])
+}
+
 model LeaveTypeMaster {
   id        String   @id @default(cuid())
   name      String   @unique
@@ -766,6 +807,7 @@ model LeaveRequest {
   endDate           DateTime
   days              Int
   reason            String?
+  isUnpaid          Boolean  @default(false)
   status            LeaveRequestStatus @default(PENDING)
   targetApproverId  String?
   targetApprover    Employee?          @relation("LeaveTargetApprover", fields: [targetApproverId], references: [id])

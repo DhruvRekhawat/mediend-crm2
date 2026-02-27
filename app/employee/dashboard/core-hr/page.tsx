@@ -43,7 +43,7 @@ import { toast } from 'sonner'
 import { InfoField } from '@/components/employee/info-field'
 import { SectionContainer } from '@/components/employee/section-container'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
-import { AttendanceHeatmap } from '@/components/employee/attendance-heatmap'
+import { AttendanceHeatmap, type AttendanceDay as HeatmapAttendanceDay } from '@/components/employee/attendance-heatmap'
 import { LeaveBalanceCard } from '@/components/hrms/LeaveBalanceCard'
 import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
 import { BirthdayCard } from '@/components/birthday-card'
@@ -61,7 +61,26 @@ interface AttendanceDay {
   inTime: Date | null
   outTime: Date | null
   isLate: boolean
-  logs: Array<{ id: string; logDate: Date; punchDirection: string }>
+  status?: string
+  penalty?: number
+  isHalfDay?: boolean
+  isNormalized?: boolean
+  logs?: Array<{ id: string; logDate: Date; punchDirection: string }>
+}
+
+interface AttendanceMyResponse {
+  attendance: AttendanceDay[]
+  leaveDays: { date: string; isUnpaid: boolean }[]
+}
+
+interface AttendanceStats {
+  grace1Count: number
+  grace2Count: number
+  latePenaltyCount: number
+  halfDayCount: number
+  totalPenalty: number
+  normalizationsUsed: number
+  normalizationsLimit: number
 }
 
 interface LeaveType {
@@ -79,6 +98,7 @@ interface LeaveRequest {
   days: number
   reason: string | null
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  isUnpaid?: boolean
   approvedAt: Date | null
   approvedBy: { id: string; name: string; email: string } | null
   remarks: string | null
@@ -168,46 +188,143 @@ function AttendanceTab() {
     format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd')
   )
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [normalizeDialogOpen, setNormalizeDialogOpen] = useState(false)
+  const [normalizeDate, setNormalizeDate] = useState('')
+  const queryClient = useQueryClient()
 
-  const { data: attendance, isLoading } = useQuery<AttendanceDay[]>({
+  const { data: attendanceData, isLoading } = useQuery<AttendanceMyResponse>({
     queryKey: ['attendance', 'my', fromDate, toDate],
     queryFn: () =>
-      apiGet<AttendanceDay[]>(
+      apiGet<AttendanceMyResponse>(
         `/api/attendance/my?fromDate=${fromDate}&toDate=${toDate}`
       ),
   })
 
+  const { data: stats } = useQuery<AttendanceStats>({
+    queryKey: ['attendance', 'stats', fromDate, toDate],
+    queryFn: () =>
+      apiGet<AttendanceStats>(
+        `/api/attendance/stats?fromDate=${fromDate}&toDate=${toDate}`
+      ),
+  })
+
+  const normalizeMutation = useMutation({
+    mutationFn: (date: string) =>
+      apiPost<unknown>('/api/attendance/normalize', { date }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'my'] })
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'stats'] })
+      setNormalizeDialogOpen(false)
+      setNormalizeDate('')
+      toast.success('Attendance normalized successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to normalize attendance')
+    },
+  })
+
+  const attendance = attendanceData?.attendance ?? []
+  const leaveDays = attendanceData?.leaveDays ?? []
+
   return (
     <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>From</Label>
-            <Input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="mt-1"
-            />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>From</Label>
+          <Input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label>To</Label>
+          <Input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+      </div>
+
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Grace 1</p>
+            <p className="text-2xl font-semibold">{stats.grace1Count}</p>
           </div>
-          <div>
-            <Label>To</Label>
-            <Input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="mt-1"
-            />
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Grace 2</p>
+            <p className="text-2xl font-semibold">{stats.grace2Count}</p>
           </div>
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Late (penalty)</p>
+            <p className="text-2xl font-semibold">{stats.latePenaltyCount}</p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Half days</p>
+            <p className="text-2xl font-semibold">{stats.halfDayCount}</p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Total penalties</p>
+            <p className="text-2xl font-semibold">₹{stats.totalPenalty}</p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Normalizations</p>
+            <p className="text-2xl font-semibold">{stats.normalizationsUsed}/{stats.normalizationsLimit}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground text-sm">Use normalization to mark a day as full day (max 3/month)</span>
+        <Dialog open={normalizeDialogOpen} onOpenChange={setNormalizeDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">Normalize attendance</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Normalize a day</DialogTitle>
+              <DialogDescription>Select a date to mark as full day. You can normalize up to 3 days per month.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={normalizeDate}
+                  onChange={(e) => setNormalizeDate(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setNormalizeDialogOpen(false)}>Cancel</Button>
+                <Button
+                  onClick={() => {
+                    if (normalizeDate) normalizeMutation.mutate(normalizeDate)
+                    else toast.error('Select a date')
+                  }}
+                  disabled={!normalizeDate || normalizeMutation.isPending}
+                >
+                  {normalizeMutation.isPending ? 'Normalizing...' : 'Normalize'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <SectionContainer title="Attendance records">
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">Loading...</div>
-        ) : attendance && attendance.length > 0 ? (
+        ) : (attendance.length > 0 || leaveDays.length > 0) ? (
           <AttendanceHeatmap
-            attendance={attendance}
+            attendance={attendance as HeatmapAttendanceDay[]}
             fromDate={fromDate}
             toDate={toDate}
+            leaveDays={leaveDays}
           />
         ) : (
           <div className="text-center py-8 text-muted-foreground">
@@ -304,6 +421,18 @@ function LeavesTab() {
         <div>
           <h2 className="text-lg font-semibold mb-4">Leave balance</h2>
           <LeaveBalanceCard balances={leaveData.balances} />
+        </div>
+      )}
+
+      {leaveData?.requests && leaveData.requests.filter((r) => r.status === 'APPROVED' && r.isUnpaid).length > 0 && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-800 p-4">
+          <h3 className="font-medium text-rose-800 dark:text-rose-200">Unpaid leave</h3>
+          <p className="text-sm text-rose-700 dark:text-rose-300 mt-1">
+            {leaveData.requests
+              .filter((r) => r.status === 'APPROVED' && r.isUnpaid)
+              .reduce((sum, r) => sum + r.days, 0)}{' '}
+            day(s) taken as unpaid leave (quota exhausted).
+          </p>
         </div>
       )}
 

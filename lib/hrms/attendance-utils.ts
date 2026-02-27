@@ -1,5 +1,95 @@
 import { AttendanceLog, PunchDirection } from '@prisma/client'
 
+export type AttendanceStatus =
+  | 'on-time'
+  | 'grace-1'
+  | 'grace-2'
+  | 'late-penalty'
+  | 'half-day'
+
+export interface DepartmentTiming {
+  shiftStartHour: number
+  shiftStartMinute: number
+  grace1Minutes: number
+  grace2Minutes: number
+  penaltyMinutes: number
+  penaltyAmount: number
+}
+
+export const DEFAULT_DEPARTMENT_TIMING: DepartmentTiming = {
+  shiftStartHour: 10,
+  shiftStartMinute: 0,
+  grace1Minutes: 15,
+  grace2Minutes: 15,
+  penaltyMinutes: 30,
+  penaltyAmount: 200,
+}
+
+const MIN_FULL_DAY_HOURS = 9
+
+export interface AttendanceClassification {
+  status: AttendanceStatus
+  penalty: number
+  isHalfDay: boolean
+  isLate: boolean
+}
+
+/**
+ * Classify attendance for a single day based on punch-in time, work hours, and department timing.
+ * Uses UTC getters for time comparison (no timezone conversion).
+ * Rule: After the penalty window ends, it is always half-day regardless of hours worked.
+ */
+export function classifyAttendance(
+  punchTime: Date,
+  workHours: number | null,
+  timing: DepartmentTiming = DEFAULT_DEPARTMENT_TIMING
+): AttendanceClassification {
+  const punchMinutes = punchTime.getUTCHours() * 60 + punchTime.getUTCMinutes()
+  const shiftStartMinutes = timing.shiftStartHour * 60 + timing.shiftStartMinute
+  const grace1EndMinutes = shiftStartMinutes + timing.grace1Minutes
+  const grace2EndMinutes = grace1EndMinutes + timing.grace2Minutes
+  const penaltyEndMinutes = grace2EndMinutes + timing.penaltyMinutes
+
+  const hasEnoughHours = workHours !== null && workHours >= MIN_FULL_DAY_HOURS
+
+  if (punchMinutes < shiftStartMinutes) {
+    if (hasEnoughHours) {
+      return { status: 'on-time', penalty: 0, isHalfDay: false, isLate: false }
+    }
+    return { status: 'half-day', penalty: 0, isHalfDay: true, isLate: false }
+  }
+
+  if (punchMinutes < grace1EndMinutes) {
+    if (hasEnoughHours) {
+      return { status: 'grace-1', penalty: 0, isHalfDay: false, isLate: true }
+    }
+    return { status: 'half-day', penalty: 0, isHalfDay: true, isLate: true }
+  }
+
+  if (punchMinutes < grace2EndMinutes) {
+    if (hasEnoughHours) {
+      return { status: 'grace-2', penalty: 0, isHalfDay: false, isLate: true }
+    }
+    return { status: 'half-day', penalty: 0, isHalfDay: true, isLate: true }
+  }
+
+  if (punchMinutes < penaltyEndMinutes) {
+    return {
+      status: 'late-penalty',
+      penalty: timing.penaltyAmount,
+      isHalfDay: false,
+      isLate: true,
+    }
+  }
+
+  return {
+    status: 'half-day',
+    penalty: 0,
+    isHalfDay: true,
+    isLate: true,
+  }
+}
+
 export interface AttendanceWithHours {
   date: Date
   inTime: Date | null
@@ -7,9 +97,10 @@ export interface AttendanceWithHours {
   workHours: number | null
   isLate: boolean
   logs: AttendanceLog[]
+  status?: AttendanceStatus
+  penalty?: number
+  isHalfDay?: boolean
 }
-
-const WORK_START_HOUR = 11 // 11 AM
 
 export function calculateWorkHours(inTime: Date, outTime: Date | null): number | null {
   if (!outTime) return null
@@ -17,21 +108,22 @@ export function calculateWorkHours(inTime: Date, outTime: Date | null): number |
   return diffMs / (1000 * 60 * 60) // Convert to hours
 }
 
-export function isLateArrival(punchTime: Date): boolean {
-  // IMPORTANT: No timezone conversions.
-  // Attendance `logDate` is stored in UTC with the same clock-components as the device-provided IOTime.
-  // So we must read hour/minute using UTC getters to preserve the original IOTime HH:mm.
-  const punchHour = punchTime.getUTCHours()
-  const punchMinute = punchTime.getUTCMinutes()
-  return punchHour > WORK_START_HOUR || (punchHour === WORK_START_HOUR && punchMinute > 0)
+export function isLateArrival(punchTime: Date, timing?: DepartmentTiming): boolean {
+  const t = timing ?? DEFAULT_DEPARTMENT_TIMING
+  const punchMinutes = punchTime.getUTCHours() * 60 + punchTime.getUTCMinutes()
+  const shiftStartMinutes = t.shiftStartHour * 60 + t.shiftStartMinute
+  return punchMinutes >= shiftStartMinutes + t.grace1Minutes
 }
 
-export function groupAttendanceByDate(logs: AttendanceLog[]): AttendanceWithHours[] {
+export function groupAttendanceByDate(
+  logs: AttendanceLog[],
+  timing?: DepartmentTiming
+): AttendanceWithHours[] {
   const grouped = new Map<string, AttendanceWithHours>()
 
   for (const log of logs) {
     const dateKey = log.logDate.toISOString().split('T')[0]
-    
+
     if (!grouped.has(dateKey)) {
       const [y, m, d] = dateKey.split('-').map(Number)
       grouped.set(dateKey, {
@@ -47,14 +139,9 @@ export function groupAttendanceByDate(logs: AttendanceLog[]): AttendanceWithHour
     const day = grouped.get(dateKey)!
     day.logs.push(log)
 
-    // IMPORTANT:
-    // The biometric device/API can mislabel exit punches as IN.
-    // So for each day we treat:
-    // - inTime as the earliest punch of the day
-    // - outTime as the latest punch of the day (only if there are at least 2 punches)
     if (!day.inTime || log.logDate < day.inTime) {
       day.inTime = log.logDate
-      day.isLate = isLateArrival(log.logDate)
+      day.isLate = isLateArrival(log.logDate, timing)
     }
 
     if (!day.outTime || log.logDate > day.outTime) {
@@ -62,24 +149,28 @@ export function groupAttendanceByDate(logs: AttendanceLog[]): AttendanceWithHour
     }
   }
 
-  // Calculate work hours for each day
+  const t = timing ?? DEFAULT_DEPARTMENT_TIMING
+
   for (const day of grouped.values()) {
-    // If only one punch exists, treat it as IN and keep OUT/workHours as null.
-    // If multiple punches exist, OUT is the last punch and hours are positive.
     if (day.logs.length < 2) {
       day.outTime = null
       day.workHours = null
-      continue
-    }
-
-    if (day.inTime && day.outTime) {
+    } else if (day.inTime && day.outTime) {
       day.workHours = calculateWorkHours(day.inTime, day.outTime)
     } else {
       day.workHours = null
     }
+
+    if (day.inTime != null) {
+      const classification = classifyAttendance(day.inTime, day.workHours ?? null, t)
+      day.status = classification.status
+      day.penalty = classification.penalty
+      day.isHalfDay = classification.isHalfDay
+      day.isLate = classification.isLate
+    }
   }
 
-  return Array.from(grouped.values()).sort((a, b) => 
+  return Array.from(grouped.values()).sort((a, b) =>
     b.date.getTime() - a.date.getTime()
   )
 }
@@ -92,7 +183,5 @@ export function normalizePunchDirection(direction: string): PunchDirection {
   if (normalized === 'out' || normalized === '0') {
     return PunchDirection.OUT
   }
-  // Default to IN if unclear
   return PunchDirection.IN
 }
-

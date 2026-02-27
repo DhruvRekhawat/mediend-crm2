@@ -16,10 +16,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-import { apiGet, apiPatch } from '@/lib/api-client'
+import { apiGet, apiPatch, apiPost } from '@/lib/api-client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { Calendar, Check, Clock, Users, X } from 'lucide-react'
+import { Calendar, Check, Clock, Users, X, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -61,6 +61,24 @@ interface TeamLeavesResponse {
   leaves: TeamLeave[]
 }
 
+interface NormalizationRecord {
+  id: string
+  employeeId: string
+  date: string
+  type: string
+  status: string
+  reason: string | null
+  employee: { id: string; employeeCode: string; user: { name: string; email: string } }
+  requestedBy?: { id: string; user: { name: string } }
+  approvedBy?: { id: string; user: { name: string } } | null
+}
+
+interface TeamNormalizationResponse {
+  list: NormalizationRecord[]
+  subordinates: { id: string; employeeCode: string; name: string; email: string }[]
+  managerLimitPerEmployee: number
+}
+
 export default function MyTeamPage() {
   const queryClient = useQueryClient()
   const [fromDate, setFromDate] = useState(
@@ -71,6 +89,9 @@ export default function MyTeamPage() {
   const [selectedLeave, setSelectedLeave] = useState<TeamLeave | null>(null)
   const [remarks, setRemarks] = useState('')
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
+  const [normEmployeeId, setNormEmployeeId] = useState('')
+  const [normDate, setNormDate] = useState('')
+  const [normReason, setNormReason] = useState('')
 
   const { data: attendanceData, isLoading: attendanceLoading } = useQuery<TeamAttendanceResponse>({
     queryKey: ['hierarchy', 'my-team', 'attendance', fromDate, toDate],
@@ -84,6 +105,27 @@ export default function MyTeamPage() {
     queryKey: ['hierarchy', 'my-team', 'leaves', leaveStatusFilter],
     queryFn: () =>
       apiGet<TeamLeavesResponse>(`/api/hierarchy/my-team/leaves?status=${leaveStatusFilter}`),
+  })
+
+  const { data: normData, isLoading: normLoading } = useQuery<TeamNormalizationResponse>({
+    queryKey: ['attendance', 'normalize', 'team', fromDate, toDate],
+    queryFn: () =>
+      apiGet<TeamNormalizationResponse>(
+        `/api/attendance/normalize/team?fromDate=${fromDate}&toDate=${toDate}`
+      ),
+  })
+
+  const normalizeMutation = useMutation({
+    mutationFn: (payload: { employeeId: string; date: string; reason?: string }) =>
+      apiPost('/api/attendance/normalize/manager', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team'] })
+      setNormEmployeeId('')
+      setNormDate('')
+      setNormReason('')
+      toast.success('Attendance normalized')
+    },
+    onError: (e: Error) => toast.error(e.message || 'Failed to normalize'),
   })
 
   const approveMutation = useMutation({
@@ -137,6 +179,10 @@ export default function MyTeamPage() {
           <TabsTrigger value="leaves" className="gap-2">
             <Calendar className="h-4 w-4" />
             Leaves
+          </TabsTrigger>
+          <TabsTrigger value="normalization" className="gap-2">
+            <UserCheck className="h-4 w-4" />
+            Normalization
           </TabsTrigger>
         </TabsList>
 
@@ -311,6 +357,107 @@ export default function MyTeamPage() {
                         </TableCell>
                       </TableRow>
                     )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="normalization" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Normalize attendance</CardTitle>
+              <CardDescription>
+                Mark a team member&apos;s day as full day. Max 5 days per employee per month.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-end gap-4">
+                <div>
+                  <Label>Employee</Label>
+                  <select
+                    className="mt-1 flex h-9 w-[200px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                    value={normEmployeeId}
+                    onChange={(e) => setNormEmployeeId(e.target.value)}
+                  >
+                    <option value="">Select...</option>
+                    {(normData?.subordinates ?? []).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.employeeCode})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label>Date</Label>
+                  <Input
+                    type="date"
+                    value={normDate}
+                    onChange={(e) => setNormDate(e.target.value)}
+                    className="mt-1 w-[160px]"
+                  />
+                </div>
+                <Button
+                  onClick={() => {
+                    if (normEmployeeId && normDate) {
+                      normalizeMutation.mutate({
+                        employeeId: normEmployeeId,
+                        date: normDate,
+                        reason: normReason || undefined,
+                      })
+                    } else {
+                      toast.error('Select employee and date')
+                    }
+                  }}
+                  disabled={!normEmployeeId || !normDate || normalizeMutation.isPending}
+                >
+                  {normalizeMutation.isPending ? 'Normalizing...' : 'Normalize'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Remaining this month: 5 per employee (see list below).
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent normalizations</CardTitle>
+              <CardDescription>Manager normalizations in the selected range</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {normLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              ) : !normData?.list?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No normalizations in this range.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {normData.list.map((n) => (
+                      <TableRow key={n.id}>
+                        <TableCell className="font-medium">
+                          {n.employee?.user?.name ?? '—'} ({n.employee?.employeeCode})
+                        </TableCell>
+                        <TableCell>{format(new Date(n.date), 'PPP')}</TableCell>
+                        <TableCell>{n.type}</TableCell>
+                        <TableCell>
+                          <Badge variant={n.status === 'APPROVED' ? 'default' : 'secondary'}>
+                            {n.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               )}
