@@ -51,7 +51,26 @@ export async function GET(request: NextRequest) {
         }
       : DEFAULT_DEPARTMENT_TIMING
 
-    const [logs, normalizations] = await Promise.all([
+    const monthStart = new Date(Date.UTC(
+      rangeStart.getUTCFullYear(),
+      rangeStart.getUTCMonth(),
+      1,
+      0,
+      0,
+      0,
+      0
+    ))
+    const monthEndForLimit = new Date(Date.UTC(
+      rangeStart.getUTCFullYear(),
+      rangeStart.getUTCMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    ))
+
+    const [logs, normalizations, selfNormalizationsThisMonth] = await Promise.all([
       prisma.attendanceLog.findMany({
         where: {
           employeeId: employee.id,
@@ -67,11 +86,25 @@ export async function GET(request: NextRequest) {
         },
         select: { date: true },
       }),
+      prisma.attendanceNormalization.findMany({
+        where: {
+          employeeId: employee.id,
+          type: 'SELF',
+          status: 'APPROVED',
+          date: { gte: monthStart, lte: monthEndForLimit },
+        },
+        select: { hoursUsed: true },
+      }),
     ])
 
     const grouped = groupAttendanceByDate(logs, timing)
     const normDates = new Set(
       normalizations.map((n) => n.date.toISOString().split('T')[0])
+    )
+
+    const normalizationsHoursUsed = selfNormalizationsThisMonth.reduce(
+      (sum, n) => sum + (n.hoursUsed ?? 1),
+      0
     )
 
     let grace1Count = 0
@@ -81,6 +114,8 @@ export async function GET(request: NextRequest) {
     let totalPenalty = 0
 
     for (const day of grouped) {
+      const dateKey = day.date.toISOString().split('T')[0]
+      if (normDates.has(dateKey)) continue
       if (day.status === 'grace-1') grace1Count++
       else if (day.status === 'grace-2') grace2Count++
       else if (day.status === 'late-penalty') {
@@ -95,8 +130,10 @@ export async function GET(request: NextRequest) {
       latePenaltyCount,
       halfDayCount,
       totalPenalty,
-      normalizationsUsed: normalizations.length,
-      normalizationsLimit: 3,
+      normalizationsUsed: selfNormalizationsThisMonth.length,
+      normalizationsLimitDays: 3,
+      normalizationsHoursUsed,
+      normalizationsLimitHours: 3,
     })
   } catch (error) {
     console.error('Error fetching attendance stats:', error)

@@ -80,7 +80,9 @@ interface AttendanceStats {
   halfDayCount: number
   totalPenalty: number
   normalizationsUsed: number
-  normalizationsLimit: number
+  normalizationsLimitDays: number
+  normalizationsHoursUsed: number
+  normalizationsLimitHours: number
 }
 
 interface LeaveType {
@@ -190,6 +192,7 @@ function AttendanceTab() {
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [normalizeDialogOpen, setNormalizeDialogOpen] = useState(false)
   const [normalizeDate, setNormalizeDate] = useState('')
+  const [normalizeHours, setNormalizeHours] = useState<1 | 2 | 3>(1)
   const queryClient = useQueryClient()
 
   const { data: attendanceData, isLoading } = useQuery<AttendanceMyResponse>({
@@ -209,13 +212,14 @@ function AttendanceTab() {
   })
 
   const normalizeMutation = useMutation({
-    mutationFn: (date: string) =>
-      apiPost<unknown>('/api/attendance/normalize', { date }),
+    mutationFn: ({ date, hours }: { date: string; hours: 1 | 2 | 3 }) =>
+      apiPost<unknown>('/api/attendance/normalize', { date, hours }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['attendance', 'my'] })
       queryClient.invalidateQueries({ queryKey: ['attendance', 'stats'] })
       setNormalizeDialogOpen(false)
       setNormalizeDate('')
+      setNormalizeHours(1)
       toast.success('Attendance normalized successfully')
     },
     onError: (error: Error) => {
@@ -273,13 +277,13 @@ function AttendanceTab() {
           </div>
           <div className="rounded-lg border bg-card p-4">
             <p className="text-xs text-muted-foreground">Normalizations</p>
-            <p className="text-2xl font-semibold">{stats.normalizationsUsed}/{stats.normalizationsLimit}</p>
+            <p className="text-2xl font-semibold">{stats.normalizationsHoursUsed}/{stats.normalizationsLimitHours} hrs, {stats.normalizationsUsed}/{stats.normalizationsLimitDays} days</p>
           </div>
         </div>
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-muted-foreground text-sm">Use normalization to mark a day as full day (max 3/month)</span>
+        <span className="text-muted-foreground text-sm">You can use up to 3 hours per month, on up to 3 days. Choose 1, 2, or 3 hours per day. Only days where you were in by 11 AM or worked at least 7 hours can be normalized; leave and absent days cannot.</span>
         <Dialog open={normalizeDialogOpen} onOpenChange={setNormalizeDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">Normalize attendance</Button>
@@ -287,7 +291,7 @@ function AttendanceTab() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Normalize a day</DialogTitle>
-              <DialogDescription>Select a date to mark as full day. You can normalize up to 3 days per month.</DialogDescription>
+              <DialogDescription>Select a date and how many hours (1, 2, or 3) to use from your monthly allowance. You can use up to 3 hours per month on up to 3 days.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -299,11 +303,27 @@ function AttendanceTab() {
                   className="mt-1"
                 />
               </div>
+              <div>
+                <Label>Hours to use (1, 2, or 3)</Label>
+                <div className="flex gap-2 mt-2">
+                  {([1, 2, 3] as const).map((h) => (
+                    <Button
+                      key={h}
+                      type="button"
+                      variant={normalizeHours === h ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setNormalizeHours(h)}
+                    >
+                      {h} hr{h > 1 ? 's' : ''}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setNormalizeDialogOpen(false)}>Cancel</Button>
                 <Button
                   onClick={() => {
-                    if (normalizeDate) normalizeMutation.mutate(normalizeDate)
+                    if (normalizeDate) normalizeMutation.mutate({ date: normalizeDate, hours: normalizeHours })
                     else toast.error('Select a date')
                   }}
                   disabled={!normalizeDate || normalizeMutation.isPending}

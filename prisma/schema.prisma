@@ -773,6 +773,8 @@ model AttendanceNormalization {
   approvedBy    Employee?           @relation("NormalizationApprover", fields: [approvedById], references: [id], onDelete: SetNull)
   status        NormalizationStatus @default(APPROVED)
   reason        String?
+  /** For SELF type: 1, 2, or 3 hours of monthly allowance used. MANAGER type: null. */
+  hoursUsed     Int?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
