@@ -15,6 +15,7 @@ const createUserSchema = z.object({
   departmentId: z.string().optional().nullable(),
   employeeCode: z.string().min(1),
   managerId: z.string().nullable().optional(),
+  bdNumber: z.number().int().positive().optional().nullable(),
 })
 
 export async function GET(request: NextRequest) {
@@ -144,6 +145,16 @@ export async function POST(request: NextRequest) {
       return errorResponse('Employee code already exists', 400)
     }
 
+    if (data.bdNumber != null) {
+      const bdNumExists = await prisma.employee.findUnique({
+        where: { bdNumber: data.bdNumber },
+      })
+      if (bdNumExists) {
+        await prisma.user.delete({ where: { id: newUser.id } })
+        return errorResponse('BD number already assigned to another employee', 400)
+      }
+    }
+
     if (data.managerId) {
       const manager = await prisma.employee.findUnique({
         where: { id: data.managerId },
@@ -155,15 +166,18 @@ export async function POST(request: NextRequest) {
     }
 
     const { initializeLeaveBalances } = await import('@/lib/hrms/leave-balance-utils')
+    const { clearBdNumberCache } = await import('@/lib/sync/bd-number-map')
     const employee = await prisma.employee.create({
       data: {
         userId: newUser.id,
         employeeCode: data.employeeCode.trim(),
         departmentId: data.departmentId || null,
         managerId: data.managerId ?? null,
+        bdNumber: data.bdNumber ?? null,
       },
     })
     await initializeLeaveBalances(employee.id)
+    clearBdNumberCache()
 
     const { passwordHash: _passwordHash, ...safeUser } = newUser
 

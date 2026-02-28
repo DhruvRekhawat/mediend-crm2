@@ -13,6 +13,7 @@ const updateEmployeeSchema = z.object({
   departmentId: z.string().optional().nullable(),
   teamLeadId: z.string().nullable().optional(),
   managerId: z.string().nullable().optional(),
+  bdNumber: z.number().int().positive().optional().nullable(),
   dateOfBirth: z.string().transform((str) => new Date(str)).optional().nullable(),
   aadharNumber: z.string().max(12).optional().nullable(),
   panNumber: z.string().max(10).optional().nullable(),
@@ -75,6 +76,18 @@ export async function PATCH(
 
     if (!currentEmployee) {
       return errorResponse('Employee not found', 404)
+    }
+
+    if (data.bdNumber !== undefined && data.bdNumber != null) {
+      const bdNumExists = await prisma.employee.findFirst({
+        where: {
+          bdNumber: data.bdNumber,
+          id: { not: id },
+        },
+      })
+      if (bdNumExists) {
+        return errorResponse('BD number already assigned to another employee', 400)
+      }
     }
 
     // Validate teamLeadId if being updated
@@ -177,6 +190,9 @@ export async function PATCH(
         ? { connect: { id: data.managerId } }
         : { disconnect: true }
     }
+    if (data.bdNumber !== undefined) {
+      updateData.bdNumber = data.bdNumber
+    }
     if (data.teamLeadId !== undefined) {
       if (data.teamLeadId) {
         // Find the team that the team lead leads
@@ -206,6 +222,10 @@ export async function PATCH(
     if (data.aadharDocUrl !== undefined) updateData.aadharDocUrl = data.aadharDocUrl || null
     if (data.panDocUrl !== undefined) updateData.panDocUrl = data.panDocUrl || null
 
+    const { clearBdNumberCache } = await import('@/lib/sync/bd-number-map')
+    if (data.bdNumber !== undefined) {
+      clearBdNumberCache()
+    }
     const updated = await prisma.employee.update({
       where: { id },
       data: updateData,

@@ -40,6 +40,7 @@ interface Team {
 interface Employee {
   id: string
   employeeCode: string
+  bdNumber: number | null
   joinDate: Date | null
   salary: number | null
   departmentId: string | null
@@ -77,6 +78,7 @@ interface CreateUserData {
   departmentId: string | null
   employeeCode: string
   managerId: string | null
+  bdNumber: number | null
 }
 
 export default function HRUsersPage() {
@@ -347,11 +349,17 @@ function CreateUserForm({
     departmentId: '',
     employeeCode: '',
     managerId: '',
+    bdNumber: '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.employeeCode.trim()) {
+      return
+    }
+    const bdNum = formData.bdNumber.trim() ? parseInt(formData.bdNumber, 10) : null
+    if (formData.bdNumber.trim() && (isNaN(bdNum!) || bdNum! < 1)) {
+      toast.error('BD number must be a positive integer')
       return
     }
     onSubmit({
@@ -362,6 +370,7 @@ function CreateUserForm({
       departmentId: formData.departmentId || null,
       employeeCode: formData.employeeCode.trim(),
       managerId: formData.managerId || null,
+      bdNumber: bdNum,
     })
     // Reset form
     setFormData({
@@ -372,6 +381,7 @@ function CreateUserForm({
       departmentId: '',
       employeeCode: '',
       managerId: '',
+      bdNumber: '',
     })
   }
 
@@ -510,6 +520,23 @@ function CreateUserForm({
           </SelectContent>
         </Select>
       </div>
+
+      {formData.role === 'BD' && (
+        <div>
+          <Label>BD number (optional)</Label>
+          <Input
+            type="number"
+            min={1}
+            step={1}
+            value={formData.bdNumber}
+            onChange={(e) => setFormData({ ...formData, bdNumber: e.target.value })}
+            placeholder="Used to sync leads from MySQL (BDM)"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            If set, leads with this BDM number will be assigned to this BD when synced.
+          </p>
+        </div>
+      )}
 
       <div className="flex justify-end gap-2">
         <Button type="submit" disabled={isLoading}>
@@ -696,6 +723,7 @@ function EditEmployeeDialog({
   const [isOpen, setIsOpen] = useState(false)
   const [formData, setFormData] = useState({
     employeeCode: user.employee?.employeeCode || '',
+    bdNumber: user.employee?.bdNumber != null ? String(user.employee.bdNumber) : '',
     joinDate: user.employee?.joinDate ? format(new Date(user.employee.joinDate), 'yyyy-MM-dd') : '',
     salary: user.employee?.salary?.toString() || '',
     departmentId: user.employee?.departmentId || 'none',
@@ -710,6 +738,7 @@ function EditEmployeeDialog({
     mutationFn: (data: {
       userId: string
       employeeCode: string
+      bdNumber?: number | null
       joinDate?: string | null
       salary?: number | null
       departmentId?: string | null
@@ -732,6 +761,7 @@ function EditEmployeeDialog({
   const updateEmployeeMutation = useMutation({
     mutationFn: async (data: {
       employeeCode?: string
+      bdNumber?: number | null
       joinDate?: string | null
       salary?: number | null
       departmentId?: string | null
@@ -760,10 +790,17 @@ function EditEmployeeDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
+    const bdNum = formData.bdNumber.trim() ? parseInt(formData.bdNumber, 10) : null
+    if (formData.bdNumber.trim() && (isNaN(bdNum!) || bdNum! < 1)) {
+      toast.error('BD number must be a positive integer')
+      return
+    }
+
     if (user.employee) {
       // Update existing employee
       updateEmployeeMutation.mutate({
         employeeCode: formData.employeeCode || undefined,
+        bdNumber: bdNum,
         joinDate: formData.joinDate || null,
         salary: formData.salary ? parseFloat(formData.salary) : null,
         departmentId: formData.departmentId === 'none' ? null : formData.departmentId || null,
@@ -782,6 +819,7 @@ function EditEmployeeDialog({
       createEmployeeMutation.mutate({
         userId: user.id,
         employeeCode: formData.employeeCode,
+        bdNumber: bdNum,
         joinDate: formData.joinDate || null,
         salary: formData.salary ? parseFloat(formData.salary) : null,
         departmentId: formData.departmentId === 'none' ? null : formData.departmentId || null,
@@ -827,6 +865,19 @@ function EditEmployeeDialog({
                 placeholder="e.g., EMP001"
               />
             </div>
+            {user.role === 'BD' && (
+              <div>
+                <Label>BD number (optional)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={formData.bdNumber}
+                  onChange={(e) => setFormData({ ...formData, bdNumber: e.target.value })}
+                  placeholder="For lead sync"
+                />
+              </div>
+            )}
             <div>
               <Label>Date of Birth</Label>
               <Input

@@ -14,6 +14,7 @@ const createEmployeeSchema = z.object({
   salary: z.number().positive().optional().nullable(),
   departmentId: z.string().optional().nullable(),
   managerId: z.string().nullable().optional(),
+  bdNumber: z.number().int().positive().optional().nullable(),
   dateOfBirth: z.string().transform((str) => new Date(str)).optional().nullable(),
   aadharNumber: z.string().max(12).optional().nullable(),
   panNumber: z.string().max(10).optional().nullable(),
@@ -53,6 +54,16 @@ export async function POST(request: NextRequest) {
       return errorResponse('Employee code already exists', 400)
     }
 
+    if (data.bdNumber != null) {
+      const bdNumExists = await prisma.employee.findUnique({
+        where: { bdNumber: data.bdNumber },
+      })
+      if (bdNumExists) {
+        return errorResponse('BD number already assigned to another employee', 400)
+      }
+    }
+
+    const { clearBdNumberCache } = await import('@/lib/sync/bd-number-map')
     const employee = await prisma.employee.create({
       data: {
         userId: data.userId,
@@ -64,6 +75,7 @@ export async function POST(request: NextRequest) {
         dateOfBirth: data.dateOfBirth || null,
         aadharNumber: data.aadharNumber || null,
         panNumber: data.panNumber || null,
+        bdNumber: data.bdNumber ?? null,
         aadharDocUrl: data.aadharDocUrl || null,
         panDocUrl: data.panDocUrl || null,
       },
@@ -87,6 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize leave balances for the new employee
     await initializeLeaveBalances(employee.id)
+    clearBdNumberCache()
 
     return successResponse(employee, 'Employee record created successfully')
   } catch (error) {
