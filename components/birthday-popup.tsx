@@ -6,7 +6,7 @@ import { apiGet } from '@/lib/api-client'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import confetti from 'canvas-confetti'
-import Script from 'next/script'
+import Image from 'next/image'
 
 const BIRTHDAY_DISMISSED_KEY = 'birthday-popup-dismissed'
 
@@ -85,7 +85,6 @@ export function BirthdayPopup() {
 
   return (
     <>
-      <Script src="https://tenor.com/embed.js" strategy="lazyOnload" />
       <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-b from-purple-900/95 via-pink-900/95 to-orange-900/95 backdrop-blur-sm">
         <Button
           variant="ghost"
@@ -110,18 +109,15 @@ export function BirthdayPopup() {
           </p>
           <p className="mt-4 text-sm text-white/80">From your Mediend family 💝</p>
 
-          <div className="mt-8 w-full max-w-[280px] [&_.tenor-gif-embed]:!max-w-full">
-            <div
-              className="tenor-gif-embed mx-auto"
-              data-postid="7319868932938175422"
-              data-share-method="host"
-              data-aspect-ratio="1"
-              data-width="100%"
-            >
-              <a href="https://tenor.com/view/pengu-pudgy-penguin-pudgypenguins-happy-birthday-gif-7319868932938175422">
-                Pengu Pudgy Sticker
-              </a>
-            </div>
+          <div className="mt-8 w-full max-w-[280px]">
+            <Image
+              src="/pengu-pudgy.gif"
+              alt="Happy Birthday"
+              width={280}
+              height={280}
+              className="mx-auto rounded-lg object-contain"
+              unoptimized
+            />
           </div>
         </div>
 
