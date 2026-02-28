@@ -1,22 +1,59 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
-import { apiGet } from '@/lib/api-client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiGet, apiPatch } from '@/lib/api-client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { OrgNode, type OrgChartNode } from './org-node'
 import { useState } from 'react'
+import { useAuth } from '@/hooks/use-auth'
+import { hasPermission } from '@/lib/rbac'
+import { toast } from 'sonner'
 
 interface OrgChartResponse {
   roots: OrgChartNode[]
 }
 
+interface EmployeeOption {
+  id: string
+  employeeCode: string
+  user: { name: string; email: string; role: string }
+}
+
 export function OrgChart() {
   const [selectedNode, setSelectedNode] = useState<OrgChartNode | null>(null)
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
+  const canEditHierarchy = user && hasPermission(user, 'hierarchy:write')
 
   const { data, isLoading, error } = useQuery<OrgChartResponse>({
     queryKey: ['hierarchy', 'org-chart'],
     queryFn: () => apiGet<OrgChartResponse>('/api/hierarchy/org-chart'),
+  })
+
+  const { data: employees = [] } = useQuery<EmployeeOption[]>({
+    queryKey: ['employees', 'list'],
+    queryFn: () => apiGet<EmployeeOption[]>('/api/employees'),
+    enabled: canEditHierarchy && !!selectedNode,
+  })
+
+  const assignManagerMutation = useMutation({
+    mutationFn: ({ employeeId, managerId }: { employeeId: string; managerId: string | null }) =>
+      apiPatch('/api/hierarchy/assign-manager', { employeeId, managerId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hierarchy', 'org-chart'] })
+      toast.success('Manager updated')
+    },
+    onError: (err: Error) => toast.error(err.message || 'Failed to update manager'),
   })
 
   if (isLoading) {
@@ -103,6 +140,43 @@ export function OrgChart() {
               <span className="font-medium text-muted-foreground">Direct reports</span>
               <p className="mt-0.5">{selectedNode.subordinateCount}</p>
             </div>
+            <div>
+              <span className="font-medium text-muted-foreground">Current manager</span>
+              <p className="mt-0.5">{selectedNode.managerName ?? '—'}</p>
+            </div>
+            {canEditHierarchy && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label className="text-muted-foreground">Change manager</Label>
+                <Select
+                  value={selectedNode.managerId ?? '__none__'}
+                  onValueChange={(value) => {
+                    const managerId = value === '__none__' ? null : value
+                    assignManagerMutation.mutate({
+                      employeeId: selectedNode.id,
+                      managerId,
+                    })
+                  }}
+                  disabled={assignManagerMutation.isPending}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select manager" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">No manager</SelectItem>
+                    {employees
+                      .filter((e) => e.id !== selectedNode.id)
+                      .map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.user.name} ({emp.employeeCode})
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Select a new manager for this employee. The tree will refresh after saving.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

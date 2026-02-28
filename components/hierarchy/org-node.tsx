@@ -14,6 +14,8 @@ export interface OrgChartNode {
   email: string
   role: string
   departmentName: string | null
+  managerId: string | null
+  managerName: string | null
   subordinateCount: number
   subordinates: OrgChartNode[]
 }

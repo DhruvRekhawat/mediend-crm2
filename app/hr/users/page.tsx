@@ -75,6 +75,8 @@ interface CreateUserData {
   password: string
   role: UserRole
   departmentId: string | null
+  employeeCode: string
+  managerId: string | null
 }
 
 export default function HRUsersPage() {
@@ -94,6 +96,11 @@ export default function HRUsersPage() {
   const { data: teams } = useQuery<Team[]>({
     queryKey: ['teams'],
     queryFn: () => apiGet<Team[]>('/api/teams'),
+  })
+
+  const { data: employees } = useQuery<Array<{ id: string; employeeCode: string; user: { name: string } }>>({
+    queryKey: ['employees'],
+    queryFn: () => apiGet<Array<{ id: string; employeeCode: string; user: { name: string } }>>('/api/employees'),
   })
 
   const createUserMutation = useMutation({
@@ -130,6 +137,7 @@ export default function HRUsersPage() {
                 </DialogHeader>
                 <CreateUserForm
                   departments={departments || []}
+                  employees={employees || []}
                   onSubmit={(data) => createUserMutation.mutate(data)}
                   isLoading={createUserMutation.isPending}
                 />
@@ -299,10 +307,12 @@ export default function HRUsersPage() {
 
 function CreateUserForm({
   departments,
+  employees,
   onSubmit,
   isLoading,
 }: {
   departments: Array<{ id: string; name: string }>
+  employees: Array<{ id: string; employeeCode: string; user: { name: string } }>
   onSubmit: (data: CreateUserData) => void
   isLoading: boolean
 }) {
@@ -335,21 +345,33 @@ function CreateUserForm({
     password: '',
     role: defaultRole as UserRole,
     departmentId: '',
+    employeeCode: '',
+    managerId: '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.employeeCode.trim()) {
+      return
+    }
     onSubmit({
-      ...formData,
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
       departmentId: formData.departmentId || null,
+      employeeCode: formData.employeeCode.trim(),
+      managerId: formData.managerId || null,
     })
     // Reset form
     setFormData({
       name: '',
       email: '',
       password: '',
-      role: 'BD',
+      role: defaultRole as UserRole,
       departmentId: '',
+      employeeCode: '',
+      managerId: '',
     })
   }
 
@@ -383,6 +405,16 @@ function CreateUserForm({
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           required
           minLength={6}
+        />
+      </div>
+
+      <div>
+        <Label>Employee Code *</Label>
+        <Input
+          value={formData.employeeCode}
+          onChange={(e) => setFormData({ ...formData, employeeCode: e.target.value })}
+          required
+          placeholder="e.g. EMP001"
         />
       </div>
 
@@ -457,6 +489,26 @@ function CreateUserForm({
             </p>
           )}
         </div>
+      </div>
+
+      <div>
+        <Label>Manager (optional)</Label>
+        <Select
+          value={formData.managerId || 'none'}
+          onValueChange={(value) => setFormData({ ...formData, managerId: value === 'none' ? '' : value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="No manager" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No manager</SelectItem>
+            {employees.map((emp) => (
+              <SelectItem key={emp.id} value={emp.id}>
+                {emp.user.name} ({emp.employeeCode})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex justify-end gap-2">

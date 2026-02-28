@@ -11,6 +11,8 @@ export interface OrgChartNode {
   email: string
   role: string
   departmentName: string | null
+  managerId: string | null
+  managerName: string | null
   subordinateCount: number
   subordinates: OrgChartNode[]
 }
@@ -28,6 +30,7 @@ function buildTree(
 ): OrgChartNode[] {
   const nodes = employees.filter((e) => e.managerId === managerId)
   return nodes.map((emp) => {
+    const manager = emp.managerId ? employees.find((e) => e.id === emp.managerId) : null
     const children = buildTree(employees, emp.id)
     return {
       id: emp.id,
@@ -37,6 +40,8 @@ function buildTree(
       email: emp.user.email,
       role: emp.user.role,
       departmentName: emp.department?.name ?? null,
+      managerId: emp.managerId,
+      managerName: manager?.user.name ?? null,
       subordinateCount: children.length,
       subordinates: children,
     }

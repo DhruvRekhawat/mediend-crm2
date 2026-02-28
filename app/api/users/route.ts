@@ -13,6 +13,8 @@ const createUserSchema = z.object({
   name: z.string().min(1),
   role: z.enum(['MD', 'SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'ADMIN', 'USER']),
   departmentId: z.string().optional().nullable(),
+  employeeCode: z.string().min(1),
+  managerId: z.string().nullable().optional(),
 })
 
 export async function GET(request: NextRequest) {
@@ -133,45 +135,35 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create employee record if departmentId is provided
-    if (data.departmentId) {
-      try {
-        // Generate unique employee code
-        let employeeCode: string
-        let isUnique = false
-        let attempt = 0
-        
-        while (!isUnique && attempt < 100) {
-          const employeeCount = await prisma.employee.count()
-          employeeCode = `EMP${String(employeeCount + attempt + 1).padStart(4, '0')}`
-          
-          const existing = await prisma.employee.findUnique({
-            where: { employeeCode },
-          })
-          
-          if (!existing) {
-            isUnique = true
-          } else {
-            attempt++
-          }
-        }
+    // Create employee record with required employeeCode
+    const codeExists = await prisma.employee.findUnique({
+      where: { employeeCode: data.employeeCode },
+    })
+    if (codeExists) {
+      await prisma.user.delete({ where: { id: newUser.id } })
+      return errorResponse('Employee code already exists', 400)
+    }
 
-        if (!isUnique) {
-          throw new Error('Could not generate unique employee code')
-        }
-
-        await prisma.employee.create({
-          data: {
-            userId: newUser.id,
-            employeeCode: employeeCode!,
-            departmentId: data.departmentId,
-          },
-        })
-      } catch (error) {
-        // Log error but don't fail user creation if employee creation fails
-        console.error('Error creating employee record:', error)
+    if (data.managerId) {
+      const manager = await prisma.employee.findUnique({
+        where: { id: data.managerId },
+      })
+      if (!manager) {
+        await prisma.user.delete({ where: { id: newUser.id } })
+        return errorResponse('Manager not found', 400)
       }
     }
+
+    const { initializeLeaveBalances } = await import('@/lib/hrms/leave-balance-utils')
+    const employee = await prisma.employee.create({
+      data: {
+        userId: newUser.id,
+        employeeCode: data.employeeCode.trim(),
+        departmentId: data.departmentId || null,
+        managerId: data.managerId ?? null,
+      },
+    })
+    await initializeLeaveBalances(employee.id)
 
     const { passwordHash: _passwordHash, ...safeUser } = newUser
 

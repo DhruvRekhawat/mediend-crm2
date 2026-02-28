@@ -12,6 +12,7 @@ const updateEmployeeSchema = z.object({
   salary: z.number().positive().optional().nullable(),
   departmentId: z.string().optional().nullable(),
   teamLeadId: z.string().nullable().optional(),
+  managerId: z.string().nullable().optional(),
   dateOfBirth: z.string().transform((str) => new Date(str)).optional().nullable(),
   aadharNumber: z.string().max(12).optional().nullable(),
   panNumber: z.string().max(10).optional().nullable(),
@@ -155,6 +156,25 @@ export async function PATCH(
     if (data.departmentId !== undefined) {
       updateData.department = data.departmentId 
         ? { connect: { id: data.departmentId } }
+        : { disconnect: true }
+    }
+    if (data.managerId !== undefined) {
+      if (data.managerId === id) {
+        return errorResponse('Employee cannot be their own manager', 400)
+      }
+      if (data.managerId) {
+        const manager = await prisma.employee.findUnique({
+          where: { id: data.managerId },
+        })
+        if (!manager) {
+          return errorResponse('Manager not found', 400)
+        }
+      }
+    }
+
+    if (data.managerId !== undefined) {
+      updateData.manager = data.managerId
+        ? { connect: { id: data.managerId } }
         : { disconnect: true }
     }
     if (data.teamLeadId !== undefined) {

@@ -31,7 +31,7 @@ export default function HROrgChartPage() {
       <div>
         <h1 className="text-3xl font-bold">Organization Chart</h1>
         <p className="text-muted-foreground mt-1">
-          View and explore the company hierarchy. Assign managers from HR Departments or Users to build the tree.
+          View and explore the company hierarchy. Click a person to see details and change their manager from the panel on the right.
         </p>
       </div>
       <OrgChart />
