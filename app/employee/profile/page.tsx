@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { User, Mail, Hash, Calendar, DollarSign, Building, Cake } from 'lucide-react'
 import { format } from 'date-fns'
-import { BirthdayCard } from '@/components/birthday-card'
+import { BirthdayPopup } from '@/components/birthday-popup'
 
 interface Employee {
   id: string
@@ -43,9 +43,7 @@ export default function EmployeeProfilePage() {
 
   return (
     <div className="space-y-6">
-      {/* Birthday Wish Card */}
-      <BirthdayCard />
-
+      <BirthdayPopup />
       <div>
         <h1 className="text-3xl font-bold">My Profile</h1>
         <p className="text-muted-foreground mt-1">View your employee details</p>

@@ -46,7 +46,7 @@ import { TabNavigation, type TabItem } from '@/components/employee/tab-navigatio
 import { AttendanceHeatmap, type AttendanceDay as HeatmapAttendanceDay } from '@/components/employee/attendance-heatmap'
 import { LeaveBalanceCard } from '@/components/hrms/LeaveBalanceCard'
 import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
-import { BirthdayCard } from '@/components/birthday-card'
+import { BirthdayPopup } from '@/components/birthday-popup'
 import { useRouter } from 'next/navigation'
 
 const CORE_HR_TABS: TabItem[] = [
@@ -537,7 +537,7 @@ function ProfileTab() {
 
   return (
     <div className="space-y-6">
-      <BirthdayCard />
+      <BirthdayPopup />
       {isLoading ? (
         <div className="text-center py-8 text-muted-foreground">Loading...</div>
       ) : employee ? (
