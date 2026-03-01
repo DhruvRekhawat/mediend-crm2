@@ -97,8 +97,8 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
               <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t bg-background">
                 <div className="flex items-center justify-around h-16">
                   <Link
-                    href="/finance/approvals"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/finance/approvals') ? 'text-primary' : 'text-muted-foreground'}`}
+                    href="/md/approvals"
+                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/approvals') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
                     <CheckSquare className="h-5 w-5" />
                     <span className="text-xs">Approvals</span>

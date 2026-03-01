@@ -314,7 +314,7 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Fin Approvals',
-    url: '/finance/approvals',
+    url: '/md/approvals',
     icon: CheckCircle,
     permission: 'finance:approve',
   },
