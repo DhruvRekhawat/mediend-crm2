@@ -2,12 +2,18 @@
 
 import { cn } from '@/lib/utils'
 
-export type TabVariant = 'core-hr' | 'financial' | 'support' | 'mental-health'
+export type TabVariant = 'core-hr' | 'financial' | 'support' | 'mental-health' | 'tasks'
 
 const variantStyles: Record<
   TabVariant,
   { active: string; inactive: string; list: string }
 > = {
+  tasks: {
+    active: 'bg-blue-600 text-white border-blue-600',
+    inactive:
+      'border-border bg-muted/30 text-muted-foreground hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
+    list: 'border-b border-border gap-0',
+  },
   'core-hr': {
     active: 'bg-green-600 text-white border-green-600',
     inactive:

@@ -82,6 +82,7 @@ export function AppSidebar() {
     user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER'
       ? itemsWithUrls.filter(
           (item) =>
+            item.title === 'Tasks' ||
             item.title === 'Sales Dashboard' ||
             item.title === 'Finance Dashboard' ||
             item.title === 'HR Dashboard' ||

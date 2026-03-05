@@ -1,18 +1,44 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon, Clock, User, Flag, FolderOpen } from "lucide-react"
 import { format } from "date-fns"
-import { Calendar, Clock, User, CheckCircle, XCircle, Loader } from "lucide-react"
-import { useTask } from "@/hooks/use-tasks"
+import {
+  useTask,
+  useTaskComments,
+  useCreateTaskComment,
+  useTaskActivity,
+  useUpdateTask,
+  type Task,
+  type UpdateTaskInput,
+} from "@/hooks/use-tasks"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 interface TaskDetailModalProps {
   open: boolean
@@ -20,129 +46,410 @@ interface TaskDetailModalProps {
   taskId: string | null
 }
 
-const STATUS_CONFIG: Record<
-  string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle }
-> = {
-  PENDING: { label: "Pending", variant: "secondary", icon: Clock },
-  IN_PROGRESS: { label: "In Progress", variant: "default", icon: Loader },
-  COMPLETED: { label: "Completed", variant: "outline", icon: CheckCircle },
-  CANCELLED: { label: "Cancelled", variant: "destructive", icon: XCircle },
+const STATUS_OPTIONS = [
+  { value: "PENDING", label: "Pending" },
+  { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "CANCELLED", label: "Cancelled" },
+] as const
+
+const PRIORITY_OPTIONS = [
+  { value: "GENERAL", label: "General" },
+  { value: "LOW", label: "Low" },
+  { value: "MEDIUM", label: "Medium" },
+  { value: "HIGH", label: "High" },
+  { value: "URGENT", label: "Urgent" },
+] as const
+
+const PRIORITY_LABELS: Record<string, string> = {
+  GENERAL: "General",
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
 }
 
-const PRIORITY_CONFIG: Record<
-  string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
-> = {
-  LOW: { label: "Low", variant: "secondary" },
-  MEDIUM: { label: "Medium", variant: "default" },
-  HIGH: { label: "High", variant: "outline" },
-  URGENT: { label: "Urgent", variant: "destructive" },
+const ACTIVITY_LABELS: Record<string, string> = {
+  TITLE_CHANGED: "Title changed",
+  DUE_DATE_CHANGED: "Due date changed",
+  PRIORITY_CHANGED: "Priority changed",
+  STATUS_CHANGED: "Status changed",
+  PROJECT_CHANGED: "Project changed",
+}
+
+function formatActivityDetails(action: string, details: string | null): string {
+  if (!details) return ""
+  if (action === "DUE_DATE_CHANGED") {
+    return details
+      .split(/\s*→\s*/)
+      .map((part) => {
+        const trimmed = part.trim()
+        if (trimmed === "None" || !trimmed) return trimmed
+        const d = new Date(trimmed)
+        return isNaN(d.getTime()) ? trimmed : format(d, "MMM d, yyyy")
+      })
+      .join(" → ")
+  }
+  return details
+}
+
+function TaskDetailContent({
+  taskId,
+  onClose,
+}: {
+  taskId: string
+  onClose: () => void
+}) {
+  const { data: task, isLoading } = useTask(taskId)
+  const { data: comments = [], refetch: refetchComments } = useTaskComments(taskId)
+  const createComment = useCreateTaskComment(taskId)
+  const { data: activity = [], refetch: refetchActivity } = useTaskActivity(taskId)
+  const updateTask = useUpdateTask()
+
+  const [commentText, setCommentText] = useState("")
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleValue, setTitleValue] = useState("")
+  const [statusValue, setStatusValue] = useState<string>("")
+  const [priorityValue, setPriorityValue] = useState<string>("")
+  const [dueDateValue, setDueDateValue] = useState<Date | null>(null)
+
+  useEffect(() => {
+    if (task) {
+      setTitleValue(task.title)
+      setStatusValue(task.status)
+      setPriorityValue(task.priority)
+      setDueDateValue(task.dueDate ? new Date(task.dueDate) : null)
+    }
+  }, [task])
+
+  const handleAddComment = async () => {
+    const trimmed = commentText.trim()
+    if (!trimmed) return
+    try {
+      await createComment.mutateAsync(trimmed)
+      setCommentText("")
+      refetchComments()
+    } catch {
+      toast.error("Failed to add comment")
+    }
+  }
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!task) return
+    try {
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: { status: newStatus as UpdateTaskInput["status"] },
+      })
+      setStatusValue(newStatus)
+    } catch {
+      toast.error("Failed to update status")
+    }
+  }
+
+  const handleSaveTitle = async () => {
+    if (!task || titleValue.trim() === task.title) {
+      setEditingTitle(false)
+      return
+    }
+    try {
+      await updateTask.mutateAsync({ id: task.id, data: { title: titleValue.trim() } })
+      setEditingTitle(false)
+      refetchActivity()
+    } catch {
+      toast.error("Failed to update title")
+    }
+  }
+
+  const handlePriorityChange = async (newPriority: string) => {
+    if (!task || newPriority === task.priority) return
+    try {
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: { priority: newPriority as UpdateTaskInput["priority"] },
+      })
+      setPriorityValue(newPriority)
+      refetchActivity()
+    } catch {
+      toast.error("Failed to update priority")
+    }
+  }
+
+  const handleDueDateChange = async (newDate: Date | null) => {
+    if (!task) return
+    const currentDue = task.dueDate ? new Date(task.dueDate).toISOString() : null
+    const newDue = newDate ? newDate.toISOString() : null
+    if (currentDue === newDue) return
+    try {
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: { dueDate: newDue },
+      })
+      setDueDateValue(newDate)
+      refetchActivity()
+    } catch {
+      toast.error("Failed to update due date")
+    }
+  }
+
+  if (isLoading || !task) {
+    return (
+      <div className="space-y-4 p-4">
+        <Skeleton className="h-8 w-3/4" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col md:flex-row md:min-h-0 h-full">
+      <div className="flex-1 min-w-0 flex flex-col border-b md:border-b-0 md:border-r">
+        <div className="p-4 space-y-3 shrink-0">
+          <div className="flex items-start gap-2">
+            {editingTitle ? (
+              <div className="flex-1 flex gap-2">
+                <input
+                  value={titleValue}
+                  onChange={(e) => setTitleValue(e.target.value)}
+                  onBlur={handleSaveTitle}
+                  onKeyDown={(e) => e.key === "Enter" && handleSaveTitle()}
+                  className="flex-1 rounded border bg-transparent px-2 py-1 text-base font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                  autoFocus
+                />
+                <Button size="sm" variant="ghost" onClick={() => setEditingTitle(false)}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <h2
+                className="flex-1 text-lg font-semibold cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1"
+                onClick={() => setEditingTitle(true)}
+              >
+                {task.title}
+              </h2>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={statusValue}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className="text-xs rounded border bg-muted/50 px-2 py-1"
+            >
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {task.project && (
+              <Badge variant="secondary" className="text-xs">
+                {task.project.name}
+              </Badge>
+            )}
+          </div>
+          {task.description && (
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {task.description}
+            </p>
+          )}
+        </div>
+
+        <Separator />
+
+        <div className="flex-1 min-h-0 flex flex-col p-4">
+          <h3 className="text-sm font-medium mb-2">Comments</h3>
+          <ScrollArea className="flex-1 min-h-[120px] max-h-[240px] pr-2">
+            <div className="space-y-3">
+              {comments.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No comments yet.</p>
+              ) : (
+                comments.map((c) => (
+                  <div key={c.id} className="flex gap-2">
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                      {c.user.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">
+                        {c.user.name} · {format(new Date(c.createdAt), "MMM d, HH:mm")}
+                      </p>
+                      <p className="text-sm mt-0.5 whitespace-pre-wrap">{c.content}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+          <div className="flex gap-2 mt-2 shrink-0">
+            <Textarea
+              placeholder="Add a comment..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
+                  handleAddComment()
+                }
+              }}
+              className="min-h-[60px] resize-none"
+              rows={2}
+            />
+            <Button
+              size="sm"
+              onClick={handleAddComment}
+              disabled={!commentText.trim() || createComment.isPending}
+            >
+              Send
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="md:w-64 shrink-0 p-4 space-y-4 bg-muted/30">
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">Details</h3>
+          <div className="flex items-center gap-2 text-sm">
+            <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="text-left hover:underline focus:outline-none focus:underline"
+                >
+                  {dueDateValue
+                    ? format(dueDateValue, "MMM d, yyyy")
+                    : "Set due date"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dueDateValue ?? undefined}
+                  onSelect={(d) => handleDueDateChange(d ?? null)}
+                  initialFocus
+                />
+                {dueDateValue && (
+                  <div className="border-t p-2">
+                    <button
+                      type="button"
+                      className="text-xs text-destructive hover:underline"
+                      onClick={() => handleDueDateChange(null)}
+                    >
+                      Clear date
+                    </button>
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          </div>
+          {task.assignee && (
+            <div className="flex items-center gap-2 text-sm">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <span>{task.assignee.name}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-sm">
+            <Flag className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <select
+              value={priorityValue}
+              onChange={(e) => handlePriorityChange(e.target.value)}
+              className="flex-1 rounded border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              {PRIORITY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {task.project && (
+            <div className="flex items-center gap-2 text-sm">
+              <FolderOpen className="h-4 w-4 text-muted-foreground" />
+              <span>{task.project.name}</span>
+            </div>
+          )}
+          {task.createdBy && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Created by {task.createdBy.name}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>Updated {format(new Date(task.updatedAt), "MMM d")}</span>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">Activity</h3>
+          {activity.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No activity yet.</p>
+          ) : (
+            <ScrollArea className="max-h-[200px]">
+              <ul className="space-y-2 text-xs">
+                {activity.map((a) => (
+                  <li key={a.id} className="flex flex-col gap-0.5">
+                    <span className="font-medium">
+                      {ACTIVITY_LABELS[a.action] ?? a.action}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {a.user.name}
+                      {a.details ? ` · ${formatActivityDetails(a.action, a.details)}` : ""}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {format(new Date(a.createdAt), "MMM d, HH:mm")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function TaskDetailModal({ open, onOpenChange, taskId }: TaskDetailModalProps) {
-  const { data: task, isLoading } = useTask(taskId)
+  const isMobile = useIsMobile()
 
   if (!taskId) return null
 
+  const content = (
+    <TaskDetailContent
+      taskId={taskId}
+      onClose={() => onOpenChange(false)}
+    />
+  )
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent
+          side="right"
+          className="w-full max-w-full sm:max-w-full p-0 flex flex-col"
+        >
+          <SheetHeader className="p-4 border-b shrink-0">
+            <SheetTitle className="sr-only">Task details</SheetTitle>
+          </SheetHeader>
+          <div className="flex-1 min-h-0 overflow-auto">
+            {content}
+          </div>
+        </SheetContent>
+      </Sheet>
+    )
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {isLoading ? (
-              <Skeleton className="h-6 w-48" />
-            ) : (
-              <>
-                {task?.title}
-                {task && (
-                  <>
-                    <Badge variant={STATUS_CONFIG[task.status]?.variant ?? "secondary"}>
-                      {STATUS_CONFIG[task.status]?.label ?? task.status}
-                    </Badge>
-                    <Badge variant={PRIORITY_CONFIG[task.priority]?.variant ?? "secondary"}>
-                      {PRIORITY_CONFIG[task.priority]?.label ?? task.priority}
-                    </Badge>
-                  </>
-                )}
-              </>
-            )}
-          </DialogTitle>
-          <DialogDescription>
-            {isLoading ? (
-              <Skeleton className="h-4 w-32 mt-2" />
-            ) : task ? (
-              `Created ${format(new Date(task.createdAt), "MMM d, yyyy")}`
-            ) : null}
-          </DialogDescription>
+      <DialogContent className="w-[90vw] min-h-[80vh] max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-4 shrink-0">
+          <DialogTitle className="sr-only">Task details</DialogTitle>
         </DialogHeader>
-
-        {isLoading ? (
-          <div className="space-y-4 py-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        ) : task ? (
-          <div className="space-y-4 py-4">
-            {task.description && (
-              <div>
-                <h4 className="text-sm font-medium mb-2">Description</h4>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {task.description}
-                </p>
-              </div>
-            )}
-
-            <Separator />
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Due Date</p>
-                  <p className="text-sm font-medium">
-                    {task.dueDate
-                      ? format(new Date(task.dueDate), "MMM d, yyyy HH:mm")
-                      : "No due date"}
-                  </p>
-                </div>
-              </div>
-
-              {task.assignee && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Assignee</p>
-                    <p className="text-sm font-medium">{task.assignee.name}</p>
-                  </div>
-                </div>
-              )}
-
-              {task.createdBy && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Created By</p>
-                    <p className="text-sm font-medium">{task.createdBy.name}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-xs text-muted-foreground">Last Updated</p>
-                  <p className="text-sm font-medium">
-                    {format(new Date(task.updatedAt), "MMM d, yyyy HH:mm")}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-sm py-4">Task not found</p>
-        )}
+        <div className="flex-1 min-h-0 overflow-auto">
+          {content}
+        </div>
       </DialogContent>
     </Dialog>
   )

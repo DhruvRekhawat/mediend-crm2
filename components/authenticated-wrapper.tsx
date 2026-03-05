@@ -97,18 +97,18 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
               <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t bg-background">
                 <div className="flex items-center justify-around h-16">
                   <Link
-                    href="/md/approvals"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/approvals') ? 'text-primary' : 'text-muted-foreground'}`}
-                  >
-                    <CheckSquare className="h-5 w-5" />
-                    <span className="text-xs">Approvals</span>
-                  </Link>
-                  <Link
                     href="/md/tasks"
                     className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/tasks') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
                     <ListTodo className="h-5 w-5" />
                     <span className="text-xs">Tasks</span>
+                  </Link>
+                  <Link
+                    href="/md/approvals"
+                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/approvals') ? 'text-primary' : 'text-muted-foreground'}`}
+                  >
+                    <CheckSquare className="h-5 w-5" />
+                    <span className="text-xs">Approvals</span>
                   </Link>
                   <Link
                     href="/md/anonymous-messages"
@@ -130,6 +130,13 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
             {showUserBottomNav && (
               <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t bg-background shadow-lg">
                 <div className="flex items-center justify-around h-16">
+                  <Link
+                    href="/md/tasks"
+                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/md/tasks') ? 'text-primary' : 'text-muted-foreground'}`}
+                  >
+                    <ListTodo className="h-5 w-5" />
+                    <span className="text-xs font-medium">Tasks</span>
+                  </Link>
                   <Link
                     href="/employee/dashboard/core-hr"
                     className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/employee/dashboard/core-hr') ? 'text-primary' : 'text-muted-foreground'}`}

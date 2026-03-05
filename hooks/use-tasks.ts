@@ -19,6 +19,7 @@ export interface Task {
   status: string
   assigneeId: string
   createdById: string
+  projectId?: string | null
   startTime: string | null
   endTime: string | null
   allDay: boolean
@@ -26,18 +27,57 @@ export interface Task {
   updatedAt: string
   assignee?: { id: string; name: string; email: string }
   createdBy?: { id: string; name: string }
+  project?: { id: string; name: string } | null
 }
 
 export interface TasksQueryParams {
   assigneeId?: string
+  createdById?: string
   status?: string
   startDate?: string
   endDate?: string
 }
 
+export interface TaskProject {
+  id: string
+  name: string
+  createdById?: string
+  createdAt?: string
+  _count?: { tasks: number }
+}
+
+export interface TaskComment {
+  id: string
+  taskId: string
+  userId: string
+  content: string
+  createdAt: string
+  user: { id: string; name: string; email: string }
+}
+
+export interface TaskActivityLog {
+  id: string
+  taskId: string
+  userId: string
+  action: string
+  details: string | null
+  createdAt: string
+  user: { id: string; name: string }
+}
+
+export interface TaskStats {
+  total: number
+  completed: number
+  pending: number
+  overdue: number
+  projectWise: { projectId: string | null; projectName: string; count: number }[]
+  employeeWise: { assigneeId: string; assigneeName: string; total: number; completed: number }[]
+}
+
 export function useTasks(params?: TasksQueryParams) {
   const searchParams = new URLSearchParams()
   if (params?.assigneeId) searchParams.set("assigneeId", params.assigneeId)
+  if (params?.createdById) searchParams.set("createdById", params.createdById)
   if (params?.status) searchParams.set("status", params.status)
   if (params?.startDate) searchParams.set("startDate", params.startDate)
   if (params?.endDate) searchParams.set("endDate", params.endDate)
@@ -69,9 +109,11 @@ export function usePendingTasks(assigneeId?: string) {
 
 export interface CreateTaskInput {
   title: string
+  description?: string | null
   dueDate?: string | null
   priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   assigneeId?: string
+  projectId?: string | null
   startTime?: string | null
   endTime?: string | null
   allDay?: boolean
@@ -90,9 +132,11 @@ export function useCreateTask() {
 
 export interface UpdateTaskInput {
   title?: string
+  description?: string | null
   dueDate?: string | null
   priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+  projectId?: string | null
   startTime?: string | null
   endTime?: string | null
   allDay?: boolean
@@ -181,5 +225,78 @@ export function useUpdateTaskDueDate() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
     },
+  })
+}
+
+export function useTaskProjects() {
+  return useQuery<TaskProject[]>({
+    queryKey: ["task-projects"],
+    queryFn: () => apiGet<TaskProject[]>("/api/task-projects"),
+  })
+}
+
+export function useCreateTaskProject() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { name: string }) =>
+      apiPost<TaskProject>("/api/task-projects", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-projects"] })
+    },
+  })
+}
+
+export function useTaskComments(taskId: string | null) {
+  return useQuery<TaskComment[]>({
+    queryKey: ["tasks", taskId, "comments"],
+    queryFn: () => apiGet<TaskComment[]>(`/api/tasks/${taskId}/comments`),
+    enabled: !!taskId,
+  })
+}
+
+export function useCreateTaskComment(taskId: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (content: string) =>
+      apiPost<TaskComment>(`/api/tasks/${taskId}/comments`, { content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", taskId, "comments"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+    },
+  })
+}
+
+export function useTaskActivity(taskId: string | null) {
+  return useQuery<TaskActivityLog[]>({
+    queryKey: ["tasks", taskId, "activity"],
+    queryFn: () => apiGet<TaskActivityLog[]>(`/api/tasks/${taskId}/activity`),
+    enabled: !!taskId,
+  })
+}
+
+export function useTaskStats() {
+  return useQuery<TaskStats>({
+    queryKey: ["tasks", "stats"],
+    queryFn: () => apiGet<TaskStats>("/api/tasks/stats"),
+  })
+}
+
+export function useSubordinateTasks() {
+  return useQuery<Task[]>({
+    queryKey: ["tasks", "subordinates"],
+    queryFn: () => apiGet<Task[]>("/api/tasks/subordinates"),
+  })
+}
+
+export interface AssignableUser {
+  id: string
+  name: string
+  email: string
+}
+
+export function useAssignableUsers() {
+  return useQuery<AssignableUser[]>({
+    queryKey: ["tasks", "assignable-users"],
+    queryFn: () => apiGet<AssignableUser[]>("/api/tasks/assignable-users"),
   })
 }

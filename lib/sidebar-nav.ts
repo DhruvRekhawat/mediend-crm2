@@ -43,6 +43,11 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   {
+    title: 'Tasks',
+    url: '/md/tasks',
+    icon: ClipboardList,
+  },
+  {
     title: 'Dashboard',
     url: '/dashboard',
     icon: LayoutDashboard,
@@ -259,12 +264,6 @@ export const navItems: NavItem[] = [
     roles: ['MD', 'ADMIN'],
   },
   {
-    title: 'MD Task Management',
-    url: '/md/tasks',
-    icon: ClipboardList,
-    roles: ['MD', 'ADMIN'],
-  },
-  {
     title: 'Fin Ledger',
     url: '/finance/ledger',
     icon: BookOpen,
@@ -327,25 +326,13 @@ export const navItems: NavItem[] = [
 ]
 
 export function getDashboardUrl(role: string): string {
-  const routes: Record<string, string> = {
-    MD: '/md/sales',
-    SALES_HEAD: '/sales/dashboard',
-    TEAM_LEAD: '/team-lead/dashboard',
-    BD: '/bd/pipeline',
-    INSURANCE_HEAD: '/insurance/dashboard',
-    PL_HEAD: '/pl/dashboard',
-    OUTSTANDING_HEAD: '/outstanding/dashboard',
-    HR_HEAD: '/hr/users',
-    FINANCE_HEAD: '/finance/ledger',
-    ADMIN: '/md/sales',
-    TESTER: '/md/sales',
-  }
-  return routes[role] ?? '/dashboard'
+  return '/md/tasks'
 }
 
 function filterNavItems(user: SessionUser | null): NavItem[] {
   if (!user) return []
   return navItems.filter((item) => {
+    if (item.title === 'Tasks') return true
     if (user.role === 'MD') {
       return (
         item.title === 'Sales Dashboard' ||
@@ -354,9 +341,9 @@ function filterNavItems(user: SessionUser | null): NavItem[] {
         item.title.startsWith('MD ')
       )
     }
-    // USER role can only see "My " prefixed pages (MyHRMS)
+    // USER role can only see Tasks + "My " prefixed pages (MyHRMS)
     if (user.role === 'USER') {
-      return item.title.startsWith('My ')
+      return item.title === 'Tasks' || item.title.startsWith('My ')
     }
     if (item.title.startsWith('My ') || item.title.startsWith('Svc ')) {
       return true

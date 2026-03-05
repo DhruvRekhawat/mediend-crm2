@@ -319,6 +319,9 @@ model User {
   tasksAssigned       Task[]               @relation("TaskAssignee")
   tasksCreated        Task[]               @relation("TaskCreator")
   taskApprovalsRequested TaskDueDateApproval[]
+  taskProjectsCreated TaskProject[]       @relation("TaskProjectCreator")
+  taskComments        TaskComment[]
+  taskActivityLogs    TaskActivityLog[]
   workLogs            WorkLog[]
   mdTaskTeamsOwned    MDTaskTeam[]         @relation("MDTaskTeamOwner")
   mdWatchlistOwned    MDWatchlistEmployee[] @relation("MDWatchlistOwner")
@@ -1990,15 +1993,22 @@ model Task {
   endTime     DateTime?
   allDay      Boolean      @default(true)
 
+  // Project (tag)
+  projectId   String?
+  project     TaskProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
   approvals   TaskDueDateApproval[]
+  comments    TaskComment[]
+  activityLogs TaskActivityLog[]
 
   @@index([assigneeId])
   @@index([createdById])
   @@index([status])
   @@index([dueDate])
+  @@index([projectId])
 }
 
 model TaskDueDateApproval {
@@ -2015,6 +2025,44 @@ model TaskDueDateApproval {
   @@index([taskId])
   @@index([requestedById])
   @@index([status])
+}
+
+model TaskProject {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  createdById String
+  createdBy   User     @relation("TaskProjectCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  createdAt   DateTime @default(now())
+
+  @@index([createdById])
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+model TaskActivityLog {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([userId])
 }
 
 // MD (admin) task teams: saved sets of employees for quick task assignment

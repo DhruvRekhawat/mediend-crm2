@@ -8,12 +8,13 @@ export async function GET(_request: NextRequest) {
   if (!user) return unauthorizedResponse()
 
   const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
-  if (!isMDOrAdmin) {
-    return errorResponse("Forbidden", 403)
+  const where = {
+    status: "PENDING" as const,
+    ...(isMDOrAdmin ? {} : { task: { createdById: user.id } }),
   }
 
   const approvals = await prisma.taskDueDateApproval.findMany({
-    where: { status: "PENDING" },
+    where,
     include: {
       task: {
         include: {

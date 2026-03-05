@@ -15,11 +15,6 @@ export async function PATCH(
   const user = getSessionFromRequest(request)
   if (!user) return unauthorizedResponse()
 
-  const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
-  if (!isMDOrAdmin) {
-    return errorResponse("Forbidden", 403)
-  }
-
   const { id } = await params
   const approval = await prisma.taskDueDateApproval.findUnique({
     where: { id },
@@ -29,6 +24,12 @@ export async function PATCH(
   if (!approval) return errorResponse("Approval not found", 404)
   if (approval.status !== "PENDING") {
     return errorResponse("Approval already processed", 400)
+  }
+
+  const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
+  const isTaskCreator = approval.task.createdById === user.id
+  if (!isMDOrAdmin && !isTaskCreator) {
+    return errorResponse("Forbidden", 403)
   }
 
   const body = await request.json()
@@ -54,7 +55,7 @@ export async function PATCH(
         type: "DUE_DATE_CHANGE_APPROVED",
         title: "Due Date Change Approved",
         message: `Your due date change request for task "${approval.task.title}" has been approved`,
-        link: `/calendar`,
+        link: "/md/tasks",
         relatedId: approval.taskId,
       },
     })
@@ -65,7 +66,7 @@ export async function PATCH(
         type: "DUE_DATE_CHANGE_REJECTED",
         title: "Due Date Change Rejected",
         message: `Your due date change request for task "${approval.task.title}" has been rejected`,
-        link: `/calendar`,
+        link: "/md/tasks",
         relatedId: approval.taskId,
       },
     })
