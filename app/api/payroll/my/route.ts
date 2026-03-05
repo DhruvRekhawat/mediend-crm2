@@ -18,20 +18,25 @@ export async function GET(request: NextRequest) {
       return errorResponse('Employee record not found', 404)
     }
 
-    const payrollRecords = await prisma.payrollRecord.findMany({
-      where: {
-        employeeId: employee.id,
-      },
-      include: {
-        components: true,
-      },
-      orderBy: [
-        { year: 'desc' },
-        { month: 'desc' },
-      ],
-    })
+    const [payrollRecords, monthlyPayrolls] = await Promise.all([
+      prisma.payrollRecord.findMany({
+        where: { employeeId: employee.id },
+        include: { components: true },
+        orderBy: [{ year: 'desc' }, { month: 'desc' }],
+      }),
+      prisma.monthlyPayroll.findMany({
+        where: {
+          employeeId: employee.id,
+          status: { in: ['APPROVED', 'PAID'] },
+        },
+        orderBy: [{ year: 'desc' }, { month: 'desc' }],
+      }),
+    ])
 
-    return successResponse(payrollRecords)
+    return successResponse({
+      monthlyPayrolls,
+      payrollRecords,
+    })
   } catch (error) {
     console.error('Error fetching payroll:', error)
     return errorResponse('Failed to fetch payroll records', 500)

@@ -4,6 +4,32 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, unauthorizedResponse } from '@/lib/api-utils'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { numberToWordsINR } from '@/lib/hrms/salary-calculation'
+import path from 'path'
+import fs from 'fs'
+
+const MEDIEND_TEAL: [number, number, number] = [44, 110, 106] // #2C6E6A
+const MEDIEND_DARK: [number, number, number] = [26, 26, 46]   // #1A1A2E
+
+function getMonthName(month: number): string {
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+  return months[month - 1] || ''
+}
+
+function formatCurrency(amount: number): string {
+  const formatted = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount)
+  return `Rs. ${formatted}`
+}
+
+function getLogoBase64(): string | null {
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'logo-mediend.png')
+    const buffer = fs.readFileSync(logoPath)
+    return `data:image/png;base64,${buffer.toString('base64')}`
+  } catch {
+    return null
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -11,106 +37,186 @@ export async function GET(
 ) {
   try {
     const user = getSessionFromRequest(request)
-    if (!user) {
-      return unauthorizedResponse()
-    }
+    if (!user) return unauthorizedResponse()
 
     const { id } = await params
-
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
-      include: {
-        user: true,
-        department: true,
-      },
+      include: { user: true, department: true },
     })
+    if (!employee) return errorResponse('Employee record not found', 404)
 
-    if (!employee) {
-      return errorResponse('Employee record not found', 404)
+    const monthlyPayroll = await prisma.monthlyPayroll.findUnique({
+      where: { id },
+      include: { employee: { include: { user: true, department: true } } },
+    })
+    if (monthlyPayroll && monthlyPayroll.employeeId === employee.id) {
+      if (monthlyPayroll.status === 'DRAFT') return errorResponse('Payroll not yet released', 404)
+      const doc = new jsPDF()
+      const pageW = (doc as unknown as { internal: { pageSize: { getWidth(): number } } }).internal.pageSize.getWidth()
+      const logoData = getLogoBase64()
+      if (logoData) {
+        doc.addImage(logoData, 'PNG', 20, 10, 36, 14)
+      } else {
+        doc.setFontSize(18)
+        doc.setTextColor(...MEDIEND_TEAL)
+        doc.text('mediend', 20, 18)
+      }
+      doc.setFontSize(10)
+      doc.setTextColor(0, 0, 0)
+      doc.text('MediEND Healthcare Solutions', 20, 26)
+      doc.text('(A unit of Kundkund Healthcare Pvt. Ltd.)', 20, 31)
+      doc.setFontSize(12)
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text(`Payslip for ${getMonthName(monthlyPayroll.month)} ${monthlyPayroll.year}`, pageW - 20, 24, { align: 'right' })
+
+      let y = 42
+      doc.setFontSize(9)
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text('EMPLOYEE DETAILS', 20, y)
+      y += 6
+      doc.setFontSize(9)
+      doc.setTextColor(0, 0, 0)
+      doc.text(`Name: ${monthlyPayroll.employee.user.name}`, 20, y)
+      y += 5
+      doc.text(`Employee ID: ${monthlyPayroll.employee.employeeCode}`, 20, y)
+      y += 5
+      doc.text(`Department: ${monthlyPayroll.employee.department?.name || '—'}`, 20, y)
+      y += 8
+
+      doc.setFontSize(9)
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text('EARNINGS', 20, y)
+      y += 6
+      const earnings: [string, string][] = [
+        ['Basic Salary', formatCurrency(monthlyPayroll.adjustedBasic)],
+        ['Medical Allow.', formatCurrency(monthlyPayroll.adjustedMedical)],
+        ['Conveyance Allow.', formatCurrency(monthlyPayroll.adjustedConveyance)],
+        ['Other Allowance', formatCurrency(monthlyPayroll.adjustedOther)],
+        ['Special Allow.', formatCurrency(monthlyPayroll.adjustedSpecial)],
+      ]
+      autoTable(doc, {
+        startY: y,
+        head: [['Description', 'Amount']],
+        body: earnings,
+        theme: 'plain',
+        headStyles: { fillColor: MEDIEND_TEAL as [number, number, number], fontSize: 9 },
+        styles: { fontSize: 9 },
+        columnStyles: { 1: { halign: 'right' } },
+        margin: { left: 20 },
+        tableWidth: 80,
+      })
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4
+      doc.setFont('helvetica', 'bold')
+      doc.text('TOTAL EARNINGS', 20, y)
+      doc.text(formatCurrency(monthlyPayroll.adjustedGross), pageW - 20, y, { align: 'right' })
+      y += 8
+
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text('DEDUCTIONS', 20, y)
+      y += 6
+      const lateFines = (monthlyPayroll as { lateFines?: number }).lateFines ?? 0
+      const deductions: [string, string][] = [
+        ['EPF (Employee)', formatCurrency(monthlyPayroll.epfEmployee)],
+        ['ESIC', formatCurrency(monthlyPayroll.esicAmount)],
+        ['Insurance', formatCurrency(monthlyPayroll.insurance)],
+        ['TDS', formatCurrency(monthlyPayroll.tdsAmount)],
+      ]
+      if (lateFines > 0) {
+        deductions.push(['Late fines', formatCurrency(lateFines)])
+      }
+      autoTable(doc, {
+        startY: y,
+        head: [['Description', 'Amount']],
+        body: deductions,
+        theme: 'plain',
+        headStyles: { fillColor: MEDIEND_TEAL as [number, number, number], fontSize: 9 },
+        styles: { fontSize: 9 },
+        columnStyles: { 1: { halign: 'right' } },
+        margin: { left: 20 },
+        tableWidth: 80,
+      })
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4
+      doc.setFont('helvetica', 'bold')
+      doc.text('TOTAL DEDUCTIONS', 20, y)
+      doc.text(formatCurrency(monthlyPayroll.totalDeductions), pageW - 20, y, { align: 'right' })
+      y += 10
+
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(12)
+      doc.setTextColor(...MEDIEND_DARK)
+      doc.text('NET PAYABLE: ' + formatCurrency(monthlyPayroll.netPayable), 20, y)
+      y += 6
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.text('(Rupees ' + numberToWordsINR(monthlyPayroll.netPayable) + ')', 20, y)
+      y += 12
+
+      doc.setFontSize(8)
+      doc.setTextColor(100, 100, 100)
+      doc.text('This is a system-generated payslip and does not require a signature.', pageW / 2, y, { align: 'center' })
+      doc.text('Generated on: ' + new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }), pageW / 2, y + 5, { align: 'center' })
+
+      const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
+      return new Response(pdfBuffer, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="salary-slip-${monthlyPayroll.month}-${monthlyPayroll.year}.pdf"`,
+        },
+      })
     }
 
     const payrollRecord = await prisma.payrollRecord.findUnique({
       where: { id },
-      include: {
-        components: true,
-      },
+      include: { components: true, employee: { include: { user: true, department: true } } },
     })
-
     if (!payrollRecord || payrollRecord.employeeId !== employee.id) {
       return errorResponse('Payroll record not found', 404)
     }
 
-    // Generate PDF
     const doc = new jsPDF()
-    
-    // Header
-    doc.setFontSize(20)
-    doc.text('SALARY SLIP', 105, 20, { align: 'center' })
-    
-    doc.setFontSize(12)
-    doc.text(`Month: ${getMonthName(payrollRecord.month)} ${payrollRecord.year}`, 105, 30, { align: 'center' })
-    
-    // Employee Details
+    const logoData = getLogoBase64()
+    if (logoData) {
+      doc.addImage(logoData, 'PNG', 20, 10, 36, 14)
+    } else {
+      doc.setFontSize(18)
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text('mediend', 20, 18)
+    }
     doc.setFontSize(10)
-    let yPos = 45
-    doc.text(`Employee Name: ${employee.user.name}`, 20, yPos)
-    yPos += 7
-    doc.text(`Employee Code: ${employee.employeeCode}`, 20, yPos)
-    yPos += 7
-    doc.text(`Department: ${employee.department?.name || 'N/A'}`, 20, yPos)
-    yPos += 7
-    doc.text(`Disbursed Date: ${new Date(payrollRecord.disbursedAt).toLocaleDateString()}`, 20, yPos)
-    
-    yPos += 15
-    
-    // Salary Breakdown
-    const tableData: Array<[string, string]> = []
-    
-    // Basic Salary
-    tableData.push(['Basic Salary', formatCurrency(payrollRecord.basicSalary)])
-    
-    // Allowances
-    const allowances = payrollRecord.components.filter(c => c.componentType === 'ALLOWANCE')
-    if (allowances.length > 0) {
-      allowances.forEach(comp => {
-        tableData.push([comp.name, formatCurrency(comp.amount)])
-      })
-    }
-    
-    // Gross Salary
-    tableData.push(['Gross Salary', formatCurrency(payrollRecord.grossSalary)])
-    
-    // Deductions
-    const deductions = payrollRecord.components.filter(c => c.componentType === 'DEDUCTION')
-    if (deductions.length > 0) {
-      deductions.forEach(comp => {
-        tableData.push([comp.name, `-${formatCurrency(comp.amount)}`])
-      })
-    }
-    
-    // Net Salary
-    tableData.push(['Net Salary', formatCurrency(payrollRecord.netSalary)])
-    
+    doc.setTextColor(0, 0, 0)
+    doc.text('MediEND Healthcare Solutions', 20, 26)
+    doc.text(`Payslip for ${getMonthName(payrollRecord.month)} ${payrollRecord.year}`, 20, 34)
+    let y = 45
+    doc.setFontSize(10)
+    doc.text(`Employee: ${employee.user.name}`, 20, y)
+    y += 7
+    doc.text(`Code: ${employee.employeeCode}`, 20, y)
+    y += 7
+    doc.text(`Department: ${employee.department?.name || 'N/A'}`, 20, y)
+    y += 12
+    const rows: [string, string][] = [
+      ['Basic Salary', formatCurrency(payrollRecord.basicSalary)],
+      ...payrollRecord.components.filter((c) => c.componentType === 'ALLOWANCE').map((c) => [c.name, formatCurrency(c.amount)] as [string, string]),
+      ['Gross', formatCurrency(payrollRecord.grossSalary)],
+      ...payrollRecord.components.filter((c) => c.componentType === 'DEDUCTION').map((c) => [c.name, '-' + formatCurrency(c.amount)] as [string, string]),
+      ['Net Salary', formatCurrency(payrollRecord.netSalary)],
+    ]
     autoTable(doc, {
-      startY: yPos,
+      startY: y,
       head: [['Component', 'Amount']],
-      body: tableData,
+      body: rows,
       theme: 'striped',
-      headStyles: { fillColor: [66, 139, 202] },
+      headStyles: { fillColor: MEDIEND_TEAL as [number, number, number] },
       styles: { fontSize: 10 },
-      columnStyles: {
-        1: { halign: 'right' },
-      },
+      columnStyles: { 1: { halign: 'right' } },
     })
-    
-    // Footer
-    const finalY = ((doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable?.finalY || 0) + 10
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
     doc.setFontSize(8)
-    doc.text('This is a system generated document.', 105, finalY, { align: 'center' })
-    
-    // Generate PDF buffer
+    doc.text('This is a system-generated document.', 105, y, { align: 'center' })
+
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
-    
     return new Response(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
@@ -122,20 +228,3 @@ export async function GET(
     return errorResponse('Failed to generate salary slip', 500)
   }
 }
-
-function getMonthName(month: number): string {
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ]
-  return months[month - 1] || ''
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 2,
-  }).format(amount)
-}
-

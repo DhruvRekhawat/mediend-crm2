@@ -71,7 +71,7 @@ interface LedgerEntry {
     id: string
     name: string
     email: string
-  }
+  } | null
   attachments?: {
     name: string
     url: string
@@ -300,7 +300,7 @@ function HistoryCard({ entry, onUndo }: HistoryCardProps) {
           <div className="flex items-center justify-between mb-2">
             <div>
               <div className="text-xs text-muted-foreground">Created by</div>
-              <div className="text-sm">{entry.createdBy.name}</div>
+              <div className="text-sm">{entry.createdBy?.name ?? '—'}</div>
             </div>
             <div className="text-right">
               <div className={`text-2xl font-bold ${isApproved ? 'text-green-600' : 'text-red-600'}`}>
@@ -427,7 +427,7 @@ function SwipeCard({ entry, onApprove, onReject }: SwipeCardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-xs text-muted-foreground">Created by</div>
-                  <div className="text-sm">{entry.createdBy.name}</div>
+                  <div className="text-sm">{entry.createdBy?.name ?? '—'}</div>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-red-600">
@@ -1037,7 +1037,7 @@ export default function ApprovalsPage() {
                       -{formatCurrency(entry.paymentAmount || 0)}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">{entry.createdBy.name}</div>
+                      <div className="text-sm">{entry.createdBy?.name ?? '—'}</div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">

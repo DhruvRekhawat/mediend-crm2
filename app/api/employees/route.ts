@@ -118,7 +118,9 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (!hasPermission(user, 'hrms:employees:read')) {
+    const canRead =
+      hasPermission(user, 'hrms:employees:read') || hasPermission(user, 'finance:payroll:read')
+    if (!canRead) {
       return errorResponse('Forbidden', 403)
     }
 

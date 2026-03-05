@@ -29,6 +29,8 @@ export type Permission =
   | 'finance:write'
   | 'finance:masters:write'
   | 'finance:approve'
+  | 'finance:payroll:read'
+  | 'finance:payroll:write'
   | 'departments:create'
   | 'departments:assign_head'
   | 'users:create_tl'
@@ -49,6 +51,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'pl:read',
     'finance:read',
     'finance:approve',
+    'finance:payroll:read',
+    'finance:payroll:write',
     'departments:create',
     'departments:assign_head',
     'users:create_tl',
@@ -161,6 +165,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:payroll:write',
     'hrms:employees:read',
     'hrms:employees:write',
+    'finance:payroll:read',
+    'finance:payroll:write',
     'departments:create',
     'users:create_tl',
     'users:create_user',
@@ -174,6 +180,9 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'finance:read',
     'finance:write',
     'finance:masters:write',
+    'finance:payroll:read',
+    'finance:payroll:write',
+    'hrms:employees:read',
     'departments:create',
     'users:create_tl',
     'users:create_user',
@@ -228,6 +237,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'finance:write',
     'finance:masters:write',
     'finance:approve',
+    'finance:payroll:read',
+    'finance:payroll:write',
     'departments:create',
     'departments:assign_head',
     'users:create_tl',
@@ -272,6 +283,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'finance:write',
     'finance:masters:write',
     'finance:approve',
+    'finance:payroll:read',
+    'finance:payroll:write',
     'departments:create',
     'departments:assign_head',
     'users:create_tl',

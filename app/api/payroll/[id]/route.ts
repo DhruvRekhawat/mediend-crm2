@@ -15,6 +15,37 @@ export async function GET(
     }
 
     const { id: payrollId } = await params
+    const employee = await prisma.employee.findUnique({
+      where: { userId: user.id },
+      include: { user: true, department: true },
+    })
+
+    const monthlyPayroll = await prisma.monthlyPayroll.findUnique({
+      where: { id: payrollId },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            employeeCode: true,
+            joinDate: true,
+            designation: true,
+            panNumber: true,
+            bankAccountNumber: true,
+            uanNumber: true,
+            user: { select: { id: true, name: true, email: true } },
+            department: { select: { id: true, name: true } },
+          },
+        },
+      },
+    })
+    if (monthlyPayroll) {
+      const isOwn = employee?.id === monthlyPayroll.employeeId
+      const hasPayrollPermission = hasPermission(user, 'hrms:payroll:read') || hasPermission(user, 'finance:payroll:read')
+      if (!isOwn && !hasPayrollPermission) return errorResponse('Forbidden', 403)
+      // Employees can only see APPROVED or PAID; finance/HR can see DRAFT too
+      if (isOwn && monthlyPayroll.status === 'DRAFT') return errorResponse('Payroll not yet released', 404)
+      return successResponse({ type: 'monthly', ...monthlyPayroll })
+    }
 
     const payrollRecord = await prisma.payrollRecord.findUnique({
       where: { id: payrollId },
@@ -22,41 +53,19 @@ export async function GET(
         components: true,
         employee: {
           include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            department: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+            user: { select: { id: true, name: true, email: true } },
+            department: { select: { id: true, name: true } },
           },
         },
       },
     })
-
-    if (!payrollRecord) {
-      return errorResponse('Payroll record not found', 404)
-    }
-
-    // Check if user has permission to view payroll OR if it's their own payroll
-    const employee = await prisma.employee.findUnique({
-      where: { userId: user.id },
-    })
+    if (!payrollRecord) return errorResponse('Payroll record not found', 404)
 
     const isOwnPayroll = employee?.id === payrollRecord.employeeId
     const canView = isOwnPayroll || hasPermission(user, 'hrms:payroll:read')
+    if (!canView) return errorResponse('Forbidden', 403)
 
-    if (!canView) {
-      return errorResponse('Forbidden', 403)
-    }
-
-    return successResponse(payrollRecord)
+    return successResponse({ type: 'legacy', ...payrollRecord })
   } catch (error) {
     console.error('Error fetching payroll record:', error)
     return errorResponse('Failed to fetch payroll record', 500)

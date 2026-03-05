@@ -180,10 +180,10 @@ export const navItems: NavItem[] = [
     permission: 'hrms:employees:read',
   },
   {
-    title: 'HR Payroll',
-    url: '/hr/payroll',
+    title: 'Fin Payroll',
+    url: '/finance/payroll',
     icon: Wallet,
-    permission: 'hrms:payroll:read',
+    permission: 'finance:payroll:read',
   },
   {
     title: 'Departments',

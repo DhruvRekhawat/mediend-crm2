@@ -703,15 +703,20 @@ model Employee {
   managerId    String?
   manager      Employee?   @relation("EmployeeHierarchy", fields: [managerId], references: [id])
   subordinates Employee[]  @relation("EmployeeHierarchy")
-  dateOfBirth  DateTime?
-  aadharNumber String?
-  panNumber    String?
-  aadharDocUrl String?
-  panDocUrl    String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  dateOfBirth        DateTime?
+  aadharNumber       String?
+  panNumber          String?
+  aadharDocUrl       String?
+  panDocUrl          String?
+  designation        String?
+  bankAccountNumber  String?
+  uanNumber          String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   attendanceLogs       AttendanceLog[]
+  salaryStructures     SalaryStructure[]
+  monthlyPayrolls      MonthlyPayroll[]
   attendanceNormalizationsAsSubject AttendanceNormalization[] @relation("NormalizationSubject")
   attendanceNormalizationsRequested AttendanceNormalization[] @relation("NormalizationRequester")
   attendanceNormalizationsApproved  AttendanceNormalization[] @relation("NormalizationApprover")
@@ -880,6 +885,77 @@ model PayrollComponent {
 
   @@index([payrollRecordId])
   @@index([componentType])
+}
+
+model SalaryStructure {
+  id                   String    @id @default(cuid())
+  employeeId           String
+  employee             Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  annualCtc            Float
+  monthlyGross         Float
+  basicSalary          Float
+  medicalAllowance     Float
+  conveyanceAllowance  Float
+  otherAllowance       Float    @default(0)
+  specialAllowance     Float
+  insuranceDeduction   Float    @default(0)
+  applyTds             Boolean  @default(false)
+  tdsMonthly           Float    @default(0)
+  tdsRatePercent       Float?
+  effectiveFrom        DateTime
+  effectiveTo          DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([effectiveFrom])
+}
+
+enum MonthlyPayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+model MonthlyPayroll {
+  id                  String              @id @default(cuid())
+  employeeId          String
+  employee            Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month               Int
+  year                Int
+  totalDaysInMonth    Int
+  payableDays         Float
+  unpaidLeaves        Int     @default(0)
+  paidLeaves          Int     @default(0)
+  halfDays            Int     @default(0)
+  lateFines           Float   @default(0)
+  adjustedBasic       Float
+  adjustedMedical     Float
+  adjustedConveyance  Float
+  adjustedOther       Float
+  adjustedSpecial     Float
+  adjustedGross       Float
+  epfEmployee         Float
+  applyEsic           Boolean @default(false)
+  esicAmount          Float   @default(0)
+  applyTds            Boolean @default(false)
+  tdsAmount           Float   @default(0)
+  insurance           Float   @default(0)
+  totalDeductions     Float
+  epfEmployer         Float
+  netPayable          Float
+  status              MonthlyPayrollStatus @default(DRAFT)
+  disbursedAt         DateTime?
+  approvedById        String?
+  paidAt              DateTime?
+  generatedAt         DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([employeeId, month, year])
+  @@index([employeeId])
+  @@index([month, year])
+  @@index([status])
 }
 
 // Employee Documents (Offer Letter, Appraisal, etc.)

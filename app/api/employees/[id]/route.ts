@@ -19,6 +19,9 @@ const updateEmployeeSchema = z.object({
   panNumber: z.string().max(10).optional().nullable(),
   aadharDocUrl: z.string().url().optional().nullable().or(z.literal('')),
   panDocUrl: z.string().url().optional().nullable().or(z.literal('')),
+  designation: z.string().max(200).optional().nullable(),
+  bankAccountNumber: z.string().max(50).optional().nullable(),
+  uanNumber: z.string().max(50).optional().nullable(),
 })
 
 export async function PATCH(
@@ -31,13 +34,24 @@ export async function PATCH(
       return unauthorizedResponse()
     }
 
-    if (!hasPermission(user, 'hrms:employees:write')) {
+    const canWriteFull = hasPermission(user, 'hrms:employees:write')
+    const canWritePayrollDetails = hasPermission(user, 'finance:payroll:write')
+    if (!canWriteFull && !canWritePayrollDetails) {
       return errorResponse('Forbidden', 403)
     }
 
     const { id } = await params
     const body = await request.json()
     const data = updateEmployeeSchema.parse(body)
+
+    // Finance can only update payroll-related fields
+    const payrollOnlyFields = ['joinDate', 'designation', 'panNumber', 'bankAccountNumber', 'uanNumber']
+    if (canWritePayrollDetails && !canWriteFull) {
+      const disallowed = Object.keys(data).filter((k) => !payrollOnlyFields.includes(k))
+      if (disallowed.length > 0) {
+        return errorResponse('Only payroll details (designation, PAN, bank account, UAN, join date) can be updated', 403)
+      }
+    }
 
     // Check if employee code is being updated and is unique
     if (data.employeeCode) {
@@ -221,6 +235,9 @@ export async function PATCH(
     if (data.panNumber !== undefined) updateData.panNumber = data.panNumber
     if (data.aadharDocUrl !== undefined) updateData.aadharDocUrl = data.aadharDocUrl || null
     if (data.panDocUrl !== undefined) updateData.panDocUrl = data.panDocUrl || null
+    if (data.designation !== undefined) updateData.designation = data.designation || null
+    if (data.bankAccountNumber !== undefined) updateData.bankAccountNumber = data.bankAccountNumber || null
+    if (data.uanNumber !== undefined) updateData.uanNumber = data.uanNumber || null
 
     const { clearBdNumberCache } = await import('@/lib/sync/bd-number-map')
     if (data.bdNumber !== undefined) {

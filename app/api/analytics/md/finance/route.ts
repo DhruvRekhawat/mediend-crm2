@@ -482,7 +482,7 @@ export async function GET(request: NextRequest) {
       paymentModeName: t.paymentMode?.name || '',
       amount: t.transactionType === 'CREDIT' ? t.receivedAmount || 0 : t.paymentAmount || 0,
       description: t.description,
-      createdByName: t.createdBy.name,
+      createdByName: t.createdBy?.name ?? 'Unknown',
     }))
 
     return successResponse({
