@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') // 'bd' or 'team'
+    const type = searchParams.get('type') // 'bd', 'team', or 'teamlead'
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
@@ -292,6 +292,98 @@ export async function GET(request: NextRequest) {
 
       // Sort by closedLeads (cases closed) instead of netProfit
       leaderboard.sort((a, b) => b.closedLeads - a.closedLeads)
+
+      return successResponse(leaderboard)
+    } else if (type === 'teamlead') {
+      // Team Lead leaderboard: rank TEAM_LEAD users by their team's surgeries
+      if (user.role === 'BD' && !user.teamId) {
+        return successResponse([])
+      }
+      const teamLeads = await prisma.user.findMany({
+        where: {
+          role: 'TEAM_LEAD',
+          teamId: { not: null },
+          ...(user.role === 'TEAM_LEAD' && user.teamId
+            ? { id: user.id }
+            : user.role === 'BD' && user.teamId
+              ? { teamId: user.teamId }
+              : {}),
+        },
+        include: { team: { select: { id: true, name: true } } },
+      })
+
+      if (teamLeads.length === 0) {
+        return successResponse([])
+      }
+
+      const teamIds = teamLeads.map((tl) => tl.teamId!).filter(Boolean)
+      const closedWhere: Prisma.LeadWhereInput = {
+        status: { in: CLOSED_STATUS_CODES },
+        createdDate: dateFilter,
+        bd: { teamId: { in: teamIds } },
+      }
+      const ipdDoneWhere: Prisma.LeadWhereInput = {
+        status: '13',
+        createdDate: dateFilter,
+        bd: { teamId: { in: teamIds } },
+      }
+
+      const [closedStats, ipdDoneStats] = await Promise.all([
+        prisma.lead.groupBy({
+          by: ['bdId'],
+          where: closedWhere,
+          _count: { id: true },
+          _sum: { netProfit: true },
+        }),
+        prisma.lead.groupBy({
+          by: ['bdId'],
+          where: ipdDoneWhere,
+          _count: { id: true },
+        }),
+      ])
+
+      const bds = await prisma.user.findMany({
+        where: {
+          id: { in: [...new Set(closedStats.map((s) => s.bdId).filter(Boolean))] },
+          role: 'BD',
+          teamId: { in: teamIds },
+        },
+        select: { id: true, teamId: true },
+      })
+
+      const teamMap = new Map<string, { closedLeads: number; ipdDone: number; netProfit: number }>()
+      closedStats.forEach((stat) => {
+        const bd = bds.find((b) => b.id === stat.bdId)
+        if (bd?.teamId) {
+          const existing = teamMap.get(bd.teamId) || { closedLeads: 0, ipdDone: 0, netProfit: 0 }
+          existing.closedLeads += stat._count.id
+          existing.netProfit += stat._sum.netProfit || 0
+          teamMap.set(bd.teamId, existing)
+        }
+      })
+      ipdDoneStats.forEach((stat) => {
+        const bd = bds.find((b) => b.id === stat.bdId)
+        if (bd?.teamId) {
+          const existing = teamMap.get(bd.teamId) || { closedLeads: 0, ipdDone: 0, netProfit: 0 }
+          existing.ipdDone += stat._count.id
+          teamMap.set(bd.teamId, existing)
+        }
+      })
+
+      const leaderboard = teamLeads
+        .filter((tl) => tl.team && teamMap.has(tl.team.id))
+        .map((tl) => {
+          const stats = teamMap.get(tl.team!.id)!
+          return {
+            teamLeadId: tl.id,
+            teamLeadName: tl.name,
+            teamName: tl.team!.name,
+            closedLeads: stats.closedLeads,
+            ipdDone: stats.ipdDone,
+            netProfit: stats.netProfit,
+          }
+        })
+        .sort((a, b) => b.closedLeads - a.closedLeads)
 
       return successResponse(leaderboard)
     }
