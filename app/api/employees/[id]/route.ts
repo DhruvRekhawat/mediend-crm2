@@ -24,6 +24,47 @@ const updateEmployeeSchema = z.object({
   uanNumber: z.string().max(50).optional().nullable(),
 })
 
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = getSessionFromRequest(_request)
+    if (!user) return unauthorizedResponse()
+
+    const canRead =
+      hasPermission(user, 'hrms:employees:read') || hasPermission(user, 'finance:payroll:read')
+    if (!canRead) return errorResponse('Forbidden', 403)
+
+    const { id } = await params
+    const employee = await prisma.employee.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        department: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    if (!employee) return errorResponse('Employee not found', 404)
+    return successResponse(employee)
+  } catch (error) {
+    console.error('Error fetching employee:', error)
+    return errorResponse('Failed to fetch employee', 500)
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

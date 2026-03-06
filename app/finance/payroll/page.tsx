@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -26,94 +28,18 @@ import {
   calculateNetPay,
   isESICApplicableByRule,
 } from '@/lib/hrms/salary-calculation'
-import { Edit, FileText, Search } from 'lucide-react'
+import { Edit, FileText, Search, Users, IndianRupee, Clock } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
-
-interface Department {
-  id: string
-  name: string
-}
-
-interface Employee {
-  id: string
-  employeeCode: string
-  joinDate: string | null
-  salary: number | null
-  designation: string | null
-  panNumber: string | null
-  bankAccountNumber: string | null
-  uanNumber: string | null
-  user: { id: string; name: string; email: string; role: string }
-  department: { id: string; name: string } | null
-}
-
-interface SalaryStructure {
-  id: string
-  employeeId: string
-  annualCtc: number
-  monthlyGross: number
-  basicSalary: number
-  medicalAllowance: number
-  conveyanceAllowance: number
-  otherAllowance: number
-  specialAllowance: number
-  insuranceDeduction: number
-  applyTds: boolean
-  tdsMonthly: number
-  tdsRatePercent: number | null
-  effectiveFrom: string
-  effectiveTo: string | null
-  employee?: { id: string; employeeCode: string; user: { name: string }; department: { name: string } | null }
-}
-
-interface MonthlyPayroll {
-  id: string
-  employeeId: string
-  month: number
-  year: number
-  status: string
-  adjustedGross: number
-  netPayable: number
-  adjustedBasic?: number
-  adjustedMedical?: number
-  adjustedConveyance?: number
-  adjustedOther?: number
-  adjustedSpecial?: number
-  epfEmployee?: number
-  applyEsic?: boolean
-  esicAmount?: number
-  applyTds?: boolean
-  tdsAmount?: number
-  insurance?: number
-  lateFines?: number
-  totalDeductions?: number
-  paidLeaves?: number
-  employee?: { id: string; employeeCode: string; user: { name: string }; department: { name: string } | null }
-}
-
-interface AttendanceSummary {
-  totalDaysInMonth: number
-  fullDays: number
-  halfDays: number
-  paidLeaves: number
-  unpaidLeaves: number
-  payableDays: number
-  lateFines: number
-  normalizedDays?: number
-}
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount)
-}
+import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
+import { Progress } from '@/components/ui/progress'
+import type { Department, Employee, SalaryStructure, MonthlyPayroll } from '@/lib/finance/payroll-types'
+import { MONTHS, formatCurrency } from '@/lib/finance/payroll-types'
 
 export default function FinancePayrollPage() {
+  const router = useRouter()
   const queryClient = useQueryClient()
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -122,11 +48,9 @@ export default function FinancePayrollPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [salaryStructureDialogOpen, setSalaryStructureDialogOpen] = useState(false)
-  const [generateModalOpen, setGenerateModalOpen] = useState(false)
   const [selectedEmployeeForStructure, setSelectedEmployeeForStructure] = useState<Employee | null>(null)
-  const [selectedEmployeeForGenerate, setSelectedEmployeeForGenerate] = useState<Employee | null>(null)
-  const [createMore, setCreateMore] = useState(false)
-  const [generateQueue, setGenerateQueue] = useState<Employee[]>([])
+  const [structureMore, setStructureMore] = useState(false)
+  const [structureQueue, setStructureQueue] = useState<Employee[]>([])
   const [selectedPayrollIds, setSelectedPayrollIds] = useState<Set<string>>(new Set())
 
   const { data: employees = [], isLoading: employeesLoading } = useQuery<Employee[]>({
@@ -197,15 +121,18 @@ export default function FinancePayrollPage() {
     return list
   }, [employees, searchQuery])
 
-  const openSalaryStructure = (emp: Employee) => {
-    setSelectedEmployeeForStructure(emp)
-    setSalaryStructureDialogOpen(true)
-  }
+  const kpiStats = useMemo(() => {
+    const totalEmployees = filteredEmployees.length
+    const payrollGenerated = filteredEmployees.filter((e) => payrollByEmployee.has(e.id)).length
+    const totalNetCost = payrollRecords.reduce((sum, p) => sum + (p.netPayable ?? 0), 0)
+    const pendingDraft = payrollRecords.filter((p) => p.status === 'DRAFT').length
+    return { totalEmployees, payrollGenerated, totalNetCost, pendingDraft }
+  }, [filteredEmployees, payrollByEmployee, payrollRecords])
 
-  const openGenerateModal = (emp: Employee, queue?: Employee[]) => {
-    setSelectedEmployeeForGenerate(emp)
-    setGenerateQueue(queue ?? filteredEmployees)
-    setGenerateModalOpen(true)
+  const openSalaryStructure = (emp: Employee, queue?: Employee[]) => {
+    setSelectedEmployeeForStructure(emp)
+    setStructureQueue(queue ?? filteredEmployees)
+    setSalaryStructureDialogOpen(true)
   }
 
   const payrollIdsOnPage = useMemo(
@@ -245,6 +172,53 @@ export default function FinancePayrollPage() {
           <h1 className="text-3xl font-bold">Payroll Management</h1>
           <p className="text-muted-foreground mt-1">Manage salary structures and generate monthly payroll</p>
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/30">
+              <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
+              <p className="text-2xl font-bold">{kpiStats.totalEmployees}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/30">
+              <FileText className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Payroll Generated</p>
+              <p className="text-2xl font-bold">{kpiStats.payrollGenerated}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-emerald-100 p-3 dark:bg-emerald-900/30">
+              <IndianRupee className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Total Net Cost</p>
+              <p className="text-2xl font-bold">{formatCurrency(kpiStats.totalNetCost)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-amber-500">
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="rounded-lg bg-amber-100 p-3 dark:bg-amber-900/30">
+              <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Pending (Draft)</p>
+              <p className="text-2xl font-bold">{kpiStats.pendingDraft}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -336,7 +310,32 @@ export default function FinancePayrollPage() {
             </div>
           )}
           {employeesLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading employees...</div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10" />
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Monthly Gross</TableHead>
+                  <TableHead>Salary Structure</TableHead>
+                  <TableHead>Payroll</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /><Skeleton className="h-3 w-16 mt-1" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                    <TableCell className="text-right"><Skeleton className="h-8 w-24 ml-auto" /></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           ) : (
             <Table>
               <TableHeader>
@@ -359,12 +358,24 @@ export default function FinancePayrollPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEmployees.map((emp) => {
+                {filteredEmployees.map((emp, idx) => {
                   const structure = structureByEmployee.get(emp.id)
                   const payroll = payrollByEmployee.get(emp.id)
                   return (
-                    <TableRow key={emp.id}>
-                      <TableCell>
+                    <TableRow
+                      key={emp.id}
+                      className={`cursor-pointer transition-colors hover:bg-muted/60 ${idx % 2 === 1 ? 'bg-muted/40' : ''}`}
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          employeeId: emp.id,
+                          month: String(month),
+                          year: String(year),
+                          queue: filteredEmployees.map((e) => e.id).join(','),
+                        })
+                        router.push(`/finance/payroll/generate?${params.toString()}`)
+                      }}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         {payroll && (
                           <Checkbox
                             checked={selectedPayrollIds.has(payroll.id)}
@@ -377,40 +388,52 @@ export default function FinancePayrollPage() {
                         <div>{emp.user.name}</div>
                         <div className="text-xs text-muted-foreground">{emp.employeeCode}</div>
                       </TableCell>
-                      <TableCell>{emp.department?.name ?? '—'}</TableCell>
                       <TableCell>
+                        <Badge variant="outline" className="bg-slate-100 dark:bg-slate-800">
+                          {emp.department?.name ?? '—'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-semibold text-primary">
                         {structure ? formatCurrency(structure.monthlyGross) : '—'}
                       </TableCell>
                       <TableCell>
                         {structure ? (
-                          <Badge variant="secondary">Configured</Badge>
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">Configured</Badge>
                         ) : (
-                          <Badge variant="outline">Not set</Badge>
+                          <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">Not set</Badge>
                         )}
                       </TableCell>
                       <TableCell>
                         {payroll ? (
-                          <Badge variant={payroll.status === 'PAID' ? 'default' : payroll.status === 'APPROVED' ? 'secondary' : 'outline'}>
+                          <Badge
+                            className={
+                              payroll.status === 'PAID'
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                : payroll.status === 'APPROVED'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                            }
+                          >
                             {payroll.status}
                           </Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openSalaryStructure(emp)}>
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openSalaryStructure(emp); }}>
                             <Edit className="h-4 w-4 mr-1" />
                             Structure
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openGenerateModal(emp)}
+                          <Link
+                            href={`/finance/payroll/generate?employeeId=${emp.id}&month=${month}&year=${year}&queue=${filteredEmployees.map((e) => e.id).join(',')}`}
+                            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <FileText className="h-4 w-4 mr-1" />
                             {payroll ? 'View / Edit' : 'Generate'}
-                          </Button>
+                          </Link>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -433,44 +456,31 @@ export default function FinancePayrollPage() {
         open={salaryStructureDialogOpen}
         onOpenChange={setSalaryStructureDialogOpen}
         employee={selectedEmployeeForStructure}
+        queue={structureQueue}
+        structureMore={structureMore}
+        setStructureMore={setStructureMore}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['salary-structures'] })
-          setSalaryStructureDialogOpen(false)
-          setSelectedEmployeeForStructure(null)
-        }}
-      />
-
-      <GeneratePayrollModal
-        open={generateModalOpen}
-        onOpenChange={setGenerateModalOpen}
-        employee={selectedEmployeeForGenerate}
-        queue={generateQueue}
-        month={month}
-        year={year}
-        createMore={createMore}
-        setCreateMore={setCreateMore}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['finance-payroll'] })
-          if (!createMore) {
-            setGenerateModalOpen(false)
-            setSelectedEmployeeForGenerate(null)
-          } else {
-            const idx = generateQueue.findIndex((e) => e.id === selectedEmployeeForGenerate?.id)
-            const next = generateQueue[idx + 1]
-            if (next) setSelectedEmployeeForGenerate(next)
+          if (structureMore && structureQueue.length > 1) {
+            const idx = structureQueue.findIndex((e) => e.id === selectedEmployeeForStructure?.id)
+            const next = structureQueue[idx + 1]
+            if (next) setSelectedEmployeeForStructure(next)
             else {
-              setGenerateModalOpen(false)
-              setSelectedEmployeeForGenerate(null)
+              setSalaryStructureDialogOpen(false)
+              setSelectedEmployeeForStructure(null)
             }
+          } else {
+            setSalaryStructureDialogOpen(false)
+            setSelectedEmployeeForStructure(null)
           }
         }}
         onSkip={() => {
-          const idx = generateQueue.findIndex((e) => e.id === selectedEmployeeForGenerate?.id)
-          const next = generateQueue[idx + 1]
-          if (next) setSelectedEmployeeForGenerate(next)
+          const idx = structureQueue.findIndex((e) => e.id === selectedEmployeeForStructure?.id)
+          const next = structureQueue[idx + 1]
+          if (next) setSelectedEmployeeForStructure(next)
           else {
-            setGenerateModalOpen(false)
-            setSelectedEmployeeForGenerate(null)
+            setSalaryStructureDialogOpen(false)
+            setSelectedEmployeeForStructure(null)
           }
         }}
       />
@@ -526,36 +536,78 @@ function BulkStatusActions({
   )
 }
 
+const defaultStructureFormData = {
+  annualCtc: '',
+  basicSalary: '15000',
+  medicalAllowance: '1500',
+  conveyanceAllowance: '2150',
+  otherAllowance: '0',
+  insuranceDeduction: '0',
+  applyTds: false,
+  tdsMonthly: '0',
+  tdsRatePercent: '' as string,
+  effectiveFrom: format(new Date(), 'yyyy-MM-dd'),
+}
+
 function SalaryStructureDialog({
   open,
   onOpenChange,
   employee,
+  queue,
+  structureMore,
+  setStructureMore,
   onSuccess,
+  onSkip,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   employee: Employee | null
+  queue: Employee[]
+  structureMore: boolean
+  setStructureMore: (v: boolean) => void
   onSuccess: () => void
+  onSkip: () => void
 }) {
   const queryClient = useQueryClient()
-  const [formData, setFormData] = useState({
-    annualCtc: '',
-    basicSalary: '15000',
-    medicalAllowance: '1500',
-    conveyanceAllowance: '2150',
-    otherAllowance: '0',
-    insuranceDeduction: '0',
-    applyTds: false,
-    tdsMonthly: '0',
-    tdsRatePercent: '' as string,
-    effectiveFrom: format(new Date(), 'yyyy-MM-dd'),
-  })
+  const [formData, setFormData] = useState(defaultStructureFormData)
+  const structureContentRef = useRef<HTMLDivElement>(null)
 
   const { data: existingStructures = [] } = useQuery<SalaryStructure[]>({
     queryKey: ['salary-structure', employee?.id],
     queryFn: () => apiGet<SalaryStructure[]>(`/api/finance/salary-structure?employeeId=${employee?.id}`),
     enabled: !!employee?.id && open,
   })
+
+  useEffect(() => {
+    if (employee?.id) setFormData(defaultStructureFormData)
+  }, [employee?.id])
+
+  useEffect(() => {
+    if (!employee?.id) return
+    const scrollEl = structureContentRef.current?.parentElement
+    if (scrollEl && scrollEl.scrollTop !== undefined) scrollEl.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [employee?.id])
+
+  useEffect(() => {
+    if (!employee?.id || existingStructures.length === 0) return
+    const latest = existingStructures
+      .filter((s) => s.employeeId === employee.id)
+      .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
+    if (latest) {
+      setFormData({
+        annualCtc: String(latest.annualCtc),
+        basicSalary: String(latest.basicSalary),
+        medicalAllowance: String(latest.medicalAllowance),
+        conveyanceAllowance: String(latest.conveyanceAllowance),
+        otherAllowance: String(latest.otherAllowance),
+        insuranceDeduction: String(latest.insuranceDeduction ?? 0),
+        applyTds: latest.applyTds,
+        tdsMonthly: String(latest.tdsMonthly ?? 0),
+        tdsRatePercent: latest.tdsRatePercent != null ? String(latest.tdsRatePercent) : '',
+        effectiveFrom: format(new Date(latest.effectiveFrom), 'yyyy-MM-dd'),
+      })
+    }
+  }, [employee?.id, existingStructures])
 
   const createMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => apiPost<SalaryStructure>('/api/finance/salary-structure', data),
@@ -609,13 +661,29 @@ function SalaryStructureDialog({
 
   if (!employee) return null
 
+  const currentStructureIndex = queue.findIndex((e) => e.id === employee.id) + 1
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div ref={structureContentRef}>
         <DialogHeader>
           <DialogTitle>Salary Structure — {employee.user.name}</DialogTitle>
-          <DialogDescription>Configure salary components. Special allowance is auto-calculated.</DialogDescription>
         </DialogHeader>
+
+        {structureMore && queue.length > 1 && (
+          <div className="space-y-2 rounded-lg border p-4 mt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Employee {currentStructureIndex} of {queue.length}</span>
+              <div className="flex items-center gap-3">
+                <Label className="text-sm text-muted-foreground">Structure more</Label>
+                <Switch checked={structureMore} onCheckedChange={setStructureMore} />
+              </div>
+            </div>
+            <Progress value={(currentStructureIndex / queue.length) * 100} className="h-2" />
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -692,9 +760,9 @@ function SalaryStructureDialog({
               <Label>Apply TDS for this employee</Label>
               <p className="text-xs text-muted-foreground">When on, TDS amount or rate is used in payroll.</p>
             </div>
-            <Checkbox
+            <Switch
               checked={formData.applyTds}
-              onCheckedChange={(v) => setFormData({ ...formData, applyTds: !!v })}
+              onCheckedChange={(v) => setFormData({ ...formData, applyTds: v })}
             />
           </div>
           {formData.applyTds && (
@@ -730,7 +798,22 @@ function SalaryStructureDialog({
               onChange={(e) => setFormData({ ...formData, effectiveFrom: e.target.value })}
             />
           </div>
-          <div className="flex justify-end gap-2">
+          {(!structureMore || queue.length <= 1) && (
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div>
+                <Label>Structure more</Label>
+                <p className="text-xs text-muted-foreground">After save, load next employee in queue.</p>
+              </div>
+              <Switch checked={structureMore} onCheckedChange={setStructureMore} />
+            </div>
+          )}
+
+          <div className="flex flex-wrap justify-end gap-2">
+            {structureMore && queue.length > 1 && (
+              <Button type="button" variant="outline" onClick={onSkip}>
+                Skip to next
+              </Button>
+            )}
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
@@ -739,634 +822,9 @@ function SalaryStructureDialog({
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function GeneratePayrollModal({
-  open,
-  onOpenChange,
-  employee,
-  queue,
-  month,
-  year,
-  createMore,
-  setCreateMore,
-  onSuccess,
-  onSkip,
-}: {
-  open: boolean
-  onOpenChange: (v: boolean) => void
-  employee: Employee | null
-  queue: Employee[]
-  month: number
-  year: number
-  createMore: boolean
-  setCreateMore: (v: boolean) => void
-  onSuccess: () => void
-  onSkip: () => void
-}) {
-  const queryClient = useQueryClient()
-  const currentIndex = employee ? queue.findIndex((e) => e.id === employee.id) + 1 : 0
-
-  const { data: attendanceSummary, isLoading: attendanceLoading } = useQuery<AttendanceSummary>({
-    queryKey: ['attendance-summary', employee?.id, month, year],
-    queryFn: () =>
-      apiGet<AttendanceSummary>(
-        `/api/finance/payroll/attendance-summary?employeeId=${employee?.id}&month=${month}&year=${year}`
-      ),
-    enabled: !!employee?.id && open,
-  })
-
-  const { data: structure } = useQuery<SalaryStructure | null>({
-    queryKey: ['salary-structure-active', employee?.id, month, year],
-    queryFn: async () => {
-      const list = await apiGet<SalaryStructure[]>(`/api/finance/salary-structure?employeeId=${employee?.id}`)
-      const monthStart = new Date(year, month - 1, 1)
-      const monthEnd = new Date(year, month, 0)
-      const active = list
-        .filter((s) => {
-          const from = new Date(s.effectiveFrom)
-          const to = s.effectiveTo ? new Date(s.effectiveTo) : null
-          return from <= monthEnd && (!to || to >= monthStart)
-        })
-        .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
-      return active ?? null
-    },
-    enabled: !!employee?.id && open,
-  })
-
-  const { data: existingPayroll } = useQuery<MonthlyPayroll | null>({
-    queryKey: ['payroll-record', employee?.id, month, year],
-    queryFn: async () => {
-      const res = await apiGet<{ data: MonthlyPayroll[] }>(
-        `/api/finance/payroll?employeeId=${employee?.id}&month=${month}&year=${year}`
-      )
-      return res.data?.[0] ?? null
-    },
-    enabled: !!employee?.id && open,
-  })
-
-  const generateMutation = useMutation({
-    mutationFn: () =>
-      apiPost<MonthlyPayroll>('/api/finance/payroll/generate', {
-        employeeId: employee!.id,
-        month,
-        year,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-payroll'] })
-      queryClient.invalidateQueries({ queryKey: ['payroll-record', employee?.id, month, year] })
-      toast.success('Payroll generated')
-      onSuccess()
-    },
-    onError: (e: Error) => toast.error(e.message || 'Failed to generate'),
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (data: Record<string, unknown>) =>
-      apiPatch<MonthlyPayroll>(`/api/finance/payroll/${existingPayroll!.id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['finance-payroll'] })
-      toast.success('Payroll updated')
-      onSuccess()
-    },
-    onError: (e: Error) => toast.error(e.message || 'Failed to update'),
-  })
-
-  const [employeeDetails, setEmployeeDetails] = useState({
-    designation: '',
-    panNumber: '',
-    bankAccountNumber: '',
-    uanNumber: '',
-    joinDate: '',
-  })
-
-  useEffect(() => {
-    if (employee) {
-      setEmployeeDetails({
-        designation: employee.designation ?? '',
-        panNumber: employee.panNumber ?? '',
-        bankAccountNumber: employee.bankAccountNumber ?? '',
-        uanNumber: employee.uanNumber ?? '',
-        joinDate: employee.joinDate ? format(new Date(employee.joinDate), 'yyyy-MM-dd') : '',
-      })
-    }
-  }, [employee?.id])
-
-  const updateEmployeeMutation = useMutation({
-    mutationFn: (data: { designation?: string; panNumber?: string; bankAccountNumber?: string; uanNumber?: string; joinDate?: string }) =>
-      apiPatch<Employee>(`/api/employees/${employee!.id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees'] })
-      queryClient.invalidateQueries({ queryKey: ['finance-payroll'] })
-      toast.success('Employee details saved')
-    },
-    onError: (e: Error) => toast.error(e.message || 'Failed to save details'),
-  })
-
-  const handleSaveEmployeeDetails = () => {
-    if (!employee) return
-    updateEmployeeMutation.mutate({
-      designation: employeeDetails.designation.trim() || undefined,
-      panNumber: employeeDetails.panNumber.trim() || undefined,
-      bankAccountNumber: employeeDetails.bankAccountNumber.trim() || undefined,
-      uanNumber: employeeDetails.uanNumber.trim() || undefined,
-      joinDate: employeeDetails.joinDate ? new Date(employeeDetails.joinDate).toISOString() : undefined,
-    })
-  }
-
-  const [formData, setFormData] = useState({
-    adjustedBasic: 0,
-    adjustedMedical: 0,
-    adjustedConveyance: 0,
-    adjustedOther: 0,
-    adjustedSpecial: 0,
-    adjustedGross: 0,
-    epfEmployee: 0,
-    applyEsic: false,
-    esicAmount: 0,
-    applyTds: false,
-    tdsAmount: 0,
-    insurance: 0,
-    lateFines: 0,
-    netPayable: 0,
-    status: 'DRAFT' as 'DRAFT' | 'APPROVED' | 'PAID',
-  })
-
-  const previewData = useMemo(() => {
-    if (existingPayroll || !structure || !attendanceSummary) return null
-    const totalDays = attendanceSummary.totalDaysInMonth
-    const payableDays = attendanceSummary.payableDays
-    const breakup = {
-      basicSalary: structure.basicSalary,
-      medicalAllowance: structure.medicalAllowance,
-      conveyanceAllowance: structure.conveyanceAllowance,
-      otherAllowance: structure.otherAllowance,
-      specialAllowance: structure.specialAllowance,
-      monthlyGross: structure.monthlyGross,
-    }
-    const proRated = calculateProRatedSalary(breakup, payableDays, totalDays)
-    const epfEmployee = calculateEPF(proRated.adjustedBasic)
-    const applyEsic = isESICApplicableByRule(structure.monthlyGross)
-    const esicAmount = applyEsic ? calculateESIC(proRated.adjustedGross, structure.monthlyGross) : 0
-    const tdsAmount = structure.applyTds
-      ? calculateTDSAmount(proRated.adjustedGross, structure.tdsMonthly, structure.tdsRatePercent ?? null)
-      : 0
-    const insurance = structure.insuranceDeduction ?? 0
-    const lateFines = attendanceSummary.lateFines ?? 0
-    const netBeforeLate = calculateNetPay(
-      proRated.adjustedGross,
-      epfEmployee,
-      esicAmount,
-      insurance,
-      tdsAmount
-    )
-    const netPayable = Math.max(0, Math.round(netBeforeLate - lateFines))
-    return {
-      ...proRated,
-      epfEmployee,
-      applyEsic,
-      esicAmount,
-      applyTds: structure.applyTds,
-      tdsAmount,
-      insurance,
-      lateFines,
-      netPayable,
-    }
-  }, [existingPayroll, structure, attendanceSummary])
-
-  useEffect(() => {
-    if (existingPayroll) {
-      setFormData({
-        adjustedBasic: existingPayroll.adjustedBasic ?? 0,
-        adjustedMedical: existingPayroll.adjustedMedical ?? 0,
-        adjustedConveyance: existingPayroll.adjustedConveyance ?? 0,
-        adjustedOther: existingPayroll.adjustedOther ?? 0,
-        adjustedSpecial: existingPayroll.adjustedSpecial ?? 0,
-        adjustedGross: existingPayroll.adjustedGross ?? 0,
-        epfEmployee: existingPayroll.epfEmployee ?? 0,
-        applyEsic: existingPayroll.applyEsic ?? false,
-        esicAmount: existingPayroll.esicAmount ?? 0,
-        applyTds: existingPayroll.applyTds ?? false,
-        tdsAmount: existingPayroll.tdsAmount ?? 0,
-        insurance: existingPayroll.insurance ?? 0,
-        lateFines: existingPayroll.lateFines ?? 0,
-        netPayable: existingPayroll.netPayable ?? 0,
-        status: (existingPayroll.status as 'DRAFT' | 'APPROVED' | 'PAID') || 'DRAFT',
-      })
-    }
-  }, [existingPayroll?.id])
-
-  if (!employee) return null
-
-  const hasStructure = !!structure
-  const hasPayroll = !!existingPayroll
-  const payroll = existingPayroll
-
-  const canEdit = hasPayroll
-  const displayData = hasPayroll
-    ? {
-        adjustedBasic: formData.adjustedBasic || payroll!.adjustedBasic,
-        adjustedMedical: formData.adjustedMedical ?? payroll!.adjustedMedical,
-        adjustedConveyance: formData.adjustedConveyance ?? payroll!.adjustedConveyance,
-        adjustedOther: formData.adjustedOther ?? payroll!.adjustedOther,
-        adjustedSpecial: formData.adjustedSpecial ?? payroll!.adjustedSpecial,
-        adjustedGross: formData.adjustedGross || payroll!.adjustedGross,
-        epfEmployee: formData.epfEmployee ?? payroll!.epfEmployee,
-        applyEsic: formData.applyEsic !== undefined ? formData.applyEsic : payroll!.applyEsic,
-        esicAmount: formData.esicAmount ?? payroll!.esicAmount,
-        applyTds: formData.applyTds !== undefined ? formData.applyTds : payroll!.applyTds,
-        tdsAmount: formData.tdsAmount ?? payroll!.tdsAmount,
-        insurance: formData.insurance ?? payroll!.insurance,
-        lateFines: formData.lateFines ?? payroll!.lateFines,
-        netPayable: formData.netPayable || payroll!.netPayable,
-        status: formData.status,
-      }
-    : previewData
-    ? {
-        ...previewData,
-        status: 'DRAFT' as const,
-      }
-    : formData
-
-  const handleGenerate = () => {
-    if (!hasStructure) {
-      toast.error('Set salary structure first')
-      return
-    }
-    generateMutation.mutate()
-  }
-
-  const handleSave = () => {
-    if (!payroll) return
-    updateMutation.mutate({
-      adjustedBasic: displayData.adjustedBasic,
-      adjustedMedical: displayData.adjustedMedical,
-      adjustedConveyance: displayData.adjustedConveyance,
-      adjustedOther: displayData.adjustedOther,
-      adjustedSpecial: displayData.adjustedSpecial,
-      adjustedGross: displayData.adjustedGross,
-      epfEmployee: displayData.epfEmployee,
-      applyEsic: displayData.applyEsic,
-      esicAmount: displayData.esicAmount,
-      applyTds: displayData.applyTds,
-      tdsAmount: displayData.tdsAmount,
-      insurance: displayData.insurance,
-      lateFines: displayData.lateFines ?? 0,
-      status: formData.status,
-    })
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {hasPayroll ? 'View / Edit Payroll' : 'Generate Payroll'} — {employee.user.name}
-          </DialogTitle>
-          <DialogDescription>
-            {MONTHS[month - 1]} {year}. {queue.length > 0 && `Employee ${currentIndex} of ${queue.length}`}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-base">Employee details</CardTitle>
-              <CardDescription>These appear on the salary slip. Edit and save as needed.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Employee name</Label>
-                  <Input value={employee.user.name} readOnly className="bg-muted" />
-                </div>
-                <div>
-                  <Label>Employee ID</Label>
-                  <Input value={employee.employeeCode} readOnly className="bg-muted" />
-                </div>
-                <div>
-                  <Label>Designation</Label>
-                  <Input
-                    value={employeeDetails.designation}
-                    onChange={(e) => setEmployeeDetails((d) => ({ ...d, designation: e.target.value }))}
-                    placeholder="e.g. Software Developer"
-                  />
-                </div>
-                <div>
-                  <Label>Department</Label>
-                  <Input value={employee.department?.name ?? '—'} readOnly className="bg-muted" />
-                </div>
-                <div>
-                  <Label>Date of joining</Label>
-                  <Input
-                    type="date"
-                    value={employeeDetails.joinDate}
-                    onChange={(e) => setEmployeeDetails((d) => ({ ...d, joinDate: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label>PAN number</Label>
-                  <Input
-                    value={employeeDetails.panNumber}
-                    onChange={(e) => setEmployeeDetails((d) => ({ ...d, panNumber: e.target.value.toUpperCase() }))}
-                    placeholder="e.g. AAAAA9999A"
-                    maxLength={10}
-                  />
-                </div>
-                <div>
-                  <Label>Bank account number</Label>
-                  <Input
-                    value={employeeDetails.bankAccountNumber}
-                    onChange={(e) => setEmployeeDetails((d) => ({ ...d, bankAccountNumber: e.target.value }))}
-                    placeholder="Account number"
-                  />
-                </div>
-                <div>
-                  <Label>UAN number</Label>
-                  <Input
-                    value={employeeDetails.uanNumber}
-                    onChange={(e) => setEmployeeDetails((d) => ({ ...d, uanNumber: e.target.value }))}
-                    placeholder="EPF UAN"
-                  />
-                </div>
-                <div>
-                  <Label>Monthly gross</Label>
-                  <Input value={structure ? formatCurrency(structure.monthlyGross) : '—'} readOnly className="bg-muted" />
-                </div>
-                <div>
-                  <Label>Annual CTC</Label>
-                  <Input value={structure ? formatCurrency(structure.annualCtc) : '—'} readOnly className="bg-muted" />
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={handleSaveEmployeeDetails}
-                disabled={updateEmployeeMutation.isPending}
-              >
-                {updateEmployeeMutation.isPending ? 'Saving...' : 'Save employee details'}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-base">Attendance</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {attendanceLoading ? (
-                <p className="text-muted-foreground">Loading attendance...</p>
-              ) : attendanceSummary ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>Total days (month)</div>
-                  <div>{attendanceSummary.totalDaysInMonth}</div>
-                  <div>Full days worked</div>
-                  <div>{attendanceSummary.fullDays}</div>
-                  <div>Half days</div>
-                  <div>{attendanceSummary.halfDays}</div>
-                  <div>Paid leaves</div>
-                  <div>{attendanceSummary.paidLeaves ?? 0}</div>
-                  <div>Unpaid leaves</div>
-                  <div>{attendanceSummary.unpaidLeaves}</div>
-                  <div>Payable days</div>
-                  <div className="font-medium">{attendanceSummary.payableDays}</div>
-                  <div>Late fines (Rs.)</div>
-                  <div>{attendanceSummary.lateFines ?? 0}</div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground">No attendance data for this month.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {!hasStructure && (
-            <p className="text-amber-600 text-sm">Configure salary structure first to generate payroll.</p>
-          )}
-
-          {(hasPayroll || previewData) && (
-            <Card>
-              <CardHeader className="py-3">
-                <CardTitle className="text-base">Earnings & Deductions</CardTitle>
-                {previewData && !hasPayroll && (
-                  <p className="text-xs text-muted-foreground">Preview — generate to save. You can edit after generating.</p>
-                )}
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <Label>Adjusted Basic (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.adjustedBasic ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, adjustedBasic: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  <div>
-                    <Label>Adjusted Medical (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.adjustedMedical ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, adjustedMedical: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  <div>
-                    <Label>Adjusted Conveyance (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.adjustedConveyance ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, adjustedConveyance: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  <div>
-                    <Label>Adjusted Other (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.adjustedOther ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, adjustedOther: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  <div>
-                    <Label>Adjusted Special (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.adjustedSpecial ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, adjustedSpecial: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  <div>
-                    <Label>Adjusted Gross (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.adjustedGross ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, adjustedGross: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                  <div>
-                    <Label>EPF Employee (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.epfEmployee ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, epfEmployee: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <Label>Apply ESIC</Label>
-                    <p className="text-xs text-muted-foreground">Override rule (gross ≤ 21,100).</p>
-                  </div>
-                  <Checkbox
-                    checked={displayData.applyEsic}
-                    onCheckedChange={(v) => setFormData((f) => ({ ...f, applyEsic: !!v }))}
-                    disabled={!canEdit}
-                  />
-                </div>
-                {displayData.applyEsic && (
-                  <div>
-                    <Label>ESIC Amount (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.esicAmount ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, esicAmount: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                )}
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div>
-                    <Label>Apply TDS</Label>
-                  </div>
-                  <Checkbox
-                    checked={displayData.applyTds}
-                    onCheckedChange={(v) => setFormData((f) => ({ ...f, applyTds: !!v }))}
-                    disabled={!canEdit}
-                  />
-                </div>
-                {displayData.applyTds && (
-                  <div>
-                    <Label>TDS Amount (₹)</Label>
-                    <Input
-                      type="number"
-                      value={displayData.tdsAmount ?? 0}
-                      onChange={(e) =>
-                        setFormData((f) => ({ ...f, tdsAmount: Number(e.target.value) }))
-                      }
-                      disabled={!canEdit}
-                    />
-                  </div>
-                )}
-                <div>
-                  <Label>Insurance (Rs.)</Label>
-                  <Input
-                    type="number"
-                    value={displayData.insurance ?? 0}
-                    onChange={(e) =>
-                      setFormData((f) => ({ ...f, insurance: Number(e.target.value) }))
-                    }
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div>
-                  <Label>Late fines (Rs.)</Label>
-                  <Input
-                    type="number"
-                    value={displayData.lateFines ?? 0}
-                    onChange={(e) =>
-                      setFormData((f) => ({ ...f, lateFines: Number(e.target.value) }))
-                    }
-                    disabled={!canEdit}
-                  />
-                </div>
-                <div>
-                  <Label>Net Payable (Rs.)</Label>
-                  <Input
-                    type="text"
-                    value={formatCurrency(displayData.netPayable ?? (payroll?.netPayable ?? 0))}
-                    readOnly
-                    className="bg-muted"
-                  />
-                </div>
-                {hasPayroll && (
-                  <div>
-                    <Label>Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(v: 'DRAFT' | 'APPROVED' | 'PAID') =>
-                        setFormData((f) => ({ ...f, status: v }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DRAFT">Draft</SelectItem>
-                        <SelectItem value="APPROVED">Approved</SelectItem>
-                        <SelectItem value="PAID">Paid</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="flex items-center justify-between rounded-lg border p-4">
-            <div>
-              <Label>Create more</Label>
-              <p className="text-xs text-muted-foreground">After save, load next employee in queue.</p>
-            </div>
-            <Checkbox checked={createMore} onCheckedChange={(v) => setCreateMore(!!v)} />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {!hasPayroll && hasStructure && (
-              <Button onClick={handleGenerate} disabled={generateMutation.isPending}>
-                {generateMutation.isPending ? 'Generating...' : 'Generate Payroll'}
-              </Button>
-            )}
-            {hasPayroll && (
-              <Button onClick={handleSave} disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-              </Button>
-            )}
-            {createMore && queue.length > 1 && (
-              <Button variant="outline" onClick={onSkip}>
-                Skip to next
-              </Button>
-            )}
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
+
