@@ -1470,7 +1470,7 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
                     <div className="flex items-center gap-2 mb-1">
                       {getActionBadge(log.action)}
                       <span className="text-sm text-muted-foreground">
-                        by {log.performedBy.name}
+                        by {log.performedBy?.name ?? 'Unknown'}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground">
