@@ -109,7 +109,7 @@ interface LedgerEntry {
     id: string
     name: string
     email: string
-  }
+  } | null
   approvedBy: {
     id: string
     name: string
@@ -1415,8 +1415,8 @@ export default function LedgerEntryDetailPage({ params }: { params: Promise<{ id
               <User className="h-5 w-5 text-muted-foreground" />
               <div>
                 <label className="text-sm text-muted-foreground">Created By</label>
-                <p>{entry.createdBy.name}</p>
-                <p className="text-xs text-muted-foreground">{entry.createdBy.email}</p>
+                <p>{entry.createdBy?.name ?? 'Unknown'}</p>
+                <p className="text-xs text-muted-foreground">{entry.createdBy?.email ?? '–'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
