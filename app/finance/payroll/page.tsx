@@ -397,7 +397,7 @@ export default function FinancePayrollPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-semibold text-primary">
-                        {structure ? formatCurrency(structure.monthlyGross) : '—'}
+                        {structure ? formatCurrency(Math.ceil(structure.monthlyGross)) : '—'}
                       </TableCell>
                       <TableCell>
                         {structure ? (
@@ -582,6 +582,12 @@ function SalaryStructureDialog({
   })
 
   useEffect(() => {
+    if (open && employee?.id) {
+      queryClient.invalidateQueries({ queryKey: ['salary-structure', employee.id] })
+    }
+  }, [open, employee?.id, queryClient])
+
+  useEffect(() => {
     if (employee?.id) setFormData(defaultStructureFormData)
   }, [employee?.id])
 
@@ -617,13 +623,14 @@ function SalaryStructureDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salary-structures'] })
       queryClient.invalidateQueries({ queryKey: ['salary-structure-active'] })
+      queryClient.invalidateQueries({ queryKey: ['salary-structure', employee?.id] })
       onSuccess()
       toast.success('Salary structure saved')
     },
     onError: (e: Error) => toast.error(e.message || 'Failed to save'),
   })
 
-  const monthlyGross = formData.annualCtc ? (Number(formData.annualCtc) * 0.88 / 12) : 0
+  const monthlyGross = formData.annualCtc ? Math.ceil(Number(formData.annualCtc) * 0.88 / 12) : 0
   const other = Number(formData.otherAllowance) || 0
   const specialAllowance = Math.max(
     0,

@@ -123,12 +123,14 @@ export async function GET(
       doc.text('EARNINGS', 20, y)
       y += 6
       const earnings: [string, string][] = [
-        ['Basic Salary', formatCurrency(monthlyPayroll.adjustedBasic)],
-        ['Medical Allow.', formatCurrency(monthlyPayroll.adjustedMedical)],
-        ['Conveyance Allow.', formatCurrency(monthlyPayroll.adjustedConveyance)],
-        ['Other Allowance', formatCurrency(monthlyPayroll.adjustedOther)],
-        ['Special Allow.', formatCurrency(monthlyPayroll.adjustedSpecial)],
+        [monthlyPayroll.adjustedBasic, 'Basic Salary'],
+        [monthlyPayroll.adjustedMedical, 'Medical Allow.'],
+        [monthlyPayroll.adjustedConveyance, 'Conveyance Allow.'],
+        [monthlyPayroll.adjustedOther, 'Other Allowance'],
+        [monthlyPayroll.adjustedSpecial, 'Special Allow.'],
       ]
+        .filter(([amt]) => (amt as number) > 0)
+        .map(([amt, label]) => [label as string, formatCurrency(amt as number)])
       autoTable(doc, {
         startY: y,
         head: [['Description', 'Amount']],
@@ -151,11 +153,13 @@ export async function GET(
       doc.text('DEDUCTIONS', 20, y)
       y += 6
       const deductions: [string, string][] = [
-        ['EPF (Employee)', formatCurrency(monthlyPayroll.epfEmployee)],
-        ['ESIC', formatCurrency(monthlyPayroll.esicAmount ?? 0)],
-        ['Insurance', formatCurrency(monthlyPayroll.insurance ?? 0)],
-        ['TDS', formatCurrency(monthlyPayroll.tdsAmount ?? 0)],
+        [monthlyPayroll.epfEmployee, 'EPF (Employee)'],
+        [monthlyPayroll.esicAmount ?? 0, 'ESIC'],
+        [monthlyPayroll.insurance ?? 0, 'Insurance'],
+        [monthlyPayroll.tdsAmount ?? 0, 'TDS'],
       ]
+        .filter(([amt]) => (amt as number) > 0)
+        .map(([amt, label]) => [label as string, formatCurrency(amt as number)])
       if (lateFines > 0) {
         deductions.push(['Late fines', formatCurrency(lateFines)])
       }
@@ -176,15 +180,17 @@ export async function GET(
       doc.text(formatCurrency(monthlyPayroll.totalDeductions), pageW - 20, y, { align: 'right' })
       y += 8
 
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.setTextColor(...MEDIEND_TEAL)
-      doc.text('EMPLOYER CONTRIBUTIONS (Not deducted from salary)', 20, y)
-      y += 6
-      doc.setFontSize(9)
-      doc.setTextColor(0, 0, 0)
-      doc.text(`Employer PF: ${formatCurrency(monthlyPayroll.epfEmployer)}`, 20, y)
-      y += 8
+      if (monthlyPayroll.epfEmployer > 0) {
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(9)
+        doc.setTextColor(...MEDIEND_TEAL)
+        doc.text('EMPLOYER CONTRIBUTIONS (Not deducted from salary)', 20, y)
+        y += 6
+        doc.setFontSize(9)
+        doc.setTextColor(0, 0, 0)
+        doc.text(`Employer PF: ${formatCurrency(monthlyPayroll.epfEmployer)}`, 20, y)
+        y += 8
+      }
 
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(12)
@@ -239,11 +245,16 @@ export async function GET(
     y += 7
     doc.text(`Department: ${employee.department?.name || 'N/A'}`, 20, y)
     y += 12
+    const allowanceRows: [string, string][] = payrollRecord.basicSalary > 0
+      ? [['Basic Salary', formatCurrency(payrollRecord.basicSalary)]]
+      : []
+    const allowanceComps = payrollRecord.components.filter((c) => c.componentType === 'ALLOWANCE' && c.amount > 0)
+    allowanceRows.push(...allowanceComps.map((c) => [c.name, formatCurrency(c.amount)] as [string, string]))
+    const deductionComps = payrollRecord.components.filter((c) => c.componentType === 'DEDUCTION' && c.amount > 0)
     const rows: [string, string][] = [
-      ['Basic Salary', formatCurrency(payrollRecord.basicSalary)],
-      ...payrollRecord.components.filter((c) => c.componentType === 'ALLOWANCE').map((c) => [c.name, formatCurrency(c.amount)] as [string, string]),
+      ...allowanceRows,
       ['Gross', formatCurrency(payrollRecord.grossSalary)],
-      ...payrollRecord.components.filter((c) => c.componentType === 'DEDUCTION').map((c) => [c.name, '-' + formatCurrency(c.amount)] as [string, string]),
+      ...deductionComps.map((c) => [c.name, '-' + formatCurrency(c.amount)] as [string, string]),
       ['Net Salary', formatCurrency(payrollRecord.netSalary)],
     ]
     autoTable(doc, {

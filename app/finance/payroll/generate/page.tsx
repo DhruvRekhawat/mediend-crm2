@@ -500,7 +500,7 @@ export default function GeneratePayrollPage() {
               <div className="flex flex-1 gap-6 flex-wrap">
                 <div>
                   <Label className="text-xs text-muted-foreground">Monthly gross</Label>
-                  <p className="font-medium">{structure ? formatCurrency(structure.monthlyGross) : '—'}</p>
+                  <p className="font-medium">{structure ? formatCurrency(Math.ceil(structure.monthlyGross)) : '—'}</p>
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Annual CTC</Label>

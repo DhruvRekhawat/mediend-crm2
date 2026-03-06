@@ -35,9 +35,9 @@ export interface AttendanceSummaryForPayroll {
   normalizedDays?: number
 }
 
-/** Monthly gross from annual CTC (CTC minus 12% PF, then divided by 12) */
+/** Monthly gross from annual CTC (CTC minus 12% PF, then divided by 12), rounded up to whole rupees */
 export function calculateMonthlyGross(annualCtc: number): number {
-  return (annualCtc * (1 - 0.12)) / 12
+  return Math.ceil((annualCtc * (1 - 0.12)) / 12)
 }
 
 /** Salary component breakup. Special allowance is the balancing figure. */

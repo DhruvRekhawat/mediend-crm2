@@ -205,11 +205,11 @@ export default function PayslipPage() {
                 <div className="ed-col-title earnings">Earnings</div>
                 {isMonthly && m ? (
                   <>
-                    <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(m.adjustedBasic)}</span></div>
-                    <div className="ed-row"><span className="ed-label">Medical Allowance</span><span className="ed-value">{formatCurrency(m.adjustedMedical)}</span></div>
-                    <div className="ed-row"><span className="ed-label">Conveyance Allowance</span><span className="ed-value">{formatCurrency(m.adjustedConveyance)}</span></div>
-                    <div className="ed-row"><span className="ed-label">Other Allowance</span><span className="ed-value">{formatCurrency(m.adjustedOther)}</span></div>
-                    <div className="ed-row"><span className="ed-label">Special Allowance</span><span className="ed-value">{formatCurrency(m.adjustedSpecial)}</span></div>
+                    {m.adjustedBasic > 0 && <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(m.adjustedBasic)}</span></div>}
+                    {m.adjustedMedical > 0 && <div className="ed-row"><span className="ed-label">Medical Allowance</span><span className="ed-value">{formatCurrency(m.adjustedMedical)}</span></div>}
+                    {m.adjustedConveyance > 0 && <div className="ed-row"><span className="ed-label">Conveyance Allowance</span><span className="ed-value">{formatCurrency(m.adjustedConveyance)}</span></div>}
+                    {m.adjustedOther > 0 && <div className="ed-row"><span className="ed-label">Other Allowance</span><span className="ed-value">{formatCurrency(m.adjustedOther)}</span></div>}
+                    {m.adjustedSpecial > 0 && <div className="ed-row"><span className="ed-label">Special Allowance</span><span className="ed-value">{formatCurrency(m.adjustedSpecial)}</span></div>}
                     <div className="ed-total earnings-total"><span>Total Earnings</span><span className="ed-value">{formatCurrency(m.adjustedGross)}</span></div>
                   </>
                 ) : (
@@ -217,8 +217,8 @@ export default function PayslipPage() {
                     const leg = payrollData as LegacyPayrollSlip
                     return (
                       <>
-                        <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(leg.basicSalary)}</span></div>
-                        {leg.components.filter((c) => c.componentType === 'ALLOWANCE').map((c) => (
+                        {leg.basicSalary > 0 && <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(leg.basicSalary)}</span></div>}
+                        {leg.components.filter((c) => c.componentType === 'ALLOWANCE' && c.amount > 0).map((c) => (
                           <div key={c.name} className="ed-row"><span className="ed-label">{c.name}</span><span className="ed-value">{formatCurrency(c.amount)}</span></div>
                         ))}
                         <div className="ed-total earnings-total"><span>Total Earnings</span><span className="ed-value">{formatCurrency(leg.grossSalary)}</span></div>
@@ -231,23 +231,21 @@ export default function PayslipPage() {
                 <div className="ed-col-title deductions">Deductions</div>
                 {isMonthly && m ? (
                   <>
-                    <div className="ed-row"><span className="ed-label">EPF (Employee)</span><span className="ed-value">{formatCurrency(m.epfEmployee)}</span></div>
-                    <div className={m.applyEsic ? 'ed-row' : 'ed-row na'}><span className="ed-label">ESIC</span><span className="ed-value">{m.applyEsic ? formatCurrency(m.esicAmount) : 'N/A'}</span></div>
-                    <div className="ed-row"><span className="ed-label">Professional Tax</span><span className="ed-value">{formatCurrency(0)}</span></div>
-                    <div className="ed-row"><span className="ed-label">Insurance</span><span className="ed-value">{formatCurrency(m.insurance)}</span></div>
-                    <div className="ed-row"><span className="ed-label">TDS</span><span className="ed-value">{formatCurrency(m.tdsAmount)}</span></div>
-                    {(m.lateFines ?? 0) > 0 && (
-                      <div className="ed-row"><span className="ed-label">Late Fines</span><span className="ed-value">{formatCurrency(m.lateFines!)}</span></div>
-                    )}
+                    {m.epfEmployee > 0 && <div className="ed-row"><span className="ed-label">EPF (Employee)</span><span className="ed-value">{formatCurrency(m.epfEmployee)}</span></div>}
+                    {m.applyEsic && (m.esicAmount ?? 0) > 0 && <div className="ed-row"><span className="ed-label">ESIC</span><span className="ed-value">{formatCurrency(m.esicAmount)}</span></div>}
+                    {m.insurance > 0 && <div className="ed-row"><span className="ed-label">Insurance</span><span className="ed-value">{formatCurrency(m.insurance)}</span></div>}
+                    {m.tdsAmount > 0 && <div className="ed-row"><span className="ed-label">TDS</span><span className="ed-value">{formatCurrency(m.tdsAmount)}</span></div>}
+                    {(m.lateFines ?? 0) > 0 && <div className="ed-row"><span className="ed-label">Late Fines</span><span className="ed-value">{formatCurrency(m.lateFines!)}</span></div>}
                     <div className="ed-total deductions-total"><span>Total Deductions</span><span className="ed-value">{formatCurrency(m.totalDeductions)}</span></div>
                   </>
                 ) : (
                   (() => {
                     const leg = payrollData as LegacyPayrollSlip
-                    const dedTotal = leg.components.filter((c) => c.componentType === 'DEDUCTION').reduce((s, c) => s + c.amount, 0)
+                    const dedComps = leg.components.filter((c) => c.componentType === 'DEDUCTION' && c.amount > 0)
+                    const dedTotal = dedComps.reduce((s, c) => s + c.amount, 0)
                     return (
                       <>
-                        {leg.components.filter((c) => c.componentType === 'DEDUCTION').map((c) => (
+                        {dedComps.map((c) => (
                           <div key={c.name} className="ed-row"><span className="ed-label">{c.name}</span><span className="ed-value">-{formatCurrency(c.amount)}</span></div>
                         ))}
                         <div className="ed-total deductions-total"><span>Total Deductions</span><span className="ed-value">{formatCurrency(dedTotal)}</span></div>
@@ -259,14 +257,13 @@ export default function PayslipPage() {
             </div>
           </div>
 
-          {isMonthly && m && (
+          {isMonthly && m && (m.epfEmployer > 0) && (
             <>
               <hr className="divider" />
               <div className="section" style={{ paddingTop: 12, paddingBottom: 12 }}>
                 <div className="section-title">Employer Contributions <span style={{ fontWeight: 400, fontSize: '10px', letterSpacing: 0, textTransform: 'none', color: '#999' }}>(Not deducted from salary)</span></div>
                 <div className="employer-grid">
                   <div className="employer-row"><span>Employer PF</span><span className="value">{formatCurrency(m.epfEmployer)}</span></div>
-                  <div className="employer-row"><span>Employer ESIC</span><span className="value">{formatCurrency(0)}</span></div>
                 </div>
               </div>
             </>
