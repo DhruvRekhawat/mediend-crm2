@@ -234,7 +234,7 @@ export default function GeneratePayrollPage() {
       insurance,
       tdsAmount
     )
-    const netPayable = Math.max(0, Math.round(netBeforeLate - lateFines))
+    const netPayable = Math.max(0, Math.ceil(netBeforeLate - lateFines))
     return {
       ...proRated,
       epfEmployee,
@@ -291,6 +291,27 @@ export default function GeneratePayrollPage() {
       })
     }
   }, [previewData?.adjustedGross, previewData?.netPayable, existingPayroll?.id])
+
+  useEffect(() => {
+    const gross = formData.adjustedGross
+    const deductions =
+      formData.epfEmployee +
+      (formData.applyEsic ? formData.esicAmount : 0) +
+      formData.insurance +
+      (formData.applyTds ? formData.tdsAmount : 0) +
+      formData.lateFines
+    const net = Math.max(0, Math.ceil(gross - deductions))
+    setFormData((f) => (f.netPayable === net ? f : { ...f, netPayable: net }))
+  }, [
+    formData.adjustedGross,
+    formData.epfEmployee,
+    formData.applyEsic,
+    formData.esicAmount,
+    formData.applyTds,
+    formData.tdsAmount,
+    formData.insurance,
+    formData.lateFines,
+  ])
 
   useEffect(() => {
     if (!employeeId) return
@@ -368,6 +389,7 @@ export default function GeneratePayrollPage() {
       tdsAmount: displayData.tdsAmount,
       insurance: displayData.insurance,
       lateFines: displayData.lateFines ?? 0,
+      netPayable: displayData.netPayable ?? 0,
       status: formData.status,
     })
   }
@@ -579,27 +601,27 @@ export default function GeneratePayrollPage() {
               <h3 className="font-semibold text-green-800 dark:text-green-300">Earnings</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <Label>Adjusted Basic (₹)</Label>
+                  <Label>Payable Basic (₹)</Label>
                   <Input type="number" value={displayData.adjustedBasic ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedBasic: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Adjusted Medical (₹)</Label>
+                  <Label>Payable Medical (₹)</Label>
                   <Input type="number" value={displayData.adjustedMedical ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedMedical: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Adjusted Conveyance (₹)</Label>
+                  <Label>Payable Conveyance (₹)</Label>
                   <Input type="number" value={displayData.adjustedConveyance ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedConveyance: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Adjusted Other (₹)</Label>
+                  <Label>Payable Other (₹)</Label>
                   <Input type="number" value={displayData.adjustedOther ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedOther: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Adjusted Special (₹)</Label>
+                  <Label>Payable Special (₹)</Label>
                   <Input type="number" value={displayData.adjustedSpecial ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedSpecial: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
                 </div>
                 <div>
-                  <Label>Adjusted Gross (₹)</Label>
+                  <Label>Payable Gross (₹)</Label>
                   <Input type="number" value={displayData.adjustedGross ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedGross: Number(e.target.value) }))} disabled={!canEdit} className="mt-1 font-bold text-emerald-600" />
                 </div>
               </div>

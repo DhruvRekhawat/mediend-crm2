@@ -623,7 +623,7 @@ function SalaryStructureDialog({
     onError: (e: Error) => toast.error(e.message || 'Failed to save'),
   })
 
-  const monthlyGross = formData.annualCtc ? (Number(formData.annualCtc) / 12) : 0
+  const monthlyGross = formData.annualCtc ? (Number(formData.annualCtc) * 0.88 / 12) : 0
   const other = Number(formData.otherAllowance) || 0
   const specialAllowance = Math.max(
     0,

@@ -20,6 +20,7 @@ const updatePayrollSchema = z.object({
   tdsAmount: z.number().min(0).optional(),
   insurance: z.number().min(0).optional(),
   lateFines: z.number().min(0).optional(),
+  netPayable: z.number().min(0).optional(),
   status: z.enum(['DRAFT', 'APPROVED', 'PAID']).optional(),
   disbursedAt: z.string().transform((s) => new Date(s)).nullable().optional(),
   paidAt: z.string().transform((s) => new Date(s)).nullable().optional(),
@@ -86,13 +87,12 @@ export async function PATCH(
     const insurance = data.insurance ?? existing.insurance
     const lateFines = data.lateFines ?? existing.lateFines
     const totalDeductions = epfEmployee + esicAmount + insurance + tdsAmount + lateFines
-    const netPayable = Math.max(
-      0,
-      Math.round(adjustedGross - totalDeductions)
-    )
+    const netPayable =
+      data.netPayable ??
+      Math.max(0, Math.ceil(adjustedGross - totalDeductions))
 
     const finalAdjustedBasic = data.adjustedBasic ?? existing.adjustedBasic
-    const epfEmployer = Math.round(finalAdjustedBasic * 0.12)
+    const epfEmployer = Math.ceil(finalAdjustedBasic * 0.12)
 
     const payroll = await prisma.monthlyPayroll.update({
       where: { id },

@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
     const epfEmployee = calculateEPF(proRated.adjustedBasic)
     const applyEsic = isESICApplicableByRule(salaryStructure.monthlyGross)
     const esicAmount = applyEsic
-      ? Math.round(proRated.adjustedGross * 0.0075)
+      ? Math.ceil(proRated.adjustedGross * 0.0075)
       : 0
     const applyTds = salaryStructure.applyTds
     const tdsAmount = applyTds
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     const totalDeductions = epfEmployee + esicAmount + insurance + tdsAmount + lateFines
     const netPayable = Math.max(
       0,
-      Math.round(proRated.adjustedGross - totalDeductions)
+      Math.ceil(proRated.adjustedGross - totalDeductions)
     )
     const epfEmployer = calculateEPFEmployer(proRated.adjustedBasic)
 
