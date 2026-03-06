@@ -3,15 +3,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useParams, useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Printer, ArrowLeft, Download } from 'lucide-react'
 import { format } from 'date-fns'
 import { numberToWordsINR } from '@/lib/hrms/salary-calculation'
-
-const MEDIEND_PRIMARY = '#2C6E6A'
-const MEDIEND_SECONDARY = '#3A8F8B'
-const MEDIEND_ACCENT = '#1A1A2E'
 
 interface MonthlyPayrollSlip {
   type: 'monthly'
@@ -87,13 +82,13 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
-function maskPan(pan: string | null) {
+function maskPan(pan: string | null | undefined) {
   if (!pan || pan.length < 4) return '—'
   return 'XXXXX' + pan.slice(-4)
 }
 
-function maskBank(account: string | null) {
-  if (!account || account.length < 4) return '—'
+function maskBank(account: string | null | undefined) {
+  if (!account || account.replace(/\s/g, '').length < 4) return '—'
   const cleaned = account.replace(/\s/g, '')
   return 'XXXX XXXX ' + cleaned.slice(-4)
 }
@@ -110,22 +105,22 @@ export default function PayslipPage() {
   })
 
   const handlePrint = () => window.print()
-  const handleDownload = () => window.open(`/api/payroll/my/${payrollId}/slip`, '_blank')
+  const handleDownload = () => window.print()
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading payslip...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5]">
+        <p className="text-[#333]">Loading payslip...</p>
       </div>
     )
   }
 
   if (!payrollData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#f0f2f5]">
         <div className="text-center">
-          <p className="text-muted-foreground">Payslip not found</p>
-          <Button onClick={() => router.back()} className="mt-4">
+          <p className="text-[#333] mb-4">Payslip not found</p>
+          <Button onClick={() => router.back()} className="bg-[#2C6E6A] hover:bg-[#3A8F8B]">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Go Back
           </Button>
@@ -135,321 +130,342 @@ export default function PayslipPage() {
   }
 
   const isMonthly = payrollData.type === 'monthly'
-  const monthName = MONTHS[payrollData.month - 1] || ''
+  const monthName = MONTHS[payrollData.month - 1] ?? ''
   const employee = payrollData.employee
+  const m = isMonthly ? (payrollData as MonthlyPayrollSlip) : null
+  const netPay = isMonthly ? m!.netPayable : (payrollData as LegacyPayrollSlip).netSalary
+  const monthlyGross = isMonthly ? m!.adjustedGross : (payrollData as LegacyPayrollSlip).grossSalary
 
   return (
     <>
-      <div className="no-print p-4 bg-background border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Button variant="outline" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+      <div className="no-print p-4 bg-[#f0f2f5] border-b flex items-center justify-between sticky top-0 z-10">
+        <Button variant="outline" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleDownload} variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Print / Save as PDF
           </Button>
-          <div className="flex gap-2">
-            <Button onClick={handleDownload} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Download PDF
-            </Button>
-            <Button onClick={handlePrint}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-          </div>
+          <Button onClick={handlePrint} className="bg-[#2C6E6A] hover:bg-[#3A8F8B]">
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
         </div>
       </div>
 
-      <div className="min-h-screen bg-[#F5F5F5] p-8 print:p-0 print:bg-white">
-        <div className="max-w-4xl mx-auto bg-white shadow-lg print:shadow-none" style={{ color: '#333333' }}>
-          {/* MediEND Header */}
-          <div className="p-6 print:p-8 border-b-2" style={{ borderColor: MEDIEND_PRIMARY }}>
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative w-32 h-12 shrink-0 flex items-center">
-                  {/* Logo: same as PDF (public/logo-mediend.png). Fallback to text if missing. */}
-                  <Image
-                    src="/logo-mediend.png"
-                    alt="Mediend"
-                    width={128}
-                    height={48}
-                    className="object-contain object-left"
-                    priority
-                    unoptimized
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none'
-                      const fallback = e.currentTarget.nextElementSibling as HTMLElement
-                      if (fallback) fallback.style.display = 'block'
-                    }}
-                  />
-                  <span className="text-2xl font-semibold lowercase hidden" style={{ color: MEDIEND_PRIMARY }} aria-hidden>
-                    mediend
-                  </span>
-                </div>
-                <div>
-                  <div className="font-semibold" style={{ color: MEDIEND_ACCENT }}>
-                    MediEND Healthcare Solutions
-                  </div>
-                  <div className="text-sm text-muted-foreground">(A unit of Kundkund Healthcare Pvt. Ltd.)</div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-muted-foreground">Payslip for the month of</div>
-                <div className="text-xl font-bold" style={{ color: MEDIEND_PRIMARY }}>
-                  {monthName} {payrollData.year}
-                </div>
-              </div>
+      <div className="payslip-page bg-[#f0f2f5] py-8 print:py-0 print:bg-white">
+        <div className="slip">
+          <div className="header">
+            <div className="header-left">
+              <div className="logo">medi<span>END</span></div>
+              <div className="entity">A unit of Kundkund Healthcare Pvt. Ltd.</div>
+            </div>
+            <div className="header-right">
+              <div className="slip-title">Salary Slip</div>
+              <div className="slip-month">{monthName} {payrollData.year}</div>
             </div>
           </div>
 
-          {/* Employee Details */}
-          <div className="p-6 print:p-6 border-b" style={{ borderColor: '#F5F5F5' }}>
-            <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: MEDIEND_PRIMARY }}>
-              Employee Details
-            </h3>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Employee Name</span>
-                <span className="font-medium">{employee.user.name}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Employee ID</span>
-                <span className="font-medium">{employee.employeeCode}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Designation</span>
-                <span className="font-medium">{'designation' in employee ? (employee.designation ?? '—') : '—'}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Department</span>
-                <span className="font-medium">{employee.department?.name ?? '—'}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Date of Joining</span>
-                <span className="font-medium">
-                  {'joinDate' in employee && employee.joinDate
-                    ? format(new Date(employee.joinDate), 'dd-MMM-yyyy')
-                    : '—'}
-                </span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">PAN Number</span>
-                <span className="font-medium">{maskPan('panNumber' in employee ? employee.panNumber : null)}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">Bank Account</span>
-                <span className="font-medium">{maskBank('bankAccountNumber' in employee ? employee.bankAccountNumber : null)}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-muted-foreground">UAN Number</span>
-                <span className="font-medium">{'uanNumber' in employee ? (employee.uanNumber ?? '—') : '—'}</span>
-              </div>
+          <div className="section">
+            <div className="section-title">Employee Details</div>
+            <div className="emp-grid">
+              <div className="emp-row"><span className="label">Employee Name</span><span className="value">{employee.user.name}</span></div>
+              <div className="emp-row"><span className="label">Employee ID</span><span className="value">{employee.employeeCode}</span></div>
+              <div className="emp-row"><span className="label">Designation</span><span className="value">{'designation' in employee ? (employee.designation ?? '—') : '—'}</span></div>
+              <div className="emp-row"><span className="label">Department</span><span className="value">{employee.department?.name ?? '—'}</span></div>
+              <div className="emp-row"><span className="label">Date of Joining</span><span className="value">{'joinDate' in employee && employee.joinDate ? format(new Date(employee.joinDate), 'dd-MMM-yyyy') : '—'}</span></div>
+              <div className="emp-row"><span className="label">PAN Number</span><span className="value">{maskPan('panNumber' in employee ? employee.panNumber : null)}</span></div>
+              <div className="emp-row"><span className="label">Bank Account</span><span className="value">{maskBank('bankAccountNumber' in employee ? employee.bankAccountNumber : null)}</span></div>
+              <div className="emp-row"><span className="label">UAN Number</span><span className="value">{'uanNumber' in employee ? (employee.uanNumber ?? '—') : '—'}</span></div>
             </div>
           </div>
 
-          {isMonthly && (
-            <div className="p-6 print:p-6 border-b" style={{ borderColor: '#F5F5F5' }}>
-              <h3 className="text-sm font-bold uppercase tracking-wide mb-3" style={{ color: MEDIEND_PRIMARY }}>
-                Attendance Summary
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm">
-                <div className="text-center p-2 rounded bg-[#F5F5F5]">
-                  <div className="font-semibold">Total Days</div>
-                  <div>{(payrollData as MonthlyPayrollSlip).totalDaysInMonth}</div>
-                </div>
-                <div className="text-center p-2 rounded bg-[#F5F5F5]">
-                  <div className="font-semibold">Payable Days</div>
-                  <div>{(payrollData as MonthlyPayrollSlip).payableDays}</div>
-                </div>
-                <div className="text-center p-2 rounded bg-[#F5F5F5]">
-                  <div className="font-semibold">Half Days</div>
-                  <div>{(payrollData as MonthlyPayrollSlip).halfDays}</div>
-                </div>
-                <div className="text-center p-2 rounded bg-[#F5F5F5]">
-                  <div className="font-semibold">Paid Leaves</div>
-                  <div>{(payrollData as MonthlyPayrollSlip).paidLeaves ?? 0}</div>
-                </div>
-                <div className="text-center p-2 rounded bg-[#F5F5F5]">
-                  <div className="font-semibold">Unpaid / LOP</div>
-                  <div>{(payrollData as MonthlyPayrollSlip).unpaidLeaves}</div>
-                </div>
-                <div className="text-center p-2 rounded bg-[#F5F5F5]">
-                  <div className="font-semibold">Late Fines</div>
-                  <div>{formatCurrency((payrollData as MonthlyPayrollSlip).lateFines ?? 0)}</div>
+          <hr className="divider" />
+
+          {isMonthly && m && (
+            <>
+              <div className="section">
+                <div className="section-title">Attendance Summary</div>
+                <div className="attendance-grid">
+                  <div className="att-box"><div className="att-val">{m.totalDaysInMonth}</div><div className="att-label">Total Days</div></div>
+                  <div className="att-box"><div className="att-val">{m.payableDays}</div><div className="att-label">Payable Days</div></div>
+                  <div className="att-box"><div className="att-val">{m.paidLeaves ?? 0}</div><div className="att-label">Leaves Taken</div></div>
+                  <div className="att-box"><div className="att-val">{m.unpaidLeaves}</div><div className="att-label">LOP Days</div></div>
                 </div>
               </div>
-            </div>
+              <hr className="divider" />
+            </>
           )}
 
-          {/* Earnings vs Deductions */}
-          <div className="p-6 print:p-6 border-b" style={{ borderColor: '#F5F5F5' }}>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wide mb-2" style={{ color: MEDIEND_PRIMARY }}>
-                  Earnings
-                </h3>
-                <table className="w-full text-sm">
-                  <tbody>
-                    {isMonthly ? (
+          <div className="section">
+            <div className="ed-container">
+              <div className="ed-col">
+                <div className="ed-col-title earnings">Earnings</div>
+                {isMonthly && m ? (
+                  <>
+                    <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(m.adjustedBasic)}</span></div>
+                    <div className="ed-row"><span className="ed-label">Medical Allowance</span><span className="ed-value">{formatCurrency(m.adjustedMedical)}</span></div>
+                    <div className="ed-row"><span className="ed-label">Conveyance Allowance</span><span className="ed-value">{formatCurrency(m.adjustedConveyance)}</span></div>
+                    <div className="ed-row"><span className="ed-label">Other Allowance</span><span className="ed-value">{formatCurrency(m.adjustedOther)}</span></div>
+                    <div className="ed-row"><span className="ed-label">Special Allowance</span><span className="ed-value">{formatCurrency(m.adjustedSpecial)}</span></div>
+                    <div className="ed-total earnings-total"><span>Total Earnings</span><span className="ed-value">{formatCurrency(m.adjustedGross)}</span></div>
+                  </>
+                ) : (
+                  (() => {
+                    const leg = payrollData as LegacyPayrollSlip
+                    return (
                       <>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Basic Salary</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).adjustedBasic)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Medical Allow.</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).adjustedMedical)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Conveyance Allow.</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).adjustedConveyance)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Other Allowance</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).adjustedOther)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Special Allow.</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).adjustedSpecial)}</td>
-                        </tr>
-                        <tr className="font-bold pt-2">
-                          <td className="py-2">TOTAL EARNINGS</td>
-                          <td className="text-right" style={{ color: MEDIEND_PRIMARY }}>{formatCurrency((payrollData as MonthlyPayrollSlip).adjustedGross)}</td>
-                        </tr>
+                        <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(leg.basicSalary)}</span></div>
+                        {leg.components.filter((c) => c.componentType === 'ALLOWANCE').map((c) => (
+                          <div key={c.name} className="ed-row"><span className="ed-label">{c.name}</span><span className="ed-value">{formatCurrency(c.amount)}</span></div>
+                        ))}
+                        <div className="ed-total earnings-total"><span>Total Earnings</span><span className="ed-value">{formatCurrency(leg.grossSalary)}</span></div>
                       </>
-                    ) : (
-                      <>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Basic Salary</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as LegacyPayrollSlip).basicSalary)}</td>
-                        </tr>
-                        {(payrollData as LegacyPayrollSlip).components
-                          .filter((c) => c.componentType === 'ALLOWANCE')
-                          .map((c) => (
-                            <tr key={c.name} className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                              <td className="py-2">{c.name}</td>
-                              <td className="text-right font-medium">{formatCurrency(c.amount)}</td>
-                            </tr>
-                          ))}
-                        <tr className="font-bold pt-2">
-                          <td className="py-2">TOTAL EARNINGS</td>
-                          <td className="text-right" style={{ color: MEDIEND_PRIMARY }}>{formatCurrency((payrollData as LegacyPayrollSlip).grossSalary)}</td>
-                        </tr>
-                      </>
-                    )}
-                  </tbody>
-                </table>
+                    )
+                  })()
+                )}
               </div>
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-wide mb-2" style={{ color: MEDIEND_PRIMARY }}>
-                  Deductions
-                </h3>
-                <table className="w-full text-sm">
-                  <tbody>
-                    {isMonthly ? (
-                      <>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">EPF (Employee)</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).epfEmployee)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">ESIC</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).esicAmount)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Prof. Tax</td>
-                          <td className="text-right font-medium">₹0</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">Insurance</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).insurance)}</td>
-                        </tr>
-                        <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                          <td className="py-2">TDS</td>
-                          <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).tdsAmount)}</td>
-                        </tr>
-                        {((payrollData as MonthlyPayrollSlip).lateFines ?? 0) > 0 && (
-                          <tr className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                            <td className="py-2">Late fines</td>
-                            <td className="text-right font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).lateFines!)}</td>
-                          </tr>
-                        )}
-                        <tr className="font-bold pt-2">
-                          <td className="py-2">TOTAL DEDUCTIONS</td>
-                          <td className="text-right" style={{ color: MEDIEND_PRIMARY }}>{formatCurrency((payrollData as MonthlyPayrollSlip).totalDeductions)}</td>
-                        </tr>
-                      </>
-                    ) : (
-                      <>
-                        {(payrollData as LegacyPayrollSlip).components
-                          .filter((c) => c.componentType === 'DEDUCTION')
-                          .map((c) => (
-                            <tr key={c.name} className="border-b" style={{ borderColor: '#F5F5F5' }}>
-                              <td className="py-2">{c.name}</td>
-                              <td className="text-right font-medium">-{formatCurrency(c.amount)}</td>
-                            </tr>
-                          ))}
-                        <tr className="font-bold pt-2">
-                          <td className="py-2">TOTAL DEDUCTIONS</td>
-                          <td className="text-right" style={{ color: MEDIEND_PRIMARY }}>
-                            {formatCurrency(
-                              (payrollData as LegacyPayrollSlip).components
-                                .filter((c) => c.componentType === 'DEDUCTION')
-                                .reduce((s, c) => s + c.amount, 0)
-                            )}
-                          </td>
-                        </tr>
-                      </>
+              <div className="ed-col">
+                <div className="ed-col-title deductions">Deductions</div>
+                {isMonthly && m ? (
+                  <>
+                    <div className="ed-row"><span className="ed-label">EPF (Employee)</span><span className="ed-value">{formatCurrency(m.epfEmployee)}</span></div>
+                    <div className={m.applyEsic ? 'ed-row' : 'ed-row na'}><span className="ed-label">ESIC</span><span className="ed-value">{m.applyEsic ? formatCurrency(m.esicAmount) : 'N/A'}</span></div>
+                    <div className="ed-row"><span className="ed-label">Professional Tax</span><span className="ed-value">{formatCurrency(0)}</span></div>
+                    <div className="ed-row"><span className="ed-label">Insurance</span><span className="ed-value">{formatCurrency(m.insurance)}</span></div>
+                    <div className="ed-row"><span className="ed-label">TDS</span><span className="ed-value">{formatCurrency(m.tdsAmount)}</span></div>
+                    {(m.lateFines ?? 0) > 0 && (
+                      <div className="ed-row"><span className="ed-label">Late Fines</span><span className="ed-value">{formatCurrency(m.lateFines!)}</span></div>
                     )}
-                  </tbody>
-                </table>
+                    <div className="ed-total deductions-total"><span>Total Deductions</span><span className="ed-value">{formatCurrency(m.totalDeductions)}</span></div>
+                  </>
+                ) : (
+                  (() => {
+                    const leg = payrollData as LegacyPayrollSlip
+                    const dedTotal = leg.components.filter((c) => c.componentType === 'DEDUCTION').reduce((s, c) => s + c.amount, 0)
+                    return (
+                      <>
+                        {leg.components.filter((c) => c.componentType === 'DEDUCTION').map((c) => (
+                          <div key={c.name} className="ed-row"><span className="ed-label">{c.name}</span><span className="ed-value">-{formatCurrency(c.amount)}</span></div>
+                        ))}
+                        <div className="ed-total deductions-total"><span>Total Deductions</span><span className="ed-value">{formatCurrency(dedTotal)}</span></div>
+                      </>
+                    )
+                  })()
+                )}
               </div>
             </div>
           </div>
 
-          {isMonthly && (
-            <div className="p-6 print:p-6 border-b" style={{ borderColor: '#F5F5F5' }}>
-              <h3 className="text-sm font-bold uppercase tracking-wide mb-2" style={{ color: MEDIEND_PRIMARY }}>
-                Employer Contributions (Not deducted from salary)
-              </h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between p-2 rounded bg-[#F5F5F5]">
-                  <span>Employer PF</span>
-                  <span className="font-medium">{formatCurrency((payrollData as MonthlyPayrollSlip).epfEmployer)}</span>
-                </div>
-                <div className="flex justify-between p-2 rounded bg-[#F5F5F5]">
-                  <span>Employer ESIC</span>
-                  <span className="font-medium">₹0</span>
+          {isMonthly && m && (
+            <>
+              <hr className="divider" />
+              <div className="section" style={{ paddingTop: 12, paddingBottom: 12 }}>
+                <div className="section-title">Employer Contributions <span style={{ fontWeight: 400, fontSize: '10px', letterSpacing: 0, textTransform: 'none', color: '#999' }}>(Not deducted from salary)</span></div>
+                <div className="employer-grid">
+                  <div className="employer-row"><span>Employer PF</span><span className="value">{formatCurrency(m.epfEmployer)}</span></div>
+                  <div className="employer-row"><span>Employer ESIC</span><span className="value">{formatCurrency(0)}</span></div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
-          {/* Net Payable */}
-          <div className="p-6 print:p-6 border-b-2" style={{ borderColor: MEDIEND_PRIMARY }}>
-            <div className="rounded-lg p-6 bg-[#F5F5F5]">
-              <div className="text-lg font-bold" style={{ color: MEDIEND_ACCENT }}>
-                NET PAYABLE: {formatCurrency(isMonthly ? (payrollData as MonthlyPayrollSlip).netPayable : (payrollData as LegacyPayrollSlip).netSalary)}
-              </div>
-              <div className="text-sm text-muted-foreground mt-2">
-                (Rupees {numberToWordsINR(isMonthly ? (payrollData as MonthlyPayrollSlip).netPayable : (payrollData as LegacyPayrollSlip).netSalary)})
-              </div>
-            </div>
+          <div className="net-pay-section">
+            <div className="net-label">Net Payable</div>
+            <div className="net-amount">{formatCurrency(netPay)}</div>
+            <div className="net-words">Rupees {numberToWordsINR(netPay)} Only</div>
           </div>
 
-          {/* Footer */}
-          <div className="p-6 print:p-6 text-sm text-muted-foreground">
-            <p className="mb-2">This is a system-generated payslip and does not require a signature.</p>
-            <p>Generated on: {format(new Date(), 'dd-MMM-yyyy HH:mm')}</p>
+          <div className="ctc-bar">
+            <div>Annual CTC: <span>—</span></div>
+            <div>Monthly Gross: <span>{formatCurrency(monthlyGross)}</span></div>
+          </div>
+
+          <div className="footer">
+            <span>This is a system-generated payslip and does not require a signature.</span>
+            <span>Generated on: {format(new Date(), 'dd-MMM-yyyy hh:mm a')}</span>
           </div>
         </div>
       </div>
 
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        .payslip-page {
+          font-family: 'Inter', sans-serif;
+          color: #333;
+          display: flex;
+          justify-content: center;
+          padding: 30px;
+        }
+        .slip {
+          width: 800px;
+          max-width: 100%;
+          background: #fff;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          overflow: hidden;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .header {
+          background: #2C6E6A;
+          color: #fff;
+          padding: 24px 32px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .header-left .logo {
+          font-size: 28px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
+        .header-left .logo span { font-weight: 400; }
+        .header-left .entity {
+          font-size: 11px;
+          opacity: 0.85;
+          margin-top: 2px;
+        }
+        .header-right { text-align: right; }
+        .header-right .slip-title { font-size: 18px; font-weight: 600; }
+        .header-right .slip-month { font-size: 13px; opacity: 0.9; margin-top: 2px; }
+        .section { padding: 16px 32px; }
+        .section-title {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          color: #2C6E6A;
+          margin-bottom: 12px;
+          padding-bottom: 6px;
+          border-bottom: 2px solid #2C6E6A;
+        }
+        .divider { border: none; border-top: 1px solid #e8e8e8; margin: 0; }
+        .emp-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px 40px;
+        }
+        .emp-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          padding: 3px 0;
+        }
+        .emp-row .label { color: #777; font-weight: 500; }
+        .emp-row .value { font-weight: 600; color: #222; }
+        .attendance-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0;
+        }
+        .att-box {
+          text-align: center;
+          padding: 12px 8px;
+          background: #f7fafa;
+          border: 1px solid #e0eded;
+        }
+        .att-box:first-child { border-radius: 6px 0 0 6px; }
+        .att-box:last-child { border-radius: 0 6px 6px 0; }
+        .att-box .att-val { font-size: 22px; font-weight: 700; color: #2C6E6A; }
+        .att-box .att-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        .ed-container { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+        .ed-col { padding: 0; }
+        .ed-col:first-child { border-right: 1px solid #e8e8e8; padding-right: 24px; }
+        .ed-col:last-child { padding-left: 24px; }
+        .ed-col-title {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 12px;
+          color: #555;
+        }
+        .ed-col-title.earnings { color: #1a7a4c; }
+        .ed-col-title.deductions { color: #c0392b; }
+        .ed-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          padding: 6px 0;
+          border-bottom: 1px solid #f2f2f2;
+        }
+        .ed-row .ed-label { color: #555; }
+        .ed-row .ed-value { font-weight: 600; color: #222; }
+        .ed-row.na .ed-value { color: #bbb; }
+        .ed-total {
+          display: flex;
+          justify-content: space-between;
+          font-size: 14px;
+          font-weight: 700;
+          padding: 10px 0 0;
+          margin-top: 8px;
+          border-top: 2px solid #ddd;
+        }
+        .ed-total.earnings-total .ed-value { color: #1a7a4c; }
+        .ed-total.deductions-total .ed-value { color: #c0392b; }
+        .employer-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px 40px;
+        }
+        .employer-row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 13px;
+          padding: 4px 0;
+          color: #666;
+        }
+        .employer-row .value { font-weight: 600; }
+        .net-pay-section {
+          margin: 0 32px;
+          padding: 20px 24px;
+          background: linear-gradient(135deg, #2C6E6A 0%, #3A8F8B 100%);
+          border-radius: 8px;
+          text-align: center;
+          color: #fff;
+          margin-bottom: 8px;
+        }
+        .net-label {
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          opacity: 0.85;
+        }
+        .net-amount {
+          font-size: 36px;
+          font-weight: 700;
+          margin: 6px 0;
+          letter-spacing: -0.5px;
+        }
+        .net-words { font-size: 11px; opacity: 0.8; font-style: italic; }
+        .ctc-bar {
+          display: flex;
+          justify-content: center;
+          gap: 40px;
+          padding: 12px 32px;
+          font-size: 12px;
+          color: #888;
+        }
+        .ctc-bar span { font-weight: 600; color: #555; }
+        .footer {
+          padding: 14px 32px;
+          background: #fafafa;
+          border-top: 1px solid #eee;
+          display: flex;
+          justify-content: space-between;
+          font-size: 10px;
+          color: #aaa;
+        }
         @media print {
           @page { size: A4; margin: 0.5cm; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
           body { background: white !important; margin: 0; padding: 0; }
           .no-print { display: none !important; }
+          .payslip-page { padding: 0 !important; background: white !important; }
+          .slip { box-shadow: none !important; border: 1px solid #ddd !important; }
         }
       `}</style>
     </>
