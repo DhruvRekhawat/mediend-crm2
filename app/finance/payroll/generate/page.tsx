@@ -79,19 +79,12 @@ export default function GeneratePayrollPage() {
   })
 
   const { data: structure } = useQuery<SalaryStructure | null>({
-    queryKey: ['salary-structure-active', employeeId, month, year],
+    queryKey: ['salary-structure', employeeId],
     queryFn: async () => {
       const list = await apiGet<SalaryStructure[]>(`/api/finance/salary-structure?employeeId=${employeeId}`)
-      const monthStart = new Date(year, month - 1, 1)
-      const monthEnd = new Date(year, month, 0)
-      const active = list
-        .filter((s) => {
-          const from = new Date(s.effectiveFrom)
-          const to = s.effectiveTo ? new Date(s.effectiveTo) : null
-          return from <= monthEnd && (!to || to >= monthStart)
-        })
-        .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
-      return active ?? null
+      if (!list?.length) return null
+      const latest = list.sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
+      return latest ?? null
     },
     enabled: !!employeeId,
   })
@@ -576,13 +569,12 @@ export default function GeneratePayrollPage() {
         </CardContent>
       </Card>
 
-      {/* Payroll earnings & deductions */}
-      {(hasStructure || hasPayroll) && (
-        <Card>
-          <CardContent className="pt-6 space-y-6">
-            {!hasStructure && (
-              <p className="text-amber-600 text-sm">Configure salary structure first to generate payroll.</p>
-            )}
+      {/* Payroll earnings & deductions - always show so user can create drafts for any month */}
+      <Card>
+        <CardContent className="pt-6 space-y-6">
+          {!hasStructure && (
+            <p className="text-amber-600 text-sm">Configure salary structure first to generate payroll.</p>
+          )}
             <div className="rounded-lg border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/10 p-4 space-y-4">
               <h3 className="font-semibold text-green-800 dark:text-green-300">Earnings</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -720,7 +712,6 @@ export default function GeneratePayrollPage() {
             )}
           </CardContent>
         </Card>
-      )}
 
       {(!createMore || queue.length <= 1) && (
         <Card>

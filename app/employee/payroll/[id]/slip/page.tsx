@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Printer, ArrowLeft, Download } from 'lucide-react'
 import { format } from 'date-fns'
@@ -163,14 +164,33 @@ export default function PayslipPage() {
           {/* MediEND Header */}
           <div className="p-6 print:p-8 border-b-2" style={{ borderColor: MEDIEND_PRIMARY }}>
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <div className="text-2xl font-semibold lowercase" style={{ color: MEDIEND_PRIMARY }}>
-                  mediend
+              <div className="flex items-center gap-4">
+                <div className="relative w-32 h-12 shrink-0 flex items-center">
+                  {/* Logo: same as PDF (public/logo-mediend.png). Fallback to text if missing. */}
+                  <Image
+                    src="/logo-mediend.png"
+                    alt="Mediend"
+                    width={128}
+                    height={48}
+                    className="object-contain object-left"
+                    priority
+                    unoptimized
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                      if (fallback) fallback.style.display = 'block'
+                    }}
+                  />
+                  <span className="text-2xl font-semibold lowercase hidden" style={{ color: MEDIEND_PRIMARY }} aria-hidden>
+                    mediend
+                  </span>
                 </div>
-                <div className="font-semibold mt-1" style={{ color: MEDIEND_ACCENT }}>
-                  MediEND Healthcare Solutions
+                <div>
+                  <div className="font-semibold" style={{ color: MEDIEND_ACCENT }}>
+                    MediEND Healthcare Solutions
+                  </div>
+                  <div className="text-sm text-muted-foreground">(A unit of Kundkund Healthcare Pvt. Ltd.)</div>
                 </div>
-                <div className="text-sm text-muted-foreground">(A unit of Kundkund Healthcare Pvt. Ltd.)</div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-muted-foreground">Payslip for the month of</div>

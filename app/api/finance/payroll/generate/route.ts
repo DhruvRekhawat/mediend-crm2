@@ -53,15 +53,11 @@ export async function POST(request: NextRequest) {
     const monthEnd = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999))
 
     const salaryStructure = await prisma.salaryStructure.findFirst({
-      where: {
-        employeeId,
-        effectiveFrom: { lte: monthEnd },
-        OR: [{ effectiveTo: null }, { effectiveTo: { gte: monthStart } }],
-      },
+      where: { employeeId },
       orderBy: { effectiveFrom: 'desc' },
     })
     if (!salaryStructure) {
-      return errorResponse('No active salary structure found for this employee', 400)
+      return errorResponse('No salary structure found for this employee', 400)
     }
 
     const [leaveRequests, logs, normalizations] = await Promise.all([

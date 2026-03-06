@@ -21,6 +21,17 @@ function formatCurrency(amount: number): string {
   return `Rs. ${formatted}`
 }
 
+function maskPan(pan: string | null | undefined): string {
+  if (!pan || pan.length < 4) return '—'
+  return 'XXXXX' + pan.slice(-4)
+}
+
+function maskBank(account: string | null | undefined): string {
+  if (!account || account.replace(/\s/g, '').length < 4) return '—'
+  const cleaned = account.replace(/\s/g, '')
+  return 'XXXX XXXX ' + cleaned.slice(-4)
+}
+
 function getLogoBase64(): string | null {
   try {
     const logoPath = path.join(process.cwd(), 'public', 'logo-mediend.png')
@@ -52,6 +63,7 @@ export async function GET(
     })
     if (monthlyPayroll && monthlyPayroll.employeeId === employee.id) {
       if (monthlyPayroll.status === 'DRAFT') return errorResponse('Payroll not yet released', 404)
+      const lateFines = (monthlyPayroll as { lateFines?: number }).lateFines ?? 0
       const doc = new jsPDF()
       const pageW = (doc as unknown as { internal: { pageSize: { getWidth(): number } } }).internal.pageSize.getWidth()
       const logoData = getLogoBase64()
@@ -77,11 +89,33 @@ export async function GET(
       y += 6
       doc.setFontSize(9)
       doc.setTextColor(0, 0, 0)
+      const emp = monthlyPayroll.employee as { designation?: string | null; joinDate?: string | Date | null; panNumber?: string | null; bankAccountNumber?: string | null; uanNumber?: string | null }
       doc.text(`Name: ${monthlyPayroll.employee.user.name}`, 20, y)
       y += 5
       doc.text(`Employee ID: ${monthlyPayroll.employee.employeeCode}`, 20, y)
       y += 5
       doc.text(`Department: ${monthlyPayroll.employee.department?.name || '—'}`, 20, y)
+      y += 5
+      doc.text(`Designation: ${emp.designation ?? '—'}`, 20, y)
+      y += 5
+      doc.text(`Date of Joining: ${emp.joinDate ? new Date(emp.joinDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}`, 20, y)
+      y += 5
+      doc.text(`PAN: ${maskPan(emp.panNumber)}`, 20, y)
+      y += 5
+      doc.text(`Bank Account: ${maskBank(emp.bankAccountNumber)}`, 20, y)
+      y += 5
+      doc.text(`UAN: ${emp.uanNumber ?? '—'}`, 20, y)
+      y += 8
+
+      doc.setFontSize(9)
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text('ATTENDANCE SUMMARY', 20, y)
+      y += 6
+      doc.setFontSize(9)
+      doc.setTextColor(0, 0, 0)
+      doc.text(`Total Days: ${monthlyPayroll.totalDaysInMonth}   Payable Days: ${monthlyPayroll.payableDays}   Half Days: ${monthlyPayroll.halfDays}   Paid Leaves: ${monthlyPayroll.paidLeaves ?? 0}`, 20, y)
+      y += 5
+      doc.text(`Unpaid/LOP: ${monthlyPayroll.unpaidLeaves}   Late Fines: ${formatCurrency(lateFines)}`, 20, y)
       y += 8
 
       doc.setFontSize(9)
@@ -116,12 +150,11 @@ export async function GET(
       doc.setTextColor(...MEDIEND_TEAL)
       doc.text('DEDUCTIONS', 20, y)
       y += 6
-      const lateFines = (monthlyPayroll as { lateFines?: number }).lateFines ?? 0
       const deductions: [string, string][] = [
         ['EPF (Employee)', formatCurrency(monthlyPayroll.epfEmployee)],
-        ['ESIC', formatCurrency(monthlyPayroll.esicAmount)],
-        ['Insurance', formatCurrency(monthlyPayroll.insurance)],
-        ['TDS', formatCurrency(monthlyPayroll.tdsAmount)],
+        ['ESIC', formatCurrency(monthlyPayroll.esicAmount ?? 0)],
+        ['Insurance', formatCurrency(monthlyPayroll.insurance ?? 0)],
+        ['TDS', formatCurrency(monthlyPayroll.tdsAmount ?? 0)],
       ]
       if (lateFines > 0) {
         deductions.push(['Late fines', formatCurrency(lateFines)])
@@ -141,7 +174,17 @@ export async function GET(
       doc.setFont('helvetica', 'bold')
       doc.text('TOTAL DEDUCTIONS', 20, y)
       doc.text(formatCurrency(monthlyPayroll.totalDeductions), pageW - 20, y, { align: 'right' })
-      y += 10
+      y += 8
+
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(...MEDIEND_TEAL)
+      doc.text('EMPLOYER CONTRIBUTIONS (Not deducted from salary)', 20, y)
+      y += 6
+      doc.setFontSize(9)
+      doc.setTextColor(0, 0, 0)
+      doc.text(`Employer PF: ${formatCurrency(monthlyPayroll.epfEmployer)}`, 20, y)
+      y += 8
 
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(12)
