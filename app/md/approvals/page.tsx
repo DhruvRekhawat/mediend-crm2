@@ -106,6 +106,15 @@ function formatCurrency(amount: number) {
   }).format(amount)
 }
 
+/** For edit requests: show requested amount from editRequestData (e.g. paymentAmount when changing to DEBIT); otherwise current entry amount. */
+function getEditRequestDisplayAmount(entry: LedgerEntry): { amount: number; isDebit: boolean } {
+  const data = entry.editRequestData as Record<string, unknown> | null | undefined
+  if (data && typeof data.paymentAmount === 'number') return { amount: data.paymentAmount, isDebit: true }
+  if (data && typeof data.receivedAmount === 'number') return { amount: data.receivedAmount, isDebit: false }
+  const amount = entry.paymentAmount ?? entry.receivedAmount ?? 0
+  return { amount, isDebit: entry.transactionType === 'DEBIT' }
+}
+
 interface SwipeCardProps {
   entry: LedgerEntry
   onApprove: () => void
@@ -125,6 +134,7 @@ interface EditRequestCardProps {
 
 
 function EditRequestCard({ entry, onApprove, onReject }: EditRequestCardProps) {
+  const { amount, isDebit } = getEditRequestDisplayAmount(entry)
   return (
     <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10 dark:border-yellow-800">
       <CardHeader className="pb-3">
@@ -191,11 +201,11 @@ function EditRequestCard({ entry, onApprove, onReject }: EditRequestCardProps) {
         <div className="border-t pt-3">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-xs text-muted-foreground">Amount</div>
+              <div className="text-xs text-muted-foreground">Requested amount</div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-red-600">
-                -{formatCurrency(entry.paymentAmount || 0)}
+              <div className={`text-2xl font-bold ${isDebit ? 'text-red-600' : 'text-green-600'}`}>
+                {isDebit ? '-' : '+'}{formatCurrency(amount)}
               </div>
             </div>
           </div>
@@ -1271,6 +1281,17 @@ export default function ApprovalsPage() {
                     </div>
                   </>
                 )}
+                {dialogType === 'edit' && (() => {
+                  const { amount, isDebit } = getEditRequestDisplayAmount(selectedEntry)
+                  return (
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>Requested amount</span>
+                      <span className={isDebit ? 'text-red-600' : 'text-green-600'}>
+                        {isDebit ? '-' : '+'}{formatCurrency(amount)}
+                      </span>
+                    </div>
+                  )
+                })()}
               </div>
 
               {dialogType === 'edit' && selectedEntry.editRequestData && (
