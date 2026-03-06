@@ -42,8 +42,11 @@ export default function FinancePayrollPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const now = new Date()
-  const [month, setMonth] = useState(now.getMonth() + 1)
-  const [year, setYear] = useState(now.getFullYear())
+  // Default to previous month: March's payroll is done in April, etc.
+  const prevMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+  const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const [month, setMonth] = useState(prevMonth)
+  const [year, setYear] = useState(prevYear)
   const [departmentFilter, setDepartmentFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')

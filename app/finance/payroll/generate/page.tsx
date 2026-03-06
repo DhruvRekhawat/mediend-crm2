@@ -43,8 +43,11 @@ export default function GeneratePayrollPage() {
   const contentRef = useRef<HTMLDivElement>(null)
 
   const employeeId = searchParams.get('employeeId')
-  const month = Math.min(12, Math.max(1, parseInt(searchParams.get('month') || String(new Date().getMonth() + 1), 10)))
-  const year = parseInt(searchParams.get('year') || String(new Date().getFullYear()), 10)
+  const now = new Date()
+  const defaultPrevMonth = now.getMonth() === 0 ? 12 : now.getMonth()
+  const defaultPrevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
+  const month = Math.min(12, Math.max(1, parseInt(searchParams.get('month') || String(defaultPrevMonth), 10)))
+  const year = parseInt(searchParams.get('year') || String(defaultPrevYear), 10)
   const queueParam = searchParams.get('queue')
   const queue = useMemo(
     () => (queueParam ? queueParam.split(',').map((id) => id.trim()).filter(Boolean) : []),
@@ -208,10 +211,13 @@ export default function GeneratePayrollPage() {
     status: 'DRAFT' as 'DRAFT' | 'APPROVED' | 'PAID',
   })
 
+  const totalDaysInMonth = useMemo(() => new Date(year, month, 0).getDate(), [year, month])
+
   const previewData = useMemo(() => {
-    if (existingPayroll || !structure || !attendanceSummary) return null
-    const totalDays = attendanceSummary.totalDaysInMonth
-    const payableDays = attendanceSummary.payableDays
+    if (existingPayroll || !structure) return null
+    const totalDays = attendanceSummary?.totalDaysInMonth ?? totalDaysInMonth
+    const payableDays = attendanceSummary?.payableDays ?? totalDaysInMonth
+    const lateFines = attendanceSummary?.lateFines ?? 0
     const breakup = {
       basicSalary: structure.basicSalary,
       medicalAllowance: structure.medicalAllowance,
@@ -228,7 +234,6 @@ export default function GeneratePayrollPage() {
       ? calculateTDSAmount(proRated.adjustedGross, structure.tdsMonthly, structure.tdsRatePercent ?? null)
       : 0
     const insurance = structure.insuranceDeduction ?? 0
-    const lateFines = attendanceSummary.lateFines ?? 0
     const netBeforeLate = calculateNetPay(
       proRated.adjustedGross,
       epfEmployee,
@@ -248,7 +253,7 @@ export default function GeneratePayrollPage() {
       lateFines,
       netPayable,
     }
-  }, [existingPayroll, structure, attendanceSummary])
+  }, [existingPayroll, structure, attendanceSummary, totalDaysInMonth])
 
   useEffect(() => {
     if (existingPayroll) {
@@ -271,6 +276,28 @@ export default function GeneratePayrollPage() {
       })
     }
   }, [existingPayroll?.id])
+
+  useEffect(() => {
+    if (previewData && !existingPayroll) {
+      setFormData({
+        adjustedBasic: previewData.adjustedBasic ?? 0,
+        adjustedMedical: previewData.adjustedMedical ?? 0,
+        adjustedConveyance: previewData.adjustedConveyance ?? 0,
+        adjustedOther: previewData.adjustedOther ?? 0,
+        adjustedSpecial: previewData.adjustedSpecial ?? 0,
+        adjustedGross: previewData.adjustedGross ?? 0,
+        epfEmployee: previewData.epfEmployee ?? 0,
+        applyEsic: previewData.applyEsic ?? false,
+        esicAmount: previewData.esicAmount ?? 0,
+        applyTds: previewData.applyTds ?? false,
+        tdsAmount: previewData.tdsAmount ?? 0,
+        insurance: previewData.insurance ?? 0,
+        lateFines: previewData.lateFines ?? 0,
+        netPayable: previewData.netPayable ?? 0,
+        status: 'DRAFT',
+      })
+    }
+  }, [previewData?.adjustedGross, previewData?.netPayable, existingPayroll?.id])
 
   useEffect(() => {
     if (!employeeId) return
@@ -303,7 +330,7 @@ export default function GeneratePayrollPage() {
   const hasStructure = !!structure
   const hasPayroll = !!existingPayroll
   const payroll = existingPayroll
-  const canEdit = hasPayroll
+  const canEdit = true
   const displayData = hasPayroll
     ? {
         adjustedBasic: formData.adjustedBasic || payroll!.adjustedBasic,
@@ -322,8 +349,6 @@ export default function GeneratePayrollPage() {
         netPayable: formData.netPayable || payroll!.netPayable,
         status: formData.status,
       }
-    : previewData
-    ? { ...previewData, status: 'DRAFT' as const }
     : formData
 
   const handleGenerate = () => {
@@ -552,7 +577,7 @@ export default function GeneratePayrollPage() {
       </Card>
 
       {/* Payroll earnings & deductions */}
-      {(hasPayroll || previewData) && (
+      {(hasStructure || hasPayroll) && (
         <Card>
           <CardContent className="pt-6 space-y-6">
             {!hasStructure && (
