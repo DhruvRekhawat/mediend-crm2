@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     if (employeeId) {
       const structures = await prisma.salaryStructure.findMany({
         where: { employeeId },
-        orderBy: { effectiveFrom: 'desc' },
+        orderBy: [{ effectiveFrom: 'desc' }, { createdAt: 'desc' }],
         include: {
           employee: {
             select: {
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     }
 
     const structures = await prisma.salaryStructure.findMany({
-      orderBy: [{ employeeId: 'asc' }, { effectiveFrom: 'desc' }],
+      orderBy: [{ employeeId: 'asc' }, { effectiveFrom: 'desc' }, { createdAt: 'desc' }],
       include: {
         employee: {
           select: {

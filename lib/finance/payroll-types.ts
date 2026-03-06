@@ -32,6 +32,8 @@ export interface SalaryStructure {
   tdsRatePercent: number | null
   effectiveFrom: string
   effectiveTo: string | null
+  createdAt?: string
+  updatedAt?: string
   employee?: { id: string; employeeCode: string; user: { name: string }; department: { name: string } | null }
 }
 

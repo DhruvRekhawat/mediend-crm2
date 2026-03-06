@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const salaryStructure = await prisma.salaryStructure.findFirst({
       where: { employeeId },
-      orderBy: { effectiveFrom: 'desc' },
+      orderBy: [{ effectiveFrom: 'desc' }, { createdAt: 'desc' }],
     })
     if (!salaryStructure) {
       return errorResponse('No salary structure found for this employee', 400)

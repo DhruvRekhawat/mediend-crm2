@@ -103,7 +103,11 @@ export default function FinancePayrollPage() {
     const map = new Map<string, SalaryStructure>()
     for (const s of structuresByEmployee ?? []) {
       const existing = map.get(s.employeeId)
-      if (!existing || new Date(s.effectiveFrom) > new Date(existing.effectiveFrom)) {
+      const sEff = new Date(s.effectiveFrom).getTime()
+      const exEff = existing ? new Date(existing.effectiveFrom).getTime() : 0
+      const sCreated = new Date(s.createdAt ?? 0).getTime()
+      const exCreated = existing ? new Date(existing.createdAt ?? 0).getTime() : 0
+      if (!existing || sEff > exEff || (sEff === exEff && sCreated > exCreated)) {
         map.set(s.employeeId, s)
       }
     }
@@ -601,7 +605,11 @@ function SalaryStructureDialog({
     if (!employee?.id || existingStructures.length === 0) return
     const latest = existingStructures
       .filter((s) => s.employeeId === employee.id)
-      .sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
+      .sort((a, b) => {
+        const byEff = new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime()
+        if (byEff !== 0) return byEff
+        return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+      })[0]
     if (latest) {
       setFormData({
         annualCtc: String(latest.annualCtc),

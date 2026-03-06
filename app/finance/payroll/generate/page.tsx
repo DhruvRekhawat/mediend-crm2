@@ -83,7 +83,11 @@ export default function GeneratePayrollPage() {
     queryFn: async () => {
       const list = await apiGet<SalaryStructure[]>(`/api/finance/salary-structure?employeeId=${employeeId}`)
       if (!list?.length) return null
-      const latest = list.sort((a, b) => new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime())[0]
+      const latest = list.sort((a, b) => {
+        const byEff = new Date(b.effectiveFrom).getTime() - new Date(a.effectiveFrom).getTime()
+        if (byEff !== 0) return byEff
+        return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+      })[0]
       return latest ?? null
     },
     enabled: !!employeeId,
