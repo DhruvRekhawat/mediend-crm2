@@ -550,6 +550,7 @@ const defaultStructureFormData = {
   conveyanceAllowance: '2150',
   otherAllowance: '0',
   insuranceDeduction: '0',
+  applyPf: true,
   applyTds: false,
   tdsMonthly: '0',
   tdsRatePercent: '' as string,
@@ -618,6 +619,7 @@ function SalaryStructureDialog({
         conveyanceAllowance: String(latest.conveyanceAllowance),
         otherAllowance: String(latest.otherAllowance),
         insuranceDeduction: String(latest.insuranceDeduction ?? 0),
+        applyPf: latest.applyPf ?? true,
         applyTds: latest.applyTds,
         tdsMonthly: String(latest.tdsMonthly ?? 0),
         tdsRatePercent: latest.tdsRatePercent != null ? String(latest.tdsRatePercent) : '',
@@ -638,7 +640,11 @@ function SalaryStructureDialog({
     onError: (e: Error) => toast.error(e.message || 'Failed to save'),
   })
 
-  const monthlyGross = formData.annualCtc ? Math.ceil(Number(formData.annualCtc) * 0.88 / 12) : 0
+  const annualCtcNum = formData.annualCtc ? Number(formData.annualCtc) : 0
+  const basicNum = Number(formData.basicSalary) || 0
+  const monthlyGross = annualCtcNum
+    ? (formData.applyPf ? annualCtcNum / 12 - 0.12 * basicNum : annualCtcNum / 12)
+    : 0
   const other = Number(formData.otherAllowance) || 0
   const specialAllowance = Math.max(
     0,
@@ -670,6 +676,7 @@ function SalaryStructureDialog({
       conveyanceAllowance: Number(formData.conveyanceAllowance) || 0,
       otherAllowance: other,
       insuranceDeduction: Number(formData.insuranceDeduction) || 0,
+      applyPf: formData.applyPf,
       applyTds: formData.applyTds,
       tdsMonthly: Number(formData.tdsMonthly) || 0,
       tdsRatePercent: formData.tdsRatePercent ? Number(formData.tdsRatePercent) : null,
@@ -765,12 +772,22 @@ function SalaryStructureDialog({
             <Input type="text" value={formatCurrency(specialAllowance)} readOnly className="bg-muted" />
           </div>
           <div>
-            <Label>Insurance Deduction (₹)</Label>
+            <Label>Miscellaneous Deduction (₹)</Label>
             <Input
               type="number"
               value={formData.insuranceDeduction}
               onChange={(e) => setFormData({ ...formData, insuranceDeduction: e.target.value })}
               min={0}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <Label>PF applicable</Label>
+              <p className="text-xs text-muted-foreground">When on, 12% of basic is deducted from gross; EPF is calculated in payroll.</p>
+            </div>
+            <Switch
+              checked={formData.applyPf}
+              onCheckedChange={(v) => setFormData({ ...formData, applyPf: v })}
             />
           </div>
           <div className="flex items-center justify-between rounded-lg border p-4">

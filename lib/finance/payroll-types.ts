@@ -27,6 +27,7 @@ export interface SalaryStructure {
   otherAllowance: number
   specialAllowance: number
   insuranceDeduction: number
+  applyPf?: boolean
   applyTds: boolean
   tdsMonthly: number
   tdsRatePercent: number | null

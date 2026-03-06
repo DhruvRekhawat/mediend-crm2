@@ -35,9 +35,11 @@ export interface AttendanceSummaryForPayroll {
   normalizedDays?: number
 }
 
-/** Monthly gross from annual CTC (CTC minus 12% PF, then divided by 12), rounded up to whole rupees */
-export function calculateMonthlyGross(annualCtc: number): number {
-  return Math.ceil((annualCtc * (1 - 0.12)) / 12)
+/** Monthly gross: when PF applicable = (annualCtc/12) - (12% of basic); otherwise = annualCtc/12. No rounding. */
+export function calculateMonthlyGross(annualCtc: number, basicSalary: number, applyPf: boolean): number {
+  const monthlyCtc = annualCtc / 12
+  if (applyPf) return monthlyCtc - 0.12 * basicSalary
+  return monthlyCtc
 }
 
 /** Salary component breakup. Special allowance is the balancing figure. */
@@ -81,7 +83,7 @@ export function proRateComponent(
 ): number {
   if (totalDaysInMonth <= 0) return 0
   const ratio = payableDays / totalDaysInMonth
-  return Math.ceil(amount * ratio)
+  return Math.round(amount * ratio)
 }
 
 /** Pro-rate all salary components; adjustedGross = sum of adjusted components (round each then sum). */
@@ -91,11 +93,11 @@ export function calculateProRatedSalary(
   totalDaysInMonth: number
 ): ProRatedSalary {
   const factor = totalDaysInMonth > 0 ? payableDays / totalDaysInMonth : 0
-  const adjustedBasic = Math.ceil(structure.basicSalary * factor)
-  const adjustedMedical = Math.ceil(structure.medicalAllowance * factor)
-  const adjustedConveyance = Math.ceil(structure.conveyanceAllowance * factor)
-  const adjustedOther = Math.ceil(structure.otherAllowance * factor)
-  const adjustedSpecial = Math.ceil(structure.specialAllowance * factor)
+  const adjustedBasic = Math.round(structure.basicSalary * factor)
+  const adjustedMedical = Math.round(structure.medicalAllowance * factor)
+  const adjustedConveyance = Math.round(structure.conveyanceAllowance * factor)
+  const adjustedOther = Math.round(structure.otherAllowance * factor)
+  const adjustedSpecial = Math.round(structure.specialAllowance * factor)
   const adjustedGross =
     adjustedBasic + adjustedMedical + adjustedConveyance + adjustedOther + adjustedSpecial
   return {
@@ -110,13 +112,13 @@ export function calculateProRatedSalary(
 
 /** EPF employee share: 12% of adjusted basic */
 export function calculateEPF(adjustedBasic: number): number {
-  return Math.ceil(adjustedBasic * EPF_RATE)
+  return Math.round(adjustedBasic * EPF_RATE)
 }
 
 /** ESIC employee: 0 if monthly gross > 21,100; else 0.75% of adjusted gross */
 export function calculateESIC(adjustedGross: number, monthlyGross: number): number {
   if (monthlyGross > ESIC_GROSS_THRESHOLD) return 0
-  return Math.ceil(adjustedGross * ESIC_EMPLOYEE_RATE)
+  return Math.round(adjustedGross * ESIC_EMPLOYEE_RATE)
 }
 
 /** TDS: when applyTds and tdsRatePercent set, amount = rate% of base (e.g. adjusted gross); else use fixed tdsMonthly */
@@ -126,9 +128,9 @@ export function calculateTDSAmount(
   tdsRatePercent: number | null
 ): number {
   if (tdsRatePercent != null && tdsRatePercent > 0) {
-    return Math.ceil((adjustedGross * tdsRatePercent) / 100)
+    return Math.round((adjustedGross * tdsRatePercent) / 100)
   }
-  return Math.ceil(tdsMonthly)
+  return Math.round(tdsMonthly)
 }
 
 /** Net payable = adjusted gross - (EPF + ESIC + insurance + TDS) */
@@ -145,7 +147,7 @@ export function calculateNetPay(
 
 /** Employer PF: 12% of adjusted basic */
 export function calculateEPFEmployer(adjustedBasic: number): number {
-  return Math.ceil(adjustedBasic * EPF_RATE)
+  return Math.round(adjustedBasic * EPF_RATE)
 }
 
 /** Whether ESIC applies by rule (monthly gross ≤ 21,100) */

@@ -155,7 +155,7 @@ export async function GET(
       const deductions: [string, string][] = [
         [monthlyPayroll.epfEmployee, 'EPF (Employee)'],
         [monthlyPayroll.esicAmount ?? 0, 'ESIC'],
-        [monthlyPayroll.insurance ?? 0, 'Insurance'],
+        [monthlyPayroll.insurance ?? 0, 'Miscellaneous'],
         [monthlyPayroll.tdsAmount ?? 0, 'TDS'],
       ]
         .filter(([amt]) => (amt as number) > 0)

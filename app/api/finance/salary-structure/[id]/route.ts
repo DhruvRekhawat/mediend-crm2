@@ -13,6 +13,7 @@ const updateSalaryStructureSchema = z.object({
   conveyanceAllowance: z.number().min(0).optional(),
   otherAllowance: z.number().min(0).optional(),
   insuranceDeduction: z.number().min(0).optional(),
+  applyPf: z.boolean().optional(),
   applyTds: z.boolean().optional(),
   tdsMonthly: z.number().min(0).optional(),
   tdsRatePercent: z.number().min(0).max(100).nullable().optional(),
@@ -69,8 +70,9 @@ export async function PATCH(
     const data = updateSalaryStructureSchema.parse(body)
 
     const annualCtc = data.annualCtc ?? existing.annualCtc
-    const monthlyGross = calculateMonthlyGross(annualCtc)
     const basicSalary = data.basicSalary ?? existing.basicSalary
+    const applyPf = data.applyPf ?? existing.applyPf
+    const monthlyGross = calculateMonthlyGross(annualCtc, basicSalary, applyPf)
     const medicalAllowance = data.medicalAllowance ?? existing.medicalAllowance
     const conveyanceAllowance = data.conveyanceAllowance ?? existing.conveyanceAllowance
     const otherAllowance = data.otherAllowance ?? existing.otherAllowance
@@ -89,13 +91,15 @@ export async function PATCH(
     const structure = await prisma.salaryStructure.update({
       where: { id },
       data: {
-        ...(data.annualCtc != null && { annualCtc, monthlyGross }),
+        ...(data.annualCtc != null && { annualCtc }),
+        monthlyGross,
         basicSalary: breakup.basicSalary,
         medicalAllowance: breakup.medicalAllowance,
         conveyanceAllowance: breakup.conveyanceAllowance,
         otherAllowance: breakup.otherAllowance,
         specialAllowance: breakup.specialAllowance,
         ...(data.insuranceDeduction != null && { insuranceDeduction: data.insuranceDeduction }),
+        ...(data.applyPf != null && { applyPf: data.applyPf }),
         ...(data.applyTds != null && { applyTds: data.applyTds }),
         ...(data.tdsMonthly != null && { tdsMonthly: data.tdsMonthly }),
         ...(data.tdsRatePercent !== undefined && { tdsRatePercent: data.tdsRatePercent }),

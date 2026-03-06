@@ -224,7 +224,8 @@ export default function GeneratePayrollPage() {
       monthlyGross: structure.monthlyGross,
     }
     const proRated = calculateProRatedSalary(breakup, payableDays, totalDays)
-    const epfEmployee = calculateEPF(proRated.adjustedBasic)
+    const applyPf = structure.applyPf ?? true
+    const epfEmployee = applyPf ? calculateEPF(proRated.adjustedBasic) : 0
     const applyEsic = isESICApplicableByRule(structure.monthlyGross)
     const esicAmount = applyEsic ? calculateESIC(proRated.adjustedGross, structure.monthlyGross) : 0
     const tdsAmount = structure.applyTds
@@ -295,6 +296,22 @@ export default function GeneratePayrollPage() {
       })
     }
   }, [previewData?.adjustedGross, previewData?.netPayable, existingPayroll?.id])
+
+  useEffect(() => {
+    const sumGross =
+      formData.adjustedBasic +
+      formData.adjustedMedical +
+      formData.adjustedConveyance +
+      formData.adjustedOther +
+      formData.adjustedSpecial
+    setFormData((f) => (f.adjustedGross === sumGross ? f : { ...f, adjustedGross: sumGross }))
+  }, [
+    formData.adjustedBasic,
+    formData.adjustedMedical,
+    formData.adjustedConveyance,
+    formData.adjustedOther,
+    formData.adjustedSpecial,
+  ])
 
   useEffect(() => {
     const gross = formData.adjustedGross
@@ -688,7 +705,7 @@ export default function GeneratePayrollPage() {
                 </div>
               )}
               <div>
-                <Label>Insurance (Rs.)</Label>
+                <Label>Miscellaneous (Rs.)</Label>
                 <Input
                   type="number"
                   value={displayData.insurance ?? 0}

@@ -92,7 +92,7 @@ export async function PATCH(
       Math.max(0, Math.ceil(adjustedGross - totalDeductions))
 
     const finalAdjustedBasic = data.adjustedBasic ?? existing.adjustedBasic
-    const epfEmployer = Math.ceil(finalAdjustedBasic * 0.12)
+    const epfEmployer = Math.round(finalAdjustedBasic * 0.12)
 
     const payroll = await prisma.monthlyPayroll.update({
       where: { id },

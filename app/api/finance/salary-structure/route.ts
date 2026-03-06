@@ -14,6 +14,7 @@ const createSalaryStructureSchema = z.object({
   conveyanceAllowance: z.number().min(0).default(2150),
   otherAllowance: z.number().min(0).default(0),
   insuranceDeduction: z.number().min(0).default(0),
+  applyPf: z.boolean().default(true),
   applyTds: z.boolean().default(false),
   tdsMonthly: z.number().min(0).default(0),
   tdsRatePercent: z.number().min(0).max(100).nullable().optional(),
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createSalaryStructureSchema.parse(body)
 
-    const monthlyGross = calculateMonthlyGross(data.annualCtc)
+    const monthlyGross = calculateMonthlyGross(data.annualCtc, data.basicSalary, data.applyPf)
     const breakup = calculateSalaryBreakup(
       monthlyGross,
       data.basicSalary,
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
         otherAllowance: breakup.otherAllowance,
         specialAllowance: breakup.specialAllowance,
         insuranceDeduction: data.insuranceDeduction,
+        applyPf: data.applyPf,
         applyTds: data.applyTds,
         tdsMonthly: data.tdsMonthly,
         tdsRatePercent: data.tdsRatePercent ?? null,

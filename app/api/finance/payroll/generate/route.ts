@@ -154,10 +154,11 @@ export async function POST(request: NextRequest) {
       monthlyGross: salaryStructure.monthlyGross,
     }
     const proRated = calculateProRatedSalary(breakup, payableDays, totalDaysInMonth)
-    const epfEmployee = calculateEPF(proRated.adjustedBasic)
+    const applyPf = (salaryStructure as { applyPf?: boolean }).applyPf ?? true
+    const epfEmployee = applyPf ? calculateEPF(proRated.adjustedBasic) : 0
     const applyEsic = isESICApplicableByRule(salaryStructure.monthlyGross)
     const esicAmount = applyEsic
-      ? Math.ceil(proRated.adjustedGross * 0.0075)
+      ? Math.round(proRated.adjustedGross * 0.0075)
       : 0
     const applyTds = salaryStructure.applyTds
     const tdsAmount = applyTds
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
       0,
       Math.ceil(proRated.adjustedGross - totalDeductions)
     )
-    const epfEmployer = calculateEPFEmployer(proRated.adjustedBasic)
+    const epfEmployer = applyPf ? calculateEPFEmployer(proRated.adjustedBasic) : 0
 
     const payroll = await prisma.monthlyPayroll.create({
       data: {

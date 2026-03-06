@@ -899,6 +899,7 @@ model SalaryStructure {
   otherAllowance       Float    @default(0)
   specialAllowance     Float
   insuranceDeduction   Float    @default(0)
+  applyPf              Boolean  @default(true)
   applyTds             Boolean  @default(false)
   tdsMonthly           Float    @default(0)
   tdsRatePercent       Float?
