@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ import {
   type Task,
   type UpdateTaskInput,
 } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
@@ -100,6 +102,8 @@ function TaskDetailContent({
   taskId: string
   onClose: () => void
 }) {
+  const queryClient = useQueryClient()
+  const { user } = useAuth()
   const { data: task, isLoading } = useTask(taskId)
   const { data: comments = [], refetch: refetchComments } = useTaskComments(taskId)
   const createComment = useCreateTaskComment(taskId)
@@ -112,6 +116,13 @@ function TaskDetailContent({
   const [statusValue, setStatusValue] = useState<string>("")
   const [priorityValue, setPriorityValue] = useState<string>("")
   const [dueDateValue, setDueDateValue] = useState<Date | null>(null)
+  const [pendingDueDate, setPendingDueDate] = useState<Date | null>(null)
+  const [dueDateChangeReason, setDueDateChangeReason] = useState("")
+
+  const canEditDueDateDirectly =
+    !!task &&
+    !!user &&
+    (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
 
   useEffect(() => {
     if (task) {
@@ -180,15 +191,46 @@ function TaskDetailContent({
     const currentDue = task.dueDate ? new Date(task.dueDate).toISOString() : null
     const newDue = newDate ? newDate.toISOString() : null
     if (currentDue === newDue) return
+    if (canEditDueDateDirectly) {
+      try {
+        await updateTask.mutateAsync({
+          id: task.id,
+          data: { dueDate: newDue },
+        })
+        setDueDateValue(newDate)
+        refetchActivity()
+      } catch {
+        toast.error("Failed to update due date")
+      }
+      return
+    }
+    setPendingDueDate(newDate)
+    setDueDateChangeReason("")
+  }
+
+  const handleRequestDueDateChange = async () => {
+    if (!task || !pendingDueDate || !dueDateChangeReason.trim()) return
     try {
-      await updateTask.mutateAsync({
+      const result = await updateTask.mutateAsync({
         id: task.id,
-        data: { dueDate: newDue },
-      })
-      setDueDateValue(newDate)
-      refetchActivity()
+        data: {
+          dueDate: pendingDueDate.toISOString(),
+          dueDateChangeReason: dueDateChangeReason.trim(),
+        },
+      }) as { message?: string; approvalId?: string }
+      if (result?.message && result?.approvalId) {
+        toast.success("Due date change requested. Waiting for approval.")
+        setPendingDueDate(null)
+        setDueDateChangeReason("")
+        queryClient.invalidateQueries({ queryKey: ["task-approvals"] })
+      } else {
+        setDueDateValue(pendingDueDate)
+        setPendingDueDate(null)
+        setDueDateChangeReason("")
+        refetchActivity()
+      }
     } catch {
-      toast.error("Failed to update due date")
+      toast.error("Failed to submit request")
     }
   }
 
@@ -308,39 +350,91 @@ function TaskDetailContent({
       <div className="md:w-64 shrink-0 p-4 space-y-4 bg-muted/30">
         <div className="space-y-3">
           <h3 className="text-sm font-medium">Details</h3>
-          <div className="flex items-center gap-2 text-sm">
-            <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="text-left hover:underline focus:outline-none focus:underline"
-                >
-                  {dueDateValue
-                    ? format(dueDateValue, "MMM d, yyyy")
-                    : "Set due date"}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={dueDateValue ?? undefined}
-                  onSelect={(d) => handleDueDateChange(d ?? null)}
-                  initialFocus
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-left hover:underline focus:outline-none focus:underline"
+                  >
+                    {dueDateValue
+                      ? format(dueDateValue, "MMM d, yyyy")
+                      : "Set due date"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={(pendingDueDate ?? dueDateValue) ?? undefined}
+                    onSelect={(d) => {
+                      const date = d ?? null
+                      if (canEditDueDateDirectly) {
+                        handleDueDateChange(date)
+                      } else {
+                        setPendingDueDate(date)
+                        if (!date) setDueDateChangeReason("")
+                      }
+                    }}
+                    initialFocus
+                  />
+                  {(dueDateValue || pendingDueDate) && canEditDueDateDirectly && (
+                    <div className="border-t p-2">
+                      <button
+                        type="button"
+                        className="text-xs text-destructive hover:underline"
+                        onClick={() => handleDueDateChange(null)}
+                      >
+                        Clear date
+                      </button>
+                    </div>
+                  )}
+                  {(dueDateValue || pendingDueDate) && !canEditDueDateDirectly && (
+                    <div className="border-t p-2">
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground hover:underline"
+                        onClick={() => { setPendingDueDate(null); setDueDateChangeReason("") }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            </div>
+            {pendingDueDate != null && !canEditDueDateDirectly && (
+              <div className="rounded-md border bg-muted/30 p-2 space-y-2">
+                <p className="text-xs font-medium">Request due date change</p>
+                <p className="text-xs text-muted-foreground">
+                  New date: {format(pendingDueDate, "MMM d, yyyy")}. Reason is required.
+                </p>
+                <Textarea
+                  placeholder="Reason for change (required)"
+                  value={dueDateChangeReason}
+                  onChange={(e) => setDueDateChangeReason(e.target.value)}
+                  className="min-h-[60px] resize-none text-sm"
+                  rows={2}
                 />
-                {dueDateValue && (
-                  <div className="border-t p-2">
-                    <button
-                      type="button"
-                      className="text-xs text-destructive hover:underline"
-                      onClick={() => handleDueDateChange(null)}
-                    >
-                      Clear date
-                    </button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleRequestDueDateChange}
+                    disabled={!dueDateChangeReason.trim() || updateTask.isPending}
+                  >
+                    Request change
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => { setPendingDueDate(null); setDueDateChangeReason("") }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
           {task.assignee && (
             <div className="flex items-center gap-2 text-sm">

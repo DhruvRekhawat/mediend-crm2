@@ -2091,6 +2091,7 @@ model TaskDueDateApproval {
   requestedBy    User               @relation(fields: [requestedById], references: [id], onDelete: Cascade)
   oldDueDate     DateTime?
   newDueDate     DateTime?
+  reason         String             @db.Text
   status         TaskApprovalStatus @default(PENDING)
   createdAt      DateTime           @default(now())
 

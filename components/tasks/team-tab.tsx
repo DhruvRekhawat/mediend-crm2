@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Search, UserPlus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useMDTeamOverview, type MDTeamOverviewMember } from "@/hooks/use-md-team"
-import { TeamMemberDetail } from "./team-member-detail"
 import { AddPersonDialog } from "./add-person-dialog"
 import { cn } from "@/lib/utils"
 
@@ -19,8 +19,8 @@ function getInitials(name: string): string {
 }
 
 export function TeamTab() {
+  const router = useRouter()
   const [search, setSearch] = useState("")
-  const [selectedMember, setSelectedMember] = useState<MDTeamOverviewMember | null>(null)
   const [addPersonOpen, setAddPersonOpen] = useState(false)
 
   const { data, isLoading, isError, error } = useMDTeamOverview(search || undefined)
@@ -75,21 +75,11 @@ export function TeamTab() {
               key={member.id}
               member={member}
               index={index}
-              onClick={() => setSelectedMember(member)}
+              onClick={() => router.push(`/md/tasks/team/${member.id}`)}
             />
           ))}
         </div>
       )}
-
-      <TeamMemberDetail
-        member={selectedMember}
-        open={!!selectedMember}
-        onClose={() => setSelectedMember(null)}
-        onAssignTask={() => {
-          // Parent can scroll to / focus task input with prefill; for now just close
-          setSelectedMember(null)
-        }}
-      />
 
       <AddPersonDialog open={addPersonOpen} onOpenChange={setAddPersonOpen} />
     </div>

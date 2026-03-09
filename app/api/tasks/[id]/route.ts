@@ -8,6 +8,8 @@ const updateTaskSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
   dueDate: z.string().datetime().optional().nullable(),
+  /** Required when requesting a due date change (employee flow); ignored when MD/creator updates directly. */
+  dueDateChangeReason: z.string().min(1).optional(),
   priority: z.enum(["GENERAL", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
   projectId: z.string().optional().nullable(),
@@ -71,15 +73,16 @@ export async function PATCH(
     return errorResponse(parsed.error.message)
   }
 
-  const wasAssignedByManager = task.createdById !== task.assigneeId
+  // Employees cannot change due date directly; only MD, ADMIN, or task creator can. Others must request with a reason.
+  const canChangeDueDateDirectly = isMDOrAdmin || isCreator
+  const dueDateChanged =
+    parsed.data.dueDate !== undefined && task.dueDate?.toISOString() !== parsed.data.dueDate
 
-  if (
-    parsed.data.dueDate !== undefined &&
-    task.dueDate?.toISOString() !== parsed.data.dueDate &&
-    wasAssignedByManager &&
-    !isMDOrAdmin &&
-    !isCreator
-  ) {
+  if (dueDateChanged && !canChangeDueDateDirectly) {
+    const reason = parsed.data.dueDateChangeReason?.trim()
+    if (!reason) {
+      return errorResponse("Reason is required when requesting a due date change", 400)
+    }
     const newDue = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null
     const approval = await prisma.taskDueDateApproval.create({
       data: {
@@ -87,6 +90,7 @@ export async function PATCH(
         requestedById: user.id,
         oldDueDate: task.dueDate,
         newDueDate: newDue,
+        reason,
         status: "PENDING",
       },
     })

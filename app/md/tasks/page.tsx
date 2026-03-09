@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { TabNavigation, type TabItem } from "@/components/employee/tab-navigation"
 import { TaskInput } from "@/components/tasks/task-input"
-import { TodayTab } from "@/components/tasks/today-tab"
+import { ApprovalTab } from "@/components/tasks/approval-tab"
 import { OverviewTab } from "@/components/tasks/overview-tab"
 import { CalendarTab } from "@/components/tasks/calendar-tab"
 import { CompletedTab } from "@/components/tasks/completed-tab"
@@ -12,7 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 const TASKS_TABS: TabItem[] = [
   { value: "team", label: "Team" },
-  { value: "today", label: "Today" },
+  { value: "approval", label: "Approval" },
   { value: "overview", label: "Overview" },
   { value: "calendar", label: "Calendar" },
   { value: "completed", label: "Completed" },
@@ -68,7 +68,7 @@ export default function MDTasksPage() {
       />
 
       <div className="flex-1 min-h-0 py-0 md:py-4">
-        {activeTab === "today" && <TodayTab />}
+        {activeTab === "approval" && <ApprovalTab />}
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "calendar" && <CalendarTab />}
         {activeTab === "completed" && <CompletedTab />}

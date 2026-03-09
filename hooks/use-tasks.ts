@@ -139,6 +139,8 @@ export interface UpdateTaskInput {
   title?: string
   description?: string | null
   dueDate?: string | null
+  /** Required when requesting a due date change (employee flow). */
+  dueDateChangeReason?: string
   priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
   projectId?: string | null
@@ -181,6 +183,7 @@ export interface TaskDueDateApproval {
   requestedById: string
   oldDueDate: string | null
   newDueDate: string | null
+  reason: string
   status: string
   createdAt: string
   task: {
