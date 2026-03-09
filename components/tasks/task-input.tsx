@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { CalendarIcon, Flag, User, FolderPlus, Plus } from "lucide-react"
+import { CalendarIcon, Flag, User, FolderPlus, SendHorizonal } from "lucide-react"
 import { format } from "date-fns"
 import { useAuth } from "@/hooks/use-auth"
 import {
@@ -42,15 +42,29 @@ interface TaskInputProps {
   className?: string
   /** When true, input is anchored at bottom (e.g. mobile) */
   bottomAnchored?: boolean
+  /** Pre-fill assignee (e.g. from team member detail); hides assignee selector */
+  prefillAssignee?: { id: string; name: string }
+  /** When true (MD role), assignee is required and "Me" is not an option */
+  isMD?: boolean
 }
 
-export function TaskInput({ onSuccess, className, bottomAnchored }: TaskInputProps) {
+export function TaskInput({
+  onSuccess,
+  className,
+  bottomAnchored,
+  prefillAssignee,
+  isMD = false,
+}: TaskInputProps) {
   const { user } = useAuth()
   const [title, setTitle] = useState("")
   const [expanded, setExpanded] = useState(false)
   const [dueDate, setDueDate] = useState<Date | undefined>()
   const [priority, setPriority] = useState<CreateTaskInput["priority"]>("MEDIUM")
-  const [assigneeId, setAssigneeId] = useState<string>(user?.id ?? "")
+  const [assigneeId, setAssigneeId] = useState<string>(() => {
+    if (prefillAssignee) return prefillAssignee.id
+    if (isMD) return ""
+    return user?.id ?? ""
+  })
   const [projectId, setProjectId] = useState<string | null>(null)
   const [newProjectName, setNewProjectName] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -60,26 +74,37 @@ export function TaskInput({ onSuccess, className, bottomAnchored }: TaskInputPro
   const { data: projects = [], refetch: refetchProjects } = useTaskProjects()
   const createProjectMutation = useCreateTaskProject()
 
+  const effectiveAssigneeId = prefillAssignee ? prefillAssignee.id : assigneeId
+  const assigneeRequired = isMD || !!prefillAssignee
+  const canSubmit =
+    !!title.trim() &&
+    !createMutation.isPending &&
+    (!assigneeRequired || !!effectiveAssigneeId)
+
   const reset = useCallback(() => {
     setTitle("")
     setDueDate(undefined)
     setPriority("MEDIUM")
-    setAssigneeId(user?.id ?? "")
+    setAssigneeId(prefillAssignee ? prefillAssignee.id : isMD ? "" : user?.id ?? "")
     setProjectId(null)
     setNewProjectName("")
     setExpanded(false)
     inputRef.current?.focus()
-  }, [user?.id])
+  }, [user?.id, isMD, prefillAssignee])
 
   const handleSubmit = async () => {
     const trimmed = title.trim()
     if (!trimmed) return
+    if (assigneeRequired && !effectiveAssigneeId) {
+      toast.error("Please select a person to assign the task to.")
+      return
+    }
 
     const payload: CreateTaskInput = {
       title: trimmed,
       dueDate: dueDate ? dueDate.toISOString() : undefined,
       priority,
-      assigneeId: assigneeId || undefined,
+      assigneeId: effectiveAssigneeId || undefined,
       projectId: projectId || undefined,
     }
 
@@ -117,12 +142,11 @@ export function TaskInput({ onSuccess, className, bottomAnchored }: TaskInputPro
     <div
       className={cn(
         "rounded-lg border bg-background shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-primary/20",
-        bottomAnchored && "md:rounded-none md:border-x-0 md:border-b-0",
+        bottomAnchored && "w-full md:rounded-none md:border-x-0 md:border-b-0 md:border-t",
         className
       )}
     >
       <div className="flex items-center gap-2 p-2">
-        <Plus className="h-5 w-5 shrink-0 text-primary" aria-hidden />
         <Input
           ref={inputRef}
           value={title}
@@ -141,17 +165,19 @@ export function TaskInput({ onSuccess, className, bottomAnchored }: TaskInputPro
         />
         <Button
           type="button"
-          size="sm"
+          size="icon"
+          variant="default"
           onClick={handleSubmit}
-          disabled={!title.trim() || createMutation.isPending}
-          className="shrink-0"
+          disabled={!canSubmit}
+          className="shrink-0 h-9 w-9 rounded-full md:rounded-md"
+          aria-label="Send"
         >
-          Add task
+          <SendHorizonal className="h-4 w-4" />
         </Button>
       </div>
 
       {expanded && (
-        <div className="flex flex-wrap items-center gap-2 border-t px-2 py-2">
+        <div className="flex flex-nowrap items-center gap-2 border-t px-2 py-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -191,22 +217,45 @@ export function TaskInput({ onSuccess, className, bottomAnchored }: TaskInputPro
             </SelectContent>
           </Select>
 
-          <Select
-            value={assigneeId || "me"}
-            onValueChange={(v) => setAssigneeId(v === "me" ? user?.id ?? "" : v)}
-          >
-            <SelectTrigger className="h-8 w-[140px] gap-1.5">
+          {!prefillAssignee && (
+            <Select
+              value={assigneeId || (isMD ? "__none__" : "me")}
+              onValueChange={(v) => {
+                if (v === "__none__") setAssigneeId("")
+                else setAssigneeId(v === "me" ? user?.id ?? "" : v)
+              }}
+            >
+              <SelectTrigger className="h-8 min-w-[140px] w-[140px] gap-1.5 shrink-0">
+                <User className="h-4 w-4" />
+                <SelectValue placeholder={isMD ? "Select person" : "Assign to"} />
+              </SelectTrigger>
+              <SelectContent>
+                {isMD && (
+                  <SelectItem value="__none__" className="text-muted-foreground">
+                    Select person
+                  </SelectItem>
+                )}
+                {!isMD && user && (
+                  <SelectItem key={user.id} value={user.id}>
+                    Me
+                  </SelectItem>
+                )}
+                {assignableUsers
+                  .filter((u) => !isMD || u.id !== user?.id)
+                  .map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          )}
+          {prefillAssignee && (
+            <span className="h-8 inline-flex items-center gap-1.5 rounded-md border border-input bg-muted/30 px-3 text-sm text-muted-foreground shrink-0">
               <User className="h-4 w-4" />
-              <SelectValue placeholder="Assign to" />
-            </SelectTrigger>
-            <SelectContent>
-              {assignableUsers.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.id === user?.id ? "Me" : u.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              {prefillAssignee.name}
+            </span>
+          )}
 
           <Select
             value={projectId ?? "none"}

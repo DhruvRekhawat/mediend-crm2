@@ -126,10 +126,18 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const departmentId = searchParams.get('departmentId')
+    const search = searchParams.get('search')?.trim()
 
     const where: Prisma.EmployeeWhereInput = {}
     if (departmentId) {
       where.departmentId = departmentId
+    }
+    if (search) {
+      where.OR = [
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+        { employeeCode: { contains: search, mode: 'insensitive' } },
+      ]
     }
 
     const employees = await prisma.employee.findMany({

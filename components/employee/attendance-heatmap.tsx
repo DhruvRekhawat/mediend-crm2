@@ -50,9 +50,9 @@ interface AttendanceHeatmapProps {
 }
 
 function formatTime(date: Date | string | null) {
-  if (!date) return 'N/A'
+  if (date == null) return 'N/A'
   const d = typeof date === 'string' ? new Date(date) : date
-  if (isNaN(d.getTime())) return 'N/A'
+  if (typeof d.getTime !== 'function' || isNaN(d.getTime())) return 'N/A'
   return new Intl.DateTimeFormat('en-IN', {
     timeZone: 'UTC',
     hour: '2-digit',
@@ -61,10 +61,18 @@ function formatTime(date: Date | string | null) {
   }).format(d)
 }
 
+function toDate(value: Date | string | null): Date | null {
+  if (value == null) return null
+  const d = typeof value === 'string' ? new Date(value) : value
+  return typeof d.getTime === 'function' && !isNaN(d.getTime()) ? d : null
+}
+
 /** Show "-" when only punch-in exists (no punch-out or entry time === exit time). */
-function getExitTimeDisplay(inTime: Date | null, outTime: Date | null): string {
-  if (!outTime) return '-'
-  if (inTime && outTime.getTime() === inTime.getTime()) return '-'
+function getExitTimeDisplay(inTime: Date | string | null, outTime: Date | string | null): string {
+  const out = toDate(outTime)
+  if (!out) return '-'
+  const inVal = toDate(inTime)
+  if (inVal && out.getTime() === inVal.getTime()) return '-'
   return formatTime(outTime)
 }
 

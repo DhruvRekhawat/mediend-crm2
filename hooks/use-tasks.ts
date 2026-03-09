@@ -126,6 +126,7 @@ export function useCreateTask() {
     mutationFn: (data: CreateTaskInput) => apiPost<Task>("/api/tasks", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["md-team-overview"] })
     },
   })
 }
