@@ -107,6 +107,23 @@ services:
       - tools
     entrypoint: ["bun", "run", "scripts/sync-historic-attendance.ts"]
 
+  # One-off: fix lead circles from MySQL (set circle string from MySQL Circle column)
+  # Usage: docker compose --profile tools run --rm fix-lead-circles
+  # Dry run: docker compose --profile tools run --rm fix-lead-circles -- --dry-run
+  fix-lead-circles:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/fix-lead-circles.ts"]
+
 volumes:
   pgdata:
   uptime-kuma-data:
