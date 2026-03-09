@@ -4,10 +4,19 @@ import { useState } from "react"
 import { Search, UserPlus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useMDTeamOverview, type MDTeamOverviewMember } from "@/hooks/use-md-team"
 import { TeamMemberDetail } from "./team-member-detail"
 import { AddPersonDialog } from "./add-person-dialog"
 import { cn } from "@/lib/utils"
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+  return name.slice(0, 2).toUpperCase() || "?"
+}
 
 export function TeamTab() {
   const [search, setSearch] = useState("")
@@ -60,11 +69,12 @@ export function TeamTab() {
           {search ? "No team members match your search." : "No team members yet. Add people to get started."}
         </div>
       ) : (
-        <div className="divide-y divide-border">
-          {members.map((member) => (
+        <div className="divide-y divide-border rounded-lg overflow-hidden">
+          {members.map((member, index) => (
             <TeamMemberRow
               key={member.id}
               member={member}
+              index={index}
               onClick={() => setSelectedMember(member)}
             />
           ))}
@@ -88,50 +98,63 @@ export function TeamTab() {
 
 function TeamMemberRow({
   member,
+  index,
   onClick,
 }: {
   member: MDTeamOverviewMember
+  index: number
   onClick: () => void
 }) {
   const isIn = member.attendanceStatus === "in"
   const isLeave = member.attendanceStatus === "leave"
+  const isEven = index % 2 === 0
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "min-h-[44px] w-full text-left py-3 px-0 transition-colors active:bg-muted/50",
-        "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation"
+        "min-h-[44px] w-full text-left py-3 px-3 transition-colors active:bg-muted/50",
+        "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation",
+        isEven ? "bg-muted/20" : "bg-background"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{member.name}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {member.designation || member.role || member.department?.name || "—"}
-          </p>
+      <div className="flex items-center gap-3">
+        <Avatar className="size-9 shrink-0">
+          <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
+            {getInitials(member.name)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-[220px]">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-sm truncate">{member.name}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {member.designation || member.role || member.department?.name || "—"}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "shrink-0 rounded px-1.5 py-0.5 text-xs font-medium",
+                isLeave && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
+                isIn && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
+                !isIn && !isLeave && "bg-muted text-muted-foreground"
+              )}
+            >
+              {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
+            </span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-2">
+            <span className="text-xs text-muted-foreground">
+              {member.taskCount} task{member.taskCount !== 1 ? "s" : ""}
+            </span>
+            {member.overdueCount > 0 && (
+              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                {member.overdueCount} overdue
+              </span>
+            )}
+          </div>
         </div>
-        <span
-          className={cn(
-            "shrink-0 rounded px-1.5 py-0.5 text-xs font-medium",
-            isLeave && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
-            isIn && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
-            !isIn && !isLeave && "bg-muted text-muted-foreground"
-          )}
-        >
-          {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
-        </span>
-      </div>
-      <div className="mt-1 flex flex-wrap gap-2">
-        <span className="text-xs text-muted-foreground">
-          {member.taskCount} task{member.taskCount !== 1 ? "s" : ""}
-        </span>
-        {member.overdueCount > 0 && (
-          <span className="text-xs font-medium text-red-600 dark:text-red-400">
-            {member.overdueCount} overdue
-          </span>
-        )}
       </div>
     </button>
   )

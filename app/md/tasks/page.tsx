@@ -48,7 +48,7 @@ export default function MDTasksPage() {
   }, [])
 
   return (
-    <div className="flex flex-col min-h-0 w-full max-w-4xl mx-auto px-2 md:px-0">
+    <div className="flex flex-col min-h-0 w-full max-w-5xl mx-auto px-2 md:px-0">
       <div className="shrink-0 space-y-3 md:space-y-4 pb-3 md:pb-4">
         {!isMobile && (
           <TaskInput
