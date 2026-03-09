@@ -23,15 +23,17 @@ export interface MDTeamOverviewMember {
   source: TeamMemberSource
 }
 
-function requireMDOrAdmin(user: { role: string }) {
-  return user.role === "MD" || user.role === "ADMIN"
-}
-
 export async function GET(request: NextRequest) {
   try {
     const user = getSessionFromRequest(request)
     if (!user) return unauthorizedResponse()
-    if (!requireMDOrAdmin(user)) {
+
+    const employee = await getEmployeeByUserId(user.id)
+    const hasSubordinates = employee
+      ? (await getSubordinates(employee.id, false)).length > 0
+      : false
+    const isManager = user.role === "MD" || user.role === "ADMIN" || hasSubordinates
+    if (!isManager) {
       return errorResponse("Forbidden", 403)
     }
 
