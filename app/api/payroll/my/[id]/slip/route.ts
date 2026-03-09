@@ -64,6 +64,10 @@ export async function GET(
     if (monthlyPayroll && monthlyPayroll.employeeId === employee.id) {
       if (monthlyPayroll.status === 'DRAFT') return errorResponse('Payroll not yet released', 404)
       const lateFines = (monthlyPayroll as { lateFines?: number }).lateFines ?? 0
+      const salaryStructure = await prisma.salaryStructure.findFirst({
+        where: { employeeId: monthlyPayroll.employeeId },
+        orderBy: [{ effectiveFrom: 'desc' }],
+      })
       const doc = new jsPDF()
       const pageW = (doc as unknown as { internal: { pageSize: { getWidth(): number } } }).internal.pageSize.getWidth()
       const logoData = getLogoBase64()
@@ -122,25 +126,31 @@ export async function GET(
       doc.setTextColor(...MEDIEND_TEAL)
       doc.text('EARNINGS', 20, y)
       y += 6
-      const earnings: [string, string][] = [
-        [monthlyPayroll.adjustedBasic, 'Basic Salary'],
-        [monthlyPayroll.adjustedMedical, 'Medical Allow.'],
-        [monthlyPayroll.adjustedConveyance, 'Conveyance Allow.'],
-        [monthlyPayroll.adjustedOther, 'Other Allowance'],
-        [monthlyPayroll.adjustedSpecial, 'Special Allow.'],
+      const adjustedHra = (monthlyPayroll as { adjustedHra?: number }).adjustedHra ?? 0
+      const earningsRows: [string, string, string][] = [
+        ['Basic Salary', salaryStructure?.basicSalary ?? 0, monthlyPayroll.adjustedBasic],
+        ['HRA', salaryStructure?.hraAllowance ?? 0, adjustedHra],
+        ['Medical Allow.', salaryStructure?.medicalAllowance ?? 0, monthlyPayroll.adjustedMedical],
+        ['Conveyance Allow.', salaryStructure?.conveyanceAllowance ?? 0, monthlyPayroll.adjustedConveyance],
+        ['Other Allowance', salaryStructure?.otherAllowance ?? 0, monthlyPayroll.adjustedOther],
+        ['Special Allow.', salaryStructure?.specialAllowance ?? 0, monthlyPayroll.adjustedSpecial],
       ]
-        .filter(([amt]) => (amt as number) > 0)
-        .map(([amt, label]) => [label as string, formatCurrency(amt as number)])
+        .filter(([, fixed, earned]) => (fixed as number) > 0 || (earned as number) > 0)
+        .map(([label, fixed, earned]) => [
+          label as string,
+          formatCurrency(Math.round((fixed as number) || 0)),
+          formatCurrency(Math.round((earned as number) || 0)),
+        ])
       autoTable(doc, {
         startY: y,
-        head: [['Description', 'Amount']],
-        body: earnings,
+        head: [['Description', 'Fixed', 'Earned']],
+        body: earningsRows,
         theme: 'plain',
         headStyles: { fillColor: MEDIEND_TEAL as [number, number, number], fontSize: 9 },
         styles: { fontSize: 9 },
-        columnStyles: { 1: { halign: 'right' } },
+        columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
         margin: { left: 20 },
-        tableWidth: 80,
+        tableWidth: 105,
       })
       y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4
       doc.setFont('helvetica', 'bold')
@@ -172,7 +182,7 @@ export async function GET(
         styles: { fontSize: 9 },
         columnStyles: { 1: { halign: 'right' } },
         margin: { left: 20 },
-        tableWidth: 80,
+        tableWidth: 65,
       })
       y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4
       doc.setFont('helvetica', 'bold')

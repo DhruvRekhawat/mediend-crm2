@@ -21,6 +21,7 @@ const updateEmployeeSchema = z.object({
   panDocUrl: z.string().url().optional().nullable().or(z.literal('')),
   designation: z.string().max(200).optional().nullable(),
   bankAccountNumber: z.string().max(50).optional().nullable(),
+  ifscCode: z.string().max(11).optional().nullable(),
   uanNumber: z.string().max(50).optional().nullable(),
 })
 
@@ -86,11 +87,11 @@ export async function PATCH(
     const data = updateEmployeeSchema.parse(body)
 
     // Finance can only update payroll-related fields
-    const payrollOnlyFields = ['joinDate', 'designation', 'panNumber', 'bankAccountNumber', 'uanNumber']
+    const payrollOnlyFields = ['joinDate', 'designation', 'panNumber', 'bankAccountNumber', 'ifscCode', 'uanNumber']
     if (canWritePayrollDetails && !canWriteFull) {
       const disallowed = Object.keys(data).filter((k) => !payrollOnlyFields.includes(k))
       if (disallowed.length > 0) {
-        return errorResponse('Only payroll details (designation, PAN, bank account, UAN, join date) can be updated', 403)
+        return errorResponse('Only payroll details (designation, PAN, bank account, IFSC, UAN, join date) can be updated', 403)
       }
     }
 
@@ -278,6 +279,7 @@ export async function PATCH(
     if (data.panDocUrl !== undefined) updateData.panDocUrl = data.panDocUrl || null
     if (data.designation !== undefined) updateData.designation = data.designation || null
     if (data.bankAccountNumber !== undefined) updateData.bankAccountNumber = data.bankAccountNumber || null
+    if (data.ifscCode !== undefined) updateData.ifscCode = data.ifscCode || null
     if (data.uanNumber !== undefined) updateData.uanNumber = data.uanNumber || null
 
     const { clearBdNumberCache } = await import('@/lib/sync/bd-number-map')

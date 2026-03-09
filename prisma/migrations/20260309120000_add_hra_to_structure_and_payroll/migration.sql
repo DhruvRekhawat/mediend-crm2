@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "SalaryStructure" ADD COLUMN "hraAllowance" DOUBLE PRECISION NOT NULL DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "MonthlyPayroll" ADD COLUMN "adjustedHra" DOUBLE PRECISION NOT NULL DEFAULT 0;

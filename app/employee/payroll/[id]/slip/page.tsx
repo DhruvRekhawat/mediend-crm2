@@ -20,6 +20,7 @@ interface MonthlyPayrollSlip {
   halfDays: number
   lateFines?: number
   adjustedBasic: number
+  adjustedHra?: number
   adjustedMedical: number
   adjustedConveyance: number
   adjustedOther: number
@@ -206,6 +207,7 @@ export default function PayslipPage() {
                 {isMonthly && m ? (
                   <>
                     {m.adjustedBasic > 0 && <div className="ed-row"><span className="ed-label">Basic Salary</span><span className="ed-value">{formatCurrency(m.adjustedBasic)}</span></div>}
+                    {(m.adjustedHra ?? 0) > 0 && <div className="ed-row"><span className="ed-label">HRA</span><span className="ed-value">{formatCurrency(m.adjustedHra ?? 0)}</span></div>}
                     {m.adjustedMedical > 0 && <div className="ed-row"><span className="ed-label">Medical Allowance</span><span className="ed-value">{formatCurrency(m.adjustedMedical)}</span></div>}
                     {m.adjustedConveyance > 0 && <div className="ed-row"><span className="ed-label">Conveyance Allowance</span><span className="ed-value">{formatCurrency(m.adjustedConveyance)}</span></div>}
                     {m.adjustedOther > 0 && <div className="ed-row"><span className="ed-label">Other Allowance</span><span className="ed-value">{formatCurrency(m.adjustedOther)}</span></div>}

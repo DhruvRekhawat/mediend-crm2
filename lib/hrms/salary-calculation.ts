@@ -10,6 +10,7 @@ export const ESIC_EMPLOYEE_RATE = 0.0075
 
 export interface SalaryBreakup {
   basicSalary: number
+  hraAllowance: number
   medicalAllowance: number
   conveyanceAllowance: number
   otherAllowance: number
@@ -19,6 +20,7 @@ export interface SalaryBreakup {
 
 export interface ProRatedSalary {
   adjustedBasic: number
+  adjustedHra: number
   adjustedMedical: number
   adjustedConveyance: number
   adjustedOther: number
@@ -42,20 +44,22 @@ export function calculateMonthlyGross(annualCtc: number, basicSalary: number, ap
   return monthlyCtc
 }
 
-/** Salary component breakup. Special allowance is the balancing figure. */
+/** Salary component breakup. HRA is typically 50% of basic (editable). Special allowance is the balancing figure. */
 export function calculateSalaryBreakup(
   monthlyGross: number,
   basicSalary: number,
+  hraAllowance: number,
   medicalAllowance: number,
   conveyanceAllowance: number,
   otherAllowance: number
 ): SalaryBreakup {
   const specialAllowance = Math.max(
     0,
-    monthlyGross - (basicSalary + medicalAllowance + conveyanceAllowance + otherAllowance)
+    monthlyGross - (basicSalary + hraAllowance + medicalAllowance + conveyanceAllowance + otherAllowance)
   )
   return {
     basicSalary,
+    hraAllowance,
     medicalAllowance,
     conveyanceAllowance,
     otherAllowance,
@@ -86,22 +90,24 @@ export function proRateComponent(
   return Math.round(amount * ratio)
 }
 
-/** Pro-rate all salary components; adjustedGross = sum of adjusted components (round each then sum). */
+/** Pro-rate all salary components. No rounding on basic/allowances; only payable gross is rounded (mathematical). */
 export function calculateProRatedSalary(
   structure: SalaryBreakup,
   payableDays: number,
   totalDaysInMonth: number
 ): ProRatedSalary {
   const factor = totalDaysInMonth > 0 ? payableDays / totalDaysInMonth : 0
-  const adjustedBasic = Math.round(structure.basicSalary * factor)
-  const adjustedMedical = Math.round(structure.medicalAllowance * factor)
-  const adjustedConveyance = Math.round(structure.conveyanceAllowance * factor)
-  const adjustedOther = Math.round(structure.otherAllowance * factor)
-  const adjustedSpecial = Math.round(structure.specialAllowance * factor)
-  const adjustedGross =
-    adjustedBasic + adjustedMedical + adjustedConveyance + adjustedOther + adjustedSpecial
+  const adjustedBasic = structure.basicSalary * factor
+  const adjustedHra = structure.hraAllowance * factor
+  const adjustedMedical = structure.medicalAllowance * factor
+  const adjustedConveyance = structure.conveyanceAllowance * factor
+  const adjustedOther = structure.otherAllowance * factor
+  const adjustedSpecial = structure.specialAllowance * factor
+  const rawSum = adjustedBasic + adjustedHra + adjustedMedical + adjustedConveyance + adjustedOther + adjustedSpecial
+  const adjustedGross = Math.round(rawSum)
   return {
     adjustedBasic,
+    adjustedHra,
     adjustedMedical,
     adjustedConveyance,
     adjustedOther,
@@ -115,10 +121,10 @@ export function calculateEPF(adjustedBasic: number): number {
   return Math.round(adjustedBasic * EPF_RATE)
 }
 
-/** ESIC employee: 0 if monthly gross > 21,100; else 0.75% of adjusted gross */
+/** ESIC employee: 0 if monthly gross > 21,100; else 0.75% of adjusted gross (rounded up to nearest rupee). */
 export function calculateESIC(adjustedGross: number, monthlyGross: number): number {
   if (monthlyGross > ESIC_GROSS_THRESHOLD) return 0
-  return Math.round(adjustedGross * ESIC_EMPLOYEE_RATE)
+  return Math.ceil(adjustedGross * ESIC_EMPLOYEE_RATE)
 }
 
 /** TDS: when applyTds and tdsRatePercent set, amount = rate% of base (e.g. adjusted gross); else use fixed tdsMonthly */
@@ -133,7 +139,7 @@ export function calculateTDSAmount(
   return Math.round(tdsMonthly)
 }
 
-/** Net payable = adjusted gross - (EPF + ESIC + insurance + TDS) */
+/** Net payable = adjusted gross - (EPF + ESIC + insurance + TDS), rounded mathematically. */
 export function calculateNetPay(
   adjustedGross: number,
   epfEmployee: number,
@@ -142,7 +148,7 @@ export function calculateNetPay(
   tdsAmount: number
 ): number {
   const totalDeductions = epfEmployee + esicAmount + insurance + tdsAmount
-  return Math.max(0, Math.ceil(adjustedGross - totalDeductions))
+  return Math.max(0, Math.round(adjustedGross - totalDeductions))
 }
 
 /** Employer PF: 12% of adjusted basic */

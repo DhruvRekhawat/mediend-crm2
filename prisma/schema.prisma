@@ -702,6 +702,7 @@ model Employee {
   panDocUrl          String?
   designation        String?
   bankAccountNumber  String?
+  ifscCode           String?
   uanNumber          String?
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
@@ -886,6 +887,7 @@ model SalaryStructure {
   annualCtc            Float
   monthlyGross         Float
   basicSalary          Float
+  hraAllowance         Float    @default(0)
   medicalAllowance     Float
   conveyanceAllowance  Float
   otherAllowance       Float    @default(0)
@@ -923,6 +925,7 @@ model MonthlyPayroll {
   halfDays            Int     @default(0)
   lateFines           Float   @default(0)
   adjustedBasic       Float
+  adjustedHra         Float   @default(0)
   adjustedMedical     Float
   adjustedConveyance  Float
   adjustedOther       Float

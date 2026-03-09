@@ -28,7 +28,7 @@ import {
   calculateNetPay,
   isESICApplicableByRule,
 } from '@/lib/hrms/salary-calculation'
-import { Edit, FileText, Search, Users, IndianRupee, Clock } from 'lucide-react'
+import { Edit, FileText, Search, Users, IndianRupee, Clock, Download } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -55,6 +55,7 @@ export default function FinancePayrollPage() {
   const [structureMore, setStructureMore] = useState(false)
   const [structureQueue, setStructureQueue] = useState<Employee[]>([])
   const [selectedPayrollIds, setSelectedPayrollIds] = useState<Set<string>>(new Set())
+  const [exportCsvLoading, setExportCsvLoading] = useState(false)
 
   const { data: employees = [], isLoading: employeesLoading } = useQuery<Employee[]>({
     queryKey: ['employees', departmentFilter],
@@ -142,9 +143,14 @@ export default function FinancePayrollPage() {
     setSalaryStructureDialogOpen(true)
   }
 
+  const employeesToShow = useMemo(() => {
+    if (statusFilter === 'all') return filteredEmployees
+    return filteredEmployees.filter((emp) => payrollByEmployee.has(emp.id))
+  }, [filteredEmployees, payrollByEmployee, statusFilter])
+
   const payrollIdsOnPage = useMemo(
-    () => filteredEmployees.map((e) => payrollByEmployee.get(e.id)?.id).filter(Boolean) as string[],
-    [filteredEmployees, payrollByEmployee]
+    () => employeesToShow.map((e) => payrollByEmployee.get(e.id)?.id).filter(Boolean) as string[],
+    [employeesToShow, payrollByEmployee]
   )
   const allSelected =
     payrollIdsOnPage.length > 0 && payrollIdsOnPage.every((id) => selectedPayrollIds.has(id))
@@ -170,6 +176,35 @@ export default function FinancePayrollPage() {
       else next.add(id)
       return next
     })
+  }
+
+  const handleExportCsv = async () => {
+    if (selectedPayrollIds.size === 0) return
+    setExportCsvLoading(true)
+    try {
+      const ids = Array.from(selectedPayrollIds).join(',')
+      const today = format(new Date(), 'yyyy-MM-dd')
+      const url = `/api/finance/payroll/export-csv?ids=${encodeURIComponent(ids)}&transactionDate=${encodeURIComponent(today)}`
+      const res = await fetch(url, { credentials: 'include' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.message || `Export failed: ${res.status}`)
+      }
+      const blob = await res.blob()
+      const disposition = res.headers.get('Content-Disposition')
+      const filenameMatch = disposition?.match(/filename="?([^"]+)"?/)
+      const filename = filenameMatch?.[1] ?? `payroll-bank-export-${format(new Date(), 'dd-MM-yyyy')}.csv`
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+      toast.success('CSV downloaded')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Failed to export CSV')
+    } finally {
+      setExportCsvLoading(false)
+    }
   }
 
   return (
@@ -300,6 +335,15 @@ export default function FinancePayrollPage() {
           {selectedPayrollIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/50 p-3">
               <span className="text-sm font-medium">{selectedPayrollIds.size} selected</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCsv}
+                disabled={exportCsvLoading}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                {exportCsvLoading ? 'Exporting...' : 'Export for bank (CSV)'}
+              </Button>
               <BulkStatusActions
                 selectedIds={Array.from(selectedPayrollIds)}
                 onDone={() => {
@@ -365,7 +409,7 @@ export default function FinancePayrollPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredEmployees.map((emp, idx) => {
+                {employeesToShow.map((emp, idx) => {
                   const structure = structureByEmployee.get(emp.id)
                   const payroll = payrollByEmployee.get(emp.id)
                   return (
@@ -377,7 +421,7 @@ export default function FinancePayrollPage() {
                           employeeId: emp.id,
                           month: String(month),
                           year: String(year),
-                          queue: filteredEmployees.map((e) => e.id).join(','),
+                          queue: employeesToShow.map((e) => e.id).join(','),
                         })
                         router.push(`/finance/payroll/generate?${params.toString()}`)
                       }}
@@ -434,7 +478,7 @@ export default function FinancePayrollPage() {
                             Structure
                           </Button>
                           <Link
-                            href={`/finance/payroll/generate?employeeId=${emp.id}&month=${month}&year=${year}&queue=${filteredEmployees.map((e) => e.id).join(',')}`}
+                            href={`/finance/payroll/generate?employeeId=${emp.id}&month=${month}&year=${year}&queue=${employeesToShow.map((e) => e.id).join(',')}`}
                             className={buttonVariants({ variant: 'outline', size: 'sm' })}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -446,10 +490,10 @@ export default function FinancePayrollPage() {
                     </TableRow>
                   )
                 })}
-                {filteredEmployees.length === 0 && (
+                {employeesToShow.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      No employees found
+                      {statusFilter !== 'all' ? 'No payroll records with this status' : 'No employees found'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -546,6 +590,7 @@ function BulkStatusActions({
 const defaultStructureFormData = {
   annualCtc: '',
   basicSalary: '15000',
+  hraAllowance: '',
   medicalAllowance: '1500',
   conveyanceAllowance: '2150',
   otherAllowance: '0',
@@ -612,9 +657,11 @@ function SalaryStructureDialog({
         return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
       })[0]
     if (latest) {
+      const hra = (latest as { hraAllowance?: number }).hraAllowance ?? latest.basicSalary * 0.5
       setFormData({
         annualCtc: String(latest.annualCtc),
         basicSalary: String(latest.basicSalary),
+        hraAllowance: String(hra),
         medicalAllowance: String(latest.medicalAllowance),
         conveyanceAllowance: String(latest.conveyanceAllowance),
         otherAllowance: String(latest.otherAllowance),
@@ -645,11 +692,13 @@ function SalaryStructureDialog({
   const monthlyGross = annualCtcNum
     ? (formData.applyPf ? annualCtcNum / 12 - 0.12 * basicNum : annualCtcNum / 12)
     : 0
+  const hraNum = formData.hraAllowance !== '' ? Number(formData.hraAllowance) : basicNum * 0.5
   const other = Number(formData.otherAllowance) || 0
   const specialAllowance = Math.max(
     0,
     monthlyGross -
-      (Number(formData.basicSalary) || 0) -
+      basicNum -
+      hraNum -
       (Number(formData.medicalAllowance) || 0) -
       (Number(formData.conveyanceAllowance) || 0) -
       other
@@ -672,6 +721,7 @@ function SalaryStructureDialog({
       employeeId: employee.id,
       annualCtc,
       basicSalary,
+      hraAllowance: formData.hraAllowance !== '' ? Number(formData.hraAllowance) : basicSalary * 0.5,
       medicalAllowance: Number(formData.medicalAllowance) || 0,
       conveyanceAllowance: Number(formData.conveyanceAllowance) || 0,
       otherAllowance: other,
@@ -732,11 +782,37 @@ function SalaryStructureDialog({
               <Input
                 type="number"
                 value={formData.basicSalary}
-                onChange={(e) => setFormData({ ...formData, basicSalary: e.target.value })}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setFormData((prev) => {
+                    const next = { ...prev, basicSalary: v }
+                    if (prev.hraAllowance === '' || prev.hraAllowance === String((Number(prev.basicSalary) || 0) * 0.5)) {
+                      next.hraAllowance = String(Math.round((Number(v) || 0) * 0.5))
+                    }
+                    return next
+                  })
+                }}
                 min={15000}
                 step={100}
               />
             </div>
+            <div>
+              <Label>HRA (₹) — 50% of basic, editable</Label>
+              <Input
+                type="number"
+                value={formData.hraAllowance === '' ? Math.round(basicNum * 0.5) : formData.hraAllowance}
+                onChange={(e) => setFormData({ ...formData, hraAllowance: e.target.value })}
+                onFocus={() => {
+                  if (formData.hraAllowance === '') {
+                    setFormData((f) => ({ ...f, hraAllowance: String(Math.round(basicNum * 0.5)) }))
+                  }
+                }}
+                min={0}
+                placeholder={`${Math.round(basicNum * 0.5)} (50% of basic)`}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Medical Allowance (₹)</Label>
               <Input
@@ -746,8 +822,6 @@ function SalaryStructureDialog({
                 min={0}
               />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Conveyance Allowance (₹)</Label>
               <Input

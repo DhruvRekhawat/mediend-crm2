@@ -11,6 +11,7 @@ export interface Employee {
   designation: string | null
   panNumber: string | null
   bankAccountNumber: string | null
+  ifscCode: string | null
   uanNumber: string | null
   user: { id: string; name: string; email: string; role: string }
   department: { id: string; name: string } | null
@@ -22,6 +23,7 @@ export interface SalaryStructure {
   annualCtc: number
   monthlyGross: number
   basicSalary: number
+  hraAllowance: number
   medicalAllowance: number
   conveyanceAllowance: number
   otherAllowance: number
@@ -47,6 +49,7 @@ export interface MonthlyPayroll {
   adjustedGross: number
   netPayable: number
   adjustedBasic?: number
+  adjustedHra?: number
   adjustedMedical?: number
   adjustedConveyance?: number
   adjustedOther?: number
@@ -80,5 +83,5 @@ export const MONTHS = [
 ]
 
 export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount)
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.round(amount))
 }

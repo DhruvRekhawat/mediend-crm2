@@ -10,6 +10,7 @@ const createSalaryStructureSchema = z.object({
   employeeId: z.string(),
   annualCtc: z.number().positive(),
   basicSalary: z.number().min(0),
+  hraAllowance: z.number().min(0).optional(),
   medicalAllowance: z.number().min(0).default(1500),
   conveyanceAllowance: z.number().min(0).default(2150),
   otherAllowance: z.number().min(0).default(0),
@@ -78,16 +79,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const data = createSalaryStructureSchema.parse(body)
 
-    const monthlyGross = calculateMonthlyGross(data.annualCtc, data.basicSalary, data.applyPf)
+    const monthlyGrossRaw = calculateMonthlyGross(data.annualCtc, data.basicSalary, data.applyPf)
+    const monthlyGross = Math.round(monthlyGrossRaw)
+    const hraAllowance = data.hraAllowance ?? data.basicSalary * 0.5
     const breakup = calculateSalaryBreakup(
       monthlyGross,
       data.basicSalary,
+      hraAllowance,
       data.medicalAllowance,
       data.conveyanceAllowance,
       data.otherAllowance
     )
     if (breakup.specialAllowance < 0) {
-      return errorResponse('Sum of basic + medical + conveyance + other exceeds monthly gross', 400)
+      return errorResponse('Sum of basic + HRA + medical + conveyance + other exceeds monthly gross', 400)
     }
 
     const structure = await prisma.salaryStructure.create({
@@ -96,6 +100,7 @@ export async function POST(request: NextRequest) {
         annualCtc: data.annualCtc,
         monthlyGross,
         basicSalary: breakup.basicSalary,
+        hraAllowance: breakup.hraAllowance,
         medicalAllowance: breakup.medicalAllowance,
         conveyanceAllowance: breakup.conveyanceAllowance,
         otherAllowance: breakup.otherAllowance,

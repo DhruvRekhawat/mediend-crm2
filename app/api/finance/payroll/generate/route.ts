@@ -46,6 +46,11 @@ export async function POST(request: NextRequest) {
       include: { department: true },
     })
     if (!employee) return errorResponse('Employee not found', 404)
+    const bankTrim = employee.bankAccountNumber?.trim()
+    const panTrim = employee.panNumber?.trim()
+    if (!bankTrim || !panTrim) {
+      return errorResponse('Bank account number and PAN are required to generate payroll', 400)
+    }
     // Department is optional: used only for attendance timing defaults when present
 
     const totalDaysInMonth = getCalendarDaysInMonth(monthNum, yearNum)
@@ -147,6 +152,7 @@ export async function POST(request: NextRequest) {
 
     const breakup: SalaryBreakup = {
       basicSalary: salaryStructure.basicSalary,
+      hraAllowance: (salaryStructure as { hraAllowance?: number }).hraAllowance ?? salaryStructure.basicSalary * 0.5,
       medicalAllowance: salaryStructure.medicalAllowance,
       conveyanceAllowance: salaryStructure.conveyanceAllowance,
       otherAllowance: salaryStructure.otherAllowance,
@@ -158,7 +164,7 @@ export async function POST(request: NextRequest) {
     const epfEmployee = applyPf ? calculateEPF(proRated.adjustedBasic) : 0
     const applyEsic = isESICApplicableByRule(salaryStructure.monthlyGross)
     const esicAmount = applyEsic
-      ? Math.round(proRated.adjustedGross * 0.0075)
+      ? calculateESIC(proRated.adjustedGross, salaryStructure.monthlyGross)
       : 0
     const applyTds = salaryStructure.applyTds
     const tdsAmount = applyTds
@@ -172,7 +178,7 @@ export async function POST(request: NextRequest) {
     const totalDeductions = epfEmployee + esicAmount + insurance + tdsAmount + lateFines
     const netPayable = Math.max(
       0,
-      Math.ceil(proRated.adjustedGross - totalDeductions)
+      Math.round(proRated.adjustedGross - totalDeductions)
     )
     const epfEmployer = applyPf ? calculateEPFEmployer(proRated.adjustedBasic) : 0
 
@@ -188,11 +194,12 @@ export async function POST(request: NextRequest) {
         halfDays,
         lateFines,
         adjustedBasic: proRated.adjustedBasic,
+        adjustedHra: proRated.adjustedHra,
         adjustedMedical: proRated.adjustedMedical,
         adjustedConveyance: proRated.adjustedConveyance,
         adjustedOther: proRated.adjustedOther,
         adjustedSpecial: proRated.adjustedSpecial,
-        adjustedGross: proRated.adjustedGross,
+        adjustedGross: Math.round(proRated.adjustedGross),
         epfEmployee,
         applyEsic,
         esicAmount,

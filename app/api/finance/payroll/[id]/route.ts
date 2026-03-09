@@ -8,6 +8,7 @@ import { z } from 'zod'
 
 const updatePayrollSchema = z.object({
   adjustedBasic: z.number().min(0).optional(),
+  adjustedHra: z.number().min(0).optional(),
   adjustedMedical: z.number().min(0).optional(),
   adjustedConveyance: z.number().min(0).optional(),
   adjustedOther: z.number().min(0).optional(),
@@ -78,7 +79,7 @@ export async function PATCH(
     const body = await request.json()
     const data = updatePayrollSchema.parse(body)
 
-    const adjustedGross = data.adjustedGross ?? existing.adjustedGross
+    const adjustedGross = Math.round(data.adjustedGross ?? existing.adjustedGross)
     const epfEmployee = data.epfEmployee ?? existing.epfEmployee
     const esicAmount = data.applyEsic === false ? 0 : (data.esicAmount ?? existing.esicAmount)
     const applyEsic = data.applyEsic ?? existing.applyEsic
@@ -98,6 +99,7 @@ export async function PATCH(
       where: { id },
       data: {
         ...(data.adjustedBasic != null && { adjustedBasic: data.adjustedBasic }),
+        ...(data.adjustedHra != null && { adjustedHra: data.adjustedHra }),
         ...(data.adjustedMedical != null && { adjustedMedical: data.adjustedMedical }),
         ...(data.adjustedConveyance != null && { adjustedConveyance: data.adjustedConveyance }),
         ...(data.adjustedOther != null && { adjustedOther: data.adjustedOther }),

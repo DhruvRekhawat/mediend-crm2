@@ -32,7 +32,7 @@ import {
 } from '@/lib/finance/payroll-types'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
-import { ArrowLeft, Calendar, CreditCard, Building2, Shield, IndianRupee } from 'lucide-react'
+import { ArrowLeft, Calendar, CreditCard, Building2, Landmark, Shield, IndianRupee } from 'lucide-react'
 
 const CREATE_MORE_STORAGE_KEY = 'payroll-generate-create-more'
 
@@ -152,6 +152,7 @@ export default function GeneratePayrollPage() {
     designation: '',
     panNumber: '',
     bankAccountNumber: '',
+    ifscCode: '',
     uanNumber: '',
     joinDate: '',
   })
@@ -162,6 +163,7 @@ export default function GeneratePayrollPage() {
         designation: employee.designation ?? '',
         panNumber: employee.panNumber ?? '',
         bankAccountNumber: employee.bankAccountNumber ?? '',
+        ifscCode: employee.ifscCode ?? '',
         uanNumber: employee.uanNumber ?? '',
         joinDate: employee.joinDate ? format(new Date(employee.joinDate), 'yyyy-MM-dd') : '',
       })
@@ -169,7 +171,7 @@ export default function GeneratePayrollPage() {
   }, [employee?.id])
 
   const updateEmployeeMutation = useMutation({
-    mutationFn: (data: { designation?: string; panNumber?: string; bankAccountNumber?: string; uanNumber?: string; joinDate?: string }) =>
+    mutationFn: (data: { designation?: string; panNumber?: string; bankAccountNumber?: string; ifscCode?: string; uanNumber?: string; joinDate?: string }) =>
       apiPatch<Employee>(`/api/employees/${employee!.id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] })
@@ -185,6 +187,7 @@ export default function GeneratePayrollPage() {
       designation: employeeDetails.designation.trim() || undefined,
       panNumber: employeeDetails.panNumber.trim() || undefined,
       bankAccountNumber: employeeDetails.bankAccountNumber.trim() || undefined,
+      ifscCode: employeeDetails.ifscCode.trim() || undefined,
       uanNumber: employeeDetails.uanNumber.trim() || undefined,
       joinDate: employeeDetails.joinDate ? new Date(employeeDetails.joinDate).toISOString() : undefined,
     })
@@ -192,6 +195,7 @@ export default function GeneratePayrollPage() {
 
   const [formData, setFormData] = useState({
     adjustedBasic: 0,
+    adjustedHra: 0,
     adjustedMedical: 0,
     adjustedConveyance: 0,
     adjustedOther: 0,
@@ -217,6 +221,7 @@ export default function GeneratePayrollPage() {
     const lateFines = attendanceSummary?.lateFines ?? 0
     const breakup = {
       basicSalary: structure.basicSalary,
+      hraAllowance: structure.hraAllowance ?? structure.basicSalary * 0.5,
       medicalAllowance: structure.medicalAllowance,
       conveyanceAllowance: structure.conveyanceAllowance,
       otherAllowance: structure.otherAllowance,
@@ -239,7 +244,7 @@ export default function GeneratePayrollPage() {
       insurance,
       tdsAmount
     )
-    const netPayable = Math.max(0, Math.ceil(netBeforeLate - lateFines))
+    const netPayable = Math.max(0, Math.round(netBeforeLate - lateFines))
     return {
       ...proRated,
       epfEmployee,
@@ -257,6 +262,7 @@ export default function GeneratePayrollPage() {
     if (existingPayroll) {
       setFormData({
         adjustedBasic: existingPayroll.adjustedBasic ?? 0,
+        adjustedHra: existingPayroll.adjustedHra ?? 0,
         adjustedMedical: existingPayroll.adjustedMedical ?? 0,
         adjustedConveyance: existingPayroll.adjustedConveyance ?? 0,
         adjustedOther: existingPayroll.adjustedOther ?? 0,
@@ -279,6 +285,7 @@ export default function GeneratePayrollPage() {
     if (previewData && !existingPayroll) {
       setFormData({
         adjustedBasic: previewData.adjustedBasic ?? 0,
+        adjustedHra: previewData.adjustedHra ?? 0,
         adjustedMedical: previewData.adjustedMedical ?? 0,
         adjustedConveyance: previewData.adjustedConveyance ?? 0,
         adjustedOther: previewData.adjustedOther ?? 0,
@@ -300,13 +307,16 @@ export default function GeneratePayrollPage() {
   useEffect(() => {
     const sumGross =
       formData.adjustedBasic +
+      formData.adjustedHra +
       formData.adjustedMedical +
       formData.adjustedConveyance +
       formData.adjustedOther +
       formData.adjustedSpecial
-    setFormData((f) => (f.adjustedGross === sumGross ? f : { ...f, adjustedGross: sumGross }))
+    const grossRounded = Math.round(sumGross)
+    setFormData((f) => (f.adjustedGross === grossRounded ? f : { ...f, adjustedGross: grossRounded }))
   }, [
     formData.adjustedBasic,
+    formData.adjustedHra,
     formData.adjustedMedical,
     formData.adjustedConveyance,
     formData.adjustedOther,
@@ -321,7 +331,7 @@ export default function GeneratePayrollPage() {
       formData.insurance +
       (formData.applyTds ? formData.tdsAmount : 0) +
       formData.lateFines
-    const net = Math.max(0, Math.ceil(gross - deductions))
+    const net = Math.max(0, Math.round(gross - deductions))
     setFormData((f) => (f.netPayable === net ? f : { ...f, netPayable: net }))
   }, [
     formData.adjustedGross,
@@ -369,6 +379,7 @@ export default function GeneratePayrollPage() {
   const displayData = hasPayroll
     ? {
         adjustedBasic: formData.adjustedBasic || payroll!.adjustedBasic,
+        adjustedHra: formData.adjustedHra ?? payroll!.adjustedHra ?? 0,
         adjustedMedical: formData.adjustedMedical ?? payroll!.adjustedMedical,
         adjustedConveyance: formData.adjustedConveyance ?? payroll!.adjustedConveyance,
         adjustedOther: formData.adjustedOther ?? payroll!.adjustedOther,
@@ -391,6 +402,12 @@ export default function GeneratePayrollPage() {
       toast.error('Set salary structure first')
       return
     }
+    const bankTrim = employeeDetails.bankAccountNumber?.trim()
+    const panTrim = employeeDetails.panNumber?.trim()
+    if (!bankTrim || !panTrim) {
+      toast.error('Bank account number and PAN are required to generate payroll')
+      return
+    }
     generateMutation.mutate()
   }
 
@@ -398,6 +415,7 @@ export default function GeneratePayrollPage() {
     if (!payroll) return
     updateMutation.mutate({
       adjustedBasic: displayData.adjustedBasic,
+      adjustedHra: displayData.adjustedHra,
       adjustedMedical: displayData.adjustedMedical,
       adjustedConveyance: displayData.adjustedConveyance,
       adjustedOther: displayData.adjustedOther,
@@ -482,7 +500,7 @@ export default function GeneratePayrollPage() {
             <div className="flex items-center gap-3 rounded-lg border p-3">
               <CreditCard className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">PAN number</Label>
+                <Label className="text-xs text-muted-foreground">PAN number (required for payroll)</Label>
                 <Input
                   value={employeeDetails.panNumber}
                   onChange={(e) => setEmployeeDetails((d) => ({ ...d, panNumber: e.target.value.toUpperCase() }))}
@@ -495,12 +513,25 @@ export default function GeneratePayrollPage() {
             <div className="flex items-center gap-3 rounded-lg border p-3">
               <Building2 className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="flex-1 min-w-0">
-                <Label className="text-xs text-muted-foreground">Bank account number</Label>
+                <Label className="text-xs text-muted-foreground">Bank account number (required for payroll)</Label>
                 <Input
                   value={employeeDetails.bankAccountNumber}
                   onChange={(e) => setEmployeeDetails((d) => ({ ...d, bankAccountNumber: e.target.value }))}
                   placeholder="Account number"
                   className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <Landmark className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <Label className="text-xs text-muted-foreground">IFSC code</Label>
+                <Input
+                  value={employeeDetails.ifscCode}
+                  onChange={(e) => setEmployeeDetails((d) => ({ ...d, ifscCode: e.target.value.toUpperCase() }))}
+                  placeholder="e.g. UTIB0001394"
+                  maxLength={11}
+                  className="mt-1 uppercase"
                 />
               </div>
             </div>
@@ -521,7 +552,7 @@ export default function GeneratePayrollPage() {
               <div className="flex flex-1 gap-6 flex-wrap">
                 <div>
                   <Label className="text-xs text-muted-foreground">Monthly gross</Label>
-                  <p className="font-medium">{structure ? formatCurrency(Math.ceil(structure.monthlyGross)) : '—'}</p>
+                  <p className="font-medium">{structure ? formatCurrency(Math.round(structure.monthlyGross)) : '—'}</p>
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Annual CTC</Label>
@@ -618,12 +649,19 @@ export default function GeneratePayrollPage() {
           {!hasStructure && (
             <p className="text-amber-600 text-sm">Configure salary structure first to generate payroll.</p>
           )}
+          {hasStructure && !hasPayroll && (!employeeDetails.bankAccountNumber?.trim() || !employeeDetails.panNumber?.trim()) && (
+            <p className="text-amber-600 text-sm">Bank account number and PAN are required to generate payroll. Update them in the employee details above.</p>
+          )}
             <div className="rounded-lg border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/10 p-4 space-y-4">
               <h3 className="font-semibold text-green-800 dark:text-green-300">Earnings</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <Label>Payable Basic (₹)</Label>
                   <Input type="number" value={displayData.adjustedBasic ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedBasic: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
+                </div>
+                <div>
+                  <Label>Payable HRA (₹)</Label>
+                  <Input type="number" value={displayData.adjustedHra ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedHra: Number(e.target.value) }))} disabled={!canEdit} className="mt-1" />
                 </div>
                 <div>
                   <Label>Payable Medical (₹)</Label>
@@ -643,7 +681,7 @@ export default function GeneratePayrollPage() {
                 </div>
                 <div>
                   <Label>Payable Gross (₹)</Label>
-                  <Input type="number" value={displayData.adjustedGross ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedGross: Number(e.target.value) }))} disabled={!canEdit} className="mt-1 font-bold text-emerald-600" />
+                  <Input type="number" value={displayData.adjustedGross ?? 0} onChange={(e) => setFormData((f) => ({ ...f, adjustedGross: Math.round(Number(e.target.value) || 0) }))} disabled={!canEdit} className="mt-1 font-bold text-emerald-600" step={1} />
                 </div>
               </div>
             </div>
@@ -770,7 +808,10 @@ export default function GeneratePayrollPage() {
 
       <div className="flex flex-wrap gap-2">
         {!hasPayroll && hasStructure && (
-          <Button onClick={handleGenerate} disabled={generateMutation.isPending}>
+          <Button
+            onClick={handleGenerate}
+            disabled={generateMutation.isPending || !employeeDetails.bankAccountNumber?.trim() || !employeeDetails.panNumber?.trim()}
+          >
             {generateMutation.isPending ? 'Generating...' : 'Generate Payroll'}
           </Button>
         )}

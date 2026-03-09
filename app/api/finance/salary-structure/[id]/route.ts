@@ -9,6 +9,7 @@ import { z } from 'zod'
 const updateSalaryStructureSchema = z.object({
   annualCtc: z.number().positive().optional(),
   basicSalary: z.number().min(0).optional(),
+  hraAllowance: z.number().min(0).optional(),
   medicalAllowance: z.number().min(0).optional(),
   conveyanceAllowance: z.number().min(0).optional(),
   otherAllowance: z.number().min(0).optional(),
@@ -72,7 +73,9 @@ export async function PATCH(
     const annualCtc = data.annualCtc ?? existing.annualCtc
     const basicSalary = data.basicSalary ?? existing.basicSalary
     const applyPf = data.applyPf ?? existing.applyPf
-    const monthlyGross = calculateMonthlyGross(annualCtc, basicSalary, applyPf)
+    const monthlyGrossRaw = calculateMonthlyGross(annualCtc, basicSalary, applyPf)
+    const monthlyGross = Math.round(monthlyGrossRaw)
+    const hraAllowance = data.hraAllowance ?? existing.hraAllowance
     const medicalAllowance = data.medicalAllowance ?? existing.medicalAllowance
     const conveyanceAllowance = data.conveyanceAllowance ?? existing.conveyanceAllowance
     const otherAllowance = data.otherAllowance ?? existing.otherAllowance
@@ -80,12 +83,13 @@ export async function PATCH(
     const breakup = calculateSalaryBreakup(
       monthlyGross,
       basicSalary,
+      hraAllowance,
       medicalAllowance,
       conveyanceAllowance,
       otherAllowance
     )
     if (breakup.specialAllowance < 0) {
-      return errorResponse('Sum of basic + medical + conveyance + other exceeds monthly gross', 400)
+      return errorResponse('Sum of basic + HRA + medical + conveyance + other exceeds monthly gross', 400)
     }
 
     const structure = await prisma.salaryStructure.update({
@@ -94,6 +98,7 @@ export async function PATCH(
         ...(data.annualCtc != null && { annualCtc }),
         monthlyGross,
         basicSalary: breakup.basicSalary,
+        hraAllowance: breakup.hraAllowance,
         medicalAllowance: breakup.medicalAllowance,
         conveyanceAllowance: breakup.conveyanceAllowance,
         otherAllowance: breakup.otherAllowance,
