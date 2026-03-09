@@ -7,14 +7,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useTasks } from "@/hooks/use-tasks"
 import { TaskRow } from "./task-row"
 import { TaskInput } from "./task-input"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
-import { PlusCircle } from "lucide-react"
 import { startOfDay } from "date-fns"
 import type { MDTeamOverviewMember } from "@/hooks/use-md-team"
 import { cn } from "@/lib/utils"
@@ -32,11 +30,11 @@ export function TeamMemberDetail({
   onClose,
   onAssignTask,
 }: TeamMemberDetailProps) {
-  const [showAssignInput, setShowAssignInput] = useState(false)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
 
-  const { data: tasks = [], isLoading } = useTasks(
-    member ? { assigneeId: member.id } : undefined
+  const { data: tasks = [], isLoading, isError } = useTasks(
+    member ? { assigneeId: member.id } : undefined,
+    { enabled: !!member }
   )
   const today = startOfDay(new Date())
   const overdueTasks = tasks.filter(
@@ -53,10 +51,6 @@ export function TeamMemberDetail({
       (!t.dueDate || new Date(t.dueDate) >= today)
   )
 
-  const handleAssignSuccess = () => {
-    setShowAssignInput(false)
-  }
-
   if (!member) return null
 
   const isIn = member.attendanceStatus === "in"
@@ -67,12 +61,12 @@ export function TeamMemberDetail({
       <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
         <SheetContent
           side="bottom"
-          className="h-[85vh] max-h-[85dvh] rounded-t-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+          className="h-[85vh] max-h-[85dvh] rounded-t-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] px-4"
         >
-          <SheetHeader className="pb-2">
+          <SheetHeader className="pb-2 px-0">
             <SheetTitle className="text-left">{member.name}</SheetTitle>
           </SheetHeader>
-          <ScrollArea className="flex-1 -mx-6 px-6">
+          <ScrollArea className="flex-1 min-h-0 -mx-4 px-4">
             <div className="space-y-4 pb-6">
               <div className="flex flex-wrap items-center gap-2">
                 <span
@@ -117,7 +111,9 @@ export function TeamMemberDetail({
 
               <section>
                 <h3 className="text-sm font-semibold mb-2">Tasks</h3>
-                {isLoading ? (
+                {isError ? (
+                  <p className="text-xs text-destructive">Failed to load tasks.</p>
+                ) : isLoading ? (
                   <p className="text-xs text-muted-foreground">Loading…</p>
                 ) : otherPending.length === 0 && overdueTasks.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No pending tasks</p>
@@ -135,38 +131,17 @@ export function TeamMemberDetail({
                   </ul>
                 )}
               </section>
-
-              {!showAssignInput ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => setShowAssignInput(true)}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Assign task
-                </Button>
-              ) : (
-                <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-                  <p className="text-xs font-medium">New task for {member.name}</p>
-                  <TaskInput
-                    onSuccess={handleAssignSuccess}
-                    prefillAssignee={{ id: member.id, name: member.name }}
-                    isMD
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowAssignInput(false)}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
             </div>
           </ScrollArea>
+          <div className="shrink-0 -mx-4 border-t-2 border-primary/40 bg-gradient-to-t from-muted to-background px-4 pt-2 pb-[env(safe-area-inset-bottom)]">
+            <TaskInput
+              onSuccess={() => {}}
+              prefillAssignee={{ id: member.id, name: member.name }}
+              isMD
+              bottomAnchored
+              className="w-full min-w-0"
+            />
+          </div>
         </SheetContent>
       </Sheet>
 

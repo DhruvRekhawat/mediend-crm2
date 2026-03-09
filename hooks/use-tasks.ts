@@ -74,7 +74,10 @@ export interface TaskStats {
   employeeWise: { assigneeId: string; assigneeName: string; total: number; completed: number }[]
 }
 
-export function useTasks(params?: TasksQueryParams) {
+export function useTasks(
+  params?: TasksQueryParams,
+  options?: { enabled?: boolean }
+) {
   const searchParams = new URLSearchParams()
   if (params?.assigneeId) searchParams.set("assigneeId", params.assigneeId)
   if (params?.createdById) searchParams.set("createdById", params.createdById)
@@ -85,9 +88,10 @@ export function useTasks(params?: TasksQueryParams) {
   const queryString = searchParams.toString()
 
   return useQuery<Task[]>({
-    queryKey: ["tasks", params],
+    queryKey: ["tasks", params?.assigneeId, params?.createdById, params?.status, params?.startDate, params?.endDate],
     queryFn: () =>
       apiGet<Task[]>(`/api/tasks${queryString ? `?${queryString}` : ""}`),
+    enabled: options?.enabled !== false,
   })
 }
 

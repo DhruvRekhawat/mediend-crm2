@@ -26,8 +26,8 @@ export function TeamTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -52,17 +52,17 @@ export function TeamTab() {
       </div>
 
       {isLoading ? (
-        <div className="py-8 text-center text-sm text-muted-foreground">
+        <div className="py-6 text-center text-sm text-muted-foreground">
           Loading team…
         </div>
       ) : members.length === 0 ? (
-        <div className="py-8 text-center text-sm text-muted-foreground">
+        <div className="py-6 text-center text-sm text-muted-foreground">
           {search ? "No team members match your search." : "No team members yet. Add people to get started."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="divide-y divide-border">
           {members.map((member) => (
-            <TeamMemberCard
+            <TeamMemberRow
               key={member.id}
               member={member}
               onClick={() => setSelectedMember(member)}
@@ -86,7 +86,7 @@ export function TeamTab() {
   )
 }
 
-function TeamMemberCard({
+function TeamMemberRow({
   member,
   onClick,
 }: {
@@ -101,8 +101,8 @@ function TeamMemberCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "min-h-[44px] sm:min-h-[72px] w-full text-left rounded-xl border bg-card p-3 shadow-sm transition-colors active:scale-[0.99]",
-        "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation"
+        "min-h-[44px] w-full text-left py-3 px-0 transition-colors active:bg-muted/50",
+        "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation"
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -112,25 +112,23 @@ function TeamMemberCard({
             {member.designation || member.role || member.department?.name || "—"}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span
-            className={cn(
-              "rounded px-1.5 py-0.5 text-xs font-medium",
-              isLeave && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
-              isIn && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
-              !isIn && !isLeave && "bg-muted text-muted-foreground"
-            )}
-          >
-            {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
-          </span>
-        </div>
+        <span
+          className={cn(
+            "shrink-0 rounded px-1.5 py-0.5 text-xs font-medium",
+            isLeave && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
+            isIn && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
+            !isIn && !isLeave && "bg-muted text-muted-foreground"
+          )}
+        >
+          {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
+        </span>
       </div>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs">
+      <div className="mt-1 flex flex-wrap gap-2">
+        <span className="text-xs text-muted-foreground">
           {member.taskCount} task{member.taskCount !== 1 ? "s" : ""}
         </span>
         {member.overdueCount > 0 && (
-          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-200">
+          <span className="text-xs font-medium text-red-600 dark:text-red-400">
             {member.overdueCount} overdue
           </span>
         )}

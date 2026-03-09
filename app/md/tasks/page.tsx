@@ -11,23 +11,23 @@ import { TeamTab } from "@/components/tasks/team-tab"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const TASKS_TABS: TabItem[] = [
+  { value: "team", label: "Team" },
   { value: "today", label: "Today" },
   { value: "overview", label: "Overview" },
   { value: "calendar", label: "Calendar" },
   { value: "completed", label: "Completed" },
-  { value: "team", label: "Team" },
 ]
 
 const VALID_TABS = new Set(TASKS_TABS.map((t) => t.value))
 
 function getTabFromHash(): string {
-  if (typeof window === "undefined") return "today"
-  const hash = window.location.hash.slice(1) || "today"
-  return VALID_TABS.has(hash) ? hash : "today"
+  if (typeof window === "undefined") return "team"
+  const hash = window.location.hash.slice(1) || "team"
+  return VALID_TABS.has(hash) ? hash : "team"
 }
 
 export default function MDTasksPage() {
-  const [activeTab, setActiveTab] = useState("today")
+  const [activeTab, setActiveTab] = useState("team")
   const isMobile = useIsMobile()
 
   const syncFromHash = useCallback(() => {
@@ -48,7 +48,7 @@ export default function MDTasksPage() {
   }, [])
 
   return (
-    <div className="flex flex-col min-h-0 w-full max-w-4xl mx-auto px-3 md:px-0">
+    <div className="flex flex-col min-h-0 w-full max-w-4xl mx-auto px-2 md:px-0">
       <div className="shrink-0 space-y-3 md:space-y-4 pb-3 md:pb-4">
         {!isMobile && (
           <TaskInput
@@ -64,10 +64,10 @@ export default function MDTasksPage() {
         value={activeTab}
         onValueChange={handleTabChange}
         variant="tasks"
-        className="-mx-3 md:mx-0 px-3 md:px-0"
+        className="-mx-2 md:mx-0 px-2 md:px-0"
       />
 
-      <div className="flex-1 min-h-0 py-3 md:py-4">
+      <div className="flex-1 min-h-0 py-0 md:py-4">
         {activeTab === "today" && <TodayTab />}
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "calendar" && <CalendarTab />}
@@ -76,7 +76,7 @@ export default function MDTasksPage() {
       </div>
 
       {isMobile && (
-        <div className="sticky bottom-0 left-0 right-0 -mx-3 bg-background border-t px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="sticky bottom-16 left-0 right-0 -mx-2 border-t-2 border-primary/40 bg-gradient-to-t from-muted to-background px-0 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           <TaskInput
             onSuccess={() => {}}
             bottomAnchored
