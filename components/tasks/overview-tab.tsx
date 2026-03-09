@@ -3,17 +3,25 @@
 import { useState, useMemo } from "react"
 import { startOfDay } from "date-fns"
 import { useTaskStats, useTasks } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { Progress } from "@/components/ui/progress"
 import { TaskRow } from "./task-row"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
+import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import { ChevronDown, ChevronRight, LayoutGrid, Users } from "lucide-react"
+import type { Task } from "@/hooks/use-tasks"
 
 export function OverviewTab() {
+  const { user } = useAuth()
   const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorDetail } = useTaskStats()
   const { data: tasks = [], isLoading: tasksLoading } = useTasks()
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null)
   const [expandedAssigneeId, setExpandedAssigneeId] = useState<string | null>(null)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+
+  const canMarkComplete = (task: Task) =>
+    !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
 
   const overdueTasks = useMemo(() => {
     const today = startOfDay(new Date())
@@ -88,6 +96,8 @@ export function OverviewTab() {
                 onClick={() => setDetailTaskId(task.id)}
                 showAssignee
                 showProject
+                canMarkComplete={canMarkComplete(task)}
+                onMarkCompleteRequest={() => setTaskToComplete(task)}
               />
             ))}
           </div>
@@ -151,6 +161,8 @@ export function OverviewTab() {
                             onClick={() => setDetailTaskId(task.id)}
                             showAssignee={false}
                             showProject
+                            canMarkComplete={canMarkComplete(task)}
+                            onMarkCompleteRequest={() => setTaskToComplete(task)}
                           />
                         ))
                       )}
@@ -218,6 +230,8 @@ export function OverviewTab() {
                             onClick={() => setDetailTaskId(task.id)}
                             showAssignee
                             showProject={false}
+                            canMarkComplete={canMarkComplete(task)}
+                            onMarkCompleteRequest={() => setTaskToComplete(task)}
                           />
                         ))
                       )}
@@ -236,6 +250,12 @@ export function OverviewTab() {
         open={!!detailTaskId}
         onOpenChange={(open) => !open && setDetailTaskId(null)}
         taskId={detailTaskId}
+      />
+      <MarkCompleteDrawer
+        task={taskToComplete}
+        open={!!taskToComplete}
+        onOpenChange={(open) => !open && setTaskToComplete(null)}
+        onSuccess={() => setTaskToComplete(null)}
       />
     </div>
   )

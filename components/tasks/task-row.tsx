@@ -1,7 +1,7 @@
 "use client"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Flag } from "lucide-react"
+import { Flag, Star } from "lucide-react"
 import { format } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
@@ -20,6 +20,12 @@ interface TaskRowProps {
   onClick?: () => void
   showAssignee?: boolean
   showProject?: boolean
+  /** Only the assigner (creator or MD/ADMIN) can mark complete; if false, checkbox is hidden */
+  canMarkComplete?: boolean
+  /** When user marks complete (and task not yet completed), open drawer to rate; call this instead of updating */
+  onMarkCompleteRequest?: (task: Task) => void
+  /** When true, show star rating for completed tasks */
+  showCompletionRating?: boolean
   className?: string
 }
 
@@ -28,6 +34,9 @@ export function TaskRow({
   onClick,
   showAssignee = true,
   showProject = true,
+  canMarkComplete = true,
+  onMarkCompleteRequest,
+  showCompletionRating = false,
   className,
 }: TaskRowProps) {
   const updateMutation = useUpdateTask()
@@ -35,17 +44,32 @@ export function TaskRow({
 
   const handleToggleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    try {
-      await updateMutation.mutateAsync({
-        id: task.id,
-        data: {
-          status: isCompleted ? "PENDING" : "COMPLETED",
-        },
-      })
-    } catch {
-      // toast handled by mutation
+    if (isCompleted) {
+      try {
+        await updateMutation.mutateAsync({
+          id: task.id,
+          data: { status: "PENDING" },
+        })
+      } catch {
+        // toast handled by mutation
+      }
+      return
+    }
+    if (onMarkCompleteRequest) {
+      onMarkCompleteRequest(task)
+    } else if (canMarkComplete) {
+      try {
+        await updateMutation.mutateAsync({
+          id: task.id,
+          data: { status: "COMPLETED", completionRating: 5, completionComments: null },
+        })
+      } catch {
+        // toast handled by mutation
+      }
     }
   }
+
+  const showCheckbox = canMarkComplete
 
   const dueLabel = task.dueDate
     ? format(new Date(task.dueDate), "MMM d")
@@ -68,13 +92,29 @@ export function TaskRow({
         className
       )}
     >
-      <Checkbox
-        checked={isCompleted}
-        onCheckedChange={() => {}}
-        onClick={handleToggleComplete}
-        aria-label={isCompleted ? "Mark incomplete" : "Mark complete"}
-        className="shrink-0"
-      />
+      {showCheckbox && (
+        <Checkbox
+          checked={isCompleted}
+          onCheckedChange={() => {}}
+          onClick={handleToggleComplete}
+          aria-label={isCompleted ? "Mark incomplete" : "Mark complete"}
+          className="shrink-0"
+        />
+      )}
+      {showCompletionRating && isCompleted && task.completionRating != null && (
+        <div className="flex items-center gap-0.5 shrink-0" aria-label={`Rated ${task.completionRating} out of 5`}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star
+              key={i}
+              className={cn(
+                "h-4 w-4",
+                i <= (task.completionRating ?? 0) ? "fill-yellow-400 text-yellow-500" : "fill-muted text-muted-foreground"
+              )}
+              aria-hidden
+            />
+          ))}
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <span
           className={cn(

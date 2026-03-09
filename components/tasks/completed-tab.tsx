@@ -2,14 +2,20 @@
 
 import { useMemo, useState } from "react"
 import { useTasks } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { TaskRow } from "./task-row"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { format } from "date-fns"
 import { CheckCircle } from "lucide-react"
+import type { Task } from "@/hooks/use-tasks"
 
 export function CompletedTab() {
+  const { user } = useAuth()
   const { data: tasks = [], isLoading } = useTasks()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+
+  const canMarkComplete = (task: Task) =>
+    !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
 
   const completedTasks = useMemo(() => {
     return tasks
@@ -53,6 +59,8 @@ export function CompletedTab() {
               onClick={() => setDetailTaskId(task.id)}
               showAssignee
               showProject
+              showCompletionRating
+              canMarkComplete={canMarkComplete(task)}
             />
             <span className="text-xs text-muted-foreground shrink-0">
               {format(new Date(task.updatedAt), "MMM d")}

@@ -310,6 +310,7 @@ model User {
   // Task Management Relations
   tasksAssigned       Task[]               @relation("TaskAssignee")
   tasksCreated        Task[]               @relation("TaskCreator")
+  tasksCompleted      Task[]               @relation("TaskCompletedBy")
   taskApprovalsRequested TaskDueDateApproval[]
   taskProjectsCreated TaskProject[]       @relation("TaskProjectCreator")
   taskComments        TaskComment[]
@@ -2060,6 +2061,13 @@ model Task {
   createdById String
   createdBy   User         @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
+  // Completion (only set when status = COMPLETED; only assigner can mark complete)
+  completedById    String?
+  completedBy      User?     @relation("TaskCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  completedAt     DateTime?
+  completionRating Int?     // 1-5 stars
+  completionComments String? @db.Text
+
   // Calendar display
   startTime   DateTime?
   endTime     DateTime?
@@ -2078,6 +2086,7 @@ model Task {
 
   @@index([assigneeId])
   @@index([createdById])
+  @@index([completedById])
   @@index([status])
   @@index([dueDate])
   @@index([projectId])

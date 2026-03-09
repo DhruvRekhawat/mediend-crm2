@@ -34,6 +34,8 @@ export interface CalendarTask {
 interface FullCalendarTasksProps {
   events: CalendarTask[]
   onEventClick?: (taskId: string) => void
+  /** When provided, marking a task complete will call this instead of updating directly (to open rating drawer). */
+  onMarkCompleteRequest?: (taskId: string) => void
   onEventDrop?: (
     taskId: string,
     newStart: Date,
@@ -56,6 +58,7 @@ function getTaskDate(task: CalendarTask): Date | null {
 export function FullCalendarTasks({
   events,
   onEventClick,
+  onMarkCompleteRequest,
   onAddTask,
   className,
 }: FullCalendarTasksProps) {
@@ -198,6 +201,7 @@ export function FullCalendarTasks({
                     key={task.id}
                     task={task}
                     onToggleComplete={updateTask}
+                    onMarkCompleteRequest={onMarkCompleteRequest}
                     onClick={() => onEventClick?.(task.id)}
                   />
                 ))}
@@ -224,16 +228,22 @@ export function FullCalendarTasks({
 function UpcomingTaskRow({
   task,
   onToggleComplete,
+  onMarkCompleteRequest,
   onClick,
 }: {
   task: CalendarTask
   onToggleComplete: ReturnType<typeof useUpdateTask>
+  onMarkCompleteRequest?: (taskId: string) => void
   onClick: () => void
 }) {
   const isCompleted = task.status === "COMPLETED"
 
   const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!isCompleted && onMarkCompleteRequest) {
+      onMarkCompleteRequest(task.id)
+      return
+    }
     try {
       await onToggleComplete.mutateAsync({
         id: task.id,

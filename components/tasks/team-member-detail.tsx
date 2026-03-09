@@ -4,11 +4,14 @@ import { useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useTasks } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { TaskRow } from "./task-row"
 import { TaskInput } from "./task-input"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
+import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import { startOfDay } from "date-fns"
 import type { MDTeamOverviewMember } from "@/hooks/use-md-team"
+import type { Task } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
 
 export interface TeamMemberDetailContentProps {
@@ -16,7 +19,12 @@ export interface TeamMemberDetailContentProps {
 }
 
 export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps) {
+  const { user } = useAuth()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+
+  const canMarkComplete = (task: Task) =>
+    !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
 
   const { data: tasks = [], isLoading, isError } = useTasks(
     { assigneeId: member.id },
@@ -82,6 +90,8 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                         task={task}
                         onClick={() => setDetailTaskId(task.id)}
                         showAssignee={false}
+                        canMarkComplete={canMarkComplete(task)}
+                        onMarkCompleteRequest={() => setTaskToComplete(task)}
                       />
                     </li>
                   ))}
@@ -105,6 +115,8 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                         task={task}
                         onClick={() => setDetailTaskId(task.id)}
                         showAssignee={false}
+                        canMarkComplete={canMarkComplete(task)}
+                        onMarkCompleteRequest={() => setTaskToComplete(task)}
                       />
                     </li>
                   ))}
@@ -128,6 +140,12 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
         open={!!detailTaskId}
         onOpenChange={(o) => !o && setDetailTaskId(null)}
         taskId={detailTaskId}
+      />
+      <MarkCompleteDrawer
+        task={taskToComplete}
+        open={!!taskToComplete}
+        onOpenChange={(open) => !open && setTaskToComplete(null)}
+        onSuccess={() => setTaskToComplete(null)}
       />
     </>
   )

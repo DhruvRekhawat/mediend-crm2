@@ -12,6 +12,9 @@ const updateTaskSchema = z.object({
   dueDateChangeReason: z.string().min(1).optional(),
   priority: z.enum(["GENERAL", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
+  /** Required when setting status to COMPLETED (1-5). Only assigner (creator or MD/ADMIN) can mark complete. */
+  completionRating: z.number().int().min(1).max(5).optional(),
+  completionComments: z.string().optional().nullable(),
   projectId: z.string().optional().nullable(),
   startTime: z.string().datetime().optional().nullable(),
   endTime: z.string().datetime().optional().nullable(),
@@ -31,6 +34,7 @@ export async function GET(
     include: {
       assignee: { select: { id: true, name: true, email: true } },
       createdBy: { select: { id: true, name: true } },
+      completedBy: { select: { id: true, name: true } },
       project: { select: { id: true, name: true } },
       approvals: { include: { requestedBy: { select: { id: true, name: true } } } },
     },
@@ -67,10 +71,23 @@ export async function PATCH(
     return errorResponse("Forbidden", 403)
   }
 
+  const canMarkComplete = isMDOrAdmin || isCreator
+
   const body = await request.json()
   const parsed = updateTaskSchema.safeParse(body)
   if (!parsed.success) {
     return errorResponse(parsed.error.message)
+  }
+
+  if (parsed.data.status === "COMPLETED" && !canMarkComplete) {
+    return errorResponse("Only the person who assigned the task can mark it complete", 403)
+  }
+
+  if (parsed.data.status === "COMPLETED") {
+    const rating = parsed.data.completionRating
+    if (rating == null || rating < 1 || rating > 5) {
+      return errorResponse("Completion rating (1-5) is required when marking a task complete", 400)
+    }
   }
 
   // Employees cannot change due date directly; only MD, ADMIN, or task creator can. Others must request with a reason.
@@ -123,11 +140,25 @@ export async function PATCH(
   if (parsed.data.description !== undefined) updateData.description = parsed.data.description
   if (parsed.data.dueDate !== undefined) updateData.dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null
   if (parsed.data.priority !== undefined) updateData.priority = parsed.data.priority
-  if (parsed.data.status !== undefined) updateData.status = parsed.data.status
   if (parsed.data.projectId !== undefined) updateData.projectId = parsed.data.projectId
   if (parsed.data.startTime !== undefined) updateData.startTime = parsed.data.startTime ? new Date(parsed.data.startTime) : null
   if (parsed.data.endTime !== undefined) updateData.endTime = parsed.data.endTime ? new Date(parsed.data.endTime) : null
   if (parsed.data.allDay !== undefined) updateData.allDay = parsed.data.allDay
+
+  if (parsed.data.status !== undefined) {
+    updateData.status = parsed.data.status
+    if (parsed.data.status === "COMPLETED") {
+      updateData.completedById = user.id
+      updateData.completedAt = new Date()
+      updateData.completionRating = parsed.data.completionRating ?? null
+      updateData.completionComments = parsed.data.completionComments?.trim() ?? null
+    } else {
+      updateData.completedById = null
+      updateData.completedAt = null
+      updateData.completionRating = null
+      updateData.completionComments = null
+    }
+  }
 
   const activityLogs: { action: string; details: string | null }[] = []
   if (parsed.data.title !== undefined && parsed.data.title !== task.title) {
@@ -155,6 +186,7 @@ export async function PATCH(
       include: {
         assignee: { select: { id: true, name: true, email: true } },
         createdBy: { select: { id: true, name: true } },
+        completedBy: { select: { id: true, name: true } },
         project: { select: { id: true, name: true } },
       },
     }),

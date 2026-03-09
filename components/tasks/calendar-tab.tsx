@@ -2,8 +2,11 @@
 
 import { useState, useCallback } from "react"
 import { useTasks } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { FullCalendarTasks, type CalendarTask } from "@/components/calendar/full-calendar"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
+import { MarkCompleteDrawer } from "./mark-complete-drawer"
+import type { Task } from "@/hooks/use-tasks"
 
 function taskToCalendarTask(t: {
   id: string
@@ -34,8 +37,10 @@ function taskToCalendarTask(t: {
 }
 
 export function CalendarTab() {
+  const { user } = useAuth()
   const { data: tasks = [], isLoading } = useTasks()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
 
   const events: CalendarTask[] = tasks
     .filter((t) => t.status !== "CANCELLED")
@@ -44,6 +49,11 @@ export function CalendarTab() {
   const handleEventClick = useCallback((taskId: string) => {
     setDetailTaskId(taskId)
   }, [])
+
+  const handleMarkCompleteRequest = useCallback((taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId)
+    if (task) setTaskToComplete(task)
+  }, [tasks])
 
   if (isLoading) {
     return (
@@ -58,12 +68,19 @@ export function CalendarTab() {
       <FullCalendarTasks
         events={events}
         onEventClick={handleEventClick}
+        onMarkCompleteRequest={handleMarkCompleteRequest}
         className="w-full"
       />
       <TaskDetailModal
         open={!!detailTaskId}
         onOpenChange={(open) => !open && setDetailTaskId(null)}
         taskId={detailTaskId}
+      />
+      <MarkCompleteDrawer
+        task={taskToComplete}
+        open={!!taskToComplete}
+        onOpenChange={(open) => !open && setTaskToComplete(null)}
+        onSuccess={() => setTaskToComplete(null)}
       />
     </div>
   )

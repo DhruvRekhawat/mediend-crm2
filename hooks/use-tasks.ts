@@ -25,8 +25,13 @@ export interface Task {
   allDay: boolean
   createdAt: string
   updatedAt: string
+  completedById?: string | null
+  completedAt?: string | null
+  completionRating?: number | null
+  completionComments?: string | null
   assignee?: { id: string; name: string; email: string }
   createdBy?: { id: string; name: string }
+  completedBy?: { id: string; name: string } | null
   project?: { id: string; name: string } | null
 }
 
@@ -143,6 +148,9 @@ export interface UpdateTaskInput {
   dueDateChangeReason?: string
   priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+  /** Required when setting status to COMPLETED (1-5). */
+  completionRating?: number
+  completionComments?: string | null
   projectId?: string | null
   startTime?: string | null
   endTime?: string | null

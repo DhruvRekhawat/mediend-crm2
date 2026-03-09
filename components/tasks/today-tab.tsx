@@ -1,11 +1,12 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { startOfDay, isBefore, isSameDay, format } from "date-fns"
 import { useTasks } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { TaskRow } from "./task-row"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
-import { useState } from "react"
+import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import type { Task } from "@/hooks/use-tasks"
 
 function getTaskDueDate(task: Task): Date | null {
@@ -14,8 +15,13 @@ function getTaskDueDate(task: Task): Date | null {
 }
 
 export function TodayTab() {
+  const { user } = useAuth()
   const { data: tasks = [], isLoading } = useTasks()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+
+  const canMarkComplete = (task: Task) =>
+    !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
 
   const sections = useMemo(() => {
     const now = new Date()
@@ -91,6 +97,8 @@ export function TodayTab() {
                 onClick={() => setDetailTaskId(task.id)}
                 showAssignee
                 showProject
+                canMarkComplete={canMarkComplete(task)}
+                onMarkCompleteRequest={() => setTaskToComplete(task)}
               />
             ))}
           </div>
@@ -117,6 +125,8 @@ export function TodayTab() {
                   onClick={() => setDetailTaskId(task.id)}
                   showAssignee
                   showProject
+                  canMarkComplete={canMarkComplete(task)}
+                  onMarkCompleteRequest={() => setTaskToComplete(task)}
                 />
               ))}
             </div>
@@ -137,6 +147,8 @@ export function TodayTab() {
                 onClick={() => setDetailTaskId(task.id)}
                 showAssignee
                 showProject
+                canMarkComplete={canMarkComplete(task)}
+                onMarkCompleteRequest={() => setTaskToComplete(task)}
               />
             ))}
           </div>
@@ -153,6 +165,12 @@ export function TodayTab() {
         open={!!detailTaskId}
         onOpenChange={(open) => !open && setDetailTaskId(null)}
         taskId={detailTaskId}
+      />
+      <MarkCompleteDrawer
+        task={taskToComplete}
+        open={!!taskToComplete}
+        onOpenChange={(open) => !open && setTaskToComplete(null)}
+        onSuccess={() => setTaskToComplete(null)}
       />
     </div>
   )

@@ -41,6 +41,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { CompletionFeedback } from "@/components/tasks/completion-feedback"
+import { MarkCompleteDrawer } from "@/components/tasks/mark-complete-drawer"
 
 interface TaskDetailModalProps {
   open: boolean
@@ -118,11 +120,19 @@ function TaskDetailContent({
   const [dueDateValue, setDueDateValue] = useState<Date | null>(null)
   const [pendingDueDate, setPendingDueDate] = useState<Date | null>(null)
   const [dueDateChangeReason, setDueDateChangeReason] = useState("")
+  const [showCompletionFeedbackModal, setShowCompletionFeedbackModal] = useState(false)
+  const [hasShownCompletionModal, setHasShownCompletionModal] = useState(false)
 
   const canEditDueDateDirectly =
     !!task &&
     !!user &&
     (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
+  const canMarkComplete = canEditDueDateDirectly
+  const [markCompleteDrawerOpen, setMarkCompleteDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    setHasShownCompletionModal(false)
+  }, [taskId])
 
   useEffect(() => {
     if (task) {
@@ -130,8 +140,18 @@ function TaskDetailContent({
       setStatusValue(task.status)
       setPriorityValue(task.priority)
       setDueDateValue(task.dueDate ? new Date(task.dueDate) : null)
+      if (
+        user &&
+        task.assigneeId === user.id &&
+        task.status === "COMPLETED" &&
+        task.completionRating != null &&
+        !hasShownCompletionModal
+      ) {
+        setShowCompletionFeedbackModal(true)
+        setHasShownCompletionModal(true)
+      }
     }
-  }, [task])
+  }, [task, user, hasShownCompletionModal])
 
   const handleAddComment = async () => {
     const trimmed = commentText.trim()
@@ -147,12 +167,17 @@ function TaskDetailContent({
 
   const handleStatusChange = async (newStatus: string) => {
     if (!task) return
+    if (newStatus === "COMPLETED" && canMarkComplete) {
+      setMarkCompleteDrawerOpen(true)
+      return
+    }
     try {
       await updateTask.mutateAsync({
         id: task.id,
         data: { status: newStatus as UpdateTaskInput["status"] },
       })
       setStatusValue(newStatus)
+      refetchActivity()
     } catch {
       toast.error("Failed to update status")
     }
@@ -278,7 +303,7 @@ function TaskDetailContent({
               onChange={(e) => handleStatusChange(e.target.value)}
               className="text-xs rounded border bg-muted/50 px-2 py-1"
             >
-              {STATUS_OPTIONS.map((o) => (
+              {STATUS_OPTIONS.filter((o) => o.value !== "COMPLETED" || canMarkComplete).map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
@@ -467,6 +492,14 @@ function TaskDetailContent({
               <span>Created by {task.createdBy.name}</span>
             </div>
           )}
+          {task.status === "COMPLETED" && task.completionRating != null && (
+            <CompletionFeedback
+              rating={task.completionRating}
+              comments={task.completionComments}
+              completedBy={task.completedBy}
+              completedAt={task.completedAt}
+            />
+          )}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             <span>Updated {format(new Date(task.updatedAt), "MMM d")}</span>
@@ -474,6 +507,33 @@ function TaskDetailContent({
         </div>
 
         <Separator />
+
+        <MarkCompleteDrawer
+          task={task}
+          open={markCompleteDrawerOpen}
+          onOpenChange={setMarkCompleteDrawerOpen}
+          onSuccess={() => {
+            setStatusValue("COMPLETED")
+            refetchActivity()
+          }}
+        />
+
+        <Dialog open={showCompletionFeedbackModal} onOpenChange={setShowCompletionFeedbackModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Task completed</DialogTitle>
+            </DialogHeader>
+            {task && task.completionRating != null && (
+              <CompletionFeedback
+                rating={task.completionRating}
+                comments={task.completionComments}
+                completedBy={task.completedBy}
+                completedAt={task.completedAt}
+              />
+            )}
+            <Button onClick={() => setShowCompletionFeedbackModal(false)}>Close</Button>
+          </DialogContent>
+        </Dialog>
 
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Activity</h3>
