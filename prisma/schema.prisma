@@ -28,14 +28,6 @@ enum UserRole {
   TESTER
 }
 
-enum Circle {
-  North
-  South
-  East
-  West
-  Central
-}
-
 enum FlowType {
   INSURANCE
   CASH
@@ -334,7 +326,7 @@ model User {
 model Team {
   id          String   @id @default(cuid())
   name        String
-  circle      Circle
+  circle      String   // From MySQL / source (e.g. "PUNE", "Mumbai")
   salesHeadId String
   salesHead   User     @relation("SalesHead", fields: [salesHeadId], references: [id])
   members     User[]   @relation("TeamMembers")
@@ -361,7 +353,7 @@ model Lead {
   status          String
   pipelineStage   PipelineStage @default(SALES)
   caseStage       CaseStage     @default(NEW_LEAD)
-  circle          Circle
+  circle          String        // From MySQL (e.g. "PUNE", "Mumbai")
   city            String
   category        String?
   treatment       String?

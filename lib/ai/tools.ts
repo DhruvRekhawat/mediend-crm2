@@ -5,7 +5,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { Prisma, Circle, PipelineStage } from '@prisma/client'
+import { Prisma, PipelineStage } from '@prisma/client'
 import { SessionUser } from '@/lib/auth'
 import { getTableInfo, getAllTables } from './schema-context'
 
@@ -19,7 +19,7 @@ export function createQueryLeadsTool(user: SessionUser) {
       status: z.string().optional().describe('Lead status filter'),
       pipelineStage: z.enum(['SALES', 'INSURANCE', 'PL', 'COMPLETED', 'LOST']).optional().describe('Pipeline stage'),
       caseStage: z.string().optional().describe('Case stage (NEW_LEAD, KYP_PENDING, etc.)'),
-      circle: z.enum(['North', 'South', 'East', 'West', 'Central']).optional().describe('Circle filter'),
+      circle: z.string().optional().describe('Circle filter (e.g. PUNE, Mumbai)'),
       city: z.string().optional().describe('City filter'),
       bdId: z.string().optional().describe('BD user ID'),
       startDate: z.string().optional().describe('Start date (ISO format)'),
@@ -39,7 +39,7 @@ export function createQueryLeadsTool(user: SessionUser) {
       if (status) where.status = status
       if (pipelineStage) where.pipelineStage = pipelineStage as PipelineStage
       if (caseStage) where.caseStage = caseStage as any
-      if (circle) where.circle = circle as Circle
+      if (circle) where.circle = circle
       if (city) where.city = city
       if (bdId) where.bdId = bdId
 
@@ -102,7 +102,7 @@ export function createQueryAnalyticsTool(user: SessionUser) {
       metric: z.enum(['dashboard', 'leaderboard', 'source-campaign', 'financial', 'trends']).describe('Analytics metric type'),
       startDate: z.string().optional().describe('Start date (ISO format)'),
       endDate: z.string().optional().describe('End date (ISO format)'),
-      circle: z.enum(['North', 'South', 'East', 'West', 'Central']).optional().describe('Circle filter'),
+      circle: z.string().optional().describe('Circle filter (e.g. PUNE, Mumbai)'),
       city: z.string().optional().describe('City filter'),
       groupBy: z.enum(['day', 'week', 'month']).optional().describe('Grouping for trends'),
     }),
@@ -116,7 +116,7 @@ export function createQueryAnalyticsTool(user: SessionUser) {
         conversionDate: dateFilter,
       }
 
-      if (circle) where.circle = circle as Circle
+      if (circle) where.circle = circle
       if (city) where.city = city
 
       // Role-based filtering

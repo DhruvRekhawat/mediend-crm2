@@ -57,7 +57,7 @@ export const navItems: NavItem[] = [
     title: 'Sales Dashboard',
     url: '/md/sales',
     icon: TrendingUp,
-    roles: ['MD', 'ADMIN'],
+    roles: ['MD', 'ADMIN', 'SALES_HEAD'],
   },
   {
     title: 'Finance Dashboard',
@@ -326,6 +326,7 @@ export const navItems: NavItem[] = [
 ]
 
 export function getDashboardUrl(role: string): string {
+  if (role === 'SALES_HEAD') return '/sales/dashboard'
   return '/md/tasks'
 }
 
@@ -365,6 +366,9 @@ function mapItemUrls(items: NavItem[], role: string): (NavItem & { url: string }
   return items.map((item) => {
     if (item.title === 'Dashboard') {
       return { ...item, url: getDashboardUrl(role) }
+    }
+    if (item.title === 'Sales Dashboard' && role === 'SALES_HEAD') {
+      return { ...item, url: '/sales/dashboard' }
     }
     if (item.title === 'Pipeline') {
       if (role === 'BD') return { ...item, url: '/bd/pipeline' }

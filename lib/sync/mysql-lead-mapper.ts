@@ -1,4 +1,4 @@
-import { Circle, PipelineStage, UserRole } from '@prisma/client'
+import { PipelineStage, UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'
@@ -83,7 +83,7 @@ export interface MySQLLeadRow {
  */
 async function findBDByName(name: string): Promise<{
   id: string
-  circle: Circle | null
+  circle: string | null
 } | null> {
   if (!name) return null
 
@@ -187,13 +187,13 @@ async function getDefaultSystemUser(): Promise<string> {
 }
 
 /**
- * Creates a new BD user with default settings
- * Returns the user ID and circle
+ * Creates a new BD user with default settings.
+ * Returns the user ID and circle (from the default team).
  */
 async function createBDUser(
   name: string,
   systemUserId: string
-): Promise<{ id: string; circle: Circle | null }> {
+): Promise<{ id: string; circle: string | null }> {
   // Generate email from name (lowercase, replace spaces with dots, handle special chars)
   const emailBase = name
     .toLowerCase()
@@ -222,7 +222,7 @@ async function createBDUser(
     team = await prisma.team.create({
       data: {
         name: 'Default Team',
-        circle: Circle.North,
+        circle: 'Default',
         salesHeadId: salesHead.id,
       },
     })
@@ -287,29 +287,6 @@ function parseBoolean(value: number | boolean | null | undefined): boolean {
   if (value === null || value === undefined) return false
   if (typeof value === 'boolean') return value
   return value === 1
-}
-
-/**
- * Map MySQL Circle string to Prisma Circle enum
- */
-function mapCircle(circleStr: string | null | undefined): Circle {
-  if (!circleStr) return Circle.North // Default
-  
-  const normalized = circleStr.trim()
-  switch (normalized.toUpperCase()) {
-    case 'NORTH':
-      return Circle.North
-    case 'SOUTH':
-      return Circle.South
-    case 'EAST':
-      return Circle.East
-    case 'WEST':
-      return Circle.West
-    case 'CENTRAL':
-      return Circle.Central
-    default:
-      return Circle.North // Default fallback
-  }
 }
 
 /**
@@ -396,7 +373,7 @@ export async function mapMySQLLeadToPrisma(
   bdId: string
   status: string
   pipelineStage: PipelineStage
-  circle: Circle
+  circle: string
   city: string
   category: string | null
   treatment: string | null
@@ -416,7 +393,7 @@ export async function mapMySQLLeadToPrisma(
   // Determine BDM name - if it's numeric, try BD number map first (from seed-employees-from-json)
   const isNumeric = /^\d+$/.test(bdmValue)
   let bdmName = bdmValue // Default to original value
-  let bdInfo: { id: string; circle: Circle | null } | null = null
+  let bdInfo: { id: string; circle: string | null } | null = null
 
   if (isNumeric) {
     const userIdFromMap = await getUserIdByBdNumber(bdmValue)
@@ -495,7 +472,7 @@ export async function mapMySQLLeadToPrisma(
     bdeName: bdmValue,
     status: normalizeStatus(mysqlRow.Status),
     pipelineStage: PipelineStage.SALES,
-    circle: mysqlRow.Circle ? mapCircle(mysqlRow.Circle) : (bdInfo.circle || Circle.North),
+    circle: mysqlRow.Circle?.trim() || bdInfo.circle || '',
     city: mysqlRow.city_option || 'Not Specified',
     category: toString(mysqlRow.Category),
     treatment: mapTreatmentCode(mysqlRow.Treatment) ?? null,

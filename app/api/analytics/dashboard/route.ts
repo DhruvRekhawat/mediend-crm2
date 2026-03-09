@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Prisma, Circle } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       conversionDate: dateFilter,
     }
 
-    if (circle) where.circle = circle as Circle
+    if (circle) where.circle = circle
     if (city) where.city = city
 
     // Role-based filtering

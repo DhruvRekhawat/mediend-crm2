@@ -61,6 +61,13 @@ function formatTime(date: Date | string | null) {
   }).format(d)
 }
 
+/** Show "-" when only punch-in exists (no punch-out or entry time === exit time). */
+function getExitTimeDisplay(inTime: Date | null, outTime: Date | null): string {
+  if (!outTime) return '-'
+  if (inTime && outTime.getTime() === inTime.getTime()) return '-'
+  return formatTime(outTime)
+}
+
 function getStatusConfig(
   attendanceRecord: AttendanceDay | undefined,
   leaveInfo: LeaveDay | undefined,
@@ -73,7 +80,7 @@ function getStatusConfig(
         status: 'normalized',
         bgColor: 'bg-blue-500',
         textColor: 'text-white',
-        tooltipText: `${dateKey} - Normalized (Full day)\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`,
+        tooltipText: `${dateKey} - Normalized (Full day)\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${getExitTimeDisplay(attendanceRecord.inTime, attendanceRecord.outTime)}`,
       }
     }
     if (attendanceRecord.isPendingNormalization) {
@@ -87,13 +94,13 @@ function getStatusConfig(
         status: 'pending-normalization',
         bgColor: base.bgColor,
         textColor: base.textColor,
-        tooltipText: `${dateKey} - Applied for normalization (pending HR approval)\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`,
+        tooltipText: `${dateKey} - Applied for normalization (pending HR approval)\nEntry: ${formatTime(attendanceRecord.inTime)}\nExit: ${getExitTimeDisplay(attendanceRecord.inTime, attendanceRecord.outTime)}`,
         pendingNormalization: true,
         baseBgColor: base.bgColor,
       }
     }
     const status = attendanceRecord.status
-    const entryExit = `Entry: ${formatTime(attendanceRecord.inTime)}\nExit: ${formatTime(attendanceRecord.outTime)}`
+    const entryExit = `Entry: ${formatTime(attendanceRecord.inTime)}\nExit: ${getExitTimeDisplay(attendanceRecord.inTime, attendanceRecord.outTime)}`
     if (status === 'on-time') {
       return {
         status: 'on-time',

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Prisma, Circle } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const circleMap = new Map<Circle, { totalLeads: number; completed: number; revenue: number; profit: number }>()
+    const circleMap = new Map<string, { totalLeads: number; completed: number; revenue: number; profit: number }>()
     
     circleStats.forEach((stat) => {
       circleMap.set(stat.circle, {
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     const cityMap = new Map<
       string,
       {
-        circle: Circle
+        circle: string
         totalLeads: number
         completed: number
         revenue: number

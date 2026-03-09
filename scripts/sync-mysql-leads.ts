@@ -277,9 +277,10 @@ async function syncOneBatch(
   const leads = await queryMySQL<MySQLLeadRow>(
     `SELECT * FROM lead
      WHERE (Lead_Date >= ? OR (Lead_Date IS NULL AND COALESCE(LeadEntryDate, create_date) >= ?))
+        OR (update_date IS NOT NULL AND update_date >= ?)
      ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC
      LIMIT ?`,
-    [lastSyncedDate, lastSyncedDate, BATCH_SIZE]
+    [lastSyncedDate, lastSyncedDate, lastSyncedDate, BATCH_SIZE]
   )
 
   if (leads.length === 0) return { fetched: 0, maxDate: lastSyncedDate, maxId: null, synced: 0, updated: 0, errors: 0 }
@@ -304,6 +305,7 @@ async function syncOneBatch(
   const leadsToUpdate: Array<{ leadRef: string; data: any }> = []
   const leadDates: Date[] = []
   const leadIds: number[] = []
+  const updateDates: Date[] = []
 
   const processLead = async (mysqlLead: MySQLLeadRow) => {
     try {
@@ -311,6 +313,10 @@ async function syncOneBatch(
       const leadDate = getLeadReceivedDate(mysqlLead)
       leadDates.push(leadDate)
       leadIds.push(mysqlLead.id)
+      if (mysqlLead.update_date) {
+        const ud = new Date(mysqlLead.update_date)
+        if (!isNaN(ud.getTime())) updateDates.push(ud)
+      }
 
       const leadData = await mapMySQLLeadToPrisma(mysqlLead, systemUserId)
       if (!leadData.bdId) { errorCount++; return }
@@ -344,7 +350,11 @@ async function syncOneBatch(
 
   await Promise.allSettled(leads.map((lead) => limit(() => processLead(lead))))
 
-  const maxDate = leadDates.length > 0 ? new Date(Math.max(...leadDates.map(d => d.getTime()))) : lastSyncedDate
+  const allDates = [...leadDates.map((d) => d.getTime()), ...updateDates.map((d) => d.getTime())]
+  const maxDate =
+    allDates.length > 0
+      ? new Date(Math.max(...allDates, lastSyncedDate.getTime()))
+      : lastSyncedDate
   const maxId = leadIds.length > 0 ? Math.max(...leadIds) : null
 
   // Batch create

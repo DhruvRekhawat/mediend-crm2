@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { UserRole, Circle, PipelineStage } from '@prisma/client'
+import { UserRole, PipelineStage } from '@prisma/client'
 import { hashPassword } from '@/lib/auth'
 
 interface IncomingLeadPayload {
@@ -31,7 +31,7 @@ interface IncomingLeadPayload {
  */
 async function findBDByName(name: string): Promise<{
   id: string
-  circle: Circle | null
+  circle: string | null
 } | null> {
   if (!name) return null
 
@@ -126,7 +126,7 @@ async function findBDByName(name: string): Promise<{
 async function createBDUser(
   name: string,
   systemUserId: string
-): Promise<{ id: string; circle: Circle | null }> {
+): Promise<{ id: string; circle: string | null }> {
   // Generate email from name (lowercase, replace spaces with dots)
   const emailBase = name.toLowerCase().replace(/\s+/g, '.')
   let email = `${emailBase}@mediend.local`
@@ -152,7 +152,7 @@ async function createBDUser(
     team = await prisma.team.create({
       data: {
         name: 'Default Team',
-        circle: Circle.North,
+        circle: 'Default',
         salesHeadId: salesHead.id,
       },
     })
@@ -252,7 +252,7 @@ export async function processIncomingLead(
 
     // Find BD user by name
     let bdId: string | null = null
-    let bdCircle: Circle = Circle.North // Default circle
+    let bdCircle: string = ''
     if (bdmName) {
       let bdInfo = await findBDByName(bdmName)
       
@@ -277,7 +277,7 @@ export async function processIncomingLead(
         }
       }
       bdId = bdInfo.id
-      if (bdInfo.circle) {
+      if (bdInfo.circle != null && bdInfo.circle !== '') {
         bdCircle = bdInfo.circle
       }
     } else {
