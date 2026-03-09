@@ -71,6 +71,7 @@ export function TaskInput({
   const [assigneePopoverOpen, setAssigneePopoverOpen] = useState(false)
   const [assigneeSearch, setAssigneeSearch] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   const createMutation = useCreateTask()
   const { data: assignableUsers = [] } = useAssignableUsers()
@@ -149,6 +150,16 @@ export function TaskInput({
     }
   }
 
+  const handleInputFocus = useCallback(() => {
+    if (!bottomAnchored) return
+    const el = wrapperRef.current ?? inputRef.current
+    if (!el) return
+    const scroll = () => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+    requestAnimationFrame(() => setTimeout(scroll, 350))
+  }, [bottomAnchored])
+
   const handleCreateProject = async () => {
     const name = newProjectName.trim()
     if (!name) return
@@ -168,10 +179,11 @@ export function TaskInput({
 
   return (
     <div
+      ref={wrapperRef}
       className={cn(
         "min-w-0 w-full",
         !bottomAnchored && "rounded-lg border bg-background shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-primary/20",
-        bottomAnchored && "bg-transparent focus-within:ring-0",
+        bottomAnchored && "bg-transparent focus-within:ring-0 scroll-mb-[40vh]",
         className
       )}
     >
@@ -182,6 +194,7 @@ export function TaskInput({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={handleInputFocus}
           placeholder="What would you like to do?"
           className="min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
           aria-label="New task title"
