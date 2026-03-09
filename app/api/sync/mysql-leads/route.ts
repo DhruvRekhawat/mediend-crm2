@@ -83,13 +83,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch leads from MySQL. Include rows where Lead_Date is NULL but LeadEntryDate/create_date >= lastSyncedDate.
+    // Fetch leads from MySQL: new leads (by Lead_Date) and existing leads with status/field updates (by update_date).
     const leads = await queryMySQL<MySQLLeadRow>(
-      `SELECT * FROM lead 
+      `SELECT * FROM lead
        WHERE (Lead_Date >= ? OR (Lead_Date IS NULL AND COALESCE(LeadEntryDate, create_date) >= ?))
-       ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC 
+          OR (update_date IS NOT NULL AND update_date >= ?)
+       ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC
        LIMIT ?`,
-      [lastSyncedDate, lastSyncedDate, BATCH_SIZE]
+      [lastSyncedDate, lastSyncedDate, lastSyncedDate, BATCH_SIZE]
     )
 
     if (leads.length === 0) {
@@ -122,10 +123,16 @@ export async function POST(request: NextRequest) {
       try {
         const leadRef = String(mysqlLead.id)
         const leadDate = getLeadReceivedDate(mysqlLead)
+        const updateDate = mysqlLead.update_date
+          ? (() => {
+              const d = new Date(mysqlLead.update_date as string | Date)
+              return !isNaN(d.getTime()) ? d : null
+            })()
+          : null
 
-        if (leadDate > maxDate) {
-          maxDate = leadDate
-        }
+        const candidateDates = [maxDate.getTime(), leadDate.getTime(), ...(updateDate ? [updateDate.getTime()] : [])]
+        const nextMax = new Date(Math.max(...candidateDates))
+        if (nextMax > maxDate) maxDate = nextMax
         if (maxId === null || mysqlLead.id > maxId) {
           maxId = mysqlLead.id
         }

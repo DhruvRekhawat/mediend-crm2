@@ -99,17 +99,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch leads from MySQL for the date range. Include rows where Lead_Date is NULL but fallback date in range.
+    // Fetch leads from MySQL: new in date range or updated in date range (so status updates are synced).
     const endOfRange = new Date(todayIST.getTime() + 24 * 60 * 60 * 1000)
     const leads = await queryMySQL<MySQLLeadRow>(
-      `SELECT * FROM lead 
+      `SELECT * FROM lead
        WHERE (
          (Lead_Date >= ? AND Lead_Date < ?)
          OR (Lead_Date IS NULL AND COALESCE(LeadEntryDate, create_date) >= ? AND COALESCE(LeadEntryDate, create_date) < ?)
+         OR (update_date IS NOT NULL AND update_date >= ? AND update_date < ?)
        )
-       ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC 
+       ORDER BY COALESCE(Lead_Date, LeadEntryDate, create_date) ASC, id ASC
        LIMIT ?`,
-      [syncFromDate, endOfRange, syncFromDate, endOfRange, BATCH_SIZE]
+      [syncFromDate, endOfRange, syncFromDate, endOfRange, syncFromDate, endOfRange, BATCH_SIZE]
     )
 
     console.log(`📥 MySQL query: Found ${leads.length} leads to sync`)

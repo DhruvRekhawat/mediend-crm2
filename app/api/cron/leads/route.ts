@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
 
     const durationMs = Date.now() - startTime;
     const isSuccess = syncResponse.ok;
-    const recordsProcessed = syncData.data?.stats?.created || 0;
+    const d = syncData.data;
+    const recordsProcessed = (d?.synced ?? 0) + (d?.updated ?? 0);
 
     // Log to CronJobLog
     await prisma.cronJobLog.create({
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
         durationMs,
         recordsProcessed,
         message: isSuccess
-          ? `Synced ${recordsProcessed} leads`
+          ? `Synced ${d?.synced ?? 0} new, updated ${d?.updated ?? 0} leads`
           : "Sync failed",
         error: isSuccess ? null : JSON.stringify(syncData),
       },
