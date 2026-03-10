@@ -32,7 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Clock, User, Flag, FolderOpen } from "lucide-react"
+import { CalendarIcon, Clock, User, FolderOpen } from "lucide-react"
+import { PriorityIcon } from "@/components/tasks/priority-icon"
 import { format } from "date-fns"
 import {
   useTask,
@@ -551,7 +552,7 @@ function TaskDetailContent({
             </div>
           )}
           <div className="flex items-center gap-2 text-sm">
-            <Flag className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <PriorityIcon priority={priorityValue} className="h-4 w-4 shrink-0 text-muted-foreground" />
             <select
               value={priorityValue}
               onChange={(e) => handlePriorityChange(e.target.value)}

@@ -2,7 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Flag } from "lucide-react"
+import { PriorityIcon } from "./priority-icon"
 import { format } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
@@ -146,9 +146,9 @@ export function TaskRow({
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {task.priority && task.priority !== "GENERAL" && (
-          <Flag
+          <PriorityIcon
+            priority={task.priority}
             className={cn("h-4 w-4", PRIORITY_COLORS[task.priority] ?? "text-muted-foreground")}
-            aria-hidden
           />
         )}
         {dueLabel && (

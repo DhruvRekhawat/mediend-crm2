@@ -23,13 +23,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   CalendarIcon,
   ChevronRight,
-  Flag,
   FolderPlus,
   User,
   X,
   Search,
   Check,
 } from "lucide-react"
+import { PriorityIcon } from "./priority-icon"
 import { format } from "date-fns"
 import { useAuth } from "@/hooks/use-auth"
 import { getAvatarColor } from "@/lib/avatar-colors"
@@ -202,25 +202,30 @@ export function MobileTaskDrawer({
     label,
     value,
     accent,
+    disabled = false,
     onClick,
   }: {
     icon: React.ElementType
     label: string
     value?: string | null
     accent?: boolean
+    disabled?: boolean
     onClick: () => void
   }) => (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "flex min-h-[52px] w-full items-center gap-4 border-b border-border py-4 px-4 text-left text-base touch-manipulation active:bg-muted/50",
+        "flex min-h-[52px] w-full items-center gap-4 border-b border-border py-4 px-4 text-left text-base touch-manipulation",
+        !disabled && "active:bg-muted/50",
+        disabled && "cursor-default",
         accent && "text-primary font-medium"
       )}
     >
       <Icon className="h-6 w-6 shrink-0 text-muted-foreground" aria-hidden />
       <span className="min-w-0 flex-1 truncate">{value ?? label}</span>
-      <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
+      {!disabled && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />}
     </button>
   )
 
@@ -268,15 +273,17 @@ export function MobileTaskDrawer({
                 />
               </div>
 
-              {!prefillAssignee && (
-                <RowButton
-                  icon={User}
-                  label="Add assignees"
-                  value={effectiveAssigneeId ? selectedAssigneeName : undefined}
-                  accent={!!effectiveAssigneeId}
-                  onClick={() => setPickerOpen("assignee")}
-                />
-              )}
+              <RowButton
+                icon={User}
+                label="Add assignees"
+                value={effectiveAssigneeId ? selectedAssigneeName : undefined}
+                accent={!!effectiveAssigneeId}
+                disabled={!!prefillAssignee}
+                onClick={() => {
+                  if (prefillAssignee) return
+                  setPickerOpen("assignee")
+                }}
+              />
               <RowButton
                 icon={CalendarIcon}
                 label="Set dates"
@@ -285,7 +292,16 @@ export function MobileTaskDrawer({
                 onClick={() => setPickerOpen("date")}
               />
               <RowButton
-                icon={Flag}
+                icon={({ className }) => (
+                  <PriorityIcon
+                    priority={priority ?? "MEDIUM"}
+                    className={cn(
+                      "h-6 w-6 shrink-0",
+                      (priority ?? "MEDIUM") !== "MEDIUM" ? priorityColorMap[priority ?? "MEDIUM"] : "text-muted-foreground",
+                      className
+                    )}
+                  />
+                )}
                 label="Priority"
                 value={selectedPriority?.label}
                 accent={(priority ?? "MEDIUM") !== "MEDIUM"}
@@ -316,7 +332,11 @@ export function MobileTaskDrawer({
 
       {/* Assignee picker */}
       <Sheet open={pickerOpen === "assignee"} onOpenChange={(o) => !o && setPickerOpen(null)}>
-        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0">
+        <SheetContent
+          side="right"
+          className="w-full max-w-full sm:max-w-full flex flex-col p-0"
+          onOpenAutoFocus={(event) => event.preventDefault()}
+        >
           <SheetHeader className="border-b px-4 py-4">
             <SheetTitle className="text-xl font-semibold pr-8">Assignees</SheetTitle>
           </SheetHeader>
@@ -448,7 +468,7 @@ export function MobileTaskDrawer({
                   setPickerOpen(null)
                 }}
               >
-                <Flag className={cn("h-5 w-5 shrink-0", priorityColorMap[p.value] ?? "text-muted-foreground")} />
+                <PriorityIcon priority={p.value} className={cn("h-5 w-5 shrink-0", priorityColorMap[p.value] ?? "text-muted-foreground")} />
                 <span className={cn("flex-1", priorityColorMap[p.value] ?? "text-muted-foreground")}>{p.label}</span>
                 {priority === p.value && <Check className="h-5 w-5 shrink-0 text-primary" />}
               </button>

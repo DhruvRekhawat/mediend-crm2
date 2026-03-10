@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { getSessionFromRequest } from "@/lib/session"
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
-import { getEmployeeByUserId, getSubordinates } from "@/lib/hierarchy"
+import { getEmployeeByUserId, getSubordinates, isUserInMDManagedCohort } from "@/lib/hierarchy"
 import { z } from "zod"
 
 const createTaskSchema = z.object({
@@ -98,13 +98,26 @@ export async function POST(request: NextRequest) {
   const assigneeId = parsed.data.assigneeId ?? user.id
 
   if (assigneeId !== user.id) {
+    const assignee = await prisma.user.findUnique({
+      where: { id: assigneeId },
+      select: { role: true },
+    })
+    if (assignee?.role === "MD" || assignee?.role === "ADMIN") {
+      return errorResponse("Tasks cannot be assigned to MD or Admin accounts", 403)
+    }
+
     const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
     let canAssign = isMDOrAdmin
     if (!canAssign) {
-      const employee = await getEmployeeByUserId(user.id)
-      if (employee) {
-        const subordinates = await getSubordinates(employee.id, false)
-        canAssign = subordinates.some((s) => s.userId === assigneeId)
+      const inCohort = await isUserInMDManagedCohort(user.id)
+      if (inCohort) {
+        canAssign = true
+      } else {
+        const employee = await getEmployeeByUserId(user.id)
+        if (employee) {
+          const subordinates = await getSubordinates(employee.id, false)
+          canAssign = subordinates.some((s) => s.userId === assigneeId)
+        }
       }
     }
     if (!canAssign) {

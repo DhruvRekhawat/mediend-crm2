@@ -56,10 +56,15 @@ export function useBackClose(
   const unregisterRef = useRef<(() => void) | null>(null)
   const pushedRef = useRef(false)
   const closedByBackRef = useRef(false)
+  const onOpenChangeRef = useRef(onOpenChange)
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange
+  }, [onOpenChange])
 
   // When open becomes true: push state and register. When open becomes false: unregister and maybe history.back().
   useEffect(() => {
-    if (open !== true || typeof onOpenChange !== "function" || !ctx) return
+    if (open !== true || typeof onOpenChangeRef.current !== "function" || !ctx) return
 
     closedByBackRef.current = false
     window.history.pushState({ backClose: true }, "")
@@ -67,7 +72,7 @@ export function useBackClose(
 
     unregisterRef.current = ctx.register(() => {
       closedByBackRef.current = true
-      onOpenChange(false)
+      onOpenChangeRef.current?.(false)
     })
 
     return () => {
@@ -78,7 +83,7 @@ export function useBackClose(
       }
       pushedRef.current = false
     }
-  }, [open, onOpenChange, ctx])
+  }, [open, ctx])
 
   // Cleanup if component unmounts while open
   useEffect(() => {

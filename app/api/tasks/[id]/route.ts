@@ -166,7 +166,7 @@ export async function PATCH(
       updateData.grade = null
       updateData.completionComments = null
       updateData.rejectionCount = (task.rejectionCount ?? 0) + 1
-    } else if (parsed.data.status !== "COMPLETED") {
+    } else {
       updateData.completedById = null
       updateData.completedAt = null
       updateData.grade = null

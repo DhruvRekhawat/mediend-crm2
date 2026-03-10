@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 // Select no longer used — Priority & Project use Popover
-import { CalendarIcon, Flag, User, FolderPlus, SendHorizonal, Search, Check, X } from "lucide-react"
+import { CalendarIcon, User, FolderPlus, SendHorizonal, Search, Check, X } from "lucide-react"
+import { PriorityIcon } from "./priority-icon"
 import { format } from "date-fns"
 import { useAuth } from "@/hooks/use-auth"
 import {
@@ -303,7 +304,7 @@ export function TaskInput({
               size="icon"
               className={cn("h-8 w-8 shrink-0", priorityColorMap[priority ?? "MEDIUM"] ?? "text-muted-foreground")}
             >
-              <Flag className="h-4 w-4" />
+              <PriorityIcon priority={priority ?? "MEDIUM"} className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-36 p-1" align="start">
@@ -317,7 +318,7 @@ export function TaskInput({
                 )}
                 onClick={() => setPriority(p.value as CreateTaskInput["priority"])}
               >
-                <Flag className={cn("h-3.5 w-3.5", p.color)} />
+                <PriorityIcon priority={p.value} className={cn("h-3.5 w-3.5", p.color)} />
                 <span className={cn(p.color)}>{p.label}</span>
               </button>
             ))}
