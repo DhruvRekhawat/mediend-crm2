@@ -155,8 +155,8 @@ export interface UpdateTaskInput {
   dueDateChangeReason?: string
   priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
   status?: "PENDING" | "IN_PROGRESS" | "EMPLOYEE_DONE" | "COMPLETED" | "CANCELLED"
-  /** Required when setting status to COMPLETED. */
-  grade?: "A+" | "A" | "B+" | "B" | "C"
+  /** Required when setting status to COMPLETED. 1-5 numeric rating. */
+  grade?: "1" | "2" | "3" | "4" | "5"
   completionComments?: string | null
   projectId?: string | null
   startTime?: string | null

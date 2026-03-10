@@ -103,6 +103,14 @@ const ACTIVITY_LABELS: Record<string, string> = {
   PROJECT_CHANGED: "Project changed",
 }
 
+const ACTIVITY_COLORS: Record<string, { border: string; bg: string; icon: string }> = {
+  TITLE_CHANGED: { border: "border-blue-200 dark:border-blue-800", bg: "bg-blue-50/60 dark:bg-blue-950/30", icon: "text-blue-600 dark:text-blue-400" },
+  DUE_DATE_CHANGED: { border: "border-purple-200 dark:border-purple-800", bg: "bg-purple-50/60 dark:bg-purple-950/30", icon: "text-purple-600 dark:text-purple-400" },
+  PRIORITY_CHANGED: { border: "border-orange-200 dark:border-orange-800", bg: "bg-orange-50/60 dark:bg-orange-950/30", icon: "text-orange-600 dark:text-orange-400" },
+  STATUS_CHANGED: { border: "border-emerald-200 dark:border-emerald-800", bg: "bg-emerald-50/60 dark:bg-emerald-950/30", icon: "text-emerald-600 dark:text-emerald-400" },
+  PROJECT_CHANGED: { border: "border-violet-200 dark:border-violet-800", bg: "bg-violet-50/60 dark:bg-violet-950/30", icon: "text-violet-600 dark:text-violet-400" },
+}
+
 function formatActivityDetails(action: string, details: string | null): string {
   if (!details) return ""
   if (action === "DUE_DATE_CHANGED") {
@@ -638,15 +646,15 @@ function TaskDetailContent({
         {canReviewTask && task.assigneeId && (() => {
           const overdue = task.dueDate && new Date(task.dueDate) < new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
           const rejected = (task.rejectionCount ?? 0) >= 2
-          const gradeC = task.grade === "C"
-          if (overdue || rejected || gradeC) {
+          const lowRating = task.grade && parseInt(task.grade) <= 2
+          if (overdue || rejected || lowRating) {
             return (
               <div className="rounded-lg border border-muted bg-muted/30 p-2">
                 <p className="text-xs font-medium text-muted-foreground">Consider issuing a warning</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {overdue && "Task overdue by more than 3 days."}
                   {rejected && " Task rejected multiple times."}
-                  {gradeC && " Task completed with grade C."}
+                  {lowRating && ` Task completed with low rating (${task.grade}/5).`}
                 </p>
                 <Button size="sm" variant="outline" className="mt-2" onClick={() => setIssueWarningOpen(true)}>
                   Issue warning
@@ -690,20 +698,23 @@ function TaskDetailContent({
           ) : (
             <ScrollArea className="max-h-[200px]">
               <ul className="space-y-2 text-sm md:text-xs">
-                {activity.map((a) => (
-                  <li key={a.id} className="flex flex-col gap-0.5 rounded-md border border-border bg-background/50 px-2 py-1.5">
-                    <span className="font-medium text-foreground">
-                      {ACTIVITY_LABELS[a.action] ?? a.action}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {a.user.name}
-                      {a.details ? ` · ${formatActivityDetails(a.action, a.details)}` : ""}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {format(new Date(a.createdAt), "MMM d, HH:mm")}
-                    </span>
-                  </li>
-                ))}
+                {activity.map((a) => {
+                  const colors = ACTIVITY_COLORS[a.action] ?? { border: "border-border", bg: "bg-background/50", icon: "text-muted-foreground" }
+                  return (
+                    <li key={a.id} className={cn("flex flex-col gap-0.5 rounded-md border-l-2 px-2.5 py-1.5", colors.border, colors.bg)}>
+                      <span className={cn("font-semibold", colors.icon)}>
+                        {ACTIVITY_LABELS[a.action] ?? a.action}
+                      </span>
+                      <span className="text-foreground/80">
+                        {a.user.name}
+                        {a.details ? ` · ${formatActivityDetails(a.action, a.details)}` : ""}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {format(new Date(a.createdAt), "MMM d, HH:mm")}
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
             </ScrollArea>
           )}

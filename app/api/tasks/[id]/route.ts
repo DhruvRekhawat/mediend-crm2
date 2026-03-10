@@ -13,7 +13,7 @@ const updateTaskSchema = z.object({
   priority: z.enum(["GENERAL", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   status: z.enum(["PENDING", "IN_PROGRESS", "EMPLOYEE_DONE", "COMPLETED", "CANCELLED"]).optional(),
   /** Required when setting status to COMPLETED. Only manager (creator or MD/ADMIN) can approve. */
-  grade: z.enum(["A+", "A", "B+", "B", "C"]).optional(),
+  grade: z.enum(["1", "2", "3", "4", "5"]).optional(),
   completionComments: z.string().optional().nullable(),
   projectId: z.string().optional().nullable(),
   startTime: z.string().datetime().optional().nullable(),
@@ -90,8 +90,8 @@ export async function PATCH(
   }
   if (parsed.data.status === "COMPLETED") {
     const grade = parsed.data.grade
-    if (!grade || !["A+", "A", "B+", "B", "C"].includes(grade)) {
-      return errorResponse("Grade (A+, A, B+, B, or C) is required when approving a task", 400)
+    if (!grade || !["1", "2", "3", "4", "5"].includes(grade)) {
+      return errorResponse("Rating (1-5) is required when approving a task", 400)
     }
   }
   if (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE" && !canReviewTask) {

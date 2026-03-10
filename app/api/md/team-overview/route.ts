@@ -18,6 +18,8 @@ export interface MDTeamOverviewMember {
   department: { id: string; name: string } | null
   taskCount: number
   overdueCount: number
+  averageRating: number | null
+  extensionRequests: number
   attendanceStatus: AttendanceStatus
   inTime: string | null
   source: TeamMemberSource
@@ -161,6 +163,42 @@ export async function GET(request: NextRequest) {
       overdueCountMap.set(r.assigneeId, r._count.id)
     }
 
+    // Average rating per assignee (completed tasks with numeric grades)
+    const completedWithGrades = await prisma.task.findMany({
+      where: {
+        assigneeId: { in: userIds },
+        status: "COMPLETED",
+        grade: { not: null },
+      },
+      select: { assigneeId: true, grade: true },
+    })
+    const ratingMap = new Map<string, { sum: number; count: number }>()
+    for (const t of completedWithGrades) {
+      const num = parseInt(t.grade!)
+      if (isNaN(num) || num < 1 || num > 5) continue
+      const existing = ratingMap.get(t.assigneeId) ?? { sum: 0, count: 0 }
+      existing.sum += num
+      existing.count += 1
+      ratingMap.set(t.assigneeId, existing)
+    }
+    const avgRatingMap = new Map<string, number>()
+    for (const [uid, { sum, count }] of ratingMap) {
+      avgRatingMap.set(uid, Math.round((sum / count) * 10) / 10)
+    }
+
+    // Extension requests per assignee
+    const extensionRequests = await prisma.taskDueDateApproval.groupBy({
+      by: ["requestedById"],
+      where: {
+        requestedById: { in: userIds },
+      },
+      _count: { id: true },
+    })
+    const extensionCountMap = new Map<string, number>()
+    for (const r of extensionRequests) {
+      extensionCountMap.set(r.requestedById, r._count.id)
+    }
+
     // Today's attendance
     const todayAttendance = await prisma.attendanceLog.findMany({
       where: {
@@ -216,6 +254,8 @@ export async function GET(request: NextRequest) {
         department: employee.department,
         taskCount: taskCountMap.get(userId) ?? 0,
         overdueCount: overdueCountMap.get(userId) ?? 0,
+        averageRating: avgRatingMap.get(userId) ?? null,
+        extensionRequests: extensionCountMap.get(userId) ?? 0,
         attendanceStatus: att.status,
         inTime: att.inTime,
         source,

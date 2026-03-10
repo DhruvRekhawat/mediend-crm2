@@ -1,12 +1,12 @@
 "use client"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import { PriorityIcon } from "./priority-icon"
 import { format } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
+import { Star } from "lucide-react"
 
 const PRIORITY_COLORS: Record<string, string> = {
   GENERAL: "text-muted-foreground",
@@ -16,12 +16,32 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: "text-red-600",
 }
 
-const GRADE_CLASS: Record<string, string> = {
-  "A+": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
-  "A": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  "B+": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  "B": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
-  "C": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+const RATING_COLORS: Record<string, string> = {
+  "1": "text-red-500",
+  "2": "text-orange-500",
+  "3": "text-amber-500",
+  "4": "text-emerald-500",
+  "5": "text-emerald-600",
+}
+
+function RatingStars({ grade }: { grade: string }) {
+  const num = parseInt(grade)
+  if (isNaN(num) || num < 1 || num > 5) return null
+  return (
+    <div className="flex items-center gap-0.5 shrink-0">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={cn(
+            "h-3 w-3",
+            s <= num
+              ? cn("fill-current", RATING_COLORS[grade])
+              : "text-muted-foreground/20"
+          )}
+        />
+      ))}
+    </div>
+  )
 }
 
 interface TaskRowProps {
@@ -29,13 +49,9 @@ interface TaskRowProps {
   onClick?: () => void
   showAssignee?: boolean
   showProject?: boolean
-  /** True if current user is the task assignee */
   isAssignee?: boolean
-  /** True if current user can review/approve (manager) */
   canMarkComplete?: boolean
-  /** When manager clicks to review EMPLOYEE_DONE task, open review drawer */
   onMarkCompleteRequest?: (task: Task) => void
-  /** When true, show grade badge for completed tasks */
   showCompletionRating?: boolean
   className?: string
 }
@@ -114,15 +130,8 @@ export function TaskRow({
           className="shrink-0"
         />
       )}
-      {isEmployeeDone && canMarkComplete && (
-        <Badge variant="secondary" className="shrink-0 text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
-          Pending review
-        </Badge>
-      )}
       {showCompletionRating && isCompleted && task.grade && (
-        <Badge variant="secondary" className={cn("shrink-0 text-xs", GRADE_CLASS[task.grade] ?? "bg-muted")}>
-          {task.grade}
-        </Badge>
+        <RatingStars grade={task.grade} />
       )}
       <div className="min-w-0 flex-1">
         <span

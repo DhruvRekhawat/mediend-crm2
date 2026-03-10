@@ -5,7 +5,6 @@ import { format } from "date-fns"
 import { Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTaskApprovals, useApproveTaskDueDate, useTasks, type Task } from "@/hooks/use-tasks"
-import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { TaskRow } from "./task-row"
 import { getTaskCardClass } from "./task-card-class"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
@@ -17,7 +16,6 @@ export function ApprovalTab() {
     { enabled: true }
   )
   const approveMutation = useApproveTaskDueDate()
-  const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
 
   if (isLoading) {
@@ -55,13 +53,9 @@ export function ApprovalTab() {
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1 space-y-1">
-                    <button
-                      type="button"
-                      onClick={() => setDetailTaskId(approval.task.id)}
-                      className="text-left font-medium text-base md:text-sm hover:underline focus:outline-none focus:underline"
-                    >
+                    <p className="text-left font-medium text-base md:text-sm">
                       {approval.task.title}
-                    </button>
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       Requested by {approval.requestedBy.name}
                       {approval.task.assignee && (
@@ -126,7 +120,7 @@ export function ApprovalTab() {
           Tasks pending review ({pendingReviewTasks.length})
         </h2>
         <p className="text-sm text-muted-foreground mb-3">
-          Employees marked these as done. Review and rate to approve or reject.
+          Employees marked these as done. Tap to review and rate.
         </p>
         {loadingReview ? (
           <div className="py-4 text-center text-sm text-muted-foreground">
@@ -142,12 +136,11 @@ export function ApprovalTab() {
               <div key={task.id} className={getTaskCardClass(task)}>
                 <TaskRow
                   task={task}
-                  onClick={() => setDetailTaskId(task.id)}
+                  onClick={() => setTaskToComplete(task)}
                   showAssignee
                   showProject
                   isAssignee={false}
-                  canMarkComplete={true}
-                  onMarkCompleteRequest={() => setTaskToComplete(task)}
+                  canMarkComplete={false}
                   showCompletionRating={false}
                 />
               </div>
@@ -162,11 +155,6 @@ export function ApprovalTab() {
         </p>
       )}
 
-      <TaskDetailModal
-        open={!!detailTaskId}
-        onOpenChange={(open) => !open && setDetailTaskId(null)}
-        taskId={detailTaskId}
-      />
       <MarkCompleteDrawer
         task={taskToComplete}
         open={!!taskToComplete}

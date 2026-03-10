@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { Star } from "lucide-react"
 
 interface CompletionFeedbackProps {
   grade: string
@@ -8,16 +9,47 @@ interface CompletionFeedbackProps {
   completedBy?: { id: string; name: string } | null
   completedAt?: string | null
   className?: string
-  /** When true, show in a compact single-line style */
   compact?: boolean
 }
 
-const GRADE_COLORS: Record<string, string> = {
-  "A+": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
-  "A": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  "B+": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  "B": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
-  "C": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+const RATING_COLORS: Record<string, string> = {
+  "1": "text-red-500",
+  "2": "text-orange-500",
+  "3": "text-amber-500",
+  "4": "text-emerald-500",
+  "5": "text-emerald-600",
+}
+
+const RATING_LABELS: Record<string, string> = {
+  "1": "Poor",
+  "2": "Below average",
+  "3": "Average",
+  "4": "Good",
+  "5": "Excellent",
+}
+
+function RatingStars({ grade, size = "sm" }: { grade: string; size?: "sm" | "md" }) {
+  const num = parseInt(grade)
+  if (isNaN(num) || num < 1 || num > 5) return null
+  const iconClass = size === "md" ? "h-4 w-4" : "h-3.5 w-3.5"
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={cn(
+            iconClass,
+            s <= num
+              ? cn("fill-current", RATING_COLORS[grade])
+              : "text-muted-foreground/20"
+          )}
+        />
+      ))}
+      <span className={cn("ml-1.5 text-xs font-medium", RATING_COLORS[grade])}>
+        {RATING_LABELS[grade]}
+      </span>
+    </div>
+  )
 }
 
 export function CompletionFeedback({
@@ -28,23 +60,13 @@ export function CompletionFeedback({
   className,
   compact = false,
 }: CompletionFeedbackProps) {
-  if (!grade || !["A+", "A", "B+", "B", "C"].includes(grade)) return null
-
-  const gradeBadge = (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
-        GRADE_COLORS[grade] ?? "bg-muted text-muted-foreground"
-      )}
-    >
-      {grade}
-    </span>
-  )
+  const num = parseInt(grade)
+  if (isNaN(num) || num < 1 || num > 5) return null
 
   if (compact) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
-        {gradeBadge}
+        <RatingStars grade={grade} size="sm" />
         {comments && (
           <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={comments}>
             {comments}
@@ -58,7 +80,7 @@ export function CompletionFeedback({
     <div className={cn("rounded-lg border bg-muted/30 p-3 space-y-2", className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium">Completion feedback</span>
-        {gradeBadge}
+        <RatingStars grade={grade} size="md" />
       </div>
       {comments && (
         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{comments}</p>

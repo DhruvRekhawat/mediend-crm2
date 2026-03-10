@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Search, UserPlus, AlertTriangle } from "lucide-react"
+import { Search, UserPlus, AlertTriangle, Star, ArrowUpRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -18,6 +18,38 @@ function getInitials(name: string): string {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
   return name.slice(0, 2).toUpperCase() || "?"
+}
+
+const TEAM_CARD_COLORS = [
+  "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/30 dark:border-l-blue-400",
+  "border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 dark:border-l-emerald-400",
+  "border-l-violet-500 bg-violet-50/50 dark:bg-violet-950/30 dark:border-l-violet-400",
+  "border-l-rose-500 bg-rose-50/50 dark:bg-rose-950/30 dark:border-l-rose-400",
+  "border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/30 dark:border-l-amber-400",
+  "border-l-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/30 dark:border-l-cyan-400",
+  "border-l-pink-500 bg-pink-50/50 dark:bg-pink-950/30 dark:border-l-pink-400",
+  "border-l-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 dark:border-l-indigo-400",
+] as const
+
+function getTeamCardColor(name: string): string {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return TEAM_CARD_COLORS[Math.abs(hash) % TEAM_CARD_COLORS.length]
+}
+
+const STAR_COLOR: Record<number, string> = {
+  1: "text-red-500",
+  2: "text-orange-500",
+  3: "text-amber-500",
+  4: "text-emerald-500",
+  5: "text-emerald-600",
+}
+
+function getStarColor(rating: number): string {
+  const rounded = Math.round(rating)
+  return STAR_COLOR[Math.min(5, Math.max(1, rounded))] ?? "text-amber-500"
 }
 
 export function TeamTab() {
@@ -80,12 +112,11 @@ export function TeamTab() {
           {search ? "No team members match your search." : "No team members yet. Add people to get started."}
         </div>
       ) : (
-        <div className="divide-y divide-border rounded-lg overflow-hidden">
-          {members.map((member, index) => (
-            <TeamMemberRow
+        <div className="grid gap-3 mt-4">
+          {members.map((member) => (
+            <TeamMemberCard
               key={member.id}
               member={member}
-              index={index}
               warningCount={warningsByUserId[member.id] ?? 0}
               onClick={() => router.push(`/md/tasks/team/${member.id}`)}
             />
@@ -98,29 +129,26 @@ export function TeamTab() {
   )
 }
 
-function TeamMemberRow({
+function TeamMemberCard({
   member,
-  index,
   warningCount,
   onClick,
 }: {
   member: MDTeamOverviewMember
-  index: number
   warningCount: number
   onClick: () => void
 }) {
   const isIn = member.attendanceStatus === "in"
   const isLeave = member.attendanceStatus === "leave"
-  const isEven = index % 2 === 0
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "min-h-[44px] w-full text-left py-3 px-3 transition-colors active:bg-muted/50",
-        "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation",
-        isEven ? "bg-muted/20" : "bg-background"
+        "rounded-lg border border-l-4 shadow-sm w-full text-left p-3 transition-colors",
+        "hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation active:opacity-90",
+        getTeamCardColor(member.name)
       )}
     >
       <div className="flex items-center gap-3">
@@ -129,7 +157,7 @@ function TeamMemberRow({
             {getInitials(member.name)}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-[220px]">
+        <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <p className="font-medium text-base md:text-sm truncate">{member.name}</p>
@@ -148,7 +176,7 @@ function TeamMemberRow({
               {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
             </span>
           </div>
-          <div className="mt-1 flex flex-wrap gap-2 items-center">
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 items-center">
             <span
               className={cn(
                 "text-sm md:text-xs",
@@ -163,10 +191,22 @@ function TeamMemberRow({
                 {member.overdueCount} overdue
               </span>
             )}
+            {member.averageRating != null && (
+              <span className={cn("inline-flex items-center gap-0.5 text-sm md:text-xs font-medium", getStarColor(member.averageRating))}>
+                <Star className="h-3 w-3 fill-current" />
+                {member.averageRating.toFixed(1)}
+              </span>
+            )}
+            {member.extensionRequests > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-sm md:text-xs text-violet-600 dark:text-violet-400">
+                <ArrowUpRight className="h-3 w-3" />
+                {member.extensionRequests} ext.
+              </span>
+            )}
             {warningCount > 0 && (
               <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200">
                 <AlertTriangle className="h-3.5 w-3.5" />
-                {warningCount} warning{warningCount !== 1 ? "s" : ""}
+                {warningCount}
               </span>
             )}
           </div>
