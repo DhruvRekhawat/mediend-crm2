@@ -18,6 +18,7 @@ export interface MDTeamOverviewMember {
   department: { id: string; name: string } | null
   taskCount: number
   overdueCount: number
+  completedCount: number
   averageRating: number | null
   extensionRequests: number
   attendanceStatus: AttendanceStatus
@@ -154,13 +155,25 @@ export async function GET(request: NextRequest) {
       },
       _count: { id: true },
     })
+    const completedByAssignee = await prisma.task.groupBy({
+      by: ["assigneeId"],
+      where: {
+        assigneeId: { in: userIds },
+        status: "COMPLETED",
+      },
+      _count: { id: true },
+    })
     const taskCountMap = new Map<string, number>()
     const overdueCountMap = new Map<string, number>()
+    const completedCountMap = new Map<string, number>()
     for (const r of tasksByAssignee) {
       taskCountMap.set(r.assigneeId, r._count.id)
     }
     for (const r of overdueByAssignee) {
       overdueCountMap.set(r.assigneeId, r._count.id)
+    }
+    for (const r of completedByAssignee) {
+      completedCountMap.set(r.assigneeId, r._count.id)
     }
 
     // Average rating per assignee (completed tasks with numeric grades)
@@ -199,13 +212,13 @@ export async function GET(request: NextRequest) {
       extensionCountMap.set(r.requestedById, r._count.id)
     }
 
-    // Today's attendance
+    // Today's attendance: IN/OUT based on *last* punch of the day (last punch IN = still in, last punch OUT = out)
     const todayAttendance = await prisma.attendanceLog.findMany({
       where: {
         employeeId: { in: employeeIds },
         logDate: { gte: todayStart, lte: todayEnd },
       },
-      orderBy: { logDate: "asc" },
+      orderBy: { logDate: "desc" },
     })
     const todayLeaves = await prisma.leaveRequest.findMany({
       where: {
@@ -223,11 +236,14 @@ export async function GET(request: NextRequest) {
         attendanceByEmployeeId.set(empId, { status: "leave", inTime: null })
         continue
       }
-      const firstPunch = todayAttendance.find((a) => a.employeeId === empId)
-      if (firstPunch) {
+      const empLogs = todayAttendance.filter((a) => a.employeeId === empId)
+      const lastPunch = empLogs[0]
+      const firstInPunch = empLogs.find((a) => a.punchDirection === "IN")
+      if (lastPunch) {
+        const isIn = lastPunch.punchDirection === "IN"
         attendanceByEmployeeId.set(empId, {
-          status: "in",
-          inTime: firstPunch.logDate.toISOString(),
+          status: isIn ? "in" : "out",
+          inTime: firstInPunch ? firstInPunch.logDate.toISOString() : null,
         })
       } else {
         attendanceByEmployeeId.set(empId, { status: "out", inTime: null })
@@ -254,6 +270,7 @@ export async function GET(request: NextRequest) {
         department: employee.department,
         taskCount: taskCountMap.get(userId) ?? 0,
         overdueCount: overdueCountMap.get(userId) ?? 0,
+        completedCount: completedCountMap.get(userId) ?? 0,
         averageRating: avgRatingMap.get(userId) ?? null,
         extensionRequests: extensionCountMap.get(userId) ?? 0,
         attendanceStatus: att.status,

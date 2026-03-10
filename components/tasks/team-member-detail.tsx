@@ -1,26 +1,39 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Plus, AlertTriangle, Star, ArrowUpRight, Crown, Users } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useTasks, useWarnings, useTaskApprovals } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { TaskRow } from "./task-row"
-import { getTaskCardClass } from "./task-card-class"
 import { TaskInput } from "./task-input"
 import { MobileTaskDrawer } from "./mobile-task-drawer"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import { IssueWarningDialog } from "./issue-warning-dialog"
-import { startOfDay, format } from "date-fns"
+import { startOfDay, format, differenceInDays } from "date-fns"
 import type { MDTeamOverviewMember } from "@/hooks/use-md-team"
 import type { Task } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
 import { getAvatarColor } from "@/lib/avatar-colors"
+
+/** Team member detail: red for overdue, yellow for on-time (no priority-based colour) */
+function getTeamDetailTaskCardClass(isOverdue: boolean): string {
+  const base = "rounded-lg border border-l-4 bg-card shadow-sm overflow-hidden mb-2"
+  return isOverdue
+    ? cn(base, "border-l-red-500 bg-red-50/50")
+    : cn(base, "border-l-amber-400 bg-amber-50/40")
+}
+
+function getOverdueDays(task: Task, today: Date): number {
+  if (!task.dueDate) return 0
+  const due = new Date(task.dueDate)
+  return Math.max(0, differenceInDays(today, due))
+}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
@@ -64,6 +77,7 @@ export interface TeamMemberDetailContentProps {
 }
 
 export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps) {
+  const router = useRouter()
   const { user } = useAuth()
   const isMobile = useIsMobile()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
@@ -185,6 +199,21 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
           </div>
         </header>
 
+        {/* Issue warning button at top */}
+        {canIssueWarning && (
+          <div className="flex justify-end mb-4">
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-amber-700 border-amber-300 hover:bg-amber-50"
+              onClick={() => setIssueWarningOpen(true)}
+            >
+              <AlertTriangle className="h-4 w-4 mr-1.5 shrink-0" />
+              Issue warning
+            </Button>
+          </div>
+        )}
+
         <ScrollArea className="flex-1 min-h-0 -mx-2 px-2">
           <div className="space-y-4 pb-6">
             {/* Warnings */}
@@ -211,36 +240,39 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
               </section>
             )}
 
-            {/* Extension Requests */}
+            {/* Extension Requests - pink, click navigates to approval tab */}
             {extensionRequests.length > 0 && (
-              <section className="rounded-xl border border-l-4 border-l-violet-500 bg-violet-50/80 dark:bg-violet-950/30 p-3">
-                <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-violet-800 dark:text-violet-200">
+              <section className="rounded-xl border border-l-4 border-l-pink-500 bg-pink-50/80 p-3">
+                <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-pink-800">
                   <ArrowUpRight className="h-4 w-4 shrink-0" />
                   Extension Requests ({extensionRequests.length})
                 </h2>
                 <ul className="space-y-1.5">
                   {extensionRequests.map((a) => (
-                    <li
-                      key={a.id}
-                      className="rounded-md bg-violet-100/60 dark:bg-violet-900/20 px-2.5 py-1.5 text-sm"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-violet-900 dark:text-violet-100 truncate">{a.task.title}</span>
-                        <span className={cn(
-                          "shrink-0 rounded px-1.5 py-0.5 text-xs font-medium",
-                          a.status === "PENDING" && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
-                          a.status === "APPROVED" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200",
-                          a.status === "REJECTED" && "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200"
-                        )}>
-                          {a.status.charAt(0) + a.status.slice(1).toLowerCase()}
-                        </span>
-                      </div>
-                      <p className="text-xs text-violet-700/80 dark:text-violet-300/80 mt-0.5">
-                        {a.oldDueDate ? format(new Date(a.oldDueDate), "MMM d") : "No date"}
-                        {" → "}
-                        {a.newDueDate ? format(new Date(a.newDueDate), "MMM d") : "No date"}
-                        {a.reason && ` · ${a.reason}`}
-                      </p>
+                    <li key={a.id}>
+                      <button
+                        type="button"
+                        onClick={() => router.push("/md/tasks#approval")}
+                        className="w-full text-left rounded-md bg-pink-100/60 hover:bg-pink-200/60 px-2.5 py-1.5 text-sm transition-colors"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-pink-900 truncate">{a.task.title}</span>
+                          <span className={cn(
+                            "shrink-0 rounded px-1.5 py-0.5 text-xs font-medium",
+                            a.status === "PENDING" && "bg-amber-100 text-amber-800",
+                            a.status === "APPROVED" && "bg-emerald-100 text-emerald-800",
+                            a.status === "REJECTED" && "bg-red-100 text-red-800"
+                          )}>
+                            {a.status.charAt(0) + a.status.slice(1).toLowerCase()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-pink-700/90 mt-0.5">
+                          {a.oldDueDate ? format(new Date(a.oldDueDate), "MMM d") : "No date"}
+                          {" → "}
+                          {a.newDueDate ? format(new Date(a.newDueDate), "MMM d") : "No date"}
+                          {a.reason && ` · ${a.reason}`}
+                        </p>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -264,26 +296,32 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                 <div className="space-y-1.5">
                   {overdueMdTasks.length > 0 && (
                     <div className="mb-2">
-                      <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Overdue</p>
+                      <p className="text-xs font-medium text-red-600 mb-1">Overdue</p>
                       <ul className="space-y-1.5">
-                        {overdueMdTasks.map((task) => (
-                          <li key={task.id} className={getTaskCardClass(task, { isOverdue: true })}>
-                            <TaskRow
-                              task={task}
-                              onClick={() => setDetailTaskId(task.id)}
-                              showAssignee={false}
-                              isAssignee={task.assigneeId === user?.id}
-                              canMarkComplete={canMarkComplete(task)}
-                              onMarkCompleteRequest={() => setTaskToComplete(task)}
-                            />
-                          </li>
-                        ))}
+                        {overdueMdTasks.map((task) => {
+                          const daysOverdue = getOverdueDays(task, today)
+                          return (
+                            <li key={task.id} className={getTeamDetailTaskCardClass(true)}>
+                              <p className="text-xs text-red-600 px-2 pt-1.5 pb-0.5 font-medium">
+                                {daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue
+                              </p>
+                              <TaskRow
+                                task={task}
+                                onClick={() => setDetailTaskId(task.id)}
+                                showAssignee={false}
+                                isAssignee={task.assigneeId === user?.id}
+                                canMarkComplete={canMarkComplete(task)}
+                                onMarkCompleteRequest={() => setTaskToComplete(task)}
+                              />
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   )}
                   <ul className="space-y-1.5">
                     {onTimeMdTasks.map((task) => (
-                      <li key={task.id} className={getTaskCardClass(task, { isOverdue: false })}>
+                      <li key={task.id} className={getTeamDetailTaskCardClass(false)}>
                         <TaskRow
                           task={task}
                           onClick={() => setDetailTaskId(task.id)}
@@ -317,26 +355,32 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                 <div className="space-y-1.5">
                   {overdueTeamTasks.length > 0 && (
                     <div className="mb-2">
-                      <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">Overdue</p>
+                      <p className="text-xs font-medium text-red-600 mb-1">Overdue</p>
                       <ul className="space-y-1.5">
-                        {overdueTeamTasks.map((task) => (
-                          <li key={task.id} className={getTaskCardClass(task, { isOverdue: true })}>
-                            <TaskRow
-                              task={task}
-                              onClick={() => setDetailTaskId(task.id)}
-                              showAssignee={false}
-                              isAssignee={task.assigneeId === user?.id}
-                              canMarkComplete={canMarkComplete(task)}
-                              onMarkCompleteRequest={() => setTaskToComplete(task)}
-                            />
-                          </li>
-                        ))}
+                        {overdueTeamTasks.map((task) => {
+                          const daysOverdue = getOverdueDays(task, today)
+                          return (
+                            <li key={task.id} className={getTeamDetailTaskCardClass(true)}>
+                              <p className="text-xs text-red-600 px-2 pt-1.5 pb-0.5 font-medium">
+                                {daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue
+                              </p>
+                              <TaskRow
+                                task={task}
+                                onClick={() => setDetailTaskId(task.id)}
+                                showAssignee={false}
+                                isAssignee={task.assigneeId === user?.id}
+                                canMarkComplete={canMarkComplete(task)}
+                                onMarkCompleteRequest={() => setTaskToComplete(task)}
+                              />
+                            </li>
+                          )
+                        })}
                       </ul>
                     </div>
                   )}
                   <ul className="space-y-1.5">
                     {onTimeTeamTasks.map((task) => (
-                      <li key={task.id} className={getTaskCardClass(task, { isOverdue: false })}>
+                      <li key={task.id} className={getTeamDetailTaskCardClass(false)}>
                         <TaskRow
                           task={task}
                           onClick={() => setDetailTaskId(task.id)}
@@ -352,21 +396,6 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                 </div>
               )}
             </section>
-
-            {/* Issue warning button */}
-            {canIssueWarning && (
-              <div className="flex justify-end">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-amber-700 border-amber-300 hover:bg-amber-50 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-950/30"
-                  onClick={() => setIssueWarningOpen(true)}
-                >
-                  <AlertTriangle className="h-4 w-4 mr-1.5 shrink-0" />
-                  Issue warning
-                </Button>
-              </div>
-            )}
           </div>
         </ScrollArea>
 

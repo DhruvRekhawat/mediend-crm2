@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Search, UserPlus, AlertTriangle, Star, ArrowUpRight } from "lucide-react"
+import { Search, UserPlus, Star, ArrowUpRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -18,25 +18,6 @@ function getInitials(name: string): string {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
   }
   return name.slice(0, 2).toUpperCase() || "?"
-}
-
-const TEAM_CARD_COLORS = [
-  "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/30 dark:border-l-blue-400",
-  "border-l-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 dark:border-l-emerald-400",
-  "border-l-violet-500 bg-violet-50/50 dark:bg-violet-950/30 dark:border-l-violet-400",
-  "border-l-rose-500 bg-rose-50/50 dark:bg-rose-950/30 dark:border-l-rose-400",
-  "border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/30 dark:border-l-amber-400",
-  "border-l-cyan-500 bg-cyan-50/50 dark:bg-cyan-950/30 dark:border-l-cyan-400",
-  "border-l-pink-500 bg-pink-50/50 dark:bg-pink-950/30 dark:border-l-pink-400",
-  "border-l-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 dark:border-l-indigo-400",
-] as const
-
-function getTeamCardColor(name: string): string {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return TEAM_CARD_COLORS[Math.abs(hash) % TEAM_CARD_COLORS.length]
 }
 
 const STAR_COLOR: Record<number, string> = {
@@ -112,7 +93,7 @@ export function TeamTab() {
           {search ? "No team members match your search." : "No team members yet. Add people to get started."}
         </div>
       ) : (
-        <div className="grid gap-3 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           {members.map((member) => (
             <TeamMemberCard
               key={member.id}
@@ -146,72 +127,87 @@ function TeamMemberCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-lg border border-l-4 shadow-sm w-full text-left p-3 transition-colors",
-        "hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation active:opacity-90",
-        getTeamCardColor(member.name)
+        "rounded-xl border bg-card shadow-sm w-full text-center transition-colors",
+        "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation active:opacity-90",
+        "flex flex-col items-stretch p-4"
       )}
     >
-      <div className="flex items-center gap-3">
-        <Avatar className="size-9 shrink-0">
-          <AvatarFallback className={cn("font-medium text-sm", getAvatarColor(member.name).bg, getAvatarColor(member.name).text)}>
+      {/* Avatar centered at top */}
+      <div className="flex justify-center mb-3">
+        <Avatar className="size-14 shrink-0">
+          <AvatarFallback
+            className={cn(
+              "font-semibold text-base text-white",
+              getAvatarColor(member.name).bg,
+              getAvatarColor(member.name).text
+            )}
+          >
             {getInitials(member.name)}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-base md:text-sm truncate">{member.name}</p>
-              <p className="text-sm md:text-xs text-muted-foreground truncate">
-                {member.designation || member.role || member.department?.name || "—"}
-              </p>
-            </div>
-            <span
-              className={cn(
-                "shrink-0 rounded px-1.5 py-0.5 text-xs font-medium",
-                isLeave && "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
-                isIn && "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200",
-                !isIn && !isLeave && "bg-muted text-muted-foreground"
-              )}
-            >
-              {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
-            </span>
-          </div>
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 items-center">
-            <span
-              className={cn(
-                "text-sm md:text-xs",
-                member.taskCount === 0 && "text-green-600 dark:text-green-400",
-                member.taskCount > 0 && "text-amber-600 dark:text-amber-400 font-medium"
-              )}
-            >
-              {member.taskCount} task{member.taskCount !== 1 ? "s" : ""}
-            </span>
-            {member.overdueCount > 0 && (
-              <span className="text-sm md:text-xs font-medium text-red-600 dark:text-red-400">
-                {member.overdueCount} overdue
-              </span>
-            )}
-            {member.averageRating != null && (
-              <span className={cn("inline-flex items-center gap-0.5 text-sm md:text-xs font-medium", getStarColor(member.averageRating))}>
-                <Star className="h-3 w-3 fill-current" />
-                {member.averageRating.toFixed(1)}
-              </span>
-            )}
-            {member.extensionRequests > 0 && (
-              <span className="inline-flex items-center gap-0.5 text-sm md:text-xs text-violet-600 dark:text-violet-400">
-                <ArrowUpRight className="h-3 w-3" />
-                {member.extensionRequests} ext.
-              </span>
-            )}
-            {warningCount > 0 && (
-              <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {warningCount}
-              </span>
-            )}
-          </div>
-        </div>
       </div>
+
+      {/* Name */}
+      <p className="font-semibold text-base text-foreground truncate px-1">
+        {member.name}
+      </p>
+
+      {/* Designation / role */}
+      <p className="text-sm text-muted-foreground truncate mt-0.5 px-1">
+        {member.designation || member.role || member.department?.name || "—"}
+      </p>
+
+      {/* Optional: attendance badge */}
+      <div className="mt-1.5 flex justify-center">
+        <span
+          className={cn(
+            "rounded px-2 py-0.5 text-xs font-medium",
+            isLeave && "bg-amber-100 text-amber-800",
+            isIn && "bg-green-100 text-green-800",
+            !isIn && !isLeave && "bg-muted text-muted-foreground"
+          )}
+        >
+          {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
+        </span>
+      </div>
+
+      {/* Task overview: ACTIVE · DONE · WARN */}
+      <div className="mt-3 pt-3 border-t border-border flex items-center justify-center gap-4 text-sm">
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="font-semibold text-blue-600">{member.taskCount}</span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Active</span>
+        </div>
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="font-semibold text-muted-foreground">
+            {member.completedCount ?? 0}
+          </span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Done</span>
+        </div>
+        {warningCount > 0 && (
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="font-semibold text-red-600">{warningCount}</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">Warn</span>
+          </div>
+        )}
+      </div>
+
+      {/* Extra: rating & extensions when present */}
+      {(member.averageRating != null || (member.extensionRequests ?? 0) > 0) && (
+        <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs">
+          {member.averageRating != null && (
+            <span className={cn("inline-flex items-center gap-0.5 font-medium", getStarColor(member.averageRating))}>
+              <Star className="h-3 w-3 fill-current" />
+              {member.averageRating.toFixed(1)}
+            </span>
+          )}
+          {(member.extensionRequests ?? 0) > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-violet-600">
+              <ArrowUpRight className="h-3 w-3" />
+              {member.extensionRequests} ext.
+            </span>
+          )}
+        </div>
+      )}
     </button>
   )
 }

@@ -14,6 +14,7 @@ export interface MDTeamOverviewMember {
   department: { id: string; name: string } | null
   taskCount: number
   overdueCount: number
+  completedCount: number
   averageRating: number | null
   extensionRequests: number
   attendanceStatus: AttendanceStatus
