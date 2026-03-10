@@ -40,9 +40,13 @@ function AIHeaderButton() {
 
 function NavBadge({ count }: { count: number }) {
   if (count <= 0) return null
+  const label = count > 99 ? '99+' : count
+  // Dot-only for 1, tiny pill for numbers
   return (
-    <span className="absolute -top-0.5 right-1/2 translate-x-3 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1">
-      {count > 99 ? '99+' : count}
+    <span
+      className="absolute -top-2 -right-2 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-red-500 text-white text-[8px] font-bold leading-none px-[2.5px] ring-[1.5px] ring-background"
+    >
+      {label}
     </span>
   )
 }
