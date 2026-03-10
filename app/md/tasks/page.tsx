@@ -1,13 +1,16 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { Plus } from "lucide-react"
 import { TabNavigation, type TabItem } from "@/components/employee/tab-navigation"
 import { TaskInput } from "@/components/tasks/task-input"
+import { MobileTaskDrawer } from "@/components/tasks/mobile-task-drawer"
 import { ApprovalTab } from "@/components/tasks/approval-tab"
 import { OverviewTab } from "@/components/tasks/overview-tab"
 import { CalendarTab } from "@/components/tasks/calendar-tab"
 import { CompletedTab } from "@/components/tasks/completed-tab"
 import { TeamTab } from "@/components/tasks/team-tab"
+import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 const TASKS_TABS: TabItem[] = [
@@ -28,6 +31,7 @@ function getTabFromHash(): string {
 
 export default function MDTasksPage() {
   const [activeTab, setActiveTab] = useState("team")
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useIsMobile()
 
   const syncFromHash = useCallback(() => {
@@ -76,14 +80,22 @@ export default function MDTasksPage() {
       </div>
 
       {isMobile && (
-        <div className="sticky bottom-16 left-0 right-0 -mx-2 border-t-2 border-primary/40 bg-gradient-to-t from-muted to-background px-0 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          <TaskInput
+        <>
+          <Button
+            size="icon"
+            className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="New task"
+          >
+            <Plus className="h-12 w-12 font-bold" />
+          </Button>
+          <MobileTaskDrawer
+            open={drawerOpen}
+            onOpenChange={setDrawerOpen}
             onSuccess={() => {}}
-            bottomAnchored
-            className="w-full"
             isMD
           />
-        </div>
+        </>
       )}
     </div>
   )

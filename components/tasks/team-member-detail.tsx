@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { Plus } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import { useTasks } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { TaskRow } from "./task-row"
 import { TaskInput } from "./task-input"
+import { MobileTaskDrawer } from "./mobile-task-drawer"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import { startOfDay } from "date-fns"
@@ -20,8 +24,10 @@ export interface TeamMemberDetailContentProps {
 
 export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps) {
   const { user } = useAuth()
+  const isMobile = useIsMobile()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const canMarkComplete = (task: Task) =>
     !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
@@ -52,7 +58,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
     <>
       <div className="flex flex-col flex-1 min-h-0">
         <header className="shrink-0 space-y-1 pb-4">
-          <h1 className="text-xl font-semibold tracking-tight">{member.name}</h1>
+          <h1 className="text-2xl md:text-xl font-semibold tracking-tight">{member.name}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <span
               className={cn(
@@ -79,7 +85,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
         <ScrollArea className="flex-1 min-h-0 -mx-2 px-2">
           <div className="space-y-6 pb-6">
             <section>
-              <h2 className="text-sm font-semibold mb-2">Overdue tasks</h2>
+              <h2 className="text-base md:text-sm font-semibold mb-2">Overdue tasks</h2>
               {overdueTasks.length === 0 ? (
                 <p className="text-xs text-muted-foreground">None</p>
               ) : (
@@ -100,7 +106,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
             </section>
 
             <section>
-              <h2 className="text-sm font-semibold mb-2">Tasks</h2>
+              <h2 className="text-base md:text-sm font-semibold mb-2">Tasks</h2>
               {isError ? (
                 <p className="text-xs text-destructive">Failed to load tasks.</p>
               ) : isLoading ? (
@@ -126,15 +132,37 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
           </div>
         </ScrollArea>
 
-        <div className="shrink-0 mt-4 pt-4 border-t border-border">
-          <TaskInput
+        {!isMobile && (
+          <div className="shrink-0 mt-4 pt-4 border-t border-border">
+            <TaskInput
+              onSuccess={() => {}}
+              prefillAssignee={{ id: member.id, name: member.name }}
+              isMD
+              className="w-full min-w-0"
+            />
+          </div>
+        )}
+      </div>
+
+      {isMobile && (
+        <>
+          <Button
+            size="icon"
+            className="fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full shadow-lg"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="New task"
+          >
+            <Plus className="h-12 w-12 font-bold" />
+          </Button>
+          <MobileTaskDrawer
+            open={drawerOpen}
+            onOpenChange={setDrawerOpen}
             onSuccess={() => {}}
             prefillAssignee={{ id: member.id, name: member.name }}
             isMD
-            className="w-full min-w-0"
           />
-        </div>
-      </div>
+        </>
+      )}
 
       <TaskDetailModal
         open={!!detailTaskId}

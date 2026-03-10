@@ -118,19 +118,19 @@ export function TaskRow({
       <div className="min-w-0 flex-1">
         <span
           className={cn(
-            "block truncate text-sm",
+            "block truncate text-base md:text-sm",
             isCompleted && "text-muted-foreground line-through"
           )}
         >
           {task.title}
         </span>
         {(showAssignee || showProject) && (
-          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm md:text-xs">
             {showProject && task.project && (
-              <span className="truncate">{task.project.name}</span>
+              <span className="truncate text-purple-600 dark:text-purple-400">{task.project.name}</span>
             )}
             {showAssignee && task.assignee && task.assigneeId !== task.createdById && (
-              <span className="truncate">→ {task.assignee.name}</span>
+              <span className="truncate text-blue-600 dark:text-blue-400">→ {task.assignee.name}</span>
             )}
           </div>
         )}

@@ -41,6 +41,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { getAvatarColor } from "@/lib/avatar-colors"
 import { CompletionFeedback } from "@/components/tasks/completion-feedback"
 import { MarkCompleteDrawer } from "@/components/tasks/mark-complete-drawer"
 
@@ -301,7 +302,12 @@ function TaskDetailContent({
             <select
               value={statusValue}
               onChange={(e) => handleStatusChange(e.target.value)}
-              className="text-xs rounded border bg-muted/50 px-2 py-1"
+              className={cn(
+                "text-xs rounded border bg-muted/50 px-2 py-1",
+                statusValue === "IN_PROGRESS" && "border-blue-400 text-blue-700 dark:text-blue-300",
+                statusValue === "COMPLETED" && "border-green-400 text-green-700 dark:text-green-300",
+                statusValue === "CANCELLED" && "border-muted text-muted-foreground"
+              )}
             >
               {STATUS_OPTIONS.filter((o) => o.value !== "COMPLETED" || canMarkComplete).map((o) => (
                 <option key={o.value} value={o.value}>
@@ -310,7 +316,7 @@ function TaskDetailContent({
               ))}
             </select>
             {task.project && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300">
                 {task.project.name}
               </Badge>
             )}
@@ -331,9 +337,11 @@ function TaskDetailContent({
               {comments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No comments yet.</p>
               ) : (
-                comments.map((c) => (
+                comments.map((c) => {
+                  const avatarColor = getAvatarColor(c.user.name)
+                  return (
                   <div key={c.id} className="flex gap-2">
-                    <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                    <div className={cn("shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium", avatarColor.bg, avatarColor.text)}>
                       {c.user.name.charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -343,7 +351,8 @@ function TaskDetailContent({
                       <p className="text-sm mt-0.5 whitespace-pre-wrap">{c.content}</p>
                     </div>
                   </div>
-                ))
+                  )
+                })
               )}
             </div>
           </ScrollArea>

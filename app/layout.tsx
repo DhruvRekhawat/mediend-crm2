@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/providers/query-provider";
+import { BackCloseProvider } from "@/providers/back-close-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthenticatedWrapper } from "@/components/authenticated-wrapper";
 import { AIProvider } from "@/components/ai/ai-provider";
@@ -32,10 +33,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <AIProvider>
-            <AuthenticatedWrapper>{children}</AuthenticatedWrapper>
-            <Toaster />
-          </AIProvider>
+          <BackCloseProvider>
+            <AIProvider>
+              <AuthenticatedWrapper>{children}</AuthenticatedWrapper>
+              <Toaster />
+            </AIProvider>
+          </BackCloseProvider>
         </QueryProvider>
       </body>
     </html>

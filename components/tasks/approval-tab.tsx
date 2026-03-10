@@ -45,14 +45,14 @@ export function ApprovalTab() {
         {approvals.map((approval) => (
           <li
             key={approval.id}
-            className="rounded-lg border bg-card p-4 shadow-sm"
+            className="rounded-lg border border-l-4 border-l-amber-400 bg-card p-4 shadow-sm"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 flex-1 space-y-1">
                 <button
                   type="button"
                   onClick={() => setDetailTaskId(approval.task.id)}
-                  className="text-left font-medium text-sm hover:underline focus:outline-none focus:underline"
+                  className="text-left font-medium text-base md:text-sm hover:underline focus:outline-none focus:underline"
                 >
                   {approval.task.title}
                 </button>
@@ -62,14 +62,18 @@ export function ApprovalTab() {
                     <> · Assignee: {approval.task.assignee.name}</>
                   )}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {approval.oldDueDate
-                    ? format(new Date(approval.oldDueDate), "MMM d, yyyy")
-                    : "No date"}
+                <p className="text-sm md:text-xs">
+                  <span className="text-muted-foreground">
+                    {approval.oldDueDate
+                      ? format(new Date(approval.oldDueDate), "MMM d, yyyy")
+                      : "No date"}
+                  </span>
                   {" → "}
-                  {approval.newDueDate
-                    ? format(new Date(approval.newDueDate), "MMM d, yyyy")
-                    : "No date"}
+                  <span className="font-medium text-primary">
+                    {approval.newDueDate
+                      ? format(new Date(approval.newDueDate), "MMM d, yyyy")
+                      : "No date"}
+                  </span>
                 </p>
                 {approval.reason && (
                   <div className="rounded bg-muted/50 px-2 py-1.5 mt-1">

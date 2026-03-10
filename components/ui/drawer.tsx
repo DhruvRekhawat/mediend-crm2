@@ -4,11 +4,22 @@ import * as React from "react"
 import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
+import { useBackClose } from "@/providers/back-close-provider"
 
 function Drawer({
+  open,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />
+  useBackClose(open, onOpenChange)
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      open={open}
+      onOpenChange={onOpenChange}
+      {...props}
+    />
+  )
 }
 
 function DrawerTrigger({

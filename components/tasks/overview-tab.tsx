@@ -65,20 +65,20 @@ export function OverviewTab() {
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="rounded-lg border bg-muted/30 px-3 py-3">
-          <p className="text-xs text-muted-foreground">Total</p>
+        <div className="rounded-lg border border-l-4 border-l-blue-500 bg-muted/30 px-3 py-3">
+          <p className="text-sm md:text-xs text-muted-foreground">Total</p>
           <p className="text-2xl font-semibold">{stats.total}</p>
         </div>
-        <div className="rounded-lg border bg-muted/30 px-3 py-3">
-          <p className="text-xs text-muted-foreground">Completed</p>
+        <div className="rounded-lg border border-l-4 border-l-green-500 bg-muted/30 px-3 py-3">
+          <p className="text-sm md:text-xs text-muted-foreground">Completed</p>
           <p className="text-2xl font-semibold text-green-600">{stats.completed}</p>
         </div>
-        <div className="rounded-lg border bg-muted/30 px-3 py-3">
-          <p className="text-xs text-muted-foreground">Pending</p>
+        <div className="rounded-lg border border-l-4 border-l-amber-500 bg-muted/30 px-3 py-3">
+          <p className="text-sm md:text-xs text-muted-foreground">Pending</p>
           <p className="text-2xl font-semibold">{stats.pending}</p>
         </div>
-        <div className="rounded-lg border bg-muted/30 px-3 py-3">
-          <p className="text-xs text-muted-foreground">Overdue</p>
+        <div className="rounded-lg border border-l-4 border-l-red-500 bg-muted/30 px-3 py-3">
+          <p className="text-sm md:text-xs text-muted-foreground">Overdue</p>
           <p className="text-2xl font-semibold text-red-600">{stats.overdue}</p>
         </div>
       </section>

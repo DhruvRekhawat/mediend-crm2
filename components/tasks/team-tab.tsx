@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useMDTeamOverview, type MDTeamOverviewMember } from "@/hooks/use-md-team"
+import { getAvatarColor } from "@/lib/avatar-colors"
 import { AddPersonDialog } from "./add-person-dialog"
 import { cn } from "@/lib/utils"
 
@@ -111,15 +112,15 @@ function TeamMemberRow({
     >
       <div className="flex items-center gap-3">
         <Avatar className="size-9 shrink-0">
-          <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
+          <AvatarFallback className={cn("font-medium text-sm", getAvatarColor(member.name).bg, getAvatarColor(member.name).text)}>
             {getInitials(member.name)}
           </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-[220px]">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-sm truncate">{member.name}</p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="font-medium text-base md:text-sm truncate">{member.name}</p>
+              <p className="text-sm md:text-xs text-muted-foreground truncate">
                 {member.designation || member.role || member.department?.name || "—"}
               </p>
             </div>
@@ -135,11 +136,11 @@ function TeamMemberRow({
             </span>
           </div>
           <div className="mt-1 flex flex-wrap gap-2">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm md:text-xs text-muted-foreground">
               {member.taskCount} task{member.taskCount !== 1 ? "s" : ""}
             </span>
             {member.overdueCount > 0 && (
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+              <span className="text-sm md:text-xs font-medium text-red-600 dark:text-red-400">
                 {member.overdueCount} overdue
               </span>
             )}
