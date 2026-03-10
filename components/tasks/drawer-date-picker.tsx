@@ -100,7 +100,8 @@ export function DrawerDatePicker({
               months: "flex flex-col gap-6",
               month: "flex flex-col w-full gap-3",
               nav: "hidden",
-              month_caption: "text-base font-semibold",
+              month_caption: "flex w-full items-center justify-center px-0 text-base font-semibold",
+              caption_label: "w-full text-center text-base font-semibold",
               weekday: "text-xs font-medium text-muted-foreground",
               day: "text-base",
             }}

@@ -6,10 +6,12 @@ type CloseFn = () => void
 
 const BackCloseContext = React.createContext<{
   register: (close: CloseFn) => () => void
+  consumeHistoryEntry: () => void
 } | null>(null)
 
 export function BackCloseProvider({ children }: { children: React.ReactNode }) {
   const stackRef = useRef<CloseFn[]>([])
+  const suppressedPopRef = useRef(0)
   const register = useCallback((close: CloseFn) => {
     stackRef.current.push(close)
     return () => {
@@ -18,9 +20,17 @@ export function BackCloseProvider({ children }: { children: React.ReactNode }) {
       if (i !== -1) arr.splice(i, 1)
     }
   }, [])
+  const consumeHistoryEntry = useCallback(() => {
+    suppressedPopRef.current += 1
+    window.history.back()
+  }, [])
 
   useEffect(() => {
     const handlePopState = () => {
+      if (suppressedPopRef.current > 0) {
+        suppressedPopRef.current -= 1
+        return
+      }
       const stack = stackRef.current
       if (stack.length === 0) return
       const close = stack[stack.length - 1]
@@ -32,7 +42,7 @@ export function BackCloseProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <BackCloseContext.Provider value={{ register }}>
+    <BackCloseContext.Provider value={{ register, consumeHistoryEntry }}>
       {children}
     </BackCloseContext.Provider>
   )
@@ -64,7 +74,7 @@ export function useBackClose(
       unregisterRef.current?.()
       unregisterRef.current = null
       if (pushedRef.current && !closedByBackRef.current) {
-        window.history.back()
+        ctx.consumeHistoryEntry()
       }
       pushedRef.current = false
     }
