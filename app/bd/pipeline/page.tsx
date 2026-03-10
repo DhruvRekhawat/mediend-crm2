@@ -49,6 +49,8 @@ export default function BDPipelinePage() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [circleFilter, setCircleFilter] = useState<string>('all')
   const [showKYPForm, setShowKYPForm] = useState(false)
   const [startDate, setStartDate] = useState<Date | undefined>(undefined)
   const [endDate, setEndDate] = useState<Date | undefined>(undefined)
@@ -135,8 +137,20 @@ export default function BDPipelinePage() {
           lead.phoneNumber?.includes(query) ||
           lead.city?.toLowerCase().includes(query) ||
           lead.hospitalName?.toLowerCase().includes(query) ||
-          lead.treatment?.toLowerCase().includes(query)
+          lead.treatment?.toLowerCase().includes(query) ||
+          String(lead.category ?? '').toLowerCase().includes(query) ||
+          String(lead.circle ?? '').toLowerCase().includes(query)
       )
+    }
+
+    // Filter by category
+    if (categoryFilter !== 'all') {
+      result = result.filter((lead) => (lead.category ?? '') === categoryFilter)
+    }
+
+    // Filter by circle
+    if (circleFilter !== 'all') {
+      result = result.filter((lead) => (lead.circle ?? '') === circleFilter)
     }
     
     // Filter by date range
@@ -183,7 +197,7 @@ export default function BDPipelinePage() {
         : 0
       return dateB - dateA // Descending order (latest first)
     })
-  }, [leads, searchQuery, startDate, endDate])
+  }, [leads, searchQuery, startDate, endDate, categoryFilter, circleFilter])
 
   // Calculate status-based statistics
   const statusStats = useMemo(() => {
@@ -310,6 +324,19 @@ export default function BDPipelinePage() {
   const uniqueStatuses = useMemo(() => {
     const statuses = new Set(leads.map((lead) => lead.status).filter((status): status is string => !!status))
     return Array.from(statuses).sort()
+  }, [leads])
+
+  // Get unique categories and circles for filters
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set(
+      leads.map((lead) => lead.category ?? '').filter((c): c is string => c !== undefined && c !== null)
+    )
+    return Array.from(categories).filter(Boolean).sort()
+  }, [leads])
+
+  const uniqueCircles = useMemo(() => {
+    const circles = new Set(leads.map((lead) => lead.circle ?? '').filter((c): c is string => c !== undefined && c !== null))
+    return Array.from(circles).filter(Boolean).sort()
   }, [leads])
 
   // Fetch targets for current BD user
@@ -530,6 +557,36 @@ export default function BDPipelinePage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="w-full md:w-48">
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {uniqueCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-full md:w-48">
+                  <Select value={circleFilter} onValueChange={setCircleFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by circle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Circles</SelectItem>
+                      {uniqueCircles.map((circle) => (
+                        <SelectItem key={circle} value={circle}>
+                          {circle}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
                 <div className="flex items-center gap-2">
@@ -611,6 +668,8 @@ export default function BDPipelinePage() {
                       <TableHead>Lead Ref</TableHead>
                       <TableHead>Patient Name</TableHead>
                       <TableHead>Treatment</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Circle</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Stage</TableHead>
                       <TableHead>Actions</TableHead>
@@ -631,6 +690,8 @@ export default function BDPipelinePage() {
                             <TableCell className="font-medium">{lead.leadRef}</TableCell>
                             <TableCell>{lead.patientName}</TableCell>
                             <TableCell>{lead.treatment}</TableCell>
+                            <TableCell>{String(lead.category ?? '-')}</TableCell>
+                            <TableCell>{String(lead.circle ?? '-')}</TableCell>
                             <TableCell>
                               <Badge
                                 variant="outline"
@@ -673,7 +734,7 @@ export default function BDPipelinePage() {
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           {searchQuery ? 'No leads found matching your search' : 'No leads found'}
                         </TableCell>
                       </TableRow>

@@ -1,7 +1,7 @@
 import { PipelineStage, UserRole } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
-import { mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'
+import { mapCategoryCode, mapCircleCode, mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'
 import { getUserIdByBdNumber } from '@/lib/sync/bd-number-map'
 
 /**
@@ -472,9 +472,9 @@ export async function mapMySQLLeadToPrisma(
     bdeName: bdmValue,
     status: normalizeStatus(mysqlRow.Status),
     pipelineStage: PipelineStage.SALES,
-    circle: mysqlRow.Circle?.trim() || bdInfo.circle || '',
+    circle: mapCircleCode(mysqlRow.Circle) || bdInfo.circle || '',
     city: mysqlRow.city_option || 'Not Specified',
-    category: toString(mysqlRow.Category),
+    category: mapCategoryCode(mysqlRow.Category),
     treatment: mapTreatmentCode(mysqlRow.Treatment) ?? null,
     hospitalName: mysqlRow.OPD_Hospital || mysqlRow.IPD_Hospital || 'Not Specified',
     createdById: systemUserId,

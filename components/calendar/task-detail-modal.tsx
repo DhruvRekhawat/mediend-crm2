@@ -294,10 +294,22 @@ function TaskDetailContent({
     )
   }
 
+  const isAssignee = task.assigneeId === user?.id
+  const showStatusDropdown =
+    isAssignee &&
+    (task.status === "PENDING" || task.status === "IN_PROGRESS" || task.status === "EMPLOYEE_DONE")
+  const statusBadgeClass = {
+    PENDING: "border-slate-400 bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300",
+    IN_PROGRESS: "border-blue-400 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+    EMPLOYEE_DONE: "border-amber-400 bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200",
+    COMPLETED: "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200",
+    CANCELLED: "border-muted bg-muted/50 text-muted-foreground",
+  }[task.status] ?? "border-muted bg-muted/50"
+
   return (
     <div className="flex flex-col md:flex-row md:min-h-0 h-full">
-      <div className="flex-1 min-w-0 flex flex-col border-b md:border-b-0 md:border-r">
-        <div className="p-4 space-y-3 shrink-0">
+      <div className="flex-1 min-w-0 flex flex-col border-b md:border-b-0 md:border-r border-border">
+        <div className="p-4 md:p-4 space-y-4 shrink-0">
           <div className="flex items-start gap-2">
             {editingTitle ? (
               <div className="flex-1 flex gap-2">
@@ -306,7 +318,7 @@ function TaskDetailContent({
                   onChange={(e) => setTitleValue(e.target.value)}
                   onBlur={handleSaveTitle}
                   onKeyDown={(e) => e.key === "Enter" && handleSaveTitle()}
-                  className="flex-1 rounded border bg-transparent px-2 py-1 text-base font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="flex-1 rounded-md border border-input bg-transparent px-3 py-2 text-lg md:text-base font-medium focus:outline-none focus:ring-2 focus:ring-ring"
                   autoFocus
                 />
                 <Button size="sm" variant="ghost" onClick={() => setEditingTitle(false)}>
@@ -315,74 +327,75 @@ function TaskDetailContent({
               </div>
             ) : (
               <h2
-                className="flex-1 text-lg font-semibold cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1"
+                className="flex-1 text-xl md:text-lg font-semibold cursor-pointer hover:bg-muted/50 rounded-md px-2 py-1 -mx-1 min-w-0"
                 onClick={() => setEditingTitle(true)}
               >
                 {task.title}
               </h2>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <select
-              value={statusValue}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              className={cn(
-                "text-xs rounded border bg-muted/50 px-2 py-1",
-                statusValue === "IN_PROGRESS" && "border-blue-400 text-blue-700 dark:text-blue-300",
-                statusValue === "EMPLOYEE_DONE" && "border-amber-400 text-amber-700 dark:text-amber-300",
-                statusValue === "COMPLETED" && "border-green-400 text-green-700 dark:text-green-300",
-                statusValue === "CANCELLED" && "border-muted text-muted-foreground"
-              )}
-            >
-              {STATUS_OPTIONS.filter((o) => {
-                if (o.value === "COMPLETED") return canReviewTask
-                if (o.value === "EMPLOYEE_DONE") return task.assigneeId === user?.id
-                return true
-              }).map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-wrap gap-2 items-center">
+            {showStatusDropdown ? (
+              <select
+                value={statusValue}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                className={cn(
+                  "text-sm md:text-xs rounded-md border-2 px-3 py-1.5 font-medium",
+                  statusValue === "IN_PROGRESS" && "border-blue-400 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+                  statusValue === "EMPLOYEE_DONE" && "border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+                  statusValue === "COMPLETED" && "border-emerald-500 bg-emerald-50 text-emerald-700 dark:text-emerald-300",
+                  statusValue === "PENDING" && "border-slate-400 bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300",
+                  statusValue === "CANCELLED" && "border-muted bg-muted/50 text-muted-foreground"
+                )}
+              >
+                <option value="PENDING">Pending</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="EMPLOYEE_DONE">Mark done (pending review)</option>
+              </select>
+            ) : (
+              <Badge variant="outline" className={cn("text-sm md:text-xs font-medium border-2 px-2.5 py-0.5", statusBadgeClass)}>
+                {STATUS_OPTIONS.find((o) => o.value === task.status)?.label ?? task.status}
+              </Badge>
+            )}
             {task.project && (
-              <Badge variant="outline" className="text-xs border-purple-300 text-purple-700 dark:border-purple-700 dark:text-purple-300">
+              <Badge variant="outline" className="text-sm md:text-xs border-2 border-purple-400 bg-purple-50 text-purple-700 dark:border-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
                 {task.project.name}
               </Badge>
             )}
           </div>
           {task.description && (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            <p className="text-base md:text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
               {task.description}
             </p>
           )}
         </div>
 
-        <Separator />
+        <Separator className="my-0" />
 
-        <div className="flex-1 min-h-0 flex flex-col p-4">
-          <h3 className="text-sm font-medium mb-2">Comments</h3>
+        <div className="flex-1 min-h-0 flex flex-col p-4 border-t border-border">
+          <h3 className="text-base md:text-sm font-semibold mb-3 text-foreground">Comments</h3>
           <ScrollArea className="flex-1 min-h-[120px] max-h-[240px] pr-2">
-            <div className="space-y-3">
+            <div className="space-y-4">
               {comments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No comments yet.</p>
+                <p className="text-base md:text-sm text-muted-foreground">No comments yet.</p>
               ) : (
                 (() => {
                   const topLevel = comments.filter((c) => !c.parentId)
                   return topLevel.map((c) => (
-                    <div key={c.id} className="space-y-2">
-                      <div className="flex gap-2">
-                        <div className={cn("shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(c.user.name).bg, getAvatarColor(c.user.name).text)}>
+                    <div key={c.id} className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                      <div className="flex gap-3">
+                        <div className={cn("shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium", getAvatarColor(c.user.name).bg, getAvatarColor(c.user.name).text)}>
                           {c.user.name.charAt(0)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm md:text-xs text-muted-foreground">
                             {c.user.name} · {format(new Date(c.createdAt), "MMM d, HH:mm")}
                           </p>
-                          <p className="text-sm mt-0.5 whitespace-pre-wrap">{c.content}</p>
+                          <p className="text-base md:text-sm mt-1 whitespace-pre-wrap">{c.content}</p>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 text-xs mt-1"
+                            className="h-8 text-sm md:text-xs mt-1"
                             onClick={() => setReplyingToId(c.id)}
                           >
                             Reply
@@ -390,17 +403,17 @@ function TaskDetailContent({
                         </div>
                       </div>
                       {(c.replies?.length ?? 0) > 0 && (
-                        <div className="pl-10 space-y-2 border-l-2 border-muted ml-4">
+                        <div className="pl-11 space-y-2 border-l-2 border-blue-200 dark:border-blue-800 ml-1">
                           {c.replies?.map((r) => (
-                            <div key={r.id} className="flex gap-2">
-                              <div className={cn("shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(r.user.name).bg, getAvatarColor(r.user.name).text)}>
+                            <div key={r.id} className="flex gap-2 py-1 pl-2">
+                              <div className={cn("shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(r.user.name).bg, getAvatarColor(r.user.name).text)}>
                                 {r.user.name.charAt(0)}
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-sm md:text-xs text-muted-foreground">
                                   {r.user.name} · {format(new Date(r.createdAt), "MMM d, HH:mm")}
                                 </p>
-                                <p className="text-sm mt-0.5 whitespace-pre-wrap">{r.content}</p>
+                                <p className="text-base md:text-sm mt-0.5 whitespace-pre-wrap">{r.content}</p>
                               </div>
                             </div>
                           ))}
@@ -412,9 +425,9 @@ function TaskDetailContent({
               )}
             </div>
           </ScrollArea>
-          <div className="space-y-2 mt-2 shrink-0">
+          <div className="space-y-2 mt-3 shrink-0">
             <Select onValueChange={(v) => setCommentText((prev) => (prev ? `${prev}\n${v}` : v))}>
-              <SelectTrigger className="h-9">
+              <SelectTrigger className="h-10 md:h-9 text-base md:text-sm">
                 <SelectValue placeholder="Quick comment..." />
               </SelectTrigger>
               <SelectContent>
@@ -426,8 +439,8 @@ function TaskDetailContent({
               </SelectContent>
             </Select>
             {replyingToId && (
-              <p className="text-xs text-muted-foreground">
-                Replying to comment · <Button variant="link" className="h-auto p-0 text-xs" onClick={() => setReplyingToId(null)}>Cancel</Button>
+              <p className="text-sm md:text-xs text-muted-foreground">
+                Replying to comment · <Button variant="link" className="h-auto p-0 text-sm md:text-xs" onClick={() => setReplyingToId(null)}>Cancel</Button>
               </p>
             )}
             <div className="flex gap-2">
@@ -441,11 +454,12 @@ function TaskDetailContent({
                     handleAddComment()
                   }
                 }}
-                className="min-h-[60px] resize-none flex-1"
+                className="min-h-[64px] md:min-h-[60px] resize-none flex-1 text-base md:text-sm"
                 rows={2}
               />
               <Button
                 size="sm"
+                className="h-10 md:h-9 text-sm"
                 onClick={handleAddComment}
                 disabled={!commentText.trim() || createComment.isPending}
               >
@@ -456,17 +470,17 @@ function TaskDetailContent({
         </div>
       </div>
 
-      <div className="md:w-64 shrink-0 p-4 space-y-4 bg-muted/30">
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium">Details</h3>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm">
-              <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="md:w-72 shrink-0 p-4 space-y-4 bg-muted/30 border-l border-border">
+        <div className="space-y-4">
+          <h3 className="text-base md:text-sm font-semibold text-foreground border-b border-border pb-2">Details</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-base md:text-sm">
+              <CalendarIcon className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
               <Popover>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="text-left hover:underline focus:outline-none focus:underline"
+                    className="text-left font-medium text-purple-700 dark:text-purple-300 hover:underline focus:outline-none focus:underline"
                   >
                     {dueDateValue
                       ? format(dueDateValue, "MMM d, yyyy")
@@ -546,17 +560,27 @@ function TaskDetailContent({
             )}
           </div>
           {task.assignee && (
-            <div className="flex items-center gap-2 text-sm">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span>{task.assignee.name}</span>
+            <div className="flex items-center gap-3 text-base md:text-sm">
+              <User className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+              <span className="font-medium text-blue-700 dark:text-blue-300">{task.assignee.name}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 text-sm">
-            <PriorityIcon priority={priorityValue} className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <div className="flex items-center gap-3 text-base md:text-sm">
+            <PriorityIcon
+              priority={priorityValue}
+              className={cn(
+                "h-5 w-5 md:h-4 md:w-4 shrink-0",
+                priorityValue === "HIGH" && "text-orange-600 dark:text-orange-400",
+                priorityValue === "URGENT" && "text-red-600 dark:text-red-400",
+                priorityValue === "MEDIUM" && "text-amber-600 dark:text-amber-400",
+                priorityValue === "LOW" && "text-blue-600 dark:text-blue-400",
+                (priorityValue === "GENERAL" || !priorityValue) && "text-muted-foreground"
+              )}
+            />
             <select
               value={priorityValue}
               onChange={(e) => handlePriorityChange(e.target.value)}
-              className="flex-1 rounded border bg-background px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 rounded-md border-2 border-border bg-background px-2 py-1.5 text-base md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {PRIORITY_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -566,13 +590,13 @@ function TaskDetailContent({
             </select>
           </div>
           {task.project && (
-            <div className="flex items-center gap-2 text-sm">
-              <FolderOpen className="h-4 w-4 text-muted-foreground" />
-              <span>{task.project.name}</span>
+            <div className="flex items-center gap-3 text-base md:text-sm">
+              <FolderOpen className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+              <span className="font-medium text-purple-700 dark:text-purple-300">{task.project.name}</span>
             </div>
           )}
           {task.createdBy && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-base md:text-sm text-muted-foreground">
               <span>Created by {task.createdBy.name}</span>
             </div>
           )}
@@ -584,13 +608,13 @@ function TaskDetailContent({
               completedAt={task.completedAt}
             />
           )}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
+          <div className="flex items-center gap-2 text-sm md:text-xs text-muted-foreground">
+            <Clock className="h-4 w-4 md:h-3 md:w-3" />
             <span>Updated {format(new Date(task.updatedAt), "MMM d")}</span>
           </div>
         </div>
 
-        <Separator />
+        <Separator className="my-2" />
 
         <MarkCompleteDrawer
           task={task.status === "EMPLOYEE_DONE" ? task : null}
@@ -659,16 +683,16 @@ function TaskDetailContent({
           </DialogContent>
         </Dialog>
 
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">Activity</h3>
+        <div className="space-y-2 border-t border-border pt-3">
+          <h3 className="text-base md:text-sm font-semibold text-foreground">Activity</h3>
           {activity.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No activity yet.</p>
+            <p className="text-sm md:text-xs text-muted-foreground">No activity yet.</p>
           ) : (
             <ScrollArea className="max-h-[200px]">
-              <ul className="space-y-2 text-xs">
+              <ul className="space-y-2 text-sm md:text-xs">
                 {activity.map((a) => (
-                  <li key={a.id} className="flex flex-col gap-0.5">
-                    <span className="font-medium">
+                  <li key={a.id} className="flex flex-col gap-0.5 rounded-md border border-border bg-background/50 px-2 py-1.5">
+                    <span className="font-medium text-foreground">
                       {ACTIVITY_LABELS[a.action] ?? a.action}
                     </span>
                     <span className="text-muted-foreground">

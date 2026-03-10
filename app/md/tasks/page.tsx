@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Plus } from "lucide-react"
 import { TabNavigation, type TabItem } from "@/components/employee/tab-navigation"
 import { TaskInput } from "@/components/tasks/task-input"
@@ -10,33 +10,65 @@ import { OverviewTab } from "@/components/tasks/overview-tab"
 import { CalendarTab } from "@/components/tasks/calendar-tab"
 import { CompletedTab } from "@/components/tasks/completed-tab"
 import { TeamTab } from "@/components/tasks/team-tab"
+import { TodayTab } from "@/components/tasks/today-tab"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
-
-const TASKS_TABS: TabItem[] = [
-  { value: "team", label: "Team" },
-  { value: "approval", label: "Approval" },
-  { value: "overview", label: "Overview" },
-  { value: "calendar", label: "Calendar" },
-  { value: "completed", label: "Completed" },
-]
-
-const VALID_TABS = new Set(TASKS_TABS.map((t) => t.value))
-
-function getTabFromHash(): string {
-  if (typeof window === "undefined") return "team"
-  const hash = window.location.hash.slice(1) || "team"
-  return VALID_TABS.has(hash) ? hash : "team"
-}
+import { apiGet } from "@/lib/api-client"
 
 export default function MDTasksPage() {
+  const [isManager, setIsManager] = useState<boolean | null>(null)
   const [activeTab, setActiveTab] = useState("team")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useIsMobile()
 
-  const syncFromHash = useCallback(() => {
-    setActiveTab(getTabFromHash())
+  useEffect(() => {
+    let cancelled = false
+    async function checkManager() {
+      try {
+        await apiGet("/api/md/team-overview")
+        if (!cancelled) setIsManager(true)
+      } catch {
+        if (!cancelled) setIsManager(false)
+      }
+    }
+    checkManager()
+    return () => {
+      cancelled = true
+    }
   }, [])
+
+  useEffect(() => {
+    if (isManager === false && activeTab === "team") {
+      setActiveTab("all")
+      if (typeof window !== "undefined") window.location.hash = "all"
+    }
+  }, [isManager, activeTab])
+
+  const tabs: TabItem[] = useMemo(
+    () => [
+      ...(isManager !== false ? [{ value: "team", label: "Team" as const }] : []),
+      { value: "approval", label: "Approval" },
+      { value: "all", label: "All tasks" },
+      { value: "overview", label: "Overview" },
+      { value: "calendar", label: "Calendar" },
+      { value: "completed", label: "Completed" },
+    ],
+    [isManager]
+  )
+
+  const validTabValues = useMemo(() => new Set(tabs.map((t) => t.value)), [tabs])
+
+  const syncFromHash = useCallback(() => {
+    if (typeof window === "undefined") return
+    const hash = window.location.hash.slice(1)
+    const defaultTab = isManager !== false ? "team" : "all"
+    const effectiveHash = hash || defaultTab
+    if (effectiveHash === "team" && isManager === false) {
+      setActiveTab("all")
+      return
+    }
+    setActiveTab(validTabValues.has(effectiveHash) ? effectiveHash : defaultTab)
+  }, [isManager, validTabValues])
 
   useEffect(() => {
     syncFromHash()
@@ -44,12 +76,19 @@ export default function MDTasksPage() {
     return () => window.removeEventListener("hashchange", syncFromHash)
   }, [syncFromHash])
 
-  const handleTabChange = useCallback((value: string) => {
-    if (VALID_TABS.has(value)) {
-      window.location.hash = value
+  const handleTabChange = useCallback(
+    (value: string) => {
+      if (!validTabValues.has(value)) return
+      if (value === "team" && !isManager) {
+        value = "all"
+      }
+      if (typeof window !== "undefined") {
+        window.location.hash = value
+      }
       setActiveTab(value)
-    }
-  }, [])
+    },
+    [isManager, validTabValues]
+  )
 
   return (
     <div className="flex flex-col min-h-0 w-full max-w-5xl mx-auto px-2 md:px-0">
@@ -64,7 +103,7 @@ export default function MDTasksPage() {
       </div>
 
       <TabNavigation
-        tabs={TASKS_TABS}
+        tabs={tabs}
         value={activeTab}
         onValueChange={handleTabChange}
         variant="tasks"
@@ -72,11 +111,12 @@ export default function MDTasksPage() {
       />
 
       <div className="flex-1 min-h-0 py-0 md:py-4">
+        {activeTab === "team" && isManager && <TeamTab />}
+        {activeTab === "all" && <TodayTab />}
         {activeTab === "approval" && <ApprovalTab />}
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "calendar" && <CalendarTab />}
         {activeTab === "completed" && <CompletedTab />}
-        {activeTab === "team" && <TeamTab />}
       </div>
 
       {isMobile && (

@@ -124,6 +124,23 @@ services:
       - tools
     entrypoint: ["bun", "run", "scripts/fix-lead-circles.ts"]
 
+  # One-off: remap lead category and circle from numeric IDs to text (historic data)
+  # Usage: docker compose --profile tools run --rm fix-lead-categories-circles
+  # Dry run: docker compose --profile tools run --rm fix-lead-categories-circles -- --dry-run
+  fix-lead-categories-circles:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/fix-lead-categories-circles.ts"]
+
 volumes:
   pgdata:
   uptime-kuma-data:

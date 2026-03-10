@@ -55,6 +55,10 @@ export function OverviewTab() {
     )
   }
 
+  const projectList = useMemo(
+    () => stats.projectWise.filter((p) => p.projectId != null),
+    [stats.projectWise]
+  )
   const projectTasks = expandedProjectId
     ? tasks.filter((t) => (t.projectId ?? null) === expandedProjectId)
     : []
@@ -191,10 +195,10 @@ export function OverviewTab() {
           By project
         </h2>
         <div className="space-y-2">
-          {stats.projectWise.length === 0 ? (
+          {projectList.length === 0 ? (
             <p className="text-sm text-muted-foreground">No projects yet.</p>
           ) : (
-            stats.projectWise.map((p) => {
+            projectList.map((p) => {
               const total = p.count
               const completed = tasks.filter(
                 (t) => (t.projectId ?? null) === p.projectId && t.status === "COMPLETED"

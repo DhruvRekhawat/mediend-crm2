@@ -84,6 +84,56 @@ const SOURCE_MAP: Record<string, string> = {
 }
 
 /**
+ * Circle code mappings (from MySQL Circle table)
+ * Maps circle ID to circle name
+ */
+const CIRCLE_MAP: Record<string, string> = {
+  '1': 'Default',
+  '2': 'Mumbai',
+  '3': 'Pune',
+  '4': 'Delhi',
+  '5': 'Noida',
+  '6': 'Gurugram',
+  '7': 'Bangalore',
+  '8': 'Faridabad',
+  '9': 'Ghaziabad',
+  '10': 'Nagpur',
+  '11': 'Others',
+  '12': 'Hyderabad',
+  '13': 'Lucknow',
+  '14': 'Kolkata',
+  '15': 'Chandigarh',
+  '16': 'Jaipur',
+  '17': 'Agra',
+  '18': 'Ranchi',
+  '19': 'Patna',
+  '20': 'Chennai',
+  '21': 'Thane',
+  '22': 'Indore',
+  '23': 'Nasik',
+}
+
+/**
+ * Category code mappings (from MySQL category table)
+ * Maps category ID to category name
+ */
+const CATEGORY_MAP: Record<string, string> = {
+  '1': 'Aesthetics',
+  '2': 'Proctology',
+  '3': 'Laparoscopy',
+  '4': 'Gynaecology',
+  '5': 'ENT',
+  '6': 'Urology',
+  '7': 'Vascular',
+  '8': 'Orthopaedics',
+  '9': 'Ophthalmology',
+  '10': 'Weight Loss',
+  '11': 'NA',
+  '12': 'Hair Loss',
+  '13': '-',
+}
+
+/**
  * Legacy: campaign IDs that were wrongly stored in lead.Source (CRM source_campaign.id).
  * Resolve to a display label. Add more as discovered.
  */
@@ -314,4 +364,34 @@ export function mapTreatmentCode(code: string | number | null | undefined): stri
 export function isTreatmentCode(value: string | null | undefined): boolean {
   if (!value) return false
   return /^\d+$/.test(String(value).trim())
+}
+
+/**
+ * Maps a circle code to its text value
+ * @param code - Circle code (string number like "2") or text value
+ * @returns Circle text value, or original value if not found/not a code
+ */
+export function mapCircleCode(code: string | number | null | undefined): string | null {
+  if (code === null || code === undefined) return null
+  const trimmed = String(code).trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) {
+    return CIRCLE_MAP[trimmed] ?? trimmed
+  }
+  return trimmed
+}
+
+/**
+ * Maps a category code to its text value
+ * @param code - Category code (string number like "1") or text value
+ * @returns Category text value, or original value if not found/not a code
+ */
+export function mapCategoryCode(code: string | number | null | undefined): string | null {
+  if (code === null || code === undefined) return null
+  const trimmed = String(code).trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) {
+    return CATEGORY_MAP[trimmed] ?? trimmed
+  }
+  return trimmed
 }

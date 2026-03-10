@@ -204,6 +204,7 @@ export function MobileTaskDrawer({
     label,
     value,
     accent,
+    valueColor,
     disabled = false,
     onClick,
   }: {
@@ -211,6 +212,8 @@ export function MobileTaskDrawer({
     label: string
     value?: string | null
     accent?: boolean
+    /** Optional: colour for icon and value (e.g. text-purple-600 dark:text-purple-400) */
+    valueColor?: string
     disabled?: boolean
     onClick: () => void
   }) => (
@@ -222,11 +225,13 @@ export function MobileTaskDrawer({
         "flex min-h-[52px] w-full items-center gap-4 border-b border-border py-4 px-4 text-left text-base touch-manipulation",
         !disabled && "active:bg-muted/50",
         disabled && "cursor-default",
-        accent && "text-primary font-medium"
+        !valueColor && accent && "text-primary font-medium"
       )}
     >
-      <Icon className="h-6 w-6 shrink-0 text-muted-foreground" aria-hidden />
-      <span className="min-w-0 flex-1 truncate">{value ?? label}</span>
+      <Icon className={cn("h-6 w-6 shrink-0", valueColor ?? "text-muted-foreground")} aria-hidden />
+      <span className={cn("min-w-0 flex-1 truncate font-medium", valueColor ?? (accent ? "text-primary" : ""))}>
+        {value ?? label}
+      </span>
       {!disabled && <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />}
     </button>
   )
@@ -280,6 +285,7 @@ export function MobileTaskDrawer({
                 label="Add assignees"
                 value={effectiveAssigneeId ? selectedAssigneeName : undefined}
                 accent={!!effectiveAssigneeId}
+                valueColor={effectiveAssigneeId ? "text-blue-600 dark:text-blue-400" : undefined}
                 disabled={!!prefillAssigneeId}
                 onClick={() => {
                   if (prefillAssigneeId) return
@@ -291,6 +297,7 @@ export function MobileTaskDrawer({
                 label="Set dates"
                 value={dueDate ? format(dueDate, "MMM d, yyyy") : undefined}
                 accent={!!dueDate}
+                valueColor={dueDate ? "text-purple-600 dark:text-purple-400" : undefined}
                 onClick={() => setPickerOpen("date")}
               />
               <RowButton
@@ -307,6 +314,7 @@ export function MobileTaskDrawer({
                 label="Priority"
                 value={selectedPriority?.label}
                 accent={(priority ?? "MEDIUM") !== "MEDIUM"}
+                valueColor={priority && priority !== "GENERAL" ? priorityColorMap[priority] : undefined}
                 onClick={() => setPickerOpen("priority")}
               />
               <RowButton
@@ -314,6 +322,7 @@ export function MobileTaskDrawer({
                 label="Project"
                 value={selectedProjectName ?? undefined}
                 accent={!!selectedProjectName}
+                valueColor={selectedProjectName ? "text-emerald-600 dark:text-emerald-400" : undefined}
                 onClick={() => setPickerOpen("project")}
               />
             </div>
