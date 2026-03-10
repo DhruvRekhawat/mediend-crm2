@@ -58,6 +58,7 @@ export default function MDAppointmentsPage() {
       apiPatch<Appointment>(`/api/md/appointments?id=${id}`, { status, remarks }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['md-appointments'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       toast.success('Appointment updated')
     },
     onError: (error: Error) => {

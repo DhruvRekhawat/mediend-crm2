@@ -20,6 +20,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Mediend CRM",
   description: "Mediend CRM - Patient Lead Management System",
+  manifest: "/manifest.json",
+  themeColor: "#062D4C",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Mediend Workspace",
+  },
 };
 
 export default function RootLayout({

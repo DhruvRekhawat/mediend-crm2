@@ -23,6 +23,14 @@ import { cn } from "@/lib/utils"
 
 const GRADES = ["A+", "A", "B+", "B", "C"] as const
 
+const GRADE_STYLES: Record<(typeof GRADES)[number], string> = {
+  "A+": "border-emerald-600 bg-emerald-500 text-white hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500",
+  "A": "border-emerald-500 bg-emerald-400 text-emerald-950 hover:bg-emerald-500 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-600",
+  "B+": "border-blue-500 bg-blue-400 text-blue-950 hover:bg-blue-500 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-600",
+  "B": "border-blue-400 bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/50 dark:text-blue-200 dark:hover:bg-blue-800/50",
+  "C": "border-amber-500 bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-200 dark:hover:bg-amber-800/50",
+}
+
 const PRESET_COMMENTS = [
   "Good job",
   "Excellent work",
@@ -110,17 +118,17 @@ export function MarkCompleteDrawer({
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="bottom"
-        className="rounded-t-2xl flex flex-col max-h-[85dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+        className="rounded-t-2xl flex flex-col max-h-[85dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] px-4 sm:px-6"
       >
-        <SheetHeader className="text-left">
+        <SheetHeader className="text-left px-0">
           <SheetTitle>
             {task ? `Review: ${task.title}` : "Review task"}
           </SheetTitle>
         </SheetHeader>
         {task && (
-          <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-auto py-4">
+          <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-auto py-5 px-1 sm:px-2">
             <div>
-              <p className="text-sm font-medium mb-2">Grade (required to approve)</p>
+              <p className="text-sm font-medium mb-3">Grade (required to approve)</p>
               <div className="flex flex-wrap gap-2" role="group" aria-label="Select grade">
                 {GRADES.map((g) => (
                   <button
@@ -128,10 +136,8 @@ export function MarkCompleteDrawer({
                     type="button"
                     onClick={() => setGrade(g)}
                     className={cn(
-                      "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
-                      grade === g
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input hover:bg-muted"
+                      "rounded-lg border-2 px-4 py-2.5 text-sm font-semibold transition-colors",
+                      grade === g ? GRADE_STYLES[g] : "border-input bg-muted/50 hover:bg-muted"
                     )}
                     aria-pressed={grade === g}
                   >

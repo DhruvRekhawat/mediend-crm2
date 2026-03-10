@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
+import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // PWA plugin uses webpack; use `next build --webpack` so build uses webpack. Empty turbopack silences config check.
+  turbopack: {},
   async headers() {
     const origin = process.env.NEXT_PUBLIC_APP_URL || "https://workspace.mediend.com";
     return [
@@ -18,4 +21,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA({
+  dest: "public",
+  register: true,
+  disable: process.env.NODE_ENV === "development",
+})(nextConfig);

@@ -8,9 +8,11 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { useBadgeCounts } from '@/hooks/use-badge-counts'
 import { useAuth } from '@/hooks/use-auth'
 import { useSidebar } from '@/components/ui/sidebar'
 import { getFilteredNavItemsWithUrls } from '@/lib/sidebar-nav'
@@ -50,10 +52,37 @@ import * as React from 'react'
 import logo from '@/public/logo-mediend.png'
 import { UserRole } from '@prisma/client'
 
+function getBadgeCount(
+  itemTitle: string,
+  counts: {
+    pendingFinanceApprovals: number
+    unreadMessages: number
+    pendingAppointments: number
+    pendingTaskReviews: number
+    pendingDueDateApprovals: number
+    myOverdueTasks: number
+    myPendingTasks: number
+  } | undefined,
+  isMdOrAdmin: boolean
+): number {
+  if (!counts) return 0
+  if (itemTitle === 'Tasks') {
+    return isMdOrAdmin
+      ? counts.pendingTaskReviews + counts.pendingDueDateApprovals
+      : counts.myPendingTasks
+  }
+  if (itemTitle === 'Fin Approvals') return counts.pendingFinanceApprovals
+  if (itemTitle === 'MD Messages') return counts.unreadMessages
+  if (itemTitle === 'MD Appointments') return counts.pendingAppointments
+  return 0
+}
+
 export function AppSidebar() {
   const { user, logout, isTester, setActiveRole } = useAuth()
   const pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
+  const { data: badgeCounts } = useBadgeCounts()
+  const isMdOrAdmin = user?.role === 'MD' || user?.role === 'ADMIN'
 
   const closeSidebarOnMobile = React.useCallback(() => {
     if (isMobile) setOpenMobile(false)
@@ -124,12 +153,18 @@ export function AppSidebar() {
                 const Icon = item.icon
                 const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                 const label = item.title.startsWith('MD ') ? item.title.replace('MD ', '') : item.title
+                const badgeCount = getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin)
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
                       <Link href={item.url} onClick={closeSidebarOnMobile}>
                         <Icon />
                         <span>{label}</span>
+                        {badgeCount > 0 && (
+                          <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                            {badgeCount > 99 ? '99+' : badgeCount}
+                          </SidebarMenuBadge>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -305,12 +340,18 @@ export function AppSidebar() {
                       .map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                        const badgeCount = getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin)
                         return (
                           <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('Fin ', '')}>
                               <Link href={item.url} onClick={closeSidebarOnMobile}>
                                 <Icon />
                                 <span>{item.title.replace('Fin ', '')}</span>
+                                {badgeCount > 0 && (
+                                  <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                                    {badgeCount > 99 ? '99+' : badgeCount}
+                                  </SidebarMenuBadge>
+                                )}
                               </Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
@@ -351,12 +392,18 @@ export function AppSidebar() {
                       .map((item) => {
                         const Icon = item.icon
                         const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                        const badgeCount = getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin)
                         return (
                           <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('MD ', '')}>
                             <Link href={item.url} onClick={closeSidebarOnMobile}>
                                 <Icon />
                                 <span>{item.title.replace('MD ', '')}</span>
+                                {badgeCount > 0 && (
+                                  <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                                    {badgeCount > 99 ? '99+' : badgeCount}
+                                  </SidebarMenuBadge>
+                                )}
                               </Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>

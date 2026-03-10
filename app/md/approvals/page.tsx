@@ -614,6 +614,7 @@ export default function ApprovalsPage() {
       queryClient.invalidateQueries({ queryKey: ['approved-debits-summary'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       setIsDialogOpen(false)
       setSelectedEntry(null)
       setRejectionReason('')
@@ -634,6 +635,7 @@ export default function ApprovalsPage() {
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       setSelectedIds(new Set())
       setIsDialogOpen(false)
       setRejectionReason('')
@@ -651,6 +653,7 @@ export default function ApprovalsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to approve edit request')
@@ -664,6 +667,7 @@ export default function ApprovalsPage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       setIsDialogOpen(false)
       setSelectedEntry(null)
       setRejectionReason('')
@@ -682,6 +686,7 @@ export default function ApprovalsPage() {
       queryClient.invalidateQueries({ queryKey: ['pending-edit-requests'] })
       queryClient.invalidateQueries({ queryKey: ['ledger'] })
       queryClient.invalidateQueries({ queryKey: ['payment-modes'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to undo')

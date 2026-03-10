@@ -17,10 +17,10 @@ export function getTaskCardClass(
   const isOverdue = opts?.isOverdue ?? false
   const forCompletedSection = opts?.forCompletedSection ?? false
 
-  if (forCompletedSection && task.status === "COMPLETED") {
+  if (task.status === "COMPLETED") {
     return cn(
       base,
-      "border-l-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20",
+      "border-l-emerald-700 bg-emerald-100/60 dark:bg-emerald-950/40 dark:border-l-emerald-600",
       "mb-2"
     )
   }
@@ -39,7 +39,7 @@ export function getTaskCardClass(
   if (task.status === "EMPLOYEE_DONE") {
     return cn(
       base,
-      "border-l-amber-400 bg-amber-50/40 dark:bg-amber-950/20",
+      "border-l-green-400 bg-green-50/50 dark:bg-green-950/30 dark:border-l-green-500",
       overdueTint,
       "mb-2"
     )

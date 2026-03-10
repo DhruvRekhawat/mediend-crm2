@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
+import { useBadgeCounts } from '@/hooks/use-badge-counts'
 import { ProtectedRoute } from '@/components/protected-route'
 import { AppSidebar } from '@/components/app-sidebar'
 import {
@@ -37,9 +38,19 @@ function AIHeaderButton() {
   )
 }
 
+function NavBadge({ count }: { count: number }) {
+  if (count <= 0) return null
+  return (
+    <span className="absolute -top-0.5 right-1/2 translate-x-3 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] font-medium px-1">
+      {count > 99 ? '99+' : count}
+    </span>
+  )
+}
+
 export function AuthenticatedWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, isLoading } = useAuth()
+  const { data: badgeCounts } = useBadgeCounts()
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   
   // Don't show sidebar on login page, payslip page, document view page, or print pages
@@ -98,30 +109,42 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
                 <div className="flex items-center justify-around h-16">
                   <Link
                     href="/md/tasks"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/tasks') ? 'text-primary' : 'text-muted-foreground'}`}
+                    className={`relative flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/tasks') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
-                    <ListTodo className="h-5 w-5" />
+                    <span className="relative inline-flex">
+                      <ListTodo className="h-5 w-5" />
+                      <NavBadge count={(badgeCounts?.pendingTaskReviews ?? 0) + (badgeCounts?.pendingDueDateApprovals ?? 0)} />
+                    </span>
                     <span className="text-xs">Tasks</span>
                   </Link>
                   <Link
                     href="/md/approvals"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/approvals') ? 'text-primary' : 'text-muted-foreground'}`}
+                    className={`relative flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/approvals') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
-                    <CheckSquare className="h-5 w-5" />
+                    <span className="relative inline-flex">
+                      <CheckSquare className="h-5 w-5" />
+                      <NavBadge count={badgeCounts?.pendingFinanceApprovals ?? 0} />
+                    </span>
                     <span className="text-xs">Approvals</span>
                   </Link>
                   <Link
                     href="/md/anonymous-messages"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/anonymous-messages') ? 'text-primary' : 'text-muted-foreground'}`}
+                    className={`relative flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/anonymous-messages') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
-                    <MessageSquare className="h-5 w-5" />
+                    <span className="relative inline-flex">
+                      <MessageSquare className="h-5 w-5" />
+                      <NavBadge count={badgeCounts?.unreadMessages ?? 0} />
+                    </span>
                     <span className="text-xs">Messages</span>
                   </Link>
                   <Link
                     href="/md/appointments"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/appointments') ? 'text-primary' : 'text-muted-foreground'}`}
+                    className={`relative flex flex-col items-center justify-center flex-1 gap-1 py-2 ${pathname?.startsWith('/md/appointments') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
-                    <Calendar className="h-5 w-5" />
+                    <span className="relative inline-flex">
+                      <Calendar className="h-5 w-5" />
+                      <NavBadge count={badgeCounts?.pendingAppointments ?? 0} />
+                    </span>
                     <span className="text-xs">Appointments</span>
                   </Link>
                 </div>
@@ -132,9 +155,12 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
                 <div className="flex items-center justify-around h-16">
                   <Link
                     href="/md/tasks"
-                    className={`flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/md/tasks') ? 'text-primary' : 'text-muted-foreground'}`}
+                    className={`relative flex flex-col items-center justify-center flex-1 gap-1 py-2 transition-colors ${pathname?.startsWith('/md/tasks') ? 'text-primary' : 'text-muted-foreground'}`}
                   >
-                    <ListTodo className="h-5 w-5" />
+                    <span className="relative inline-flex">
+                      <ListTodo className="h-5 w-5" />
+                      <NavBadge count={badgeCounts?.myPendingTasks ?? 0} />
+                    </span>
                     <span className="text-xs font-medium">Tasks</span>
                   </Link>
                   <Link

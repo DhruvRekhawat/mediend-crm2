@@ -26,15 +26,13 @@ A comprehensive Customer Relationship Management system for Mediend, a medico ma
 
 - Node.js 18+ or Bun
 - PostgreSQL database (Supabase recommended)
-- npm or bun package manager
+- Bun (recommended) or npm
 
 ## Setup Instructions
 
 ### 1. Install Dependencies
 
 ```bash
-npm install
-# or
 bun install
 ```
 
@@ -68,13 +66,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ```bash
 # Generate Prisma Client
-npm run db:generate
+bun run db:generate
 
 # Push schema to database (for development)
-npm run db:push
+bun run db:push
 
 # Or run migrations (for production)
-npm run db:migrate
+bun run db:migrate
 ```
 
 ### 4. Seed Initial Users
@@ -82,7 +80,7 @@ npm run db:migrate
 **IMPORTANT**: Create default users for testing using the seed API:
 
 **Option 1: Using the Web Interface (Recommended)**
-1. Start the dev server: `npm run dev`
+1. Start the dev server: `bun run dev`
 2. Navigate to: `http://localhost:3000/admin/seed-users`
 3. Click "Create Default Users" button
 
@@ -104,7 +102,7 @@ This will create:
 ### 5. Run Development Server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 The application will be available at `http://localhost:3000`
@@ -118,7 +116,7 @@ Run the seed script as shown above. This creates default users for testing.
 ### Option 2: Using Prisma Studio (GUI)
 
 ```bash
-npm run db:studio
+bun run db:studio
 ```
 
 1. Open Prisma Studio (usually at `http://localhost:5555`)
@@ -167,7 +165,7 @@ createUser()
 
 Run it:
 ```bash
-npx tsx scripts/create-user.ts
+bun run scripts/create-user.ts
 ```
 
 ### Option 4: Using HR Dashboard (After First Login)
@@ -245,9 +243,9 @@ The system can sync leads from a legacy MySQL/MariaDB database:
 
 **One-time Historic Sync:**
 ```bash
-npm run sync:historic:leads
+bun run sync:historic:leads
 # Or with custom date:
-HISTORIC_SYNC_FROM_DATE=2025-12-01 npm run sync:historic:leads
+HISTORIC_SYNC_FROM_DATE=2025-12-01 bun run sync:historic:leads
 ```
 
 **Automated Sync via API (Recommended - cron-job.org):**
@@ -269,13 +267,13 @@ curl -X POST https://workspace.mediend.com/api/sync/mysql-leads \
 
 **Legacy: Direct Script Sync (for local/dev):**
 ```bash
-npm run sync:leads
+bun run sync:leads
 ```
 
 **Verify Connection:**
 Before running syncs, verify your MySQL connection:
 ```bash
-npm run verify:mysql
+bun run verify:mysql
 ```
 
 This script will:
@@ -315,33 +313,33 @@ The sync system:
 
 ```bash
 # Open Prisma Studio (database GUI)
-npm run db:studio
+bun run db:studio
 
 # Create a new migration
-npm run db:migrate
+bun run db:migrate
 
 # Reset database (WARNING: deletes all data)
-npx prisma migrate reset
+bunx prisma migrate reset
 
 # Seed database with initial data
-npm run db:seed
+bun run db:seed
 ```
 
 ### Code Quality
 
 ```bash
 # Run linter
-npm run lint
+bun run lint
 ```
 
 ## Production Deployment
 
 1. Set up PostgreSQL database (Supabase recommended)
 2. Configure environment variables
-3. Run database migrations: `npm run db:migrate`
-4. Seed initial admin user: `npm run db:seed` (or create manually)
-5. Build the application: `npm run build`
-6. Start the server: `npm start`
+3. Run database migrations: `bun run db:migrate`
+4. Seed initial admin user: `bun run db:seed` (or create manually)
+5. Build the application: `bun run build`
+6. Start the server: `bun start`
 
 ## Notes
 

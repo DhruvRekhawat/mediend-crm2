@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,13 +8,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner'
 import Image from 'next/image'
 import logo from '@/public/logo-mediend.png'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Download } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<{ prompt: () => Promise<{ outcome: string }> } | null>(null)
   const { login, isLoggingIn } = useAuth()
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e as unknown as { prompt: () => Promise<{ outcome: string }> })
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return
+    try {
+      await deferredPrompt.prompt()
+      setDeferredPrompt(null)
+    } catch {
+      setDeferredPrompt(null)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,6 +129,18 @@ export default function LoginPage() {
               </form>
             </CardContent>
           </Card>
+
+          {deferredPrompt && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mt-4 border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              onClick={handleInstall}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Install App
+            </Button>
+          )}
 
           <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
             Need access? Contact your admin.

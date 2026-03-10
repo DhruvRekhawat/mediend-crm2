@@ -29,6 +29,7 @@ export default function MDAnonymousMessagesPage() {
     mutationFn: (id: string) => apiPatch<AnonymousMessage>(`/api/md/anonymous-messages?id=${id}`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['anonymous-messages'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update')

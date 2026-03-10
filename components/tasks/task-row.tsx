@@ -115,8 +115,8 @@ export function TaskRow({
         />
       )}
       {isEmployeeDone && canMarkComplete && (
-        <Badge variant="secondary" className="shrink-0 text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-          Review
+        <Badge variant="secondary" className="shrink-0 text-xs bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+          Pending review
         </Badge>
       )}
       {showCompletionRating && isCompleted && task.grade && (

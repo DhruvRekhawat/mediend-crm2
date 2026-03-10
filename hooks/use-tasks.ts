@@ -142,6 +142,7 @@ export function useCreateTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       queryClient.invalidateQueries({ queryKey: ["md-team-overview"] })
+      queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
     },
   })
 }
@@ -176,6 +177,7 @@ export function useUpdateTask() {
     }) => apiPatch<Task>(`/api/tasks/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
     },
   })
 }
@@ -187,6 +189,7 @@ export function useDeleteTask() {
     mutationFn: (id: string) => apiDelete(`/api/tasks/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
     },
   })
 }
@@ -230,6 +233,7 @@ export function useApproveTaskDueDate() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["task-approvals"] })
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
     },
   })
 }
@@ -246,6 +250,7 @@ export function useUpdateTaskDueDate() {
       apiPatch<UpdateTaskDueDateResult>(`/api/tasks/${id}`, { dueDate }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
     },
   })
 }
