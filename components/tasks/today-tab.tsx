@@ -8,6 +8,7 @@ import { TaskRow } from "./task-row"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import type { Task } from "@/hooks/use-tasks"
+import { getTaskCardClass } from "./task-card-class"
 
 function getTaskDueDate(task: Task): Date | null {
   if (!task.dueDate) return null
@@ -89,18 +90,19 @@ export function TodayTab() {
           <h2 className="text-sm font-semibold text-red-600 mb-2">
             Overdue ({sections.overdue.length})
           </h2>
-          <div className="space-y-0.5">
+          <div className="space-y-2">
             {sections.overdue.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onClick={() => setDetailTaskId(task.id)}
-                showAssignee
-                showProject
-                isAssignee={task.assigneeId === user?.id}
-                canMarkComplete={canMarkComplete(task)}
-                onMarkCompleteRequest={() => setTaskToComplete(task)}
-              />
+              <div key={task.id} className={getTaskCardClass(task, { isOverdue: true })}>
+                <TaskRow
+                  task={task}
+                  onClick={() => setDetailTaskId(task.id)}
+                  showAssignee
+                  showProject
+                  isAssignee={task.assigneeId === user?.id}
+                  canMarkComplete={canMarkComplete(task)}
+                  onMarkCompleteRequest={() => setTaskToComplete(task)}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -118,18 +120,19 @@ export function TodayTab() {
             <h2 className="text-sm font-semibold text-foreground mb-2">
               {heading} ({dayTasks.length})
             </h2>
-            <div className="space-y-0.5">
+            <div className="space-y-2">
               {dayTasks.map((task) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  onClick={() => setDetailTaskId(task.id)}
-                  showAssignee
-                  showProject
-                  isAssignee={task.assigneeId === user?.id}
-                  canMarkComplete={canMarkComplete(task)}
-                  onMarkCompleteRequest={() => setTaskToComplete(task)}
-                />
+                <div key={task.id} className={getTaskCardClass(task, { isOverdue: false })}>
+                  <TaskRow
+                    task={task}
+                    onClick={() => setDetailTaskId(task.id)}
+                    showAssignee
+                    showProject
+                    isAssignee={task.assigneeId === user?.id}
+                    canMarkComplete={canMarkComplete(task)}
+                    onMarkCompleteRequest={() => setTaskToComplete(task)}
+                  />
+                </div>
               ))}
             </div>
           </section>
@@ -141,18 +144,19 @@ export function TodayTab() {
           <h2 className="text-sm font-semibold text-muted-foreground mb-2">
             No date ({sections.noDate.length})
           </h2>
-          <div className="space-y-0.5">
+          <div className="space-y-2">
             {sections.noDate.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onClick={() => setDetailTaskId(task.id)}
-                showAssignee
-                showProject
-                isAssignee={task.assigneeId === user?.id}
-                canMarkComplete={canMarkComplete(task)}
-                onMarkCompleteRequest={() => setTaskToComplete(task)}
-              />
+              <div key={task.id} className={getTaskCardClass(task, { isOverdue: false })}>
+                <TaskRow
+                  task={task}
+                  onClick={() => setDetailTaskId(task.id)}
+                  showAssignee
+                  showProject
+                  isAssignee={task.assigneeId === user?.id}
+                  canMarkComplete={canMarkComplete(task)}
+                  onMarkCompleteRequest={() => setTaskToComplete(task)}
+                />
+              </div>
             ))}
           </div>
         </section>

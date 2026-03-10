@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Search, UserPlus } from "lucide-react"
+import { Search, UserPlus, AlertTriangle } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useMDTeamOverview, type MDTeamOverviewMember } from "@/hooks/use-md-team"
+import { useWarnings } from "@/hooks/use-tasks"
 import { getAvatarColor } from "@/lib/avatar-colors"
 import { AddPersonDialog } from "./add-person-dialog"
 import { cn } from "@/lib/utils"
@@ -25,7 +26,16 @@ export function TeamTab() {
   const [addPersonOpen, setAddPersonOpen] = useState(false)
 
   const { data, isLoading, isError, error } = useMDTeamOverview(search || undefined)
+  const { data: warnings = [] } = useWarnings()
   const members = data?.members ?? []
+
+  const warningsByUserId = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const w of warnings) {
+      map[w.employeeId] = (map[w.employeeId] ?? 0) + 1
+    }
+    return map
+  }, [warnings])
 
   if (isError) {
     return (
@@ -76,6 +86,7 @@ export function TeamTab() {
               key={member.id}
               member={member}
               index={index}
+              warningCount={warningsByUserId[member.id] ?? 0}
               onClick={() => router.push(`/md/tasks/team/${member.id}`)}
             />
           ))}
@@ -90,10 +101,12 @@ export function TeamTab() {
 function TeamMemberRow({
   member,
   index,
+  warningCount,
   onClick,
 }: {
   member: MDTeamOverviewMember
   index: number
+  warningCount: number
   onClick: () => void
 }) {
   const isIn = member.attendanceStatus === "in"
@@ -135,13 +148,25 @@ function TeamMemberRow({
               {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
             </span>
           </div>
-          <div className="mt-1 flex flex-wrap gap-2">
-            <span className="text-sm md:text-xs text-muted-foreground">
+          <div className="mt-1 flex flex-wrap gap-2 items-center">
+            <span
+              className={cn(
+                "text-sm md:text-xs",
+                member.taskCount === 0 && "text-green-600 dark:text-green-400",
+                member.taskCount > 0 && "text-amber-600 dark:text-amber-400 font-medium"
+              )}
+            >
               {member.taskCount} task{member.taskCount !== 1 ? "s" : ""}
             </span>
             {member.overdueCount > 0 && (
               <span className="text-sm md:text-xs font-medium text-red-600 dark:text-red-400">
                 {member.overdueCount} overdue
+              </span>
+            )}
+            {warningCount > 0 && (
+              <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-200">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {warningCount} warning{warningCount !== 1 ? "s" : ""}
               </span>
             )}
           </div>

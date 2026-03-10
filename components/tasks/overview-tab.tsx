@@ -6,6 +6,7 @@ import { useTaskStats, useTasks } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { Progress } from "@/components/ui/progress"
 import { TaskRow } from "./task-row"
+import { getTaskCardClass } from "./task-card-class"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import { ChevronDown, ChevronRight, LayoutGrid, Users } from "lucide-react"
@@ -39,6 +40,11 @@ export function OverviewTab() {
       )
   }, [tasks])
 
+  const projectList = useMemo(
+    () => stats?.projectWise.filter((p) => p.projectId != null) ?? [],
+    [stats]
+  )
+
   if (statsError) {
     return (
       <div className="py-6 text-center text-sm text-destructive">
@@ -55,10 +61,6 @@ export function OverviewTab() {
     )
   }
 
-  const projectList = useMemo(
-    () => stats.projectWise.filter((p) => p.projectId != null),
-    [stats.projectWise]
-  )
   const projectTasks = expandedProjectId
     ? tasks.filter((t) => (t.projectId ?? null) === expandedProjectId)
     : []
@@ -100,18 +102,19 @@ export function OverviewTab() {
           <h2 className="text-sm font-semibold text-red-600 mb-2">
             Overdue ({overdueTasks.length})
           </h2>
-          <div className="space-y-0.5 rounded-md border">
+          <div className="space-y-2">
             {overdueTasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onClick={() => setDetailTaskId(task.id)}
-                showAssignee
-                showProject
-                isAssignee={task.assigneeId === user?.id}
-                canMarkComplete={canMarkComplete(task)}
-                onMarkCompleteRequest={() => setTaskToComplete(task)}
-              />
+              <div key={task.id} className={getTaskCardClass(task, { isOverdue: true })}>
+                <TaskRow
+                  task={task}
+                  onClick={() => setDetailTaskId(task.id)}
+                  showAssignee
+                  showProject
+                  isAssignee={task.assigneeId === user?.id}
+                  canMarkComplete={canMarkComplete(task)}
+                  onMarkCompleteRequest={() => setTaskToComplete(task)}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -157,7 +160,7 @@ export function OverviewTab() {
                     />
                   </button>
                   {isExpanded && (
-                    <div className="border-t px-2 py-2 space-y-0.5">
+                    <div className="border-t px-2 py-2 space-y-2">
                       {tasksLoading ? (
                         <p className="text-xs text-muted-foreground py-2">
                           Loading...
@@ -167,18 +170,23 @@ export function OverviewTab() {
                           No tasks
                         </p>
                       ) : (
-                        assigneeTasks.map((task) => (
-<TaskRow
-                          key={task.id}
-                          task={task}
-                          onClick={() => setDetailTaskId(task.id)}
-                          showAssignee={false}
-                          showProject
-                          isAssignee={task.assigneeId === user?.id}
-                          canMarkComplete={canMarkComplete(task)}
-                          onMarkCompleteRequest={() => setTaskToComplete(task)}
-                        />
-                        ))
+                        assigneeTasks.map((task) => {
+                          const today = startOfDay(new Date())
+                          const isOverdue = !!task.dueDate && new Date(task.dueDate) < today && task.status !== "COMPLETED"
+                          return (
+                            <div key={task.id} className={getTaskCardClass(task, { isOverdue })}>
+                              <TaskRow
+                                task={task}
+                                onClick={() => setDetailTaskId(task.id)}
+                                showAssignee={false}
+                                showProject
+                                isAssignee={task.assigneeId === user?.id}
+                                canMarkComplete={canMarkComplete(task)}
+                                onMarkCompleteRequest={() => setTaskToComplete(task)}
+                              />
+                            </div>
+                          )
+                        })
                       )}
                     </div>
                   )}
@@ -227,7 +235,7 @@ export function OverviewTab() {
                     </span>
                   </button>
                   {isExpanded && (
-                    <div className="border-t px-2 py-2 space-y-0.5">
+                    <div className="border-t px-2 py-2 space-y-2">
                       {tasksLoading ? (
                         <p className="text-xs text-muted-foreground py-2">
                           Loading...
@@ -237,18 +245,23 @@ export function OverviewTab() {
                           No tasks
                         </p>
                       ) : (
-                        projectTasks.map((task) => (
-                          <TaskRow
-                            key={task.id}
-                            task={task}
-                            onClick={() => setDetailTaskId(task.id)}
-                            showAssignee
-                            showProject={false}
-                            isAssignee={task.assigneeId === user?.id}
-                            canMarkComplete={canMarkComplete(task)}
-                            onMarkCompleteRequest={() => setTaskToComplete(task)}
-                          />
-                        ))
+                        projectTasks.map((task) => {
+                          const today = startOfDay(new Date())
+                          const isOverdue = !!task.dueDate && new Date(task.dueDate) < today && task.status !== "COMPLETED"
+                          return (
+                            <div key={task.id} className={getTaskCardClass(task, { isOverdue })}>
+                              <TaskRow
+                                task={task}
+                                onClick={() => setDetailTaskId(task.id)}
+                                showAssignee
+                                showProject={false}
+                                isAssignee={task.assigneeId === user?.id}
+                                canMarkComplete={canMarkComplete(task)}
+                                onMarkCompleteRequest={() => setTaskToComplete(task)}
+                              />
+                            </div>
+                          )
+                        })
                       )}
                     </div>
                   )}

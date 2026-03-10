@@ -5,6 +5,7 @@ import { useTasks } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { TaskRow } from "./task-row"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
+import { getTaskCardClass } from "./task-card-class"
 import { format } from "date-fns"
 import { CheckCircle } from "lucide-react"
 import type { Task } from "@/hooks/use-tasks"
@@ -51,21 +52,26 @@ export function CompletedTab() {
         {completedTasks.length} task{completedTasks.length !== 1 ? "s" : ""}{" "}
         completed
       </p>
-      <div className="space-y-0.5">
+      <div className="space-y-2">
         {completedTasks.map((task) => (
-          <div key={task.id} className="flex items-center gap-2">
-            <TaskRow
-              task={task}
-              onClick={() => setDetailTaskId(task.id)}
-              showAssignee
-              showProject
-              showCompletionRating
-              isAssignee={task.assigneeId === user?.id}
-              canMarkComplete={canMarkComplete(task)}
-            />
-            <span className="text-xs text-muted-foreground shrink-0">
-              {format(new Date(task.updatedAt), "MMM d")}
-            </span>
+          <div
+            key={task.id}
+            className={getTaskCardClass(task, { forCompletedSection: true })}
+          >
+            <div className="flex items-center gap-2">
+              <TaskRow
+                task={task}
+                onClick={() => setDetailTaskId(task.id)}
+                showAssignee
+                showProject
+                showCompletionRating
+                isAssignee={task.assigneeId === user?.id}
+                canMarkComplete={canMarkComplete(task)}
+              />
+              <span className="text-xs text-muted-foreground shrink-0 pr-2">
+                {format(new Date(task.updatedAt), "MMM d")}
+              </span>
+            </div>
           </div>
         ))}
       </div>

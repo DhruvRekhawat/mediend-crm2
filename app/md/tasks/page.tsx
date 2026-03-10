@@ -107,7 +107,7 @@ export default function MDTasksPage() {
         value={activeTab}
         onValueChange={handleTabChange}
         variant="tasks"
-        className="-mx-2 md:mx-0 px-2 md:px-0"
+        className="-mx-2 md:mx-0 px-2 md:px-0 mb-4"
       />
 
       <div className="flex-1 min-h-0 py-0 md:py-4">

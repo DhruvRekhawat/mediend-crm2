@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useTaskApprovals, useApproveTaskDueDate, useTasks, type Task } from "@/hooks/use-tasks"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { TaskRow } from "./task-row"
+import { getTaskCardClass } from "./task-card-class"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
 
 export function ApprovalTab() {
@@ -136,19 +137,20 @@ export function ApprovalTab() {
             No tasks pending review.
           </p>
         ) : (
-          <div className="space-y-0.5 rounded-md border border-border bg-card">
+          <div className="space-y-2">
             {pendingReviewTasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onClick={() => setDetailTaskId(task.id)}
-                showAssignee
-                showProject
-                isAssignee={false}
-                canMarkComplete={true}
-                onMarkCompleteRequest={() => setTaskToComplete(task)}
-                showCompletionRating={false}
-              />
+              <div key={task.id} className={getTaskCardClass(task)}>
+                <TaskRow
+                  task={task}
+                  onClick={() => setDetailTaskId(task.id)}
+                  showAssignee
+                  showProject
+                  isAssignee={false}
+                  canMarkComplete={true}
+                  onMarkCompleteRequest={() => setTaskToComplete(task)}
+                  showCompletionRating={false}
+                />
+              </div>
             ))}
           </div>
         )}

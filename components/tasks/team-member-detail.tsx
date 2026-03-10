@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus } from "lucide-react"
+import { Plus, AlertTriangle } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { useTasks, useWarnings } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { TaskRow } from "./task-row"
+import { getTaskCardClass } from "./task-card-class"
 import { TaskInput } from "./task-input"
 import { MobileTaskDrawer } from "./mobile-task-drawer"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
@@ -90,17 +91,23 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
         <ScrollArea className="flex-1 min-h-0 -mx-2 px-2">
           <div className="space-y-6 pb-6">
             {canIssueWarning && (
-              <section>
-                <h2 className="text-base md:text-sm font-semibold mb-2">Warnings</h2>
+              <section className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/80 dark:bg-amber-950/30 p-3">
+                <h2 className="text-base md:text-sm font-semibold mb-2 flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  Warnings
+                </h2>
                 {warnings.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No warnings on record.</p>
+                  <p className="text-xs text-amber-700/80 dark:text-amber-300/80">No warnings on record.</p>
                 ) : (
                   <ul className="space-y-2">
                     {warnings.map((w) => (
-                      <li key={w.id} className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                      <li
+                        key={w.id}
+                        className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-100/60 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-900 dark:text-amber-100"
+                      >
                         <p className="font-medium capitalize">{w.type.replace(/_/g, " ").toLowerCase()}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{w.note}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-amber-700/90 dark:text-amber-300/90 mt-0.5">{w.note}</p>
+                        <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mt-1">
                           {format(new Date(w.createdAt), "MMM d, yyyy")}
                           {w.issuedBy && ` · by ${w.issuedBy.name}`}
                         </p>
@@ -108,20 +115,25 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                     ))}
                   </ul>
                 )}
-                <Button size="sm" variant="outline" className="mt-2" onClick={() => setIssueWarningOpen(true)}>
+                <Button
+                  size="sm"
+                  className="mt-2 bg-amber-500 hover:bg-amber-600 text-amber-950 border-0 shadow-sm dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-amber-950"
+                  onClick={() => setIssueWarningOpen(true)}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-1.5 shrink-0" />
                   Issue warning
                 </Button>
               </section>
             )}
 
-            <section>
-              <h2 className="text-base md:text-sm font-semibold mb-2">Overdue tasks</h2>
+            <section className="rounded-lg border border-border bg-muted/20 dark:bg-muted/10 p-3">
+              <h2 className="text-base md:text-sm font-semibold mb-2 text-foreground">Overdue tasks</h2>
               {overdueTasks.length === 0 ? (
                 <p className="text-xs text-muted-foreground">None</p>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {overdueTasks.map((task) => (
-                    <li key={task.id}>
+                    <li key={task.id} className={getTaskCardClass(task, { isOverdue: true })}>
                       <TaskRow
                         task={task}
                         onClick={() => setDetailTaskId(task.id)}
@@ -136,8 +148,8 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
               )}
             </section>
 
-            <section>
-              <h2 className="text-base md:text-sm font-semibold mb-2">Tasks</h2>
+            <section className="rounded-lg border border-border bg-muted/20 dark:bg-muted/10 p-3">
+              <h2 className="text-base md:text-sm font-semibold mb-2 text-foreground">Tasks</h2>
               {isError ? (
                 <p className="text-xs text-destructive">Failed to load tasks.</p>
               ) : isLoading ? (
@@ -145,9 +157,9 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
               ) : otherPending.length === 0 && overdueTasks.length === 0 ? (
                 <p className="text-xs text-muted-foreground">No pending tasks</p>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {otherPending.map((task) => (
-                    <li key={task.id}>
+                    <li key={task.id} className={getTaskCardClass(task, { isOverdue: false })}>
                       <TaskRow
                         task={task}
                         onClick={() => setDetailTaskId(task.id)}

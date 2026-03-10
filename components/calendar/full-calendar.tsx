@@ -15,6 +15,7 @@ import {
 import { ChevronLeft, ChevronRight, ChevronDown, GripVertical, Pencil, MessageSquare, MoreHorizontal, Plus } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useUpdateTask } from "@/hooks/use-tasks"
+import { getTaskCardClass } from "@/components/tasks/task-card-class"
 import { cn } from "@/lib/utils"
 
 export interface CalendarTask {
@@ -195,16 +196,25 @@ export function FullCalendarTasks({
               <h3 className="mb-2 text-sm font-semibold text-foreground">
                 {heading}
               </h3>
-              <div className="space-y-0.5">
-                {tasks.map((task) => (
-                  <UpcomingTaskRow
-                    key={task.id}
-                    task={task}
-                    onToggleComplete={updateTask}
-                    onMarkCompleteRequest={onMarkCompleteRequest}
-                    onClick={() => onEventClick?.(task.id)}
-                  />
-                ))}
+              <div className="space-y-2">
+                {tasks.map((task) => {
+                  const today = startOfDay(new Date())
+                  const taskDate = task.dueDate ? startOfDay(new Date(task.dueDate)) : null
+                  const isOverdue = !!taskDate && taskDate < today && task.status !== "COMPLETED"
+                  return (
+                    <div
+                      key={task.id}
+                      className={getTaskCardClass(task, { isOverdue })}
+                    >
+                      <UpcomingTaskRow
+                        task={task}
+                        onToggleComplete={updateTask}
+                        onMarkCompleteRequest={onMarkCompleteRequest}
+                        onClick={() => onEventClick?.(task.id)}
+                      />
+                    </div>
+                  )
+                })}
               </div>
               {onAddTask && (
                 <button
@@ -240,10 +250,11 @@ function UpcomingTaskRow({
 
   const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!isCompleted && onMarkCompleteRequest) {
+    if (task.status === "EMPLOYEE_DONE" && onMarkCompleteRequest) {
       onMarkCompleteRequest(task.id)
       return
     }
+    if (!isCompleted && onMarkCompleteRequest) return
     try {
       await onToggleComplete.mutateAsync({
         id: task.id,

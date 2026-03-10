@@ -32,6 +32,7 @@ import {
 import { PriorityIcon } from "./priority-icon"
 import { format } from "date-fns"
 import { useAuth } from "@/hooks/use-auth"
+import { useMDTeamOverview } from "@/hooks/use-md-team"
 import { getAvatarColor } from "@/lib/avatar-colors"
 import {
   useCreateTask,
@@ -105,13 +106,37 @@ export function MobileTaskDrawer({
 
   const createMutation = useCreateTask()
   const { data: assignableUsers = [] } = useAssignableUsers()
+  const { data: teamData } = useMDTeamOverview()
   const { data: projects = [], refetch: refetchProjects } = useTaskProjects()
   const createProjectMutation = useCreateTaskProject()
 
+  const teamMembers = teamData?.members ?? []
+  const teamIds = useMemo(() => new Set(teamMembers.map((m) => m.id)), [teamMembers])
+  const teamSection = useMemo(() => {
+    if (!assigneeSearch.trim()) return teamMembers
+    const q = assigneeSearch.trim().toLowerCase()
+    return teamMembers.filter(
+      (m) =>
+        m.name?.toLowerCase().includes(q) ||
+        m.email?.toLowerCase().includes(q)
+    )
+  }, [teamMembers, assigneeSearch])
+  const otherUsers = useMemo(() => {
+    if (!assigneeSearch.trim()) return []
+    const q = assigneeSearch.trim().toLowerCase()
+    return assignableUsers.filter(
+      (u) =>
+        !teamIds.has(u.id) &&
+        u.id !== user?.id &&
+        (u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
+    )
+  }, [assignableUsers, assigneeSearch, teamIds, user?.id])
+
   const assigneeOptions = useMemo(() => {
-    const list = isMD
-      ? assignableUsers.filter((u) => u.id !== user?.id)
-      : assignableUsers
+    if (isMD) {
+      return [...teamSection, ...otherUsers]
+    }
+    const list = assignableUsers
     if (!assigneeSearch.trim()) return list
     const q = assigneeSearch.trim().toLowerCase()
     return list.filter(
@@ -119,7 +144,7 @@ export function MobileTaskDrawer({
         u.name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q)
     )
-  }, [assignableUsers, assigneeSearch, isMD, user?.id])
+  }, [isMD, teamSection, otherUsers, assignableUsers, assigneeSearch])
 
   const effectiveAssigneeId = prefillAssigneeId ?? assigneeId
   const assigneeRequired = isMD || !!prefillAssigneeId
@@ -127,7 +152,10 @@ export function MobileTaskDrawer({
   const selectedAssigneeName = effectiveAssigneeId
     ? effectiveAssigneeId === user?.id
       ? "Me"
-      : assignableUsers.find((u) => u.id === effectiveAssigneeId)?.name ?? prefillAssigneeName ?? "Add assignees"
+      : assignableUsers.find((u) => u.id === effectiveAssigneeId)?.name ??
+        teamMembers.find((m) => m.id === effectiveAssigneeId)?.name ??
+        prefillAssigneeName ??
+        "Add assignees"
     : "Add assignees"
 
   const selectedPriority = PRIORITIES.find((p) => p.value === (priority ?? "MEDIUM"))
@@ -364,7 +392,7 @@ export function MobileTaskDrawer({
           </div>
           <ScrollArea className="flex-1 min-h-0">
             <div className="px-2 pb-4">
-              <p className="text-sm font-medium text-muted-foreground px-2 py-2">People</p>
+              {!isMD && <p className="text-sm font-medium text-muted-foreground px-2 py-2">People</p>}
               {!isMD && user && (
                 <button
                   type="button"
@@ -405,29 +433,90 @@ export function MobileTaskDrawer({
                   {!effectiveAssigneeId && <Check className="h-5 w-5 shrink-0 text-primary" />}
                 </button>
               )}
-              {assigneeOptions.map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  className={cn(
-                    "flex w-full min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-base text-left touch-manipulation active:bg-muted/50",
-                    effectiveAssigneeId === u.id && "bg-muted"
+              {isMD ? (
+                <>
+                  <p className="text-sm font-medium text-muted-foreground px-2 py-2 pt-1">My team</p>
+                  {teamSection.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={cn(
+                        "flex w-full min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-base text-left touch-manipulation active:bg-muted/50",
+                        effectiveAssigneeId === m.id && "bg-muted"
+                      )}
+                      onClick={() => {
+                        setAssigneeId(m.id)
+                        setPickerOpen(null)
+                      }}
+                    >
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback className={cn(getAvatarColor(m.name).bg, getAvatarColor(m.name).text, "text-sm font-medium")}>
+                          {getInitials(m.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="flex-1 truncate">{m.name}</span>
+                      {effectiveAssigneeId === m.id && <Check className="h-5 w-5 shrink-0 text-primary" />}
+                    </button>
+                  ))}
+                  {assigneeSearch.trim() && (
+                    <>
+                      <p className="text-sm font-medium text-muted-foreground px-2 py-2 pt-3">Others</p>
+                      {otherUsers.map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          className={cn(
+                            "flex w-full min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-base text-left touch-manipulation active:bg-muted/50",
+                            effectiveAssigneeId === u.id && "bg-muted"
+                          )}
+                          onClick={() => {
+                            setAssigneeId(u.id)
+                            setPickerOpen(null)
+                          }}
+                        >
+                          <Avatar className="h-10 w-10 shrink-0">
+                            <AvatarFallback className={cn(getAvatarColor(u.name ?? u.email ?? "?").bg, getAvatarColor(u.name ?? u.email ?? "?").text, "text-sm font-medium")}>
+                              {getInitials(u.name ?? u.email ?? "?")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="flex-1 truncate">{u.name ?? u.email}</span>
+                          {effectiveAssigneeId === u.id && <Check className="h-5 w-5 shrink-0 text-primary" />}
+                        </button>
+                      ))}
+                    </>
                   )}
-                  onClick={() => {
-                    setAssigneeId(u.id)
-                    setPickerOpen(null)
-                  }}
-                >
-                  <Avatar className="h-10 w-10 shrink-0">
-                    <AvatarFallback className={cn(getAvatarColor(u.name ?? u.email ?? "?").bg, getAvatarColor(u.name ?? u.email ?? "?").text, "text-sm font-medium")}>
-                      {getInitials(u.name ?? u.email ?? "?")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="flex-1 truncate">{u.name ?? u.email}</span>
-                  {effectiveAssigneeId === u.id && <Check className="h-5 w-5 shrink-0 text-primary" />}
-                </button>
-              ))}
-              {assigneeOptions.length === 0 && !user && (
+                  {teamSection.length === 0 && !assigneeSearch.trim() && (
+                    <p className="px-3 py-4 text-sm text-muted-foreground">No team members yet.</p>
+                  )}
+                  {teamSection.length === 0 && assigneeSearch.trim() && otherUsers.length === 0 && (
+                    <p className="px-3 py-6 text-center text-base text-muted-foreground">No one found.</p>
+                  )}
+                </>
+              ) : (
+                assigneeOptions.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    className={cn(
+                      "flex w-full min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-base text-left touch-manipulation active:bg-muted/50",
+                      effectiveAssigneeId === u.id && "bg-muted"
+                    )}
+                    onClick={() => {
+                      setAssigneeId(u.id)
+                      setPickerOpen(null)
+                    }}
+                  >
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarFallback className={cn(getAvatarColor(u.name ?? u.email ?? "?").bg, getAvatarColor(u.name ?? u.email ?? "?").text, "text-sm font-medium")}>
+                        {getInitials(u.name ?? u.email ?? "?")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="flex-1 truncate">{u.name ?? u.email}</span>
+                    {effectiveAssigneeId === u.id && <Check className="h-5 w-5 shrink-0 text-primary" />}
+                  </button>
+                ))
+              )}
+              {!isMD && assigneeOptions.length === 0 && !user && (
                 <p className="px-3 py-6 text-center text-base text-muted-foreground">No one found.</p>
               )}
             </div>
