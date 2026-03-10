@@ -15,9 +15,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<{ prompt: () => Promise<{ outcome: string }> } | null>(null)
+  const [isStandalone, setIsStandalone] = useState(false)
   const { login, isLoggingIn } = useAuth()
 
   useEffect(() => {
+    setIsStandalone(typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches)
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as unknown as { prompt: () => Promise<{ outcome: string }> })
@@ -35,6 +37,9 @@ export default function LoginPage() {
       setDeferredPrompt(null)
     }
   }
+
+  const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const showInstallOption = !isStandalone && (deferredPrompt || isIOS)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,16 +135,24 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          {deferredPrompt && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-4 border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-              onClick={handleInstall}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Install App
-            </Button>
+          {showInstallOption && (
+            <div className="mt-4 space-y-2">
+              {deferredPrompt ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  onClick={handleInstall}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Install App
+                </Button>
+              ) : isIOS ? (
+                <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                  Tap <span className="font-medium text-slate-700 dark:text-slate-300">Share</span> in your browser, then <span className="font-medium text-slate-700 dark:text-slate-300">Add to Home Screen</span> to install.
+                </p>
+              ) : null}
+            </div>
           )}
 
           <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
