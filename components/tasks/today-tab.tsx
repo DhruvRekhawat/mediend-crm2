@@ -97,6 +97,7 @@ export function TodayTab() {
                 onClick={() => setDetailTaskId(task.id)}
                 showAssignee
                 showProject
+                isAssignee={task.assigneeId === user?.id}
                 canMarkComplete={canMarkComplete(task)}
                 onMarkCompleteRequest={() => setTaskToComplete(task)}
               />
@@ -125,6 +126,7 @@ export function TodayTab() {
                   onClick={() => setDetailTaskId(task.id)}
                   showAssignee
                   showProject
+                  isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
                 />
@@ -147,6 +149,7 @@ export function TodayTab() {
                 onClick={() => setDetailTaskId(task.id)}
                 showAssignee
                 showProject
+                isAssignee={task.assigneeId === user?.id}
                 canMarkComplete={canMarkComplete(task)}
                 onMarkCompleteRequest={() => setTaskToComplete(task)}
               />

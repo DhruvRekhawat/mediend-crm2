@@ -24,6 +24,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon, Clock, User, Flag, FolderOpen } from "lucide-react"
 import { format } from "date-fns"
@@ -44,6 +51,7 @@ import { cn } from "@/lib/utils"
 import { getAvatarColor } from "@/lib/avatar-colors"
 import { CompletionFeedback } from "@/components/tasks/completion-feedback"
 import { MarkCompleteDrawer } from "@/components/tasks/mark-complete-drawer"
+import { IssueWarningDialog } from "@/components/tasks/issue-warning-dialog"
 
 interface TaskDetailModalProps {
   open: boolean
@@ -54,9 +62,21 @@ interface TaskDetailModalProps {
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
   { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "EMPLOYEE_DONE", label: "Done (pending review)" },
   { value: "COMPLETED", label: "Completed" },
   { value: "CANCELLED", label: "Cancelled" },
 ] as const
+
+const PRESET_COMMENTS = [
+  "Good job",
+  "Excellent work",
+  "Delivered on time",
+  "Slight delay",
+  "Very delayed",
+  "Bad quality of work",
+  "Needs improvement",
+  "Rework required",
+]
 
 const PRIORITY_OPTIONS = [
   { value: "GENERAL", label: "General" },
@@ -123,13 +143,15 @@ function TaskDetailContent({
   const [dueDateChangeReason, setDueDateChangeReason] = useState("")
   const [showCompletionFeedbackModal, setShowCompletionFeedbackModal] = useState(false)
   const [hasShownCompletionModal, setHasShownCompletionModal] = useState(false)
+  const [issueWarningOpen, setIssueWarningOpen] = useState(false)
 
   const canEditDueDateDirectly =
     !!task &&
     !!user &&
     (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
-  const canMarkComplete = canEditDueDateDirectly
+  const canReviewTask = canEditDueDateDirectly
   const [markCompleteDrawerOpen, setMarkCompleteDrawerOpen] = useState(false)
+  const [replyingToId, setReplyingToId] = useState<string | null>(null)
 
   useEffect(() => {
     setHasShownCompletionModal(false)
@@ -145,7 +167,7 @@ function TaskDetailContent({
         user &&
         task.assigneeId === user.id &&
         task.status === "COMPLETED" &&
-        task.completionRating != null &&
+        task.grade &&
         !hasShownCompletionModal
       ) {
         setShowCompletionFeedbackModal(true)
@@ -158,8 +180,9 @@ function TaskDetailContent({
     const trimmed = commentText.trim()
     if (!trimmed) return
     try {
-      await createComment.mutateAsync(trimmed)
+      await createComment.mutateAsync({ content: trimmed, ...(replyingToId && { parentId: replyingToId }) })
       setCommentText("")
+      setReplyingToId(null)
       refetchComments()
     } catch {
       toast.error("Failed to add comment")
@@ -168,7 +191,7 @@ function TaskDetailContent({
 
   const handleStatusChange = async (newStatus: string) => {
     if (!task) return
-    if (newStatus === "COMPLETED" && canMarkComplete) {
+    if (newStatus === "COMPLETED" && canReviewTask) {
       setMarkCompleteDrawerOpen(true)
       return
     }
@@ -305,11 +328,16 @@ function TaskDetailContent({
               className={cn(
                 "text-xs rounded border bg-muted/50 px-2 py-1",
                 statusValue === "IN_PROGRESS" && "border-blue-400 text-blue-700 dark:text-blue-300",
+                statusValue === "EMPLOYEE_DONE" && "border-amber-400 text-amber-700 dark:text-amber-300",
                 statusValue === "COMPLETED" && "border-green-400 text-green-700 dark:text-green-300",
                 statusValue === "CANCELLED" && "border-muted text-muted-foreground"
               )}
             >
-              {STATUS_OPTIONS.filter((o) => o.value !== "COMPLETED" || canMarkComplete).map((o) => (
+              {STATUS_OPTIONS.filter((o) => {
+                if (o.value === "COMPLETED") return canReviewTask
+                if (o.value === "EMPLOYEE_DONE") return task.assigneeId === user?.id
+                return true
+              }).map((o) => (
                 <option key={o.value} value={o.value}>
                   {o.label}
                 </option>
@@ -337,46 +365,92 @@ function TaskDetailContent({
               {comments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No comments yet.</p>
               ) : (
-                comments.map((c) => {
-                  const avatarColor = getAvatarColor(c.user.name)
-                  return (
-                  <div key={c.id} className="flex gap-2">
-                    <div className={cn("shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium", avatarColor.bg, avatarColor.text)}>
-                      {c.user.name.charAt(0)}
+                (() => {
+                  const topLevel = comments.filter((c) => !c.parentId)
+                  return topLevel.map((c) => (
+                    <div key={c.id} className="space-y-2">
+                      <div className="flex gap-2">
+                        <div className={cn("shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(c.user.name).bg, getAvatarColor(c.user.name).text)}>
+                          {c.user.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground">
+                            {c.user.name} · {format(new Date(c.createdAt), "MMM d, HH:mm")}
+                          </p>
+                          <p className="text-sm mt-0.5 whitespace-pre-wrap">{c.content}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs mt-1"
+                            onClick={() => setReplyingToId(c.id)}
+                          >
+                            Reply
+                          </Button>
+                        </div>
+                      </div>
+                      {(c.replies?.length ?? 0) > 0 && (
+                        <div className="pl-10 space-y-2 border-l-2 border-muted ml-4">
+                          {c.replies?.map((r) => (
+                            <div key={r.id} className="flex gap-2">
+                              <div className={cn("shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium", getAvatarColor(r.user.name).bg, getAvatarColor(r.user.name).text)}>
+                                {r.user.name.charAt(0)}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs text-muted-foreground">
+                                  {r.user.name} · {format(new Date(r.createdAt), "MMM d, HH:mm")}
+                                </p>
+                                <p className="text-sm mt-0.5 whitespace-pre-wrap">{r.content}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs text-muted-foreground">
-                        {c.user.name} · {format(new Date(c.createdAt), "MMM d, HH:mm")}
-                      </p>
-                      <p className="text-sm mt-0.5 whitespace-pre-wrap">{c.content}</p>
-                    </div>
-                  </div>
-                  )
-                })
+                  ))
+                })()
               )}
             </div>
           </ScrollArea>
-          <div className="flex gap-2 mt-2 shrink-0">
-            <Textarea
-              placeholder="Add a comment..."
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleAddComment()
-                }
-              }}
-              className="min-h-[60px] resize-none"
-              rows={2}
-            />
-            <Button
-              size="sm"
-              onClick={handleAddComment}
-              disabled={!commentText.trim() || createComment.isPending}
-            >
-              Send
-            </Button>
+          <div className="space-y-2 mt-2 shrink-0">
+            <Select onValueChange={(v) => setCommentText((prev) => (prev ? `${prev}\n${v}` : v))}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Quick comment..." />
+              </SelectTrigger>
+              <SelectContent>
+                {PRESET_COMMENTS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {replyingToId && (
+              <p className="text-xs text-muted-foreground">
+                Replying to comment · <Button variant="link" className="h-auto p-0 text-xs" onClick={() => setReplyingToId(null)}>Cancel</Button>
+              </p>
+            )}
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleAddComment()
+                  }
+                }}
+                className="min-h-[60px] resize-none flex-1"
+                rows={2}
+              />
+              <Button
+                size="sm"
+                onClick={handleAddComment}
+                disabled={!commentText.trim() || createComment.isPending}
+              >
+                Send
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -501,9 +575,9 @@ function TaskDetailContent({
               <span>Created by {task.createdBy.name}</span>
             </div>
           )}
-          {task.status === "COMPLETED" && task.completionRating != null && (
+          {task.status === "COMPLETED" && task.grade && (
             <CompletionFeedback
-              rating={task.completionRating}
+              grade={task.grade}
               comments={task.completionComments}
               completedBy={task.completedBy}
               completedAt={task.completedAt}
@@ -518,7 +592,7 @@ function TaskDetailContent({
         <Separator />
 
         <MarkCompleteDrawer
-          task={task}
+          task={task.status === "EMPLOYEE_DONE" ? task : null}
           open={markCompleteDrawerOpen}
           onOpenChange={setMarkCompleteDrawerOpen}
           onSuccess={() => {
@@ -527,14 +601,54 @@ function TaskDetailContent({
           }}
         />
 
+        {task.status === "EMPLOYEE_DONE" && canReviewTask && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-2">
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Pending your review</p>
+            <Button size="sm" className="mt-2" onClick={() => setMarkCompleteDrawerOpen(true)}>
+              Review task
+            </Button>
+          </div>
+        )}
+
+        {canReviewTask && task.assigneeId && (() => {
+          const overdue = task.dueDate && new Date(task.dueDate) < new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+          const rejected = (task.rejectionCount ?? 0) >= 2
+          const gradeC = task.grade === "C"
+          if (overdue || rejected || gradeC) {
+            return (
+              <div className="rounded-lg border border-muted bg-muted/30 p-2">
+                <p className="text-xs font-medium text-muted-foreground">Consider issuing a warning</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {overdue && "Task overdue by more than 3 days."}
+                  {rejected && " Task rejected multiple times."}
+                  {gradeC && " Task completed with grade C."}
+                </p>
+                <Button size="sm" variant="outline" className="mt-2" onClick={() => setIssueWarningOpen(true)}>
+                  Issue warning
+                </Button>
+              </div>
+            )
+          }
+          return null
+        })()}
+
+        <IssueWarningDialog
+          open={issueWarningOpen}
+          onOpenChange={setIssueWarningOpen}
+          employeeId={task.assigneeId}
+          employeeName={task.assignee?.name}
+          taskId={task.id}
+          taskTitle={task.title}
+        />
+
         <Dialog open={showCompletionFeedbackModal} onOpenChange={setShowCompletionFeedbackModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Task completed</DialogTitle>
             </DialogHeader>
-            {task && task.completionRating != null && (
+            {task && task.grade && (
               <CompletionFeedback
-                rating={task.completionRating}
+                grade={task.grade}
                 comments={task.completionComments}
                 completedBy={task.completedBy}
                 completedAt={task.completedAt}

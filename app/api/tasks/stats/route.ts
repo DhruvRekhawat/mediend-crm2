@@ -26,7 +26,7 @@ export async function GET(_request: NextRequest) {
   const now = new Date()
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
-  const [total, completed, pending, overdue, byProject, byAssignee] = await Promise.all([
+  const [total, completed, pending, pendingReview, overdue, byProject, byAssignee, employeesWithWarnings] = await Promise.all([
     prisma.task.count({ where: baseWhere }),
     prisma.task.count({ where: { ...baseWhere, status: "COMPLETED" } }),
     prisma.task.count({
@@ -35,10 +35,11 @@ export async function GET(_request: NextRequest) {
         status: { in: ["PENDING", "IN_PROGRESS"] },
       },
     }),
+    prisma.task.count({ where: { ...baseWhere, status: "EMPLOYEE_DONE" } }),
     prisma.task.count({
       where: {
         ...baseWhere,
-        status: { in: ["PENDING", "IN_PROGRESS"] },
+        status: { in: ["PENDING", "IN_PROGRESS", "EMPLOYEE_DONE"] },
         dueDate: { lt: startOfToday },
       },
     }),
@@ -52,6 +53,9 @@ export async function GET(_request: NextRequest) {
       where: baseWhere,
       _count: { id: true },
     }),
+    isMDOrAdmin
+      ? prisma.warning.groupBy({ by: ["employeeId"], _count: { id: true } }).then((r) => r.length)
+      : Promise.resolve(0),
   ])
 
   const projectIds = [...new Set(byProject.map((p) => p.projectId).filter(Boolean))] as string[]
@@ -97,7 +101,9 @@ export async function GET(_request: NextRequest) {
     total,
     completed,
     pending,
+    pendingReview,
     overdue,
+    employeesWithWarnings,
     projectWise,
     employeeWise,
   })

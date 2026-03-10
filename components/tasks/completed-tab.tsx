@@ -60,6 +60,7 @@ export function CompletedTab() {
               showAssignee
               showProject
               showCompletionRating
+              isAssignee={task.assigneeId === user?.id}
               canMarkComplete={canMarkComplete(task)}
             />
             <span className="text-xs text-muted-foreground shrink-0">

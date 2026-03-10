@@ -172,8 +172,17 @@ enum TaskPriority {
 enum TaskStatus {
   PENDING
   IN_PROGRESS
+  EMPLOYEE_DONE
   COMPLETED
   CANCELLED
+}
+
+enum WarningType {
+  REPEATED_DEADLINE_MISS
+  LOW_QUALITY_WORK
+  UNRESPONSIVE
+  TASK_ABANDONMENT
+  OTHER
 }
 
 enum TaskApprovalStatus {
@@ -318,6 +327,8 @@ model User {
   workLogs            WorkLog[]
   mdTaskTeamsOwned    MDTaskTeam[]         @relation("MDTaskTeamOwner")
   mdWatchlistOwned    MDWatchlistEmployee[] @relation("MDWatchlistOwner")
+  warningsReceived    Warning[]            @relation("EmployeeWarnings")
+  warningsIssued      Warning[]            @relation("IssuedWarnings")
 
   @@index([email])
   @@index([role])
@@ -2061,12 +2072,13 @@ model Task {
   createdById String
   createdBy   User         @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
-  // Completion (only set when status = COMPLETED; only assigner can mark complete)
+  // Completion (set when manager approves from EMPLOYEE_DONE)
   completedById    String?
   completedBy      User?     @relation("TaskCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
   completedAt     DateTime?
-  completionRating Int?     // 1-5 stars
+  grade           String?   // A+, A, B+, B, C
   completionComments String? @db.Text
+  rejectionCount  Int       @default(0) // times rejected from EMPLOYEE_DONE
 
   // Calendar display
   startTime   DateTime?
@@ -2083,6 +2095,7 @@ model Task {
   approvals   TaskDueDateApproval[]
   comments    TaskComment[]
   activityLogs TaskActivityLog[]
+  warnings    Warning[]
 
   @@index([assigneeId])
   @@index([createdById])
@@ -2127,10 +2140,14 @@ model TaskComment {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   content   String   @db.Text
+  parentId  String?
+  parent    TaskComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   TaskComment[] @relation("CommentReplies")
   createdAt DateTime @default(now())
 
   @@index([taskId])
   @@index([userId])
+  @@index([parentId])
 }
 
 model TaskActivityLog {
@@ -2145,6 +2162,23 @@ model TaskActivityLog {
 
   @@index([taskId])
   @@index([userId])
+}
+
+model Warning {
+  id          String      @id @default(cuid())
+  employeeId  String
+  employee    User        @relation("EmployeeWarnings", fields: [employeeId], references: [id], onDelete: Cascade)
+  taskId      String?
+  task        Task?       @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  type        WarningType
+  note        String      @db.Text
+  issuedById  String
+  issuedBy    User        @relation("IssuedWarnings", fields: [issuedById], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+
+  @@index([employeeId])
+  @@index([taskId])
+  @@index([issuedById])
 }
 
 // MD (admin) task teams: saved sets of employees for quick task assignment

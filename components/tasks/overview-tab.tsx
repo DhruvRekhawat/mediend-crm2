@@ -64,7 +64,7 @@ export function OverviewTab() {
 
   return (
     <div className="space-y-6">
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className="rounded-lg border border-l-4 border-l-blue-500 bg-muted/30 px-3 py-3">
           <p className="text-sm md:text-xs text-muted-foreground">Total</p>
           <p className="text-2xl font-semibold">{stats.total}</p>
@@ -77,9 +77,17 @@ export function OverviewTab() {
           <p className="text-sm md:text-xs text-muted-foreground">Pending</p>
           <p className="text-2xl font-semibold">{stats.pending}</p>
         </div>
+        <div className="rounded-lg border border-l-4 border-l-purple-500 bg-muted/30 px-3 py-3">
+          <p className="text-sm md:text-xs text-muted-foreground">Pending review</p>
+          <p className="text-2xl font-semibold text-purple-600">{stats.pendingReview ?? 0}</p>
+        </div>
         <div className="rounded-lg border border-l-4 border-l-red-500 bg-muted/30 px-3 py-3">
           <p className="text-sm md:text-xs text-muted-foreground">Overdue</p>
           <p className="text-2xl font-semibold text-red-600">{stats.overdue}</p>
+        </div>
+        <div className="rounded-lg border border-l-4 border-l-orange-500 bg-muted/30 px-3 py-3">
+          <p className="text-sm md:text-xs text-muted-foreground">Employees w/ warnings</p>
+          <p className="text-2xl font-semibold text-orange-600">{stats.employeesWithWarnings ?? 0}</p>
         </div>
       </section>
 
@@ -96,6 +104,7 @@ export function OverviewTab() {
                 onClick={() => setDetailTaskId(task.id)}
                 showAssignee
                 showProject
+                isAssignee={task.assigneeId === user?.id}
                 canMarkComplete={canMarkComplete(task)}
                 onMarkCompleteRequest={() => setTaskToComplete(task)}
               />
@@ -155,15 +164,16 @@ export function OverviewTab() {
                         </p>
                       ) : (
                         assigneeTasks.map((task) => (
-                          <TaskRow
-                            key={task.id}
-                            task={task}
-                            onClick={() => setDetailTaskId(task.id)}
-                            showAssignee={false}
-                            showProject
-                            canMarkComplete={canMarkComplete(task)}
-                            onMarkCompleteRequest={() => setTaskToComplete(task)}
-                          />
+<TaskRow
+                          key={task.id}
+                          task={task}
+                          onClick={() => setDetailTaskId(task.id)}
+                          showAssignee={false}
+                          showProject
+                          isAssignee={task.assigneeId === user?.id}
+                          canMarkComplete={canMarkComplete(task)}
+                          onMarkCompleteRequest={() => setTaskToComplete(task)}
+                        />
                         ))
                       )}
                     </div>
@@ -230,6 +240,7 @@ export function OverviewTab() {
                             onClick={() => setDetailTaskId(task.id)}
                             showAssignee
                             showProject={false}
+                            isAssignee={task.assigneeId === user?.id}
                             canMarkComplete={canMarkComplete(task)}
                             onMarkCompleteRequest={() => setTaskToComplete(task)}
                           />

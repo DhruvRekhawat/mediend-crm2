@@ -11,9 +11,9 @@ const updateTaskSchema = z.object({
   /** Required when requesting a due date change (employee flow); ignored when MD/creator updates directly. */
   dueDateChangeReason: z.string().min(1).optional(),
   priority: z.enum(["GENERAL", "LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
-  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"]).optional(),
-  /** Required when setting status to COMPLETED (1-5). Only assigner (creator or MD/ADMIN) can mark complete. */
-  completionRating: z.number().int().min(1).max(5).optional(),
+  status: z.enum(["PENDING", "IN_PROGRESS", "EMPLOYEE_DONE", "COMPLETED", "CANCELLED"]).optional(),
+  /** Required when setting status to COMPLETED. Only manager (creator or MD/ADMIN) can approve. */
+  grade: z.enum(["A+", "A", "B+", "B", "C"]).optional(),
   completionComments: z.string().optional().nullable(),
   projectId: z.string().optional().nullable(),
   startTime: z.string().datetime().optional().nullable(),
@@ -71,7 +71,7 @@ export async function PATCH(
     return errorResponse("Forbidden", 403)
   }
 
-  const canMarkComplete = isMDOrAdmin || isCreator
+  const canReviewTask = isMDOrAdmin || isCreator
 
   const body = await request.json()
   const parsed = updateTaskSchema.safeParse(body)
@@ -79,15 +79,23 @@ export async function PATCH(
     return errorResponse(parsed.error.message)
   }
 
-  if (parsed.data.status === "COMPLETED" && !canMarkComplete) {
-    return errorResponse("Only the person who assigned the task can mark it complete", 403)
+  // Only assignee can set status to EMPLOYEE_DONE
+  if (parsed.data.status === "EMPLOYEE_DONE" && !isAssignee) {
+    return errorResponse("Only the assignee can mark a task as done for review", 403)
   }
 
+  // Only manager can set COMPLETED (approve) or reject EMPLOYEE_DONE -> IN_PROGRESS
+  if (parsed.data.status === "COMPLETED" && !canReviewTask) {
+    return errorResponse("Only the person who assigned the task can approve it as complete", 403)
+  }
   if (parsed.data.status === "COMPLETED") {
-    const rating = parsed.data.completionRating
-    if (rating == null || rating < 1 || rating > 5) {
-      return errorResponse("Completion rating (1-5) is required when marking a task complete", 400)
+    const grade = parsed.data.grade
+    if (!grade || !["A+", "A", "B+", "B", "C"].includes(grade)) {
+      return errorResponse("Grade (A+, A, B+, B, or C) is required when approving a task", 400)
     }
+  }
+  if (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE" && !canReviewTask) {
+    return errorResponse("Only the manager can reject a task back to in progress", 403)
   }
 
   // Employees cannot change due date directly; only MD, ADMIN, or task creator can. Others must request with a reason.
@@ -150,12 +158,18 @@ export async function PATCH(
     if (parsed.data.status === "COMPLETED") {
       updateData.completedById = user.id
       updateData.completedAt = new Date()
-      updateData.completionRating = parsed.data.completionRating ?? null
+      updateData.grade = parsed.data.grade ?? null
       updateData.completionComments = parsed.data.completionComments?.trim() ?? null
-    } else {
+    } else if (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE") {
       updateData.completedById = null
       updateData.completedAt = null
-      updateData.completionRating = null
+      updateData.grade = null
+      updateData.completionComments = null
+      updateData.rejectionCount = (task.rejectionCount ?? 0) + 1
+    } else if (parsed.data.status !== "COMPLETED") {
+      updateData.completedById = null
+      updateData.completedAt = null
+      updateData.grade = null
       updateData.completionComments = null
     }
   }

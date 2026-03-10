@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Star } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -10,10 +9,30 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useUpdateTask } from "@/hooks/use-tasks"
 import type { Task } from "@/hooks/use-tasks"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+
+const GRADES = ["A+", "A", "B+", "B", "C"] as const
+
+const PRESET_COMMENTS = [
+  "Good job",
+  "Excellent work",
+  "Delivered on time",
+  "Slight delay",
+  "Very delayed",
+  "Bad quality of work",
+  "Needs improvement",
+  "Rework required",
+]
 
 interface MarkCompleteDrawerProps {
   task: Task | null
@@ -28,38 +47,64 @@ export function MarkCompleteDrawer({
   onOpenChange,
   onSuccess,
 }: MarkCompleteDrawerProps) {
-  const [rating, setRating] = useState<number>(0)
+  const [grade, setGrade] = useState<string | null>(null)
   const [comments, setComments] = useState("")
   const updateTask = useUpdateTask()
 
-  const handleSubmit = async () => {
-    if (!task || rating < 1 || rating > 5) return
+  const handlePresetSelect = (value: string) => {
+    const preset = PRESET_COMMENTS.find((p) => p === value)
+    if (preset) {
+      setComments((prev) => (prev ? `${prev}\n${preset}` : preset))
+    }
+  }
+
+  const handleApprove = async () => {
+    if (!task || !grade || !GRADES.includes(grade as (typeof GRADES)[number])) return
     try {
       await updateTask.mutateAsync({
         id: task.id,
         data: {
           status: "COMPLETED",
-          completionRating: rating,
+          grade: grade as "A+" | "A" | "B+" | "B" | "C",
           completionComments: comments.trim() || undefined,
         },
       })
-      toast.success("Task marked complete")
-      setRating(0)
+      toast.success("Task approved")
+      setGrade(null)
       setComments("")
       onOpenChange(false)
       onSuccess?.()
     } catch {
-      toast.error("Failed to mark task complete")
+      toast.error("Failed to approve task")
+    }
+  }
+
+  const handleReject = async () => {
+    if (!task) return
+    try {
+      await updateTask.mutateAsync({
+        id: task.id,
+        data: { status: "IN_PROGRESS" },
+      })
+      toast.success("Task sent back to in progress")
+      setGrade(null)
+      setComments("")
+      onOpenChange(false)
+      onSuccess?.()
+    } catch {
+      toast.error("Failed to reject task")
     }
   }
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
-      setRating(0)
+      setGrade(null)
       setComments("")
     }
     onOpenChange(next)
   }
+
+  const canApprove = task && grade && GRADES.includes(grade as (typeof GRADES)[number])
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -69,39 +114,51 @@ export function MarkCompleteDrawer({
       >
         <SheetHeader className="text-left">
           <SheetTitle>
-            {task ? `Mark complete: ${task.title}` : "Mark task complete"}
+            {task ? `Review: ${task.title}` : "Review task"}
           </SheetTitle>
         </SheetHeader>
         {task && (
           <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-auto py-4">
             <div>
-              <p className="text-sm font-medium mb-2">Rating (required)</p>
-              <div className="flex gap-1" role="group" aria-label="Rate 1 to 5 stars">
-                {[1, 2, 3, 4, 5].map((value) => (
+              <p className="text-sm font-medium mb-2">Grade (required to approve)</p>
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Select grade">
+                {GRADES.map((g) => (
                   <button
-                    key={value}
+                    key={g}
                     type="button"
-                    onClick={() => setRating(value)}
-                    className="p-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={`${value} star${value === 1 ? "" : "s"}`}
-                    aria-pressed={rating === value}
+                    onClick={() => setGrade(g)}
+                    className={cn(
+                      "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
+                      grade === g
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-input hover:bg-muted"
+                    )}
+                    aria-pressed={grade === g}
                   >
-                    <Star
-                      className={cn(
-                        "h-10 w-10 transition-colors",
-                        rating >= value
-                          ? "fill-yellow-400 text-yellow-500"
-                          : "fill-muted text-muted-foreground hover:fill-yellow-200 hover:text-yellow-400"
-                      )}
-                    />
+                    {g}
                   </button>
                 ))}
               </div>
             </div>
             <div>
+              <p className="text-sm font-medium mb-2">Quick comment</p>
+              <Select onValueChange={handlePresetSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Add preset comment..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRESET_COMMENTS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <p className="text-sm font-medium mb-2">Comments</p>
               <Textarea
-                placeholder="Add feedback or comments (optional)"
+                placeholder="Add feedback (optional)"
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 className="min-h-[100px] resize-none"
@@ -110,14 +167,22 @@ export function MarkCompleteDrawer({
             </div>
             <div className="flex gap-2 pt-2">
               <Button
-                onClick={handleSubmit}
-                disabled={rating < 1 || rating > 5 || updateTask.isPending}
+                onClick={handleApprove}
+                disabled={!canApprove || updateTask.isPending}
                 className="flex-1"
               >
-                Mark complete
+                Approve
               </Button>
               <Button
                 variant="outline"
+                onClick={handleReject}
+                disabled={updateTask.isPending}
+                className="text-destructive hover:text-destructive"
+              >
+                Reject
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => handleOpenChange(false)}
                 disabled={updateTask.isPending}
               >

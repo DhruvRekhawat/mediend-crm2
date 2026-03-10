@@ -5,7 +5,7 @@ import { Plus } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
-import { useTasks } from "@/hooks/use-tasks"
+import { useTasks, useWarnings } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { TaskRow } from "./task-row"
@@ -13,7 +13,8 @@ import { TaskInput } from "./task-input"
 import { MobileTaskDrawer } from "./mobile-task-drawer"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
-import { startOfDay } from "date-fns"
+import { IssueWarningDialog } from "./issue-warning-dialog"
+import { startOfDay, format } from "date-fns"
 import type { MDTeamOverviewMember } from "@/hooks/use-md-team"
 import type { Task } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
@@ -28,6 +29,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [issueWarningOpen, setIssueWarningOpen] = useState(false)
 
   const canMarkComplete = (task: Task) =>
     !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
@@ -36,6 +38,9 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
     { assigneeId: member.id },
     { enabled: !!member.id }
   )
+  const { data: allWarnings = [] } = useWarnings()
+  const warnings = allWarnings.filter((w) => w.employeeId === member.id)
+  const canIssueWarning = user?.role === "MD" || user?.role === "ADMIN"
   const today = startOfDay(new Date())
   const overdueTasks = tasks.filter(
     (t) =>
@@ -84,6 +89,31 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
 
         <ScrollArea className="flex-1 min-h-0 -mx-2 px-2">
           <div className="space-y-6 pb-6">
+            {canIssueWarning && (
+              <section>
+                <h2 className="text-base md:text-sm font-semibold mb-2">Warnings</h2>
+                {warnings.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No warnings on record.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {warnings.map((w) => (
+                      <li key={w.id} className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                        <p className="font-medium capitalize">{w.type.replace(/_/g, " ").toLowerCase()}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{w.note}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(w.createdAt), "MMM d, yyyy")}
+                          {w.issuedBy && ` · by ${w.issuedBy.name}`}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Button size="sm" variant="outline" className="mt-2" onClick={() => setIssueWarningOpen(true)}>
+                  Issue warning
+                </Button>
+              </section>
+            )}
+
             <section>
               <h2 className="text-base md:text-sm font-semibold mb-2">Overdue tasks</h2>
               {overdueTasks.length === 0 ? (
@@ -96,6 +126,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                         task={task}
                         onClick={() => setDetailTaskId(task.id)}
                         showAssignee={false}
+                        isAssignee={task.assigneeId === user?.id}
                         canMarkComplete={canMarkComplete(task)}
                         onMarkCompleteRequest={() => setTaskToComplete(task)}
                       />
@@ -121,6 +152,8 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                         task={task}
                         onClick={() => setDetailTaskId(task.id)}
                         showAssignee={false}
+                        showProject
+                        isAssignee={task.assigneeId === user?.id}
                         canMarkComplete={canMarkComplete(task)}
                         onMarkCompleteRequest={() => setTaskToComplete(task)}
                       />
@@ -174,6 +207,13 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
         open={!!taskToComplete}
         onOpenChange={(open) => !open && setTaskToComplete(null)}
         onSuccess={() => setTaskToComplete(null)}
+      />
+      <IssueWarningDialog
+        open={issueWarningOpen}
+        onOpenChange={setIssueWarningOpen}
+        employeeId={member.id}
+        employeeName={member.name}
+        onSuccess={() => {}}
       />
     </>
   )

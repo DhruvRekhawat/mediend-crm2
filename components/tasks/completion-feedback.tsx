@@ -1,10 +1,9 @@
 "use client"
 
-import { Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface CompletionFeedbackProps {
-  rating: number
+  grade: string
   comments?: string | null
   completedBy?: { id: string; name: string } | null
   completedAt?: string | null
@@ -13,40 +12,39 @@ interface CompletionFeedbackProps {
   compact?: boolean
 }
 
+const GRADE_COLORS: Record<string, string> = {
+  "A+": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  "A": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  "B+": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  "B": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
+  "C": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+}
+
 export function CompletionFeedback({
-  rating,
+  grade,
   comments,
   completedBy,
   completedAt,
   className,
   compact = false,
 }: CompletionFeedbackProps) {
-  if (rating < 1 || rating > 5) return null
+  if (!grade || !["A+", "A", "B+", "B", "C"].includes(grade)) return null
 
-  const stars = (
-    <div
-      className="flex items-center gap-0.5"
-      role="img"
-      aria-label={`Rated ${rating} out of 5 stars`}
+  const gradeBadge = (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold",
+        GRADE_COLORS[grade] ?? "bg-muted text-muted-foreground"
+      )}
     >
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          className={cn(
-            "shrink-0",
-            compact ? "h-4 w-4" : "h-5 w-5",
-            i <= rating ? "fill-yellow-400 text-yellow-500" : "fill-muted text-muted-foreground"
-          )}
-          aria-hidden
-        />
-      ))}
-    </div>
+      {grade}
+    </span>
   )
 
   if (compact) {
     return (
       <div className={cn("flex items-center gap-2", className)}>
-        {stars}
+        {gradeBadge}
         {comments && (
           <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={comments}>
             {comments}
@@ -60,7 +58,7 @@ export function CompletionFeedback({
     <div className={cn("rounded-lg border bg-muted/30 p-3 space-y-2", className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium">Completion feedback</span>
-        {stars}
+        {gradeBadge}
       </div>
       {comments && (
         <p className="text-sm text-muted-foreground whitespace-pre-wrap">{comments}</p>

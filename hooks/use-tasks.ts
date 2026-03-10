@@ -27,8 +27,9 @@ export interface Task {
   updatedAt: string
   completedById?: string | null
   completedAt?: string | null
-  completionRating?: number | null
+  grade?: string | null
   completionComments?: string | null
+  rejectionCount?: number
   assignee?: { id: string; name: string; email: string }
   createdBy?: { id: string; name: string }
   completedBy?: { id: string; name: string } | null
@@ -56,8 +57,11 @@ export interface TaskComment {
   taskId: string
   userId: string
   content: string
+  parentId?: string | null
   createdAt: string
   user: { id: string; name: string; email: string }
+  parent?: { id: string; userId: string; user: { id: string; name: string } } | null
+  replies?: TaskComment[]
 }
 
 export interface TaskActivityLog {
@@ -74,7 +78,9 @@ export interface TaskStats {
   total: number
   completed: number
   pending: number
+  pendingReview: number
   overdue: number
+  employeesWithWarnings: number
   projectWise: { projectId: string | null; projectName: string; count: number }[]
   employeeWise: { assigneeId: string; assigneeName: string; total: number; completed: number }[]
 }
@@ -147,9 +153,9 @@ export interface UpdateTaskInput {
   /** Required when requesting a due date change (employee flow). */
   dueDateChangeReason?: string
   priority?: "GENERAL" | "LOW" | "MEDIUM" | "HIGH" | "URGENT"
-  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
-  /** Required when setting status to COMPLETED (1-5). */
-  completionRating?: number
+  status?: "PENDING" | "IN_PROGRESS" | "EMPLOYEE_DONE" | "COMPLETED" | "CANCELLED"
+  /** Required when setting status to COMPLETED. */
+  grade?: "A+" | "A" | "B+" | "B" | "C"
   completionComments?: string | null
   projectId?: string | null
   startTime?: string | null
@@ -273,8 +279,8 @@ export function useTaskComments(taskId: string | null) {
 export function useCreateTaskComment(taskId: string | null) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (content: string) =>
-      apiPost<TaskComment>(`/api/tasks/${taskId}/comments`, { content }),
+    mutationFn: (data: { content: string; parentId?: string }) =>
+      apiPost<TaskComment>(`/api/tasks/${taskId}/comments`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks", taskId, "comments"] })
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
@@ -314,5 +320,55 @@ export function useAssignableUsers() {
   return useQuery<AssignableUser[]>({
     queryKey: ["tasks", "assignable-users"],
     queryFn: () => apiGet<AssignableUser[]>("/api/tasks/assignable-users"),
+  })
+}
+
+export type WarningType = "REPEATED_DEADLINE_MISS" | "LOW_QUALITY_WORK" | "UNRESPONSIVE" | "TASK_ABANDONMENT" | "OTHER"
+
+export interface Warning {
+  id: string
+  employeeId: string
+  taskId: string | null
+  type: WarningType
+  note: string
+  issuedById: string
+  createdAt: string
+  employee?: { id: string; name: string; email: string }
+  task?: { id: string; title: string } | null
+  issuedBy?: { id: string; name: string }
+}
+
+export interface WarningSuggestion {
+  type: "OVERDUE_3_DAYS" | "REJECTED_MULTIPLE" | "GRADE_C"
+  taskId: string
+  taskTitle: string
+  employeeId: string
+  employeeName: string
+  reason: string
+}
+
+export function useWarnings() {
+  return useQuery<Warning[]>({
+    queryKey: ["warnings"],
+    queryFn: () => apiGet<Warning[]>("/api/warnings"),
+  })
+}
+
+export function useCreateWarning() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: { employeeId: string; taskId?: string | null; type: WarningType; note: string }) =>
+      apiPost<Warning>("/api/warnings", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["warnings"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks", "stats"] })
+    },
+  })
+}
+
+export function useWarningSuggestions() {
+  return useQuery<WarningSuggestion[]>({
+    queryKey: ["warnings", "suggestions"],
+    queryFn: () => apiGet<WarningSuggestion[]>("/api/warnings/suggestions"),
   })
 }

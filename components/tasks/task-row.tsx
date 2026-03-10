@@ -1,7 +1,8 @@
 "use client"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Flag, Star } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Flag } from "lucide-react"
 import { format } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
@@ -15,16 +16,26 @@ const PRIORITY_COLORS: Record<string, string> = {
   URGENT: "text-red-600",
 }
 
+const GRADE_CLASS: Record<string, string> = {
+  "A+": "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  "A": "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  "B+": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  "B": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
+  "C": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+}
+
 interface TaskRowProps {
   task: Task
   onClick?: () => void
   showAssignee?: boolean
   showProject?: boolean
-  /** Only the assigner (creator or MD/ADMIN) can mark complete; if false, checkbox is hidden */
+  /** True if current user is the task assignee */
+  isAssignee?: boolean
+  /** True if current user can review/approve (manager) */
   canMarkComplete?: boolean
-  /** When user marks complete (and task not yet completed), open drawer to rate; call this instead of updating */
+  /** When manager clicks to review EMPLOYEE_DONE task, open review drawer */
   onMarkCompleteRequest?: (task: Task) => void
-  /** When true, show star rating for completed tasks */
+  /** When true, show grade badge for completed tasks */
   showCompletionRating?: boolean
   className?: string
 }
@@ -34,6 +45,7 @@ export function TaskRow({
   onClick,
   showAssignee = true,
   showProject = true,
+  isAssignee = false,
   canMarkComplete = true,
   onMarkCompleteRequest,
   showCompletionRating = false,
@@ -41,35 +53,36 @@ export function TaskRow({
 }: TaskRowProps) {
   const updateMutation = useUpdateTask()
   const isCompleted = task.status === "COMPLETED"
+  const isEmployeeDone = task.status === "EMPLOYEE_DONE"
 
   const handleToggleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (isCompleted) {
+    if (isCompleted && canMarkComplete) {
       try {
         await updateMutation.mutateAsync({
           id: task.id,
           data: { status: "PENDING" },
         })
-      } catch {
-        // toast handled by mutation
-      }
+      } catch {}
       return
     }
-    if (onMarkCompleteRequest) {
+    if (isEmployeeDone && canMarkComplete && onMarkCompleteRequest) {
       onMarkCompleteRequest(task)
-    } else if (canMarkComplete) {
+      return
+    }
+    if ((task.status === "PENDING" || task.status === "IN_PROGRESS") && isAssignee) {
       try {
         await updateMutation.mutateAsync({
           id: task.id,
-          data: { status: "COMPLETED", completionRating: 5, completionComments: null },
+          data: { status: "EMPLOYEE_DONE" },
         })
-      } catch {
-        // toast handled by mutation
-      }
+      } catch {}
     }
   }
 
-  const showCheckbox = canMarkComplete
+  const showCheckbox =
+    (isAssignee && (task.status === "PENDING" || task.status === "IN_PROGRESS")) ||
+    (canMarkComplete && (isEmployeeDone || isCompleted))
 
   const dueLabel = task.dueDate
     ? format(new Date(task.dueDate), "MMM d")
@@ -97,23 +110,19 @@ export function TaskRow({
           checked={isCompleted}
           onCheckedChange={() => {}}
           onClick={handleToggleComplete}
-          aria-label={isCompleted ? "Mark incomplete" : "Mark complete"}
+          aria-label={isCompleted ? "Mark incomplete" : isEmployeeDone ? "Review task" : "Mark done for review"}
           className="shrink-0"
         />
       )}
-      {showCompletionRating && isCompleted && task.completionRating != null && (
-        <div className="flex items-center gap-0.5 shrink-0" aria-label={`Rated ${task.completionRating} out of 5`}>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Star
-              key={i}
-              className={cn(
-                "h-4 w-4",
-                i <= (task.completionRating ?? 0) ? "fill-yellow-400 text-yellow-500" : "fill-muted text-muted-foreground"
-              )}
-              aria-hidden
-            />
-          ))}
-        </div>
+      {isEmployeeDone && canMarkComplete && (
+        <Badge variant="secondary" className="shrink-0 text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+          Review
+        </Badge>
+      )}
+      {showCompletionRating && isCompleted && task.grade && (
+        <Badge variant="secondary" className={cn("shrink-0 text-xs", GRADE_CLASS[task.grade] ?? "bg-muted")}>
+          {task.grade}
+        </Badge>
       )}
       <div className="min-w-0 flex-1">
         <span
@@ -146,7 +155,7 @@ export function TaskRow({
           <span
             className={cn(
               "text-xs",
-              task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "COMPLETED"
+              task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "COMPLETED" && task.status !== "EMPLOYEE_DONE"
                 ? "text-red-600"
                 : "text-muted-foreground"
             )}

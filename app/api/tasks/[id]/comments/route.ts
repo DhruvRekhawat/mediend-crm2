@@ -6,6 +6,7 @@ import { z } from "zod"
 
 const createCommentSchema = z.object({
   content: z.string().min(1),
+  parentId: z.string().optional(),
 })
 
 export async function GET(
@@ -31,6 +32,11 @@ export async function GET(
     where: { taskId },
     include: {
       user: { select: { id: true, name: true, email: true } },
+      parent: { select: { id: true, userId: true }, include: { user: { select: { id: true, name: true } } } },
+      replies: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+        orderBy: { createdAt: "asc" },
+      },
     },
     orderBy: { createdAt: "asc" },
   })
@@ -63,14 +69,27 @@ export async function POST(
     return errorResponse(parsed.error.message)
   }
 
+  let parentId: string | null = null
+  if (parsed.data.parentId) {
+    const parent = await prisma.taskComment.findFirst({
+      where: { id: parsed.data.parentId, taskId },
+    })
+    if (!parent) {
+      return errorResponse("Parent comment not found or does not belong to this task", 400)
+    }
+    parentId = parsed.data.parentId
+  }
+
   const comment = await prisma.taskComment.create({
     data: {
       taskId,
       userId: user.id,
       content: parsed.data.content.trim(),
+      parentId,
     },
     include: {
       user: { select: { id: true, name: true, email: true } },
+      parent: { select: { id: true }, include: { user: { select: { id: true, name: true } } } },
     },
   })
 
