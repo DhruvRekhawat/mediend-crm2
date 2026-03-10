@@ -86,13 +86,15 @@ export function MobileTaskDrawer({
 }: MobileTaskDrawerProps) {
   const { user } = useAuth()
   const titleRef = useRef<HTMLInputElement>(null)
+  const prefillAssigneeId = prefillAssignee?.id
+  const prefillAssigneeName = prefillAssignee?.name
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [dueDate, setDueDate] = useState<Date | undefined>()
   const [priority, setPriority] = useState<CreateTaskInput["priority"]>("MEDIUM")
   const [assigneeId, setAssigneeId] = useState<string>(() => {
-    if (prefillAssignee) return prefillAssignee.id
+    if (prefillAssigneeId) return prefillAssigneeId
     if (isMD) return ""
     return user?.id ?? ""
   })
@@ -119,13 +121,13 @@ export function MobileTaskDrawer({
     )
   }, [assignableUsers, assigneeSearch, isMD, user?.id])
 
-  const effectiveAssigneeId = prefillAssignee ? prefillAssignee.id : assigneeId
-  const assigneeRequired = isMD || !!prefillAssignee
+  const effectiveAssigneeId = prefillAssigneeId ?? assigneeId
+  const assigneeRequired = isMD || !!prefillAssigneeId
 
   const selectedAssigneeName = effectiveAssigneeId
     ? effectiveAssigneeId === user?.id
       ? "Me"
-      : assignableUsers.find((u) => u.id === effectiveAssigneeId)?.name ?? prefillAssignee?.name ?? "Add assignees"
+      : assignableUsers.find((u) => u.id === effectiveAssigneeId)?.name ?? prefillAssigneeName ?? "Add assignees"
     : "Add assignees"
 
   const selectedPriority = PRIORITIES.find((p) => p.value === (priority ?? "MEDIUM"))
@@ -141,12 +143,12 @@ export function MobileTaskDrawer({
     setDescription("")
     setDueDate(undefined)
     setPriority("MEDIUM")
-    setAssigneeId(prefillAssignee ? prefillAssignee.id : isMD ? "" : user?.id ?? "")
+    setAssigneeId(prefillAssigneeId ?? (isMD ? "" : user?.id ?? ""))
     setProjectId(null)
     setNewProjectName("")
     setPickerOpen(null)
     setAssigneeSearch("")
-  }, [user?.id, isMD, prefillAssignee])
+  }, [user?.id, isMD, prefillAssigneeId])
 
   useEffect(() => {
     if (open) {
@@ -278,9 +280,9 @@ export function MobileTaskDrawer({
                 label="Add assignees"
                 value={effectiveAssigneeId ? selectedAssigneeName : undefined}
                 accent={!!effectiveAssigneeId}
-                disabled={!!prefillAssignee}
+                disabled={!!prefillAssigneeId}
                 onClick={() => {
-                  if (prefillAssignee) return
+                  if (prefillAssigneeId) return
                   setPickerOpen("assignee")
                 }}
               />
