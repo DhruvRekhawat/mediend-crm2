@@ -161,7 +161,7 @@ export function AppSidebar() {
                         <Icon />
                         <span>{label}</span>
                         {badgeCount > 0 && (
-                          <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                          <SidebarMenuBadge className="bg-destructive text-white">
                             {badgeCount > 99 ? '99+' : badgeCount}
                           </SidebarMenuBadge>
                         )}
@@ -348,7 +348,7 @@ export function AppSidebar() {
                                 <Icon />
                                 <span>{item.title.replace('Fin ', '')}</span>
                                 {badgeCount > 0 && (
-                                  <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
+                                  <SidebarMenuBadge className="bg-destructive text-white">
                                     {badgeCount > 99 ? '99+' : badgeCount}
                                   </SidebarMenuBadge>
                                 )}
