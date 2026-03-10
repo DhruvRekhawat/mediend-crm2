@@ -93,7 +93,7 @@ export function TeamTab() {
           {search ? "No team members match your search." : "No team members yet. Add people to get started."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
           {members.map((member) => (
             <TeamMemberCard
               key={member.id}
