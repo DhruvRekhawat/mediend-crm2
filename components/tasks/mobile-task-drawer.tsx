@@ -226,7 +226,7 @@ export function MobileTaskDrawer({
 
   return (
     <>
-      <Drawer open={open} onOpenChange={onOpenChange} direction="bottom">
+      <Drawer open={open} onOpenChange={onOpenChange} direction="bottom" repositionInputs={false}>
         <DrawerContent
           className={cn(
             "inset-x-0 bottom-0 mt-0 flex h-dvh max-h-dvh flex-col rounded-t-2xl border-t",
