@@ -200,8 +200,8 @@ function TaskDetailContent({
       setCommentText("")
       setReplyingToId(null)
       refetchComments()
-    } catch {
-      toast.error("Failed to add comment")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to add comment")
     }
   }
 

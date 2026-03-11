@@ -32,7 +32,11 @@ export async function GET(
     where: { taskId },
     include: {
       user: { select: { id: true, name: true, email: true } },
-      parent: { select: { id: true, userId: true }, include: { user: { select: { id: true, name: true } } } },
+      parent: {
+        include: {
+          user: { select: { id: true, name: true } },
+        },
+      },
       replies: {
         include: { user: { select: { id: true, name: true, email: true } } },
         orderBy: { createdAt: "asc" },
@@ -89,7 +93,11 @@ export async function POST(
     },
     include: {
       user: { select: { id: true, name: true, email: true } },
-      parent: { select: { id: true }, include: { user: { select: { id: true, name: true } } } },
+      parent: {
+        include: {
+          user: { select: { id: true, name: true } },
+        },
+      },
     },
   })
 
