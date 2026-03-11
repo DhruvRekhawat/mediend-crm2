@@ -212,13 +212,13 @@ export async function GET(request: NextRequest) {
       extensionCountMap.set(r.requestedById, r._count.id)
     }
 
-    // Today's attendance: IN/OUT based on *last* punch of the day (last punch IN = still in, last punch OUT = out)
+    // Today's attendance: same logic as attendance route / heatmap — inTime = earliest punch, outTime only when 2+ punches.
+    // So: 0 punches = OUT; 1 punch = IN (only punched in); 2+ punches = OUT (has punched out).
     const todayAttendance = await prisma.attendanceLog.findMany({
       where: {
         employeeId: { in: employeeIds },
         logDate: { gte: todayStart, lte: todayEnd },
       },
-      orderBy: { logDate: "desc" },
     })
     const todayLeaves = await prisma.leaveRequest.findMany({
       where: {
@@ -237,17 +237,19 @@ export async function GET(request: NextRequest) {
         continue
       }
       const empLogs = todayAttendance.filter((a) => a.employeeId === empId)
-      const lastPunch = empLogs[0]
-      const firstInPunch = empLogs.find((a) => a.punchDirection === "IN")
-      if (lastPunch) {
-        const isIn = lastPunch.punchDirection === "IN"
-        attendanceByEmployeeId.set(empId, {
-          status: isIn ? "in" : "out",
-          inTime: firstInPunch ? firstInPunch.logDate.toISOString() : null,
-        })
-      } else {
+      if (empLogs.length === 0) {
         attendanceByEmployeeId.set(empId, { status: "out", inTime: null })
+        continue
       }
+      // Earliest punch = inTime (first check-in)
+      const earliest = empLogs.reduce((min, log) => (log.logDate < min.logDate ? log : min))
+      const inTime = earliest.logDate.toISOString()
+      // 2+ punches => they have an "out" (outTime exists in attendance route), so status = out
+      const isIn = empLogs.length === 1
+      attendanceByEmployeeId.set(empId, {
+        status: isIn ? "in" : "out",
+        inTime: isIn ? inTime : null,
+      })
     }
 
     const members: MDTeamOverviewMember[] = []

@@ -24,15 +24,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Clock, User, FolderOpen } from "lucide-react"
+import { CalendarIcon, Clock, User, FolderOpen, Trash2 } from "lucide-react"
 import { PriorityIcon } from "@/components/tasks/priority-icon"
 import { format } from "date-fns"
 import {
@@ -41,6 +34,7 @@ import {
   useCreateTaskComment,
   useTaskActivity,
   useUpdateTask,
+  useDeleteTask,
   type Task,
   type UpdateTaskInput,
 } from "@/hooks/use-tasks"
@@ -53,6 +47,17 @@ import { getAvatarColor } from "@/lib/avatar-colors"
 import { CompletionFeedback } from "@/components/tasks/completion-feedback"
 import { MarkCompleteDrawer } from "@/components/tasks/mark-complete-drawer"
 import { IssueWarningDialog } from "@/components/tasks/issue-warning-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface TaskDetailModalProps {
   open: boolean
@@ -141,6 +146,8 @@ function TaskDetailContent({
   const createComment = useCreateTaskComment(taskId)
   const { data: activity = [], refetch: refetchActivity } = useTaskActivity(taskId)
   const updateTask = useUpdateTask()
+  const deleteTask = useDeleteTask()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const [commentText, setCommentText] = useState("")
   const [editingTitle, setEditingTitle] = useState(false)
@@ -314,6 +321,151 @@ function TaskDetailContent({
     CANCELLED: "border-muted bg-muted/50 text-muted-foreground",
   }[task.status] ?? "border-muted bg-muted/50"
 
+  const detailsBlock = (
+    <>
+      <h3 className="text-base md:text-sm font-semibold text-foreground pb-2">Details</h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 text-base md:text-sm">
+          <CalendarIcon className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="text-left font-medium text-purple-700 dark:text-purple-300 hover:underline focus:outline-none focus:underline"
+              >
+                {dueDateValue
+                  ? format(dueDateValue, "MMM d, yyyy")
+                  : "Set due date"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={(pendingDueDate ?? dueDateValue) ?? undefined}
+                onSelect={(d) => {
+                  const date = d ?? null
+                  if (canEditDueDateDirectly) {
+                    handleDueDateChange(date)
+                  } else {
+                    setPendingDueDate(date)
+                    if (!date) setDueDateChangeReason("")
+                  }
+                }}
+                initialFocus
+              />
+              {(dueDateValue || pendingDueDate) && canEditDueDateDirectly && (
+                <div className="border-t p-2">
+                  <button
+                    type="button"
+                    className="text-xs text-destructive hover:underline"
+                    onClick={() => handleDueDateChange(null)}
+                  >
+                    Clear date
+                  </button>
+                </div>
+              )}
+              {(dueDateValue || pendingDueDate) && !canEditDueDateDirectly && (
+                <div className="border-t p-2">
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:underline"
+                    onClick={() => { setPendingDueDate(null); setDueDateChangeReason("") }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
+        {pendingDueDate != null && !canEditDueDateDirectly && (
+          <div className="rounded-md border bg-muted/30 p-2 space-y-2">
+            <p className="text-xs font-medium">Request due date change</p>
+            <p className="text-xs text-muted-foreground">
+              New date: {format(pendingDueDate, "MMM d, yyyy")}. Reason is required.
+            </p>
+            <Textarea
+              placeholder="Reason for change (required)"
+              value={dueDateChangeReason}
+              onChange={(e) => setDueDateChangeReason(e.target.value)}
+              className="min-h-[60px] resize-none text-sm"
+              rows={2}
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleRequestDueDateChange}
+                disabled={!dueDateChangeReason.trim() || updateTask.isPending}
+              >
+                Request change
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => { setPendingDueDate(null); setDueDateChangeReason("") }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+      {task.assignee && (
+        <div className="flex items-center gap-3 text-base md:text-sm">
+          <User className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+          <span className="font-medium text-blue-700 dark:text-blue-300">{task.assignee.name}</span>
+        </div>
+      )}
+      <div className="flex items-center gap-3 text-base md:text-sm">
+        <PriorityIcon
+          priority={priorityValue}
+          className={cn(
+            "h-5 w-5 md:h-4 md:w-4 shrink-0",
+            priorityValue === "HIGH" && "text-orange-600 dark:text-orange-400",
+            priorityValue === "URGENT" && "text-red-600 dark:text-red-400",
+            priorityValue === "MEDIUM" && "text-amber-600 dark:text-amber-400",
+            priorityValue === "LOW" && "text-blue-600 dark:text-blue-400",
+            (priorityValue === "GENERAL" || !priorityValue) && "text-muted-foreground"
+          )}
+        />
+        <select
+          value={priorityValue}
+          onChange={(e) => handlePriorityChange(e.target.value)}
+          className="flex-1 rounded-md border-2 border-border bg-background px-2 py-1.5 text-base md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {PRIORITY_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      {task.project && (
+        <div className="flex items-center gap-3 text-base md:text-sm">
+          <FolderOpen className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
+          <span className="font-medium text-purple-700 dark:text-purple-300">{task.project.name}</span>
+        </div>
+      )}
+      {task.createdBy && (
+        <div className="flex items-center gap-2 text-base md:text-sm text-muted-foreground">
+          <span>Created by {task.createdBy.name}</span>
+        </div>
+      )}
+      {task.status === "COMPLETED" && task.grade && (
+        <CompletionFeedback
+          grade={task.grade}
+          comments={task.completionComments}
+          completedBy={task.completedBy}
+          completedAt={task.completedAt}
+        />
+      )}
+      <div className="flex items-center gap-2 text-sm md:text-xs text-muted-foreground">
+        <Clock className="h-4 w-4 md:h-3 md:w-3" />
+        <span>Updated {format(new Date(task.updatedAt), "MMM d")}</span>
+      </div>
+    </>
+  )
+
   return (
     <div className="flex flex-col md:flex-row md:min-h-0 h-full">
       <div className="flex-1 min-w-0 flex flex-col border-b md:border-b-0 md:border-r border-border">
@@ -378,9 +530,11 @@ function TaskDetailContent({
           )}
         </div>
 
-        <Separator className="my-0" />
+        <div className="px-4 pb-4 space-y-4 shrink-0 border-b border-border">
+          {detailsBlock}
+        </div>
 
-        <div className="flex-1 min-h-0 flex flex-col p-4 border-t border-border">
+        <div className="flex-1 min-h-0 flex flex-col p-4">
           <h3 className="text-base md:text-sm font-semibold mb-3 text-foreground">Comments</h3>
           <ScrollArea className="flex-1 min-h-[120px] max-h-[240px] pr-2">
             <div className="space-y-4">
@@ -434,18 +588,19 @@ function TaskDetailContent({
             </div>
           </ScrollArea>
           <div className="space-y-2 mt-3 shrink-0">
-            <Select onValueChange={(v) => setCommentText((prev) => (prev ? `${prev}\n${v}` : v))}>
-              <SelectTrigger className="h-10 md:h-9 text-base md:text-sm">
-                <SelectValue placeholder="Quick comment..." />
-              </SelectTrigger>
-              <SelectContent>
-                {PRESET_COMMENTS.map((p) => (
-                  <SelectItem key={p} value={p}>
-                    {p}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <p className="text-xs font-medium text-muted-foreground">Quick comment</p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRESET_COMMENTS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setCommentText((prev) => (prev ? `${prev}\n${p}` : p))}
+                  className="rounded-full px-3 py-1.5 text-xs font-medium bg-muted hover:bg-muted/80 text-foreground border border-border transition-colors"
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
             {replyingToId && (
               <p className="text-sm md:text-xs text-muted-foreground">
                 Replying to comment · <Button variant="link" className="h-auto p-0 text-sm md:text-xs" onClick={() => setReplyingToId(null)}>Cancel</Button>
@@ -479,150 +634,6 @@ function TaskDetailContent({
       </div>
 
       <div className="md:w-72 shrink-0 p-4 space-y-4 bg-muted/30 border-l border-border">
-        <div className="space-y-4">
-          <h3 className="text-base md:text-sm font-semibold text-foreground border-b border-border pb-2">Details</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-base md:text-sm">
-              <CalendarIcon className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="text-left font-medium text-purple-700 dark:text-purple-300 hover:underline focus:outline-none focus:underline"
-                  >
-                    {dueDateValue
-                      ? format(dueDateValue, "MMM d, yyyy")
-                      : "Set due date"}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={(pendingDueDate ?? dueDateValue) ?? undefined}
-                    onSelect={(d) => {
-                      const date = d ?? null
-                      if (canEditDueDateDirectly) {
-                        handleDueDateChange(date)
-                      } else {
-                        setPendingDueDate(date)
-                        if (!date) setDueDateChangeReason("")
-                      }
-                    }}
-                    initialFocus
-                  />
-                  {(dueDateValue || pendingDueDate) && canEditDueDateDirectly && (
-                    <div className="border-t p-2">
-                      <button
-                        type="button"
-                        className="text-xs text-destructive hover:underline"
-                        onClick={() => handleDueDateChange(null)}
-                      >
-                        Clear date
-                      </button>
-                    </div>
-                  )}
-                  {(dueDateValue || pendingDueDate) && !canEditDueDateDirectly && (
-                    <div className="border-t p-2">
-                      <button
-                        type="button"
-                        className="text-xs text-muted-foreground hover:underline"
-                        onClick={() => { setPendingDueDate(null); setDueDateChangeReason("") }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-            </div>
-            {pendingDueDate != null && !canEditDueDateDirectly && (
-              <div className="rounded-md border bg-muted/30 p-2 space-y-2">
-                <p className="text-xs font-medium">Request due date change</p>
-                <p className="text-xs text-muted-foreground">
-                  New date: {format(pendingDueDate, "MMM d, yyyy")}. Reason is required.
-                </p>
-                <Textarea
-                  placeholder="Reason for change (required)"
-                  value={dueDateChangeReason}
-                  onChange={(e) => setDueDateChangeReason(e.target.value)}
-                  className="min-h-[60px] resize-none text-sm"
-                  rows={2}
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={handleRequestDueDateChange}
-                    disabled={!dueDateChangeReason.trim() || updateTask.isPending}
-                  >
-                    Request change
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => { setPendingDueDate(null); setDueDateChangeReason("") }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-          {task.assignee && (
-            <div className="flex items-center gap-3 text-base md:text-sm">
-              <User className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-blue-600 dark:text-blue-400" />
-              <span className="font-medium text-blue-700 dark:text-blue-300">{task.assignee.name}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-3 text-base md:text-sm">
-            <PriorityIcon
-              priority={priorityValue}
-              className={cn(
-                "h-5 w-5 md:h-4 md:w-4 shrink-0",
-                priorityValue === "HIGH" && "text-orange-600 dark:text-orange-400",
-                priorityValue === "URGENT" && "text-red-600 dark:text-red-400",
-                priorityValue === "MEDIUM" && "text-amber-600 dark:text-amber-400",
-                priorityValue === "LOW" && "text-blue-600 dark:text-blue-400",
-                (priorityValue === "GENERAL" || !priorityValue) && "text-muted-foreground"
-              )}
-            />
-            <select
-              value={priorityValue}
-              onChange={(e) => handlePriorityChange(e.target.value)}
-              className="flex-1 rounded-md border-2 border-border bg-background px-2 py-1.5 text-base md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {PRIORITY_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          {task.project && (
-            <div className="flex items-center gap-3 text-base md:text-sm">
-              <FolderOpen className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-              <span className="font-medium text-purple-700 dark:text-purple-300">{task.project.name}</span>
-            </div>
-          )}
-          {task.createdBy && (
-            <div className="flex items-center gap-2 text-base md:text-sm text-muted-foreground">
-              <span>Created by {task.createdBy.name}</span>
-            </div>
-          )}
-          {task.status === "COMPLETED" && task.grade && (
-            <CompletionFeedback
-              grade={task.grade}
-              comments={task.completionComments}
-              completedBy={task.completedBy}
-              completedAt={task.completedAt}
-            />
-          )}
-          <div className="flex items-center gap-2 text-sm md:text-xs text-muted-foreground">
-            <Clock className="h-4 w-4 md:h-3 md:w-3" />
-            <span>Updated {format(new Date(task.updatedAt), "MMM d")}</span>
-          </div>
-        </div>
-
-        <Separator className="my-2" />
 
         <MarkCompleteDrawer
           task={task.status === "EMPLOYEE_DONE" ? task : null}
@@ -719,6 +730,50 @@ function TaskDetailContent({
             </ScrollArea>
           )}
         </div>
+
+        <div className="border-t border-border pt-4 mt-4">
+          <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete task
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete task?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete &quot;{task?.title}&quot;. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    if (!task) return
+                    try {
+                      await deleteTask.mutateAsync(task.id)
+                      toast.success("Task deleted")
+                      setDeleteDialogOpen(false)
+                      onClose()
+                    } catch {
+                      toast.error("Failed to delete task")
+                    }
+                  }}
+                  disabled={deleteTask.isPending}
+                >
+                  {deleteTask.isPending ? "Deleting…" : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
     </div>
   )
@@ -743,7 +798,7 @@ export function TaskDetailModal({ open, onOpenChange, taskId }: TaskDetailModalP
           side="right"
           className="w-full max-w-full sm:max-w-full p-0 flex flex-col"
         >
-          <SheetHeader className="p-4 border-b shrink-0">
+          <SheetHeader className="p-4 shrink-0 border-0">
             <SheetTitle className="sr-only">Task details</SheetTitle>
           </SheetHeader>
           <div className="flex-1 min-h-0 overflow-auto">
@@ -757,7 +812,7 @@ export function TaskDetailModal({ open, onOpenChange, taskId }: TaskDetailModalP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[90vw] min-h-[80vh] max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="p-4 shrink-0">
+        <DialogHeader className="p-4 shrink-0 border-b-0">
           <DialogTitle className="sr-only">Task details</DialogTitle>
         </DialogHeader>
         <div className="flex-1 min-h-0 overflow-auto">

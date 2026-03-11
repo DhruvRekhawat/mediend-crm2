@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -107,57 +108,7 @@ export function TaskList({
       ) : (
         <div className="space-y-2">
           {filteredTasks.map((task) => (
-            <Card key={task.id} className="hover:bg-muted/50 transition-colors">
-              <CardHeader className="py-3 px-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base font-medium truncate">
-                      {task.title}
-                    </CardTitle>
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {task.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant={PRIORITY_COLORS[task.priority] ?? "secondary"}>
-                      {task.priority}
-                    </Badge>
-                    <Badge variant={STATUS_COLORS[task.status] ?? "secondary"}>
-                      {task.status.replace("_", " ")}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-muted-foreground">
-                    {task.dueDate
-                      ? `Due: ${format(new Date(task.dueDate), "MMM d, yyyy HH:mm")}`
-                      : "No due date"}
-                  </span>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => handleEdit(task)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    {onDeleteTask && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => onDeleteTask(task)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
+            <TaskListCard key={task.id} task={task} onEdit={handleEdit} onDelete={onDeleteTask} showAddButton={showAddButton} />
           ))}
         </div>
       )}
@@ -175,5 +126,96 @@ export function TaskList({
         }}
       />
     </div>
+  )
+}
+
+function TaskListCard({
+  task,
+  onEdit,
+  onDelete,
+  showAddButton,
+}: {
+  task: Task
+  onEdit: (task: Task) => void
+  onDelete?: (task: Task) => void
+  showAddButton: boolean
+}) {
+  const isCompleted = task.status === "COMPLETED"
+  const [runStrikethrough, setRunStrikethrough] = useState(false)
+  const hasAnimated = useRef(false)
+
+  useEffect(() => {
+    if (isCompleted && !hasAnimated.current) {
+      hasAnimated.current = true
+      setRunStrikethrough(true)
+      const t = setTimeout(() => setRunStrikethrough(false), 450)
+      return () => clearTimeout(t)
+    }
+  }, [isCompleted])
+
+  return (
+    <Card className={cn("hover:bg-muted/50 transition-colors", isCompleted && "opacity-80")}>
+      <CardHeader className="py-3 px-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <span className="relative inline-block min-w-0 max-w-full">
+              <CardTitle className={cn("text-base font-medium truncate", isCompleted && "text-muted-foreground")}>
+                {task.title}
+              </CardTitle>
+              {isCompleted && (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-current pointer-events-none origin-left opacity-60",
+                    runStrikethrough && "animate-[strikethrough_0.4s_ease-out_forwards]"
+                  )}
+                  style={runStrikethrough ? undefined : { transform: "scaleX(1)" }}
+                />
+              )}
+            </span>
+            {task.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                {task.description}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant={PRIORITY_COLORS[task.priority] ?? "secondary"}>
+              {task.priority}
+            </Badge>
+            <Badge variant={STATUS_COLORS[task.status] ?? "secondary"}>
+              {task.status.replace("_", " ")}
+            </Badge>
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-xs text-muted-foreground">
+            {task.dueDate
+              ? `Due: ${format(new Date(task.dueDate), "MMM d, yyyy HH:mm")}`
+              : "No due date"}
+          </span>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onEdit(task)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive"
+                onClick={() => onDelete(task)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
   )
 }

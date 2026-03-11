@@ -13,6 +13,15 @@
   }
 }
 
+@keyframes strikethrough {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

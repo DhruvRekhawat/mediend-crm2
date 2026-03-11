@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import {
   format,
-  startOfWeek,
+  startOfMonth,
   addDays,
   addWeeks,
   subWeeks,
@@ -14,9 +14,16 @@ import {
 } from "date-fns"
 import { ChevronLeft, ChevronRight, ChevronDown, GripVertical, Pencil, MessageSquare, MoreHorizontal, Plus } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { useUpdateTask } from "@/hooks/use-tasks"
 import { getTaskCardClass } from "@/components/tasks/task-card-class"
 import { cn } from "@/lib/utils"
+
+const DAYS_VISIBLE = 50
 
 export interface CalendarTask {
   id: string
@@ -63,20 +70,18 @@ export function FullCalendarTasks({
   onAddTask,
   className,
 }: FullCalendarTasksProps) {
-  const [viewStart, setViewStart] = useState(() => {
-    const d = new Date()
-    return startOfWeek(d, { weekStartsOn: 1 })
-  })
+  const [viewStart, setViewStart] = useState(() => startOfDay(new Date()))
   const [selectedDate, setSelectedDate] = useState(() => new Date())
+  const [monthPopoverOpen, setMonthPopoverOpen] = useState(false)
   const updateTask = useUpdateTask()
 
-  const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDays(viewStart, i))
+  const fiftyDays = useMemo(() => {
+    return Array.from({ length: DAYS_VISIBLE }, (_, i) => addDays(viewStart, i))
   }, [viewStart])
 
   const monthLabel = format(viewStart, "MMMM yyyy")
   const visibleStart = viewStart
-  const visibleEnd = addDays(viewStart, 6)
+  const visibleEnd = addDays(viewStart, DAYS_VISIBLE - 1)
 
   const tasksByDate = useMemo(() => {
     const map = new Map<string, CalendarTask[]>()
@@ -113,23 +118,57 @@ export function FullCalendarTasks({
   const goPrev = () => setViewStart((prev) => subWeeks(prev, 1))
   const goNext = () => setViewStart((prev) => addWeeks(prev, 1))
   const goToday = () => {
-    const today = new Date()
+    const today = startOfDay(new Date())
     setSelectedDate(today)
-    setViewStart(startOfWeek(today, { weekStartsOn: 1 }))
+    setViewStart(today)
   }
+
+  const visibleMonths = useMemo(() => {
+    const seen = new Set<string>()
+    const list: { key: string; date: Date }[] = []
+    for (let i = 0; i < fiftyDays.length; i++) {
+      const d = fiftyDays[i]
+      const monthStart = startOfMonth(d)
+      const key = format(monthStart, "yyyy-MM")
+      if (!seen.has(key)) {
+        seen.add(key)
+        list.push({ key, date: monthStart })
+      }
+    }
+    return list
+  }, [fiftyDays])
 
   return (
     <div className={cn("flex flex-col", className)}>
       <header className="space-y-3 border-b pb-4">
         <h2 className="text-lg font-semibold text-foreground">Upcoming</h2>
         <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
-          >
-            {monthLabel}
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </button>
+          <Popover open={monthPopoverOpen} onOpenChange={setMonthPopoverOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                {monthLabel}
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-1" align="start">
+              {visibleMonths.map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => {
+                    setViewStart(m.date)
+                    setMonthPopoverOpen(false)
+                  }}
+                  className="w-full rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
+                >
+                  {format(m.date, "MMMM yyyy")}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -156,28 +195,34 @@ export function FullCalendarTasks({
             </button>
           </div>
         </div>
-        <div className="flex gap-0.5">
-          {weekDays.map((day) => {
-            const isSelected = isSameDay(day, selectedDate)
-            const dayNum = format(day, "d")
-            const weekday = WEEKDAY_NAMES[getDay(day)]
-            return (
-              <button
-                key={day.toISOString()}
-                type="button"
-                onClick={() => setSelectedDate(day)}
-                className={cn(
-                  "flex flex-1 flex-col items-center rounded-md py-2 text-xs transition-colors",
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <span className="font-medium">{weekday}</span>
-                <span className="mt-0.5 font-medium">{dayNum}</span>
-              </button>
-            )
-          })}
+        <div className="overflow-x-auto -mx-2 px-2 pb-1">
+          <div className="flex gap-1 w-max">
+            {fiftyDays.map((day) => {
+              const isSelected = isSameDay(day, selectedDate)
+              const dayNum = format(day, "d")
+              const weekday = WEEKDAY_NAMES[getDay(day)]
+              return (
+                <button
+                  key={day.toISOString()}
+                  type="button"
+                  onClick={() => {
+                    setSelectedDate(day)
+                    const key = format(day, "yyyy-MM-dd")
+                    document.getElementById(`day-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }}
+                  className={cn(
+                    "shrink-0 flex flex-col items-center w-10 rounded-md py-1.5 text-xs transition-colors",
+                    isSelected
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <span className="font-medium">{weekday}</span>
+                  <span className="mt-0.5 font-medium">{dayNum}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </header>
 
@@ -192,7 +237,7 @@ export function FullCalendarTasks({
               : `${dayLabel} · ${weekdayFull}`
 
           return (
-            <section key={key}>
+            <section key={key} id={`day-${key}`}>
               <h3 className="mb-2 text-sm font-semibold text-foreground">
                 {heading}
               </h3>

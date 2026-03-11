@@ -87,6 +87,11 @@ export function MarkCompleteDrawer({
           completionComments: comments.trim() || undefined,
         },
       })
+      try {
+        const audio = new Audio("/ding-sound-effect_1.mp3")
+        audio.volume = 0.5
+        audio.play().catch(() => {})
+      } catch {}
       toast.success("Task approved")
       setRating(null)
       setHoverRating(null)

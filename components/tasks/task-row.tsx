@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useState, useEffect } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PriorityIcon } from "./priority-icon"
 import { format } from "date-fns"
@@ -7,6 +8,16 @@ import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
 import { Star } from "lucide-react"
+
+const DING_SOUND = "/ding-sound-effect_1.mp3"
+
+function playDoneSound() {
+  try {
+    const audio = new Audio(DING_SOUND)
+    audio.volume = 0.5
+    audio.play().catch(() => {})
+  } catch {}
+}
 
 const PRIORITY_COLORS: Record<string, string> = {
   GENERAL: "text-muted-foreground",
@@ -70,6 +81,19 @@ export function TaskRow({
   const updateMutation = useUpdateTask()
   const isCompleted = task.status === "COMPLETED"
   const isEmployeeDone = task.status === "EMPLOYEE_DONE"
+  const isDone = isCompleted || isEmployeeDone
+  const wasDoneRef = useRef(isDone)
+  const [runStrikethrough, setRunStrikethrough] = useState(false)
+
+  useEffect(() => {
+    if (isDone && !wasDoneRef.current) {
+      playDoneSound()
+      setRunStrikethrough(true)
+      const t = setTimeout(() => setRunStrikethrough(false), 450)
+      return () => clearTimeout(t)
+    }
+    wasDoneRef.current = isDone
+  }, [isDone])
 
   const handleToggleComplete = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -134,13 +158,25 @@ export function TaskRow({
         <RatingStars grade={task.grade} />
       )}
       <div className="min-w-0 flex-1">
-        <span
-          className={cn(
-            "block truncate text-base md:text-sm",
-            isCompleted && "text-muted-foreground line-through"
+        <span className="relative inline-block min-w-0 max-w-full">
+          <span
+            className={cn(
+              "block truncate text-base md:text-sm",
+              isDone && "text-muted-foreground"
+            )}
+          >
+            {task.title}
+          </span>
+          {isDone && (
+            <span
+              aria-hidden
+              className={cn(
+                "absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-current pointer-events-none origin-left opacity-60",
+                runStrikethrough && "animate-[strikethrough_0.4s_ease-out_forwards]"
+              )}
+              style={runStrikethrough ? undefined : { transform: "scaleX(1)" }}
+            />
           )}
-        >
-          {task.title}
         </span>
         {(showAssignee || showProject) && (
           <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm md:text-xs">
