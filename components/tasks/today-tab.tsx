@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useRef, useEffect } from "react"
 import { startOfDay, isBefore, isSameDay, format } from "date-fns"
 import { useTasks } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
@@ -20,16 +20,34 @@ export function TodayTab() {
   const { data: tasks = [], isLoading } = useTasks()
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+  const [exitingIds, setExitingIds] = useState<Set<string>>(() => new Set())
+  const prevStatusRef = useRef<Map<string, string>>(new Map())
 
   const canMarkComplete = (task: Task) =>
     !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
+
+  useEffect(() => {
+    const next = new Map<string, string>()
+    const toAdd: string[] = []
+    for (const t of tasks) {
+      next.set(t.id, t.status)
+      if (t.status === "COMPLETED" && prevStatusRef.current.get(t.id) !== "COMPLETED") {
+        toAdd.push(t.id)
+      }
+    }
+    prevStatusRef.current = next
+    if (toAdd.length > 0) {
+      setExitingIds((prev) => new Set([...prev, ...toAdd]))
+    }
+  }, [tasks])
 
   const sections = useMemo(() => {
     const now = new Date()
     const startToday = startOfDay(now)
 
     const activeTasks = tasks.filter(
-      (t) => t.status !== "COMPLETED" && t.status !== "CANCELLED"
+      (t) =>
+        (t.status !== "COMPLETED" && t.status !== "CANCELLED") || exitingIds.has(t.id)
     )
 
     const byDate = new Map<string, Task[]>()
@@ -68,7 +86,7 @@ export function TodayTab() {
     }
 
     return { overdue, byDate, sortedDates, noDate }
-  }, [tasks])
+  }, [tasks, exitingIds])
 
   if (isLoading) {
     return (
@@ -101,6 +119,14 @@ export function TodayTab() {
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
+                  exitAnimation={exitingIds.has(task.id)}
+                  onExitAnimationEnd={() =>
+                    setExitingIds((prev) => {
+                      const next = new Set(prev)
+                      next.delete(task.id)
+                      return next
+                    })
+                  }
                 />
               </div>
             ))}
@@ -131,6 +157,14 @@ export function TodayTab() {
                     isAssignee={task.assigneeId === user?.id}
                     canMarkComplete={canMarkComplete(task)}
                     onMarkCompleteRequest={() => setTaskToComplete(task)}
+                    exitAnimation={exitingIds.has(task.id)}
+                    onExitAnimationEnd={() =>
+                      setExitingIds((prev) => {
+                        const next = new Set(prev)
+                        next.delete(task.id)
+                        return next
+                      })
+                    }
                   />
                 </div>
               ))}
@@ -155,6 +189,14 @@ export function TodayTab() {
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
+                  exitAnimation={exitingIds.has(task.id)}
+                  onExitAnimationEnd={() =>
+                    setExitingIds((prev) => {
+                      const next = new Set(prev)
+                      next.delete(task.id)
+                      return next
+                    })
+                  }
                 />
               </div>
             ))}

@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { NotificationBell } from '@/components/notifications/notification-bell'
-import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
 import { Button } from '@/components/ui/button'
 import { CalendarIcon, CheckSquare, ListTodo, MessageSquare, Calendar, Sparkles, Search, UserCircle, Wallet } from 'lucide-react'
 import { useAI } from '@/components/ai/ai-provider'
@@ -78,7 +77,6 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
 
   return (
     <ProtectedRoute>
-      {shouldShowSidebar && <WorkLogEnforcer />}
       {shouldShowSidebar ? (
         <SidebarProvider defaultOpen={true}>
           <AppSidebar />

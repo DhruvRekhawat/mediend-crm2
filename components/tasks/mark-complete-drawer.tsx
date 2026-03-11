@@ -55,7 +55,7 @@ interface MarkCompleteDrawerProps {
   task: Task | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess?: () => void
+  onSuccess?: (task: Task) => void
 }
 
 export function MarkCompleteDrawer({
@@ -97,7 +97,7 @@ export function MarkCompleteDrawer({
       setHoverRating(null)
       setComments("")
       onOpenChange(false)
-      onSuccess?.()
+      onSuccess?.(task)
     } catch {
       toast.error("Failed to approve task")
     }

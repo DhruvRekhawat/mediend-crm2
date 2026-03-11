@@ -64,6 +64,11 @@ interface TaskRowProps {
   canMarkComplete?: boolean
   onMarkCompleteRequest?: (task: Task) => void
   showCompletionRating?: boolean
+  /** When false, strikethrough is not shown for done tasks (e.g. in Approval tab). */
+  showStrikethrough?: boolean
+  /** When true, applies exit pop animation (task is being removed from list). */
+  exitAnimation?: boolean
+  onExitAnimationEnd?: () => void
   className?: string
 }
 
@@ -76,6 +81,9 @@ export function TaskRow({
   canMarkComplete = true,
   onMarkCompleteRequest,
   showCompletionRating = false,
+  showStrikethrough = true,
+  exitAnimation = false,
+  onExitAnimationEnd,
   className,
 }: TaskRowProps) {
   const updateMutation = useUpdateTask()
@@ -139,9 +147,11 @@ export function TaskRow({
           onClick?.()
         }
       }}
+      onAnimationEnd={exitAnimation ? onExitAnimationEnd : undefined}
       className={cn(
         "flex min-h-[44px] cursor-pointer items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isCompleted && "opacity-70",
+        exitAnimation && "animate-[task-exit-pop_0.35s_ease-out_forwards]",
         className
       )}
     >
@@ -167,7 +177,7 @@ export function TaskRow({
           >
             {task.title}
           </span>
-          {isDone && (
+          {isDone && showStrikethrough && (
             <span
               aria-hidden
               className={cn(

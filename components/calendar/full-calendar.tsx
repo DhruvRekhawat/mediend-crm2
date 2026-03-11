@@ -5,6 +5,8 @@ import {
   format,
   startOfMonth,
   addDays,
+  addMonths,
+  subMonths,
   addWeeks,
   subWeeks,
   isSameDay,
@@ -123,25 +125,21 @@ export function FullCalendarTasks({
     setViewStart(today)
   }
 
-  const visibleMonths = useMemo(() => {
-    const seen = new Set<string>()
+  const allMonths = useMemo(() => {
     const list: { key: string; date: Date }[] = []
-    for (let i = 0; i < fiftyDays.length; i++) {
-      const d = fiftyDays[i]
-      const monthStart = startOfMonth(d)
-      const key = format(monthStart, "yyyy-MM")
-      if (!seen.has(key)) {
-        seen.add(key)
-        list.push({ key, date: monthStart })
-      }
+    const today = new Date()
+    let d = startOfMonth(subMonths(today, 12))
+    const end = startOfMonth(addMonths(today, 13))
+    while (d < end) {
+      list.push({ key: format(d, "yyyy-MM"), date: new Date(d) })
+      d = addMonths(d, 1)
     }
     return list
-  }, [fiftyDays])
+  }, [])
 
   return (
     <div className={cn("flex flex-col", className)}>
       <header className="space-y-3 border-b pb-4">
-        <h2 className="text-lg font-semibold text-foreground">Upcoming</h2>
         <div className="flex items-center justify-between gap-2">
           <Popover open={monthPopoverOpen} onOpenChange={setMonthPopoverOpen}>
             <PopoverTrigger asChild>
@@ -153,14 +151,20 @@ export function FullCalendarTasks({
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-40 p-1" align="start">
-              {visibleMonths.map((m) => (
+            <PopoverContent className="w-40 p-1 max-h-[70vh] overflow-y-auto" align="start">
+              {allMonths.map((m) => (
                 <button
                   key={m.key}
                   type="button"
                   onClick={() => {
-                    setViewStart(m.date)
+                    const monthStart = startOfDay(m.date)
+                    setViewStart(monthStart)
+                    setSelectedDate(monthStart)
                     setMonthPopoverOpen(false)
+                    const key = format(monthStart, "yyyy-MM-dd")
+                    setTimeout(() => {
+                      document.getElementById(`day-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }, 100)
                   }}
                   className="w-full rounded-md px-2 py-2 text-left text-sm hover:bg-muted"
                 >
@@ -348,38 +352,6 @@ function UpcomingTaskRow({
             {task.project.name}
           </p>
         )}
-      </div>
-      <div className="flex shrink-0 items-center gap-1 text-muted-foreground">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick()
-          }}
-          className="rounded p-1 hover:bg-muted hover:text-foreground"
-          aria-label="Edit task"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onClick()
-          }}
-          className="rounded p-1 hover:bg-muted hover:text-foreground"
-          aria-label="Comments"
-        >
-          <MessageSquare className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => e.stopPropagation()}
-          className="rounded p-1 hover:bg-muted hover:text-foreground"
-          aria-label="More options"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
       </div>
     </div>
   )

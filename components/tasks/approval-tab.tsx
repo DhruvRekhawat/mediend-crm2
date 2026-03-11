@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { format } from "date-fns"
 import { Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/use-auth"
 import { useTaskApprovals, useApproveTaskDueDate, useTasks, type Task } from "@/hooks/use-tasks"
 import { TaskRow } from "./task-row"
 import { getTaskCardClass } from "./task-card-class"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
 
 export function ApprovalTab() {
+  const { user } = useAuth()
   const { data: approvals = [], isLoading, isError } = useTaskApprovals()
   const { data: pendingReviewTasks = [], isLoading: loadingReview } = useTasks(
     { status: "EMPLOYEE_DONE" },
@@ -17,6 +19,16 @@ export function ApprovalTab() {
   )
   const approveMutation = useApproveTaskDueDate()
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+  const [exitingTask, setExitingTask] = useState<Task | null>(null)
+
+  const canReviewTask = (task: Task) =>
+    !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
+
+  const visibleReviewTasks = useMemo(() => {
+    if (!exitingTask) return pendingReviewTasks
+    if (pendingReviewTasks.some((t) => t.id === exitingTask.id)) return pendingReviewTasks
+    return [exitingTask, ...pendingReviewTasks]
+  }, [pendingReviewTasks, exitingTask])
 
   if (isLoading) {
     return (
@@ -117,7 +129,7 @@ export function ApprovalTab() {
 
       <section>
         <h2 className="text-sm font-semibold text-foreground mb-2">
-          Tasks pending review ({pendingReviewTasks.length})
+          Tasks pending review ({visibleReviewTasks.length})
         </h2>
         <p className="text-sm text-muted-foreground mb-3">
           Employees marked these as done. Tap to review and rate.
@@ -126,22 +138,25 @@ export function ApprovalTab() {
           <div className="py-4 text-center text-sm text-muted-foreground">
             Loading…
           </div>
-        ) : pendingReviewTasks.length === 0 ? (
+        ) : visibleReviewTasks.length === 0 ? (
           <p className="text-sm text-muted-foreground py-2">
             No tasks pending review.
           </p>
         ) : (
           <div className="space-y-2">
-            {pendingReviewTasks.map((task) => (
+            {visibleReviewTasks.map((task) => (
               <div key={task.id} className={getTaskCardClass(task)}>
                 <TaskRow
                   task={task}
-                  onClick={() => setTaskToComplete(task)}
+                  onClick={() => !exitingTask && canReviewTask(task) && setTaskToComplete(task)}
                   showAssignee
                   showProject
                   isAssignee={false}
                   canMarkComplete={false}
                   showCompletionRating={false}
+                  showStrikethrough={false}
+                  exitAnimation={exitingTask?.id === task.id}
+                  onExitAnimationEnd={() => exitingTask?.id === task.id && setExitingTask(null)}
                 />
               </div>
             ))}
@@ -159,7 +174,10 @@ export function ApprovalTab() {
         task={taskToComplete}
         open={!!taskToComplete}
         onOpenChange={(open) => !open && setTaskToComplete(null)}
-        onSuccess={() => setTaskToComplete(null)}
+        onSuccess={(task) => {
+          setTaskToComplete(null)
+          if (task) setExitingTask(task)
+        }}
       />
     </div>
   )

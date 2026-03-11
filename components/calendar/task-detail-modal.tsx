@@ -323,7 +323,6 @@ function TaskDetailContent({
 
   const detailsBlock = (
     <>
-      <h3 className="text-base md:text-sm font-semibold text-foreground pb-2">Details</h3>
       <div className="space-y-3">
         <div className="flex items-center gap-3 text-base md:text-sm">
           <CalendarIcon className="h-5 w-5 md:h-4 md:w-4 shrink-0 text-purple-600 dark:text-purple-400" />
@@ -534,8 +533,7 @@ function TaskDetailContent({
           {detailsBlock}
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col p-4">
-          <h3 className="text-base md:text-sm font-semibold mb-3 text-foreground">Comments</h3>
+        <div className="flex-1 min-h-0 flex flex-col p-4 rounded-lg bg-gradient-to-b from-blue-100 to-background dark:from-blue-950/20 dark:to-background">
           <ScrollArea className="flex-1 min-h-[120px] max-h-[240px] pr-2">
             <div className="space-y-4">
               {comments.length === 0 ? (
@@ -633,7 +631,7 @@ function TaskDetailContent({
         </div>
       </div>
 
-      <div className="md:w-72 shrink-0 p-4 space-y-4 bg-muted/30 border-l border-border">
+      <div className="md:w-72 shrink-0 flex flex-col min-h-0 overflow-y-auto p-4 space-y-4 bg-muted/30 border-l border-border">
 
         <MarkCompleteDrawer
           task={task.status === "EMPLOYEE_DONE" ? task : null}
@@ -702,12 +700,12 @@ function TaskDetailContent({
           </DialogContent>
         </Dialog>
 
-        <div className="space-y-2 border-t border-border pt-3">
+        <div className="space-y-2 border-t border-border pt-3 shrink-0">
           <h3 className="text-base md:text-sm font-semibold text-foreground">Activity</h3>
           {activity.length === 0 ? (
             <p className="text-sm md:text-xs text-muted-foreground">No activity yet.</p>
           ) : (
-            <ScrollArea className="max-h-[200px]">
+            <ScrollArea className="max-h-[180px]">
               <ul className="space-y-2 text-sm md:text-xs">
                 {activity.map((a) => {
                   const colors = ACTIVITY_COLORS[a.action] ?? { border: "border-border", bg: "bg-background/50", icon: "text-muted-foreground" }
@@ -731,7 +729,7 @@ function TaskDetailContent({
           )}
         </div>
 
-        <div className="border-t border-border pt-4 mt-4">
+        <div className="border-t border-border pt-4 mt-4 shrink-0">
           <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <AlertDialogTrigger asChild>
               <Button
