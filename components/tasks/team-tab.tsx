@@ -6,12 +6,7 @@ import { Search, UserPlus, Star, ArrowUpRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import {
-  useMDTeamOverview,
-  useTodayTeamAttendance,
-  type MDTeamOverviewMember,
-  type TeamAttendanceSnapshot,
-} from "@/hooks/use-md-team"
+import { useMDTeamOverview, type MDTeamOverviewMember } from "@/hooks/use-md-team"
 import { useWarnings } from "@/hooks/use-tasks"
 import { getAvatarColor } from "@/lib/avatar-colors"
 import { AddPersonDialog } from "./add-person-dialog"
@@ -44,7 +39,6 @@ export function TeamTab() {
   const [addPersonOpen, setAddPersonOpen] = useState(false)
 
   const { data, isLoading, isError, error } = useMDTeamOverview(search || undefined)
-  const { data: todayAttendance = {} } = useTodayTeamAttendance()
   const { data: warnings = [] } = useWarnings()
   const members = data?.members ?? []
 
@@ -104,7 +98,6 @@ export function TeamTab() {
             <TeamMemberCard
               key={member.id}
               member={member}
-              attendance={todayAttendance[member.employeeId] ?? null}
               warningCount={warningsByUserId[member.id] ?? 0}
               onClick={() => router.push(`/md/tasks/team/${member.id}`)}
             />
@@ -119,19 +112,15 @@ export function TeamTab() {
 
 function TeamMemberCard({
   member,
-  attendance,
   warningCount,
   onClick,
 }: {
   member: MDTeamOverviewMember
-  attendance: TeamAttendanceSnapshot | null
   warningCount: number
   onClick: () => void
 }) {
-  const attendanceStatus =
-    member.attendanceStatus === "leave" ? "leave" : (attendance?.status ?? "out")
-  const isIn = attendanceStatus === "in"
-  const isLeave = attendanceStatus === "leave"
+  const isIn = member.attendanceStatus === "in"
+  const isLeave = member.attendanceStatus === "leave"
 
   return (
     <button

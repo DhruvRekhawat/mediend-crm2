@@ -212,8 +212,12 @@ export async function GET(request: NextRequest) {
       extensionCountMap.set(r.requestedById, r._count.id)
     }
 
-    // Today's attendance: same logic as attendance route / heatmap — inTime = earliest punch, outTime only when 2+ punches.
-    // So: 0 punches = OUT; 1 punch = IN (only punched in); 2+ punches = OUT (has punched out).
+    // Today's attendance — matches attendance route / heatmap logic.
+    // inTime = earliest punch, outTime = latest punch (only if 2+ punches AND gap > 5 min).
+    // Biometric devices often record duplicate/close-together punches for a single check-in,
+    // so we use a minimum gap threshold to distinguish a real check-out from a double-tap.
+    const MIN_IN_OUT_GAP_MS = 5 * 60 * 1000 // 5 minutes
+
     const todayAttendance = await prisma.attendanceLog.findMany({
       where: {
         employeeId: { in: employeeIds },
@@ -241,14 +245,15 @@ export async function GET(request: NextRequest) {
         attendanceByEmployeeId.set(empId, { status: "out", inTime: null })
         continue
       }
-      // Earliest punch = inTime (first check-in)
       const earliest = empLogs.reduce((min, log) => (log.logDate < min.logDate ? log : min))
+      const latest = empLogs.reduce((max, log) => (log.logDate > max.logDate ? log : max))
       const inTime = earliest.logDate.toISOString()
-      // 2+ punches => they have an "out" (outTime exists in attendance route), so status = out
-      const isIn = empLogs.length === 1
+      const gapMs = latest.logDate.getTime() - earliest.logDate.getTime()
+      // "in" when only 1 punch, or when all punches are within 5 min (biometric double-tap)
+      const isIn = empLogs.length === 1 || gapMs < MIN_IN_OUT_GAP_MS
       attendanceByEmployeeId.set(empId, {
         status: isIn ? "in" : "out",
-        inTime: isIn ? inTime : null,
+        inTime,
       })
     }
 

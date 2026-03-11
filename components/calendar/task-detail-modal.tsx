@@ -167,8 +167,6 @@ function TaskDetailContent({
     (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
   const canReviewTask = canEditDueDateDirectly
   const [markCompleteDrawerOpen, setMarkCompleteDrawerOpen] = useState(false)
-  const [replyingToId, setReplyingToId] = useState<string | null>(null)
-
   useEffect(() => {
     setHasShownCompletionModal(false)
   }, [taskId])
@@ -196,9 +194,8 @@ function TaskDetailContent({
     const trimmed = commentText.trim()
     if (!trimmed) return
     try {
-      await createComment.mutateAsync({ content: trimmed, ...(replyingToId && { parentId: replyingToId }) })
+      await createComment.mutateAsync({ content: trimmed })
       setCommentText("")
-      setReplyingToId(null)
       refetchComments()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to add comment")
@@ -533,7 +530,8 @@ function TaskDetailContent({
           {detailsBlock}
         </div>
 
-        <div className="flex-1 min-h-0 flex flex-col p-4 rounded-lg bg-gradient-to-b from-blue-100 to-background dark:from-blue-950/20 dark:to-background">
+        <div className="flex-1 min-h-0 flex flex-col p-4">
+          <h3 className="text-base md:text-sm font-semibold mb-3 text-foreground">Comments</h3>
           <ScrollArea className="flex-1 min-h-[120px] max-h-[240px] pr-2">
             <div className="space-y-4">
               {comments.length === 0 ? (
@@ -552,14 +550,6 @@ function TaskDetailContent({
                             {c.user.name} · {format(new Date(c.createdAt), "MMM d, HH:mm")}
                           </p>
                           <p className="text-base md:text-sm mt-1 whitespace-pre-wrap">{c.content}</p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 text-sm md:text-xs mt-1"
-                            onClick={() => setReplyingToId(c.id)}
-                          >
-                            Reply
-                          </Button>
                         </div>
                       </div>
                       {(c.replies?.length ?? 0) > 0 && (
@@ -599,11 +589,6 @@ function TaskDetailContent({
                 </button>
               ))}
             </div>
-            {replyingToId && (
-              <p className="text-sm md:text-xs text-muted-foreground">
-                Replying to comment · <Button variant="link" className="h-auto p-0 text-sm md:text-xs" onClick={() => setReplyingToId(null)}>Cancel</Button>
-              </p>
-            )}
             <div className="flex gap-2">
               <Textarea
                 placeholder="Add a comment..."
@@ -631,22 +616,13 @@ function TaskDetailContent({
         </div>
       </div>
 
-      <div className="md:w-72 shrink-0 flex flex-col min-h-0 overflow-y-auto p-4 space-y-4 bg-muted/30 border-l border-border">
+      <div className="md:w-72 shrink-0 flex flex-col min-h-0 overflow-y-auto p-4 gap-4 bg-muted/30 border-l border-border">
 
-        <MarkCompleteDrawer
-          task={task.status === "EMPLOYEE_DONE" ? task : null}
-          open={markCompleteDrawerOpen}
-          onOpenChange={setMarkCompleteDrawerOpen}
-          onSuccess={() => {
-            setStatusValue("COMPLETED")
-            refetchActivity()
-          }}
-        />
-
+        {/* Action buttons — always at the top */}
         {task.status === "EMPLOYEE_DONE" && canReviewTask && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-2">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3">
             <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Pending your review</p>
-            <Button size="sm" className="mt-2" onClick={() => setMarkCompleteDrawerOpen(true)}>
+            <Button size="sm" className="mt-2 w-full" onClick={() => setMarkCompleteDrawerOpen(true)}>
               Review task
             </Button>
           </div>
@@ -658,14 +634,14 @@ function TaskDetailContent({
           const lowRating = task.grade && parseInt(task.grade) <= 2
           if (overdue || rejected || lowRating) {
             return (
-              <div className="rounded-lg border border-muted bg-muted/30 p-2">
-                <p className="text-xs font-medium text-muted-foreground">Consider issuing a warning</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+              <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20 p-3">
+                <p className="text-xs font-semibold text-orange-700 dark:text-orange-300">Issue a warning</p>
+                <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
                   {overdue && "Task overdue by more than 3 days."}
                   {rejected && " Task rejected multiple times."}
-                  {lowRating && ` Task completed with low rating (${task.grade}/5).`}
+                  {lowRating && ` Low rating (${task.grade}/5).`}
                 </p>
-                <Button size="sm" variant="outline" className="mt-2" onClick={() => setIssueWarningOpen(true)}>
+                <Button size="sm" variant="outline" className="mt-2 w-full border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300" onClick={() => setIssueWarningOpen(true)}>
                   Issue warning
                 </Button>
               </div>
@@ -673,6 +649,45 @@ function TaskDetailContent({
           }
           return null
         })()}
+
+        {/* Activity */}
+        <div className="space-y-2">
+          <h3 className="text-base md:text-sm font-semibold text-foreground">Activity</h3>
+          {activity.length === 0 ? (
+            <p className="text-sm md:text-xs text-muted-foreground">No activity yet.</p>
+          ) : (
+            <ul className="space-y-2 text-sm md:text-xs">
+              {activity.map((a) => {
+                const colors = ACTIVITY_COLORS[a.action] ?? { border: "border-border", bg: "bg-background/50", icon: "text-muted-foreground" }
+                return (
+                  <li key={a.id} className={cn("flex flex-col gap-0.5 rounded-md border-l-2 px-2.5 py-1.5", colors.border, colors.bg)}>
+                    <span className={cn("font-semibold", colors.icon)}>
+                      {ACTIVITY_LABELS[a.action] ?? a.action}
+                    </span>
+                    <span className="text-foreground/80">
+                      {a.user.name}
+                      {a.details ? ` · ${formatActivityDetails(a.action, a.details)}` : ""}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {format(new Date(a.createdAt), "MMM d, HH:mm")}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Hidden portal components */}
+        <MarkCompleteDrawer
+          task={task.status === "EMPLOYEE_DONE" ? task : null}
+          open={markCompleteDrawerOpen}
+          onOpenChange={setMarkCompleteDrawerOpen}
+          onSuccess={() => {
+            setStatusValue("COMPLETED")
+            refetchActivity()
+          }}
+        />
 
         <IssueWarningDialog
           open={issueWarningOpen}
@@ -700,36 +715,8 @@ function TaskDetailContent({
           </DialogContent>
         </Dialog>
 
-        <div className="space-y-2 border-t border-border pt-3 shrink-0">
-          <h3 className="text-base md:text-sm font-semibold text-foreground">Activity</h3>
-          {activity.length === 0 ? (
-            <p className="text-sm md:text-xs text-muted-foreground">No activity yet.</p>
-          ) : (
-            <ScrollArea className="max-h-[180px]">
-              <ul className="space-y-2 text-sm md:text-xs">
-                {activity.map((a) => {
-                  const colors = ACTIVITY_COLORS[a.action] ?? { border: "border-border", bg: "bg-background/50", icon: "text-muted-foreground" }
-                  return (
-                    <li key={a.id} className={cn("flex flex-col gap-0.5 rounded-md border-l-2 px-2.5 py-1.5", colors.border, colors.bg)}>
-                      <span className={cn("font-semibold", colors.icon)}>
-                        {ACTIVITY_LABELS[a.action] ?? a.action}
-                      </span>
-                      <span className="text-foreground/80">
-                        {a.user.name}
-                        {a.details ? ` · ${formatActivityDetails(a.action, a.details)}` : ""}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {format(new Date(a.createdAt), "MMM d, HH:mm")}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </ScrollArea>
-          )}
-        </div>
-
-        <div className="border-t border-border pt-4 mt-4 shrink-0">
+        {/* Delete — pinned to very bottom */}
+        <div className="mt-auto border-t border-border pt-4">
           <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <AlertDialogTrigger asChild>
               <Button
