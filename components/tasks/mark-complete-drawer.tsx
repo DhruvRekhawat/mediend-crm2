@@ -115,7 +115,7 @@ export function MarkCompleteDrawer({
       setHoverRating(null)
       setComments("")
       onOpenChange(false)
-      onSuccess?.()
+      onSuccess?.(task)
     } catch {
       toast.error("Failed to reject task")
     }
