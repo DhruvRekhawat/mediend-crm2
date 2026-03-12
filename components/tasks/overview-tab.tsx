@@ -63,6 +63,22 @@ export function OverviewTab() {
     [stats]
   )
 
+  const statDrawerTasks = useMemo(() => {
+    if (!statDrawer) return []
+    switch (statDrawer) {
+      case "total":
+        return tasks.filter((t) => t.status !== "CANCELLED")
+      case "completed":
+        return tasks.filter((t) => t.status === "COMPLETED")
+      case "pending":
+        return tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS")
+      case "pendingReview":
+        return tasks.filter((t) => t.status === "EMPLOYEE_DONE")
+      default:
+        return []
+    }
+  }, [statDrawer, tasks])
+
   if (statsError) {
     return (
       <div className="py-6 text-center text-sm text-destructive">
@@ -85,23 +101,6 @@ export function OverviewTab() {
   const assigneeTasks = expandedAssigneeId
     ? tasks.filter((t) => t.assigneeId === expandedAssigneeId)
     : []
-
-  const statDrawerTasks = useMemo(() => {
-    if (!statDrawer) return []
-    const today = startOfDay(new Date())
-    switch (statDrawer) {
-      case "total":
-        return tasks.filter((t) => t.status !== "CANCELLED")
-      case "completed":
-        return tasks.filter((t) => t.status === "COMPLETED")
-      case "pending":
-        return tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS")
-      case "pendingReview":
-        return tasks.filter((t) => t.status === "EMPLOYEE_DONE")
-      default:
-        return []
-    }
-  }, [statDrawer, tasks])
 
   const statDrawerTitle =
     statDrawer === "total"
