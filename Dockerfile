@@ -42,7 +42,7 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-CMD ["sh", "-c", "bunx prisma migrate deploy && node server.js"]
+CMD ["node", "server.js"]
 
 # Stage for running one-off migrations (has full source + deps)
 FROM builder AS migrate
