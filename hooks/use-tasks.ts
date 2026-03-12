@@ -76,6 +76,10 @@ export interface TaskActivityLog {
   user: { id: string; name: string }
 }
 
+export interface MemberTaskActivityLog extends TaskActivityLog {
+  task?: { id: string; title: string }
+}
+
 export interface TaskStats {
   total: number
   completed: number
@@ -302,6 +306,15 @@ export function useTaskActivity(taskId: string | null) {
     queryKey: ["tasks", taskId, "activity"],
     queryFn: () => apiGet<TaskActivityLog[]>(`/api/tasks/${taskId}/activity`),
     enabled: !!taskId,
+  })
+}
+
+export function useMemberTaskActivity(assigneeId: string | null) {
+  return useQuery<MemberTaskActivityLog[]>({
+    queryKey: ["tasks", "activity", assigneeId],
+    queryFn: () =>
+      apiGet<MemberTaskActivityLog[]>(`/api/tasks/activity?assigneeId=${assigneeId}`),
+    enabled: !!assigneeId,
   })
 }
 

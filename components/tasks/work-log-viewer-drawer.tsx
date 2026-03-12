@@ -109,14 +109,14 @@ export function WorkLogViewerDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="h-full max-h-dvh w-full max-w-md sm:max-w-lg ml-auto rounded-l-2xl rounded-r-none">
-        <DrawerHeader className="border-b">
+      <DrawerContent className="h-full max-h-dvh w-full max-w-md sm:max-w-lg ml-auto rounded-l-2xl rounded-r-none flex flex-col overflow-hidden">
+        <DrawerHeader className="shrink-0 border-b">
           <DrawerTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-teal-600" />
             Work Logs — {memberName}
           </DrawerTitle>
         </DrawerHeader>
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 min-h-0">
           <div className="p-4 space-y-6 pb-8">
             {isLoading && sortedDates.length === 0 ? (
               <p className="text-sm text-muted-foreground py-8">Loading logs…</p>
