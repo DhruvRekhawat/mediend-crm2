@@ -362,11 +362,12 @@ export function useWarnings() {
 export function useCreateWarning() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { employeeId: string; taskId?: string | null; type: WarningType; note: string }) =>
+    mutationFn: (data: { employeeId: string; taskId: string; type: WarningType; note: string }) =>
       apiPost<Warning>("/api/warnings", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["warnings"] })
       queryClient.invalidateQueries({ queryKey: ["tasks", "stats"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
     },
   })
 }

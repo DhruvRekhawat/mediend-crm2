@@ -41,6 +41,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
+import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
+import { usePushSubscription } from '@/hooks/use-push-subscription'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -418,6 +420,38 @@ function NavCards() {
   )
 }
 
+// ─── Push reminder banner ───────────────────────────────────────────────────────
+
+function PushReminderBanner() {
+  const { subscribe, permission, isSupported } = usePushSubscription()
+  const [loading, setLoading] = useState(false)
+
+  if (!isSupported || permission === 'granted') return null
+
+  const handleEnable = async () => {
+    setLoading(true)
+    await subscribe()
+    setLoading(false)
+  }
+
+  return (
+    <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-xl p-3 flex items-center justify-between gap-3">
+      <p className="text-sm text-teal-800 dark:text-teal-200">
+        Enable push reminders for work log deadlines
+      </p>
+      <Button
+        size="sm"
+        variant="outline"
+        className="shrink-0 border-teal-300 text-teal-700 hover:bg-teal-100 dark:border-teal-700 dark:text-teal-300 dark:hover:bg-teal-900/50"
+        onClick={handleEnable}
+        disabled={loading || permission === 'denied'}
+      >
+        {loading ? 'Enabling…' : 'Enable'}
+      </Button>
+    </div>
+  )
+}
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -452,6 +486,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto w-full">
+      <WorkLogEnforcer />
       {/* Banner + Greeting */}
       {uploading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -476,6 +511,9 @@ export default function HomePage() {
         canEdit={canEdit}
         onSave={handleSaveThought}
       />
+
+      {/* Push reminder banner */}
+      <PushReminderBanner />
 
       {/* KPIs */}
       <div>

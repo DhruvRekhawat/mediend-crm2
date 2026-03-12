@@ -8,7 +8,6 @@ import { MobileTaskDrawer } from "@/components/tasks/mobile-task-drawer"
 import { ApprovalTab } from "@/components/tasks/approval-tab"
 import { OverviewTab } from "@/components/tasks/overview-tab"
 import { CalendarTab } from "@/components/tasks/calendar-tab"
-import { CompletedTab } from "@/components/tasks/completed-tab"
 import { TeamTab } from "@/components/tasks/team-tab"
 import { TodayTab } from "@/components/tasks/today-tab"
 import { Button } from "@/components/ui/button"
@@ -17,7 +16,7 @@ import { apiGet } from "@/lib/api-client"
 
 export default function MDTasksPage() {
   const [isManager, setIsManager] = useState<boolean | null>(null)
-  const [activeTab, setActiveTab] = useState("team")
+  const [activeTab, setActiveTab] = useState("overview")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useIsMobile()
 
@@ -39,19 +38,18 @@ export default function MDTasksPage() {
 
   useEffect(() => {
     if (isManager === false && activeTab === "team") {
-      setActiveTab("all")
-      if (typeof window !== "undefined") window.location.hash = "all"
+      setActiveTab("overview")
+      if (typeof window !== "undefined") window.location.hash = "overview"
     }
   }, [isManager, activeTab])
 
   const tabs: TabItem[] = useMemo(
     () => [
+      { value: "overview", label: "Overview" },
       ...(isManager !== false ? [{ value: "team", label: "Team" as const }] : []),
       { value: "approval", label: "Approval" },
       { value: "all", label: "All tasks" },
-      { value: "overview", label: "Overview" },
       { value: "calendar", label: "Calendar" },
-      { value: "completed", label: "Completed" },
     ],
     [isManager]
   )
@@ -61,7 +59,7 @@ export default function MDTasksPage() {
   const syncFromHash = useCallback(() => {
     if (typeof window === "undefined") return
     const hash = window.location.hash.slice(1)
-    const defaultTab = isManager !== false ? "team" : "all"
+    const defaultTab = "overview"
     const effectiveHash = hash || defaultTab
     if (effectiveHash === "team" && isManager === false) {
       setActiveTab("all")
@@ -80,7 +78,7 @@ export default function MDTasksPage() {
     (value: string) => {
       if (!validTabValues.has(value)) return
       if (value === "team" && !isManager) {
-        value = "all"
+        value = "overview"
       }
       if (typeof window !== "undefined") {
         window.location.hash = value
@@ -116,7 +114,6 @@ export default function MDTasksPage() {
         {activeTab === "approval" && <ApprovalTab />}
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "calendar" && <CalendarTab />}
-        {activeTab === "completed" && <CompletedTab />}
       </div>
 
       {isMobile && (

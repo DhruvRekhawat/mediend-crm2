@@ -16,6 +16,7 @@ services:
       timeout: 5s
       retries: 5
 
+  # App: Next.js + cron endpoints. Env must include CRON_SECRET, VAPID keys for push notifications.
   app:
     build:
       context: .
@@ -29,7 +30,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     env_file:
-     - /opt/mediend-crm/mediend-crm2/.env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy

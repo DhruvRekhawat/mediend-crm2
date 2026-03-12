@@ -20,9 +20,12 @@ import { useCreateWorkLog } from "@/hooks/use-work-logs"
 import { toast } from "sonner"
 
 const INTERVALS = [
-  { start: 9, end: 12, label: "9:00 AM - 12:00 PM" },
-  { start: 12, end: 15, label: "12:00 PM - 3:00 PM" },
-  { start: 15, end: 18, label: "3:00 PM - 6:00 PM" },
+  { start: 0, end: 9, label: "Night catch-up (optional)" },
+  { start: 9, end: 11, label: "9:00 AM - 11:00 AM" },
+  { start: 11, end: 13, label: "11:00 AM - 1:00 PM" },
+  { start: 13, end: 15, label: "1:00 PM - 3:00 PM" },
+  { start: 15, end: 17, label: "3:00 PM - 5:00 PM" },
+  { start: 17, end: 19, label: "5:00 PM - 7:00 PM" },
 ] as const
 
 function formatDateOnly(d: Date) {
@@ -78,8 +81,8 @@ export function WorkLogPanel({
       const tzOffsetMinutes = -new Date().getTimezoneOffset()
       await createMutation.mutateAsync({
         logDate: formatDateOnly(selectedDate),
-        intervalStart: selectedInterval.start as 9 | 12 | 15,
-        intervalEnd: selectedInterval.end as 12 | 15 | 18,
+        intervalStart: selectedInterval.start as 0 | 9 | 11 | 13 | 15 | 17,
+        intervalEnd: selectedInterval.end as 9 | 11 | 13 | 15 | 17 | 19,
         description: description.trim(),
         tzOffsetMinutes,
       })

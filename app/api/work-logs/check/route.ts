@@ -1,13 +1,16 @@
 import { NextRequest } from "next/server"
 import { getSessionFromRequest } from "@/lib/session"
-import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-utils"
+import { successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
-import { startOfDay, getHours, getMinutes } from "date-fns"
+import { startOfDay, endOfDay, getHours, getMinutes } from "date-fns"
 
-const INTERVALS = [
-  { start: 9, end: 12, deadlineHour: 12, deadlineMinute: 30 },
-  { start: 12, end: 15, deadlineHour: 15, deadlineMinute: 30 },
-  { start: 15, end: 18, deadlineHour: 18, deadlineMinute: 30 },
+// Required intervals (morning catch-up 0-9 is optional, not enforced)
+const REQUIRED_INTERVALS = [
+  { start: 9, end: 11, deadlineHour: 11, deadlineMinute: 30 },
+  { start: 11, end: 13, deadlineHour: 13, deadlineMinute: 30 },
+  { start: 13, end: 15, deadlineHour: 15, deadlineMinute: 30 },
+  { start: 15, end: 17, deadlineHour: 17, deadlineMinute: 30 },
+  { start: 17, end: 19, deadlineHour: 19, deadlineMinute: 30 },
 ] as const
 
 /** Work log enforcement starts on this date. Before this, the API never blocks. */
@@ -18,6 +21,42 @@ export async function GET(request: NextRequest) {
   if (!user) return unauthorizedResponse()
 
   if (user.role === "MD" || user.role === "ADMIN") {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+    })
+  }
+
+  // Only enforce for MD team members or MD watchlist members
+  const employee = await prisma.employee.findFirst({
+    where: { userId: user.id },
+    select: { id: true },
+  })
+  if (!employee) {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+    })
+  }
+
+  const inTeam = await prisma.mDTaskTeamMember.findFirst({
+    where: {
+      employeeId: employee.id,
+      team: { owner: { role: "MD" } },
+    },
+    select: { id: true },
+  })
+  const inWatchlist = await prisma.mDWatchlistEmployee.findFirst({
+    where: { employeeId: employee.id },
+    select: { id: true },
+  })
+  if (!inTeam && !inWatchlist) {
     return successResponse({
       complete: true,
       isBlocked: false,
@@ -62,6 +101,42 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Sunday exemption
+  const dayOfWeek =
+    tzOffsetParam != null && !Number.isNaN(tzOffsetMinutes)
+      ? dayForWeekend.getUTCDay()
+      : dayForWeekend.getDay()
+  if (dayOfWeek === 0) {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+    })
+  }
+
+  // Leave exemption
+  const dayEnd = endOfDay(dayForWeekend)
+  const onLeave = await prisma.leaveRequest.findFirst({
+    where: {
+      employeeId: employee.id,
+      status: "APPROVED",
+      startDate: { lte: dayEnd },
+      endDate: { gte: dayStart },
+    },
+    select: { id: true },
+  })
+  if (onLeave) {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+    })
+  }
+
   const todayLogs = await prisma.workLog.findMany({
     where: {
       employeeId: user.id,
@@ -74,7 +149,7 @@ export async function GET(request: NextRequest) {
   const missingIntervals: { start: number; end: number; deadline: string }[] = []
   let isBlocked = false
 
-  for (const interval of INTERVALS) {
+  for (const interval of REQUIRED_INTERVALS) {
     const deadlineDecimal = interval.deadlineHour + interval.deadlineMinute / 60
     const isPastDeadline = currentTimeDecimal >= deadlineDecimal
 
@@ -88,13 +163,9 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const dayOfWeek =
-    tzOffsetParam != null && !Number.isNaN(tzOffsetMinutes)
-      ? dayForWeekend.getUTCDay()
-      : dayForWeekend.getDay()
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+  const isWeekend = dayOfWeek === 6
   const isOutsideWorkHours =
-    currentTimeDecimal < 9 || currentTimeDecimal >= 18.5
+    currentTimeDecimal < 9 || currentTimeDecimal >= 19.5
   const isExempt = isWeekend || isOutsideWorkHours
 
   return successResponse({

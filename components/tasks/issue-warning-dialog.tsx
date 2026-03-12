@@ -33,9 +33,11 @@ interface IssueWarningDialogProps {
   /** Pre-filled when opening from a task or team member context */
   employeeId: string
   employeeName?: string
-  /** Optional task to link the warning to */
+  /** Task to link the warning to - required. When from task detail, pass directly. When from team member, use task dropdown. */
   taskId?: string | null
   taskTitle?: string
+  /** Tasks for dropdown when issuing from team member (no taskId provided) */
+  tasks?: { id: string; title: string }[]
   onSuccess?: () => void
 }
 
@@ -44,13 +46,20 @@ export function IssueWarningDialog({
   onOpenChange,
   employeeId,
   employeeName,
-  taskId,
+  taskId: initialTaskId,
   taskTitle,
+  tasks: taskOptions,
   onSuccess,
 }: IssueWarningDialogProps) {
   const [type, setType] = useState<WarningType | "">("")
   const [note, setNote] = useState("")
+  const [selectedTaskId, setSelectedTaskId] = useState<string>("")
   const createWarning = useCreateWarning()
+
+  const taskId = initialTaskId ?? (selectedTaskId || null)
+  const selectedTask = initialTaskId
+    ? { id: initialTaskId, title: taskTitle ?? "" }
+    : taskOptions?.find((t) => t.id === selectedTaskId)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,10 +67,15 @@ export function IssueWarningDialog({
       toast.error("Please select a type and enter a note")
       return
     }
+    const finalTaskId = initialTaskId ?? selectedTaskId
+    if (!finalTaskId) {
+      toast.error("Please select a task")
+      return
+    }
     try {
       await createWarning.mutateAsync({
         employeeId,
-        taskId: taskId ?? undefined,
+        taskId: finalTaskId,
         type: type as WarningType,
         note: note.trim(),
       })
@@ -79,6 +93,7 @@ export function IssueWarningDialog({
     if (!next) {
       setType("")
       setNote("")
+      setSelectedTaskId("")
     }
     onOpenChange(next)
   }
@@ -90,17 +105,38 @@ export function IssueWarningDialog({
           <DialogTitle>Issue warning</DialogTitle>
         </DialogHeader>
         {employeeName && (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground mb-2">
             Employee: <span className="font-medium text-foreground">{employeeName}</span>
-            {taskTitle && (
+            {selectedTask && (
               <>
                 {" · Task: "}
-                <span className="font-medium text-foreground">{taskTitle}</span>
+                <span className="font-medium text-foreground">{selectedTask.title}</span>
               </>
             )}
           </p>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {taskOptions && !initialTaskId && (
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Task (required)</label>
+              {taskOptions.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-2">No tasks to assign warning to</p>
+              ) : (
+                <Select value={selectedTaskId} onValueChange={setSelectedTaskId} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select task..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {taskOptions.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          )}
           <div>
             <label className="text-sm font-medium mb-1.5 block">Type</label>
             <Select value={type} onValueChange={(v) => setType(v as WarningType)} required>
@@ -131,7 +167,7 @@ export function IssueWarningDialog({
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!type || !note.trim() || createWarning.isPending}>
+            <Button type="submit" disabled={!type || !note.trim() || !taskId || createWarning.isPending}>
               Issue warning
             </Button>
           </div>

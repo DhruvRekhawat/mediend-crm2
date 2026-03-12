@@ -377,6 +377,11 @@ export type MDWatchlistEmployee = Prisma.MDWatchlistEmployeeModel
  */
 export type WorkLog = Prisma.WorkLogModel
 /**
+ * Model PushSubscription
+ * 
+ */
+export type PushSubscription = Prisma.PushSubscriptionModel
+/**
  * Model CronJobLog
  * 
  */

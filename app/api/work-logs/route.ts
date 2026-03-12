@@ -9,16 +9,19 @@ const createWorkLogSchema = z.object({
     z.string().datetime(),
     z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   ]),
-  intervalStart: z.number().refine((v) => [9, 12, 15].includes(v)),
-  intervalEnd: z.number().refine((v) => [12, 15, 18].includes(v)),
+  intervalStart: z.number().refine((v) => [0, 9, 11, 13, 15, 17].includes(v)),
+  intervalEnd: z.number().refine((v) => [9, 11, 13, 15, 17, 19].includes(v)),
   description: z.string().min(1),
   tzOffsetMinutes: z.number().optional(),
 })
 
 const INTERVALS = [
-  { start: 9, end: 12 },
-  { start: 12, end: 15 },
-  { start: 15, end: 18 },
+  { start: 0, end: 9 },
+  { start: 9, end: 11 },
+  { start: 11, end: 13 },
+  { start: 13, end: 15 },
+  { start: 15, end: 17 },
+  { start: 17, end: 19 },
 ] as const
 
 export async function GET(request: NextRequest) {
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
     (i) => i.start === parsed.data.intervalStart && i.end === parsed.data.intervalEnd
   )
   if (!validInterval) {
-    return errorResponse("Invalid interval. Use 9-12, 12-15, or 15-18")
+    return errorResponse("Invalid interval. Use 0-9, 9-11, 11-13, 13-15, 15-17, or 17-19")
   }
 
   const log = await prisma.workLog.upsert({

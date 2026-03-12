@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useTasks } from "@/hooks/use-tasks"
+import { useTasks, useWarnings } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { TaskRow } from "./task-row"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
@@ -13,6 +13,14 @@ import type { Task } from "@/hooks/use-tasks"
 export function CompletedTab() {
   const { user } = useAuth()
   const { data: tasks = [], isLoading } = useTasks()
+  const { data: allWarnings = [] } = useWarnings()
+  const taskWarningCountMap = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const w of allWarnings) {
+      if (w.taskId) map[w.taskId] = (map[w.taskId] ?? 0) + 1
+    }
+    return map
+  }, [allWarnings])
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
 
   const canMarkComplete = (task: Task) =>
@@ -86,6 +94,7 @@ export function CompletedTab() {
                     showProject
                     showCompletionRating={false}
                     showStrikethrough={false}
+                    warningCount={taskWarningCountMap[task.id] ?? 0}
                     isAssignee={task.assigneeId === user?.id}
                     canMarkComplete={canMarkComplete(task)}
                   />
@@ -117,6 +126,7 @@ export function CompletedTab() {
                     showAssignee
                     showProject
                     showCompletionRating
+                    warningCount={taskWarningCountMap[task.id] ?? 0}
                     isAssignee={task.assigneeId === user?.id}
                     canMarkComplete={canMarkComplete(task)}
                   />

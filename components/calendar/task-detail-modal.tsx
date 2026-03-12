@@ -628,27 +628,17 @@ function TaskDetailContent({
           </div>
         )}
 
-        {canReviewTask && task.assigneeId && (() => {
-          const overdue = task.dueDate && new Date(task.dueDate) < new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-          const rejected = (task.rejectionCount ?? 0) >= 2
-          const lowRating = task.grade && parseInt(task.grade) <= 2
-          if (overdue || rejected || lowRating) {
-            return (
-              <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20 p-3">
-                <p className="text-xs font-semibold text-orange-700 dark:text-orange-300">Issue a warning</p>
-                <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
-                  {overdue && "Task overdue by more than 3 days."}
-                  {rejected && " Task rejected multiple times."}
-                  {lowRating && ` Low rating (${task.grade}/5).`}
-                </p>
-                <Button size="sm" variant="outline" className="mt-2 w-full border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300" onClick={() => setIssueWarningOpen(true)}>
-                  Issue warning
-                </Button>
-              </div>
-            )
-          }
-          return null
-        })()}
+        {canReviewTask && task.assigneeId && (
+          <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/20 p-3">
+            <p className="text-xs font-semibold text-orange-700 dark:text-orange-300">Issue warning</p>
+            <p className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
+              Attach a warning to this task for the assignee.
+            </p>
+            <Button size="sm" variant="outline" className="mt-2 w-full border-orange-300 text-orange-700 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300" onClick={() => setIssueWarningOpen(true)}>
+              Issue warning
+            </Button>
+          </div>
+        )}
 
         {/* Activity */}
         <div className="space-y-2">

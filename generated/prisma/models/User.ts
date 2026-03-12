@@ -250,6 +250,7 @@ export type UserWhereInput = {
   taskComments?: Prisma.TaskCommentListRelationFilter
   taskActivityLogs?: Prisma.TaskActivityLogListRelationFilter
   workLogs?: Prisma.WorkLogListRelationFilter
+  pushSubscriptions?: Prisma.PushSubscriptionListRelationFilter
   mdTaskTeamsOwned?: Prisma.MDTaskTeamListRelationFilter
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeListRelationFilter
   warningsReceived?: Prisma.WarningListRelationFilter
@@ -309,6 +310,7 @@ export type UserOrderByWithRelationInput = {
   taskComments?: Prisma.TaskCommentOrderByRelationAggregateInput
   taskActivityLogs?: Prisma.TaskActivityLogOrderByRelationAggregateInput
   workLogs?: Prisma.WorkLogOrderByRelationAggregateInput
+  pushSubscriptions?: Prisma.PushSubscriptionOrderByRelationAggregateInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamOrderByRelationAggregateInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeOrderByRelationAggregateInput
   warningsReceived?: Prisma.WarningOrderByRelationAggregateInput
@@ -371,6 +373,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   taskComments?: Prisma.TaskCommentListRelationFilter
   taskActivityLogs?: Prisma.TaskActivityLogListRelationFilter
   workLogs?: Prisma.WorkLogListRelationFilter
+  pushSubscriptions?: Prisma.PushSubscriptionListRelationFilter
   mdTaskTeamsOwned?: Prisma.MDTaskTeamListRelationFilter
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeListRelationFilter
   warningsReceived?: Prisma.WarningListRelationFilter
@@ -457,6 +460,7 @@ export type UserCreateInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -515,6 +519,7 @@ export type UserUncheckedCreateInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -573,6 +578,7 @@ export type UserUpdateInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -631,6 +637,7 @@ export type UserUncheckedUpdateInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -1466,6 +1473,20 @@ export type UserUpdateOneRequiredWithoutWorkLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWorkLogsInput, Prisma.UserUpdateWithoutWorkLogsInput>, Prisma.UserUncheckedUpdateWithoutWorkLogsInput>
 }
 
+export type UserCreateNestedOneWithoutPushSubscriptionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPushSubscriptionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPushSubscriptionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPushSubscriptionsInput
+  upsert?: Prisma.UserUpsertWithoutPushSubscriptionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPushSubscriptionsInput, Prisma.UserUpdateWithoutPushSubscriptionsInput>, Prisma.UserUncheckedUpdateWithoutPushSubscriptionsInput>
+}
+
 export type UserCreateWithoutSalesHeadTeamsInput = {
   id?: string
   email: string
@@ -1517,6 +1538,7 @@ export type UserCreateWithoutSalesHeadTeamsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -1574,6 +1596,7 @@ export type UserUncheckedCreateWithoutSalesHeadTeamsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -1636,6 +1659,7 @@ export type UserCreateWithoutTeamInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -1693,6 +1717,7 @@ export type UserUncheckedCreateWithoutTeamInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -1771,6 +1796,7 @@ export type UserUpdateWithoutSalesHeadTeamsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -1828,6 +1854,7 @@ export type UserUncheckedUpdateWithoutSalesHeadTeamsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -1915,6 +1942,7 @@ export type UserCreateWithoutAssignedLeadsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -1972,6 +2000,7 @@ export type UserUncheckedCreateWithoutAssignedLeadsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -2034,6 +2063,7 @@ export type UserCreateWithoutCreatedLeadsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -2091,6 +2121,7 @@ export type UserUncheckedCreateWithoutCreatedLeadsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -2153,6 +2184,7 @@ export type UserCreateWithoutUpdatedLeadsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -2210,6 +2242,7 @@ export type UserUncheckedCreateWithoutUpdatedLeadsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -2283,6 +2316,7 @@ export type UserUpdateWithoutAssignedLeadsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -2340,6 +2374,7 @@ export type UserUncheckedUpdateWithoutAssignedLeadsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -2408,6 +2443,7 @@ export type UserUpdateWithoutCreatedLeadsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -2465,6 +2501,7 @@ export type UserUncheckedUpdateWithoutCreatedLeadsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -2533,6 +2570,7 @@ export type UserUpdateWithoutUpdatedLeadsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -2590,6 +2628,7 @@ export type UserUncheckedUpdateWithoutUpdatedLeadsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -2647,6 +2686,7 @@ export type UserCreateWithoutLeadStageEventsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -2704,6 +2744,7 @@ export type UserUncheckedCreateWithoutLeadStageEventsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -2777,6 +2818,7 @@ export type UserUpdateWithoutLeadStageEventsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -2834,6 +2876,7 @@ export type UserUncheckedUpdateWithoutLeadStageEventsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -2891,6 +2934,7 @@ export type UserCreateWithoutCreatedTargetsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -2948,6 +2992,7 @@ export type UserUncheckedCreateWithoutCreatedTargetsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -3021,6 +3066,7 @@ export type UserUpdateWithoutCreatedTargetsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -3078,6 +3124,7 @@ export type UserUncheckedUpdateWithoutCreatedTargetsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -3135,6 +3182,7 @@ export type UserCreateWithoutInsuranceCasesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -3192,6 +3240,7 @@ export type UserUncheckedCreateWithoutInsuranceCasesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -3265,6 +3314,7 @@ export type UserUpdateWithoutInsuranceCasesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -3322,6 +3372,7 @@ export type UserUncheckedUpdateWithoutInsuranceCasesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -3379,6 +3430,7 @@ export type UserCreateWithoutPlRecordsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -3436,6 +3488,7 @@ export type UserUncheckedCreateWithoutPlRecordsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -3509,6 +3562,7 @@ export type UserUpdateWithoutPlRecordsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -3566,6 +3620,7 @@ export type UserUncheckedUpdateWithoutPlRecordsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -3623,6 +3678,7 @@ export type UserCreateWithoutDepartmentHeadOfInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -3680,6 +3736,7 @@ export type UserUncheckedCreateWithoutDepartmentHeadOfInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -3753,6 +3810,7 @@ export type UserUpdateWithoutDepartmentHeadOfInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -3810,6 +3868,7 @@ export type UserUncheckedUpdateWithoutDepartmentHeadOfInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -3867,6 +3926,7 @@ export type UserCreateWithoutEmployeeInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -3924,6 +3984,7 @@ export type UserUncheckedCreateWithoutEmployeeInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -3997,6 +4058,7 @@ export type UserUpdateWithoutEmployeeInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -4054,6 +4116,7 @@ export type UserUncheckedUpdateWithoutEmployeeInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -4111,6 +4174,7 @@ export type UserCreateWithoutApprovedLeavesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -4168,6 +4232,7 @@ export type UserUncheckedCreateWithoutApprovedLeavesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -4241,6 +4306,7 @@ export type UserUpdateWithoutApprovedLeavesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -4298,6 +4364,7 @@ export type UserUncheckedUpdateWithoutApprovedLeavesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -4355,6 +4422,7 @@ export type UserCreateWithoutDeletedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -4412,6 +4480,7 @@ export type UserUncheckedCreateWithoutDeletedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -4474,6 +4543,7 @@ export type UserCreateWithoutEditRequestedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -4531,6 +4601,7 @@ export type UserUncheckedCreateWithoutEditRequestedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -4593,6 +4664,7 @@ export type UserCreateWithoutEditApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -4650,6 +4722,7 @@ export type UserUncheckedCreateWithoutEditApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -4712,6 +4785,7 @@ export type UserCreateWithoutCreatedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -4769,6 +4843,7 @@ export type UserUncheckedCreateWithoutCreatedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -4831,6 +4906,7 @@ export type UserCreateWithoutApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -4888,6 +4964,7 @@ export type UserUncheckedCreateWithoutApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -4961,6 +5038,7 @@ export type UserUpdateWithoutDeletedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -5018,6 +5096,7 @@ export type UserUncheckedUpdateWithoutDeletedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -5086,6 +5165,7 @@ export type UserUpdateWithoutEditRequestedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -5143,6 +5223,7 @@ export type UserUncheckedUpdateWithoutEditRequestedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -5211,6 +5292,7 @@ export type UserUpdateWithoutEditApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -5268,6 +5350,7 @@ export type UserUncheckedUpdateWithoutEditApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -5336,6 +5419,7 @@ export type UserUpdateWithoutCreatedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -5393,6 +5477,7 @@ export type UserUncheckedUpdateWithoutCreatedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -5461,6 +5546,7 @@ export type UserUpdateWithoutApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -5518,6 +5604,7 @@ export type UserUncheckedUpdateWithoutApprovedLedgerEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -5575,6 +5662,7 @@ export type UserCreateWithoutLedgerAuditLogsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -5632,6 +5720,7 @@ export type UserUncheckedCreateWithoutLedgerAuditLogsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -5705,6 +5794,7 @@ export type UserUpdateWithoutLedgerAuditLogsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -5762,6 +5852,7 @@ export type UserUncheckedUpdateWithoutLedgerAuditLogsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -5819,6 +5910,7 @@ export type UserCreateWithoutCreatedSalesEntriesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -5876,6 +5968,7 @@ export type UserUncheckedCreateWithoutCreatedSalesEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -5949,6 +6042,7 @@ export type UserUpdateWithoutCreatedSalesEntriesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -6006,6 +6100,7 @@ export type UserUncheckedUpdateWithoutCreatedSalesEntriesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -6063,6 +6158,7 @@ export type UserCreateWithoutStockMovementsCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -6120,6 +6216,7 @@ export type UserUncheckedCreateWithoutStockMovementsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -6193,6 +6290,7 @@ export type UserUpdateWithoutStockMovementsCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -6250,6 +6348,7 @@ export type UserUncheckedUpdateWithoutStockMovementsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -6307,6 +6406,7 @@ export type UserCreateWithoutPurchasesCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -6364,6 +6464,7 @@ export type UserUncheckedCreateWithoutPurchasesCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -6437,6 +6538,7 @@ export type UserUpdateWithoutPurchasesCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -6494,6 +6596,7 @@ export type UserUncheckedUpdateWithoutPurchasesCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -6551,6 +6654,7 @@ export type UserCreateWithoutIssuesReceivedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -6608,6 +6712,7 @@ export type UserUncheckedCreateWithoutIssuesReceivedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -6670,6 +6775,7 @@ export type UserCreateWithoutIssuesCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -6727,6 +6833,7 @@ export type UserUncheckedCreateWithoutIssuesCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -6800,6 +6907,7 @@ export type UserUpdateWithoutIssuesReceivedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -6857,6 +6965,7 @@ export type UserUncheckedUpdateWithoutIssuesReceivedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -6925,6 +7034,7 @@ export type UserUpdateWithoutIssuesCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -6982,6 +7092,7 @@ export type UserUncheckedUpdateWithoutIssuesCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -7039,6 +7150,7 @@ export type UserCreateWithoutKypSubmissionsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -7096,6 +7208,7 @@ export type UserUncheckedCreateWithoutKypSubmissionsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -7169,6 +7282,7 @@ export type UserUpdateWithoutKypSubmissionsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -7226,6 +7340,7 @@ export type UserUncheckedUpdateWithoutKypSubmissionsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -7283,6 +7398,7 @@ export type UserCreateWithoutPreAuthsRaisedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -7340,6 +7456,7 @@ export type UserUncheckedCreateWithoutPreAuthsRaisedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -7402,6 +7519,7 @@ export type UserCreateWithoutPreAuthHandledInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -7459,6 +7577,7 @@ export type UserUncheckedCreateWithoutPreAuthHandledInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -7532,6 +7651,7 @@ export type UserUpdateWithoutPreAuthsRaisedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -7589,6 +7709,7 @@ export type UserUncheckedUpdateWithoutPreAuthsRaisedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -7657,6 +7778,7 @@ export type UserUpdateWithoutPreAuthHandledInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -7714,6 +7836,7 @@ export type UserUncheckedUpdateWithoutPreAuthHandledInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -7771,6 +7894,7 @@ export type UserCreateWithoutNotificationsInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -7828,6 +7952,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -7901,6 +8026,7 @@ export type UserUpdateWithoutNotificationsInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -7958,6 +8084,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -8015,6 +8142,7 @@ export type UserCreateWithoutQueriesRaisedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -8072,6 +8200,7 @@ export type UserUncheckedCreateWithoutQueriesRaisedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -8134,6 +8263,7 @@ export type UserCreateWithoutQueriesAnsweredInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -8191,6 +8321,7 @@ export type UserUncheckedCreateWithoutQueriesAnsweredInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -8264,6 +8395,7 @@ export type UserUpdateWithoutQueriesRaisedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -8321,6 +8453,7 @@ export type UserUncheckedUpdateWithoutQueriesRaisedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -8389,6 +8522,7 @@ export type UserUpdateWithoutQueriesAnsweredInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -8446,6 +8580,7 @@ export type UserUncheckedUpdateWithoutQueriesAnsweredInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -8503,6 +8638,7 @@ export type UserCreateWithoutPdfsCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -8560,6 +8696,7 @@ export type UserUncheckedCreateWithoutPdfsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -8633,6 +8770,7 @@ export type UserUpdateWithoutPdfsCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -8690,6 +8828,7 @@ export type UserUncheckedUpdateWithoutPdfsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -8747,6 +8886,7 @@ export type UserCreateWithoutAdmissionsInitiatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -8804,6 +8944,7 @@ export type UserUncheckedCreateWithoutAdmissionsInitiatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -8877,6 +9018,7 @@ export type UserUpdateWithoutAdmissionsInitiatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -8934,6 +9076,7 @@ export type UserUncheckedUpdateWithoutAdmissionsInitiatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -8991,6 +9134,7 @@ export type UserCreateWithoutInsuranceInitiateFormsCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -9048,6 +9192,7 @@ export type UserUncheckedCreateWithoutInsuranceInitiateFormsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -9121,6 +9266,7 @@ export type UserUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -9178,6 +9324,7 @@ export type UserUncheckedUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -9235,6 +9382,7 @@ export type UserCreateWithoutCaseStageChangesInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -9292,6 +9440,7 @@ export type UserUncheckedCreateWithoutCaseStageChangesInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -9365,6 +9514,7 @@ export type UserUpdateWithoutCaseStageChangesInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -9422,6 +9572,7 @@ export type UserUncheckedUpdateWithoutCaseStageChangesInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -9479,6 +9630,7 @@ export type UserCreateWithoutCaseChatMessagesSentInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -9536,6 +9688,7 @@ export type UserUncheckedCreateWithoutCaseChatMessagesSentInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -9609,6 +9762,7 @@ export type UserUpdateWithoutCaseChatMessagesSentInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -9666,6 +9820,7 @@ export type UserUncheckedUpdateWithoutCaseChatMessagesSentInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -9723,6 +9878,7 @@ export type UserCreateWithoutDischargeSheetsCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -9780,6 +9936,7 @@ export type UserUncheckedCreateWithoutDischargeSheetsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -9853,6 +10010,7 @@ export type UserUpdateWithoutDischargeSheetsCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -9910,6 +10068,7 @@ export type UserUncheckedUpdateWithoutDischargeSheetsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -9967,6 +10126,7 @@ export type UserCreateWithoutOutstandingCasesHandledInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -10024,6 +10184,7 @@ export type UserUncheckedCreateWithoutOutstandingCasesHandledInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -10097,6 +10258,7 @@ export type UserUpdateWithoutOutstandingCasesHandledInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -10154,6 +10316,7 @@ export type UserUncheckedUpdateWithoutOutstandingCasesHandledInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -10211,6 +10374,7 @@ export type UserCreateWithoutTasksAssignedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -10268,6 +10432,7 @@ export type UserUncheckedCreateWithoutTasksAssignedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -10330,6 +10495,7 @@ export type UserCreateWithoutTasksCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -10387,6 +10553,7 @@ export type UserUncheckedCreateWithoutTasksCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -10449,6 +10616,7 @@ export type UserCreateWithoutTasksCompletedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -10506,6 +10674,7 @@ export type UserUncheckedCreateWithoutTasksCompletedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -10579,6 +10748,7 @@ export type UserUpdateWithoutTasksAssignedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -10636,6 +10806,7 @@ export type UserUncheckedUpdateWithoutTasksAssignedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -10704,6 +10875,7 @@ export type UserUpdateWithoutTasksCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -10761,6 +10933,7 @@ export type UserUncheckedUpdateWithoutTasksCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -10829,6 +11002,7 @@ export type UserUpdateWithoutTasksCompletedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -10886,6 +11060,7 @@ export type UserUncheckedUpdateWithoutTasksCompletedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -10943,6 +11118,7 @@ export type UserCreateWithoutTaskApprovalsRequestedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -11000,6 +11176,7 @@ export type UserUncheckedCreateWithoutTaskApprovalsRequestedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -11073,6 +11250,7 @@ export type UserUpdateWithoutTaskApprovalsRequestedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -11130,6 +11308,7 @@ export type UserUncheckedUpdateWithoutTaskApprovalsRequestedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -11187,6 +11366,7 @@ export type UserCreateWithoutTaskProjectsCreatedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -11244,6 +11424,7 @@ export type UserUncheckedCreateWithoutTaskProjectsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -11317,6 +11498,7 @@ export type UserUpdateWithoutTaskProjectsCreatedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -11374,6 +11556,7 @@ export type UserUncheckedUpdateWithoutTaskProjectsCreatedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -11431,6 +11614,7 @@ export type UserCreateWithoutTaskCommentsInput = {
   taskProjectsCreated?: Prisma.TaskProjectCreateNestedManyWithoutCreatedByInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -11488,6 +11672,7 @@ export type UserUncheckedCreateWithoutTaskCommentsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUncheckedCreateNestedManyWithoutCreatedByInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -11561,6 +11746,7 @@ export type UserUpdateWithoutTaskCommentsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUpdateManyWithoutCreatedByNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -11618,6 +11804,7 @@ export type UserUncheckedUpdateWithoutTaskCommentsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -11675,6 +11862,7 @@ export type UserCreateWithoutTaskActivityLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectCreateNestedManyWithoutCreatedByInput
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -11732,6 +11920,7 @@ export type UserUncheckedCreateWithoutTaskActivityLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUncheckedCreateNestedManyWithoutCreatedByInput
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -11805,6 +11994,7 @@ export type UserUpdateWithoutTaskActivityLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUpdateManyWithoutCreatedByNestedInput
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -11862,6 +12052,7 @@ export type UserUncheckedUpdateWithoutTaskActivityLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -11920,6 +12111,7 @@ export type UserCreateWithoutWarningsReceivedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
@@ -11977,6 +12169,7 @@ export type UserUncheckedCreateWithoutWarningsReceivedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
@@ -12039,6 +12232,7 @@ export type UserCreateWithoutWarningsIssuedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -12096,6 +12290,7 @@ export type UserUncheckedCreateWithoutWarningsIssuedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -12169,6 +12364,7 @@ export type UserUpdateWithoutWarningsReceivedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
@@ -12226,6 +12422,7 @@ export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
@@ -12294,6 +12491,7 @@ export type UserUpdateWithoutWarningsIssuedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -12351,6 +12549,7 @@ export type UserUncheckedUpdateWithoutWarningsIssuedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -12408,6 +12607,7 @@ export type UserCreateWithoutMdTaskTeamsOwnedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
@@ -12465,6 +12665,7 @@ export type UserUncheckedCreateWithoutMdTaskTeamsOwnedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
@@ -12538,6 +12739,7 @@ export type UserUpdateWithoutMdTaskTeamsOwnedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
@@ -12595,6 +12797,7 @@ export type UserUncheckedUpdateWithoutMdTaskTeamsOwnedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
@@ -12652,6 +12855,7 @@ export type UserCreateWithoutMdWatchlistOwnedInput = {
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
@@ -12709,6 +12913,7 @@ export type UserUncheckedCreateWithoutMdWatchlistOwnedInput = {
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
   workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
@@ -12782,6 +12987,7 @@ export type UserUpdateWithoutMdWatchlistOwnedInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
@@ -12839,6 +13045,7 @@ export type UserUncheckedUpdateWithoutMdWatchlistOwnedInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
@@ -12895,6 +13102,7 @@ export type UserCreateWithoutWorkLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectCreateNestedManyWithoutCreatedByInput
   taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
@@ -12952,6 +13160,7 @@ export type UserUncheckedCreateWithoutWorkLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUncheckedCreateNestedManyWithoutCreatedByInput
   taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
@@ -13025,6 +13234,7 @@ export type UserUpdateWithoutWorkLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUpdateManyWithoutCreatedByNestedInput
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -13082,6 +13292,255 @@ export type UserUncheckedUpdateWithoutWorkLogsInput = {
   taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
+  warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
+  warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+}
+
+export type UserCreateWithoutPushSubscriptionsInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name: string
+  role: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  team?: Prisma.TeamCreateNestedOneWithoutMembersInput
+  createdLeads?: Prisma.LeadCreateNestedManyWithoutCreatedByInput
+  assignedLeads?: Prisma.LeadCreateNestedManyWithoutBdInput
+  updatedLeads?: Prisma.LeadCreateNestedManyWithoutUpdatedByInput
+  leadStageEvents?: Prisma.LeadStageEventCreateNestedManyWithoutChangedByInput
+  createdTargets?: Prisma.TargetCreateNestedManyWithoutCreatedByInput
+  salesHeadTeams?: Prisma.TeamCreateNestedManyWithoutSalesHeadInput
+  insuranceCases?: Prisma.InsuranceCaseCreateNestedManyWithoutHandledByInput
+  plRecords?: Prisma.PLRecordCreateNestedManyWithoutHandledByInput
+  employee?: Prisma.EmployeeCreateNestedOneWithoutUserInput
+  approvedLeaves?: Prisma.LeaveRequestCreateNestedManyWithoutApprovedByInput
+  createdLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutCreatedByInput
+  approvedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutApprovedByInput
+  deletedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutDeletedByInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutEditRequestedByInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutEditApprovedByInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogCreateNestedManyWithoutPerformedByInput
+  createdSalesEntries?: Prisma.SalesEntryCreateNestedManyWithoutCreatedByInput
+  stockMovementsCreated?: Prisma.StockMovementCreateNestedManyWithoutCreatedByInput
+  purchasesCreated?: Prisma.PurchaseTransactionCreateNestedManyWithoutCreatedByInput
+  issuesCreated?: Prisma.IssueTransactionCreateNestedManyWithoutCreatedByInput
+  issuesReceived?: Prisma.IssueTransactionCreateNestedManyWithoutIssuedToInput
+  kypSubmissions?: Prisma.KYPSubmissionCreateNestedManyWithoutSubmittedByInput
+  preAuthHandled?: Prisma.PreAuthorizationCreateNestedManyWithoutHandledByInput
+  queriesRaised?: Prisma.InsuranceQueryCreateNestedManyWithoutRaisedByInput
+  queriesAnswered?: Prisma.InsuranceQueryCreateNestedManyWithoutAnsweredByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetCreateNestedManyWithoutCreatedByInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormCreateNestedManyWithoutCreatedByInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseCreateNestedManyWithoutHandledByInput
+  departmentHeadOf?: Prisma.DepartmentCreateNestedManyWithoutHeadInput
+  preAuthsRaised?: Prisma.PreAuthorizationCreateNestedManyWithoutPreAuthRaisedByInput
+  pdfsCreated?: Prisma.PreAuthPDFCreateNestedManyWithoutCreatedByInput
+  admissionsInitiated?: Prisma.AdmissionRecordCreateNestedManyWithoutInitiatedByInput
+  caseStageChanges?: Prisma.CaseStageHistoryCreateNestedManyWithoutChangedByInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageCreateNestedManyWithoutSenderInput
+  tasksAssigned?: Prisma.TaskCreateNestedManyWithoutAssigneeInput
+  tasksCreated?: Prisma.TaskCreateNestedManyWithoutCreatedByInput
+  tasksCompleted?: Prisma.TaskCreateNestedManyWithoutCompletedByInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalCreateNestedManyWithoutRequestedByInput
+  taskProjectsCreated?: Prisma.TaskProjectCreateNestedManyWithoutCreatedByInput
+  taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
+  taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
+  workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
+  warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
+  warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+}
+
+export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name: string
+  role: $Enums.UserRole
+  teamId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutBdInput
+  updatedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutUpdatedByInput
+  leadStageEvents?: Prisma.LeadStageEventUncheckedCreateNestedManyWithoutChangedByInput
+  createdTargets?: Prisma.TargetUncheckedCreateNestedManyWithoutCreatedByInput
+  salesHeadTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutSalesHeadInput
+  insuranceCases?: Prisma.InsuranceCaseUncheckedCreateNestedManyWithoutHandledByInput
+  plRecords?: Prisma.PLRecordUncheckedCreateNestedManyWithoutHandledByInput
+  employee?: Prisma.EmployeeUncheckedCreateNestedOneWithoutUserInput
+  approvedLeaves?: Prisma.LeaveRequestUncheckedCreateNestedManyWithoutApprovedByInput
+  createdLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutCreatedByInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutApprovedByInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutDeletedByInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutEditRequestedByInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutEditApprovedByInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUncheckedCreateNestedManyWithoutPerformedByInput
+  createdSalesEntries?: Prisma.SalesEntryUncheckedCreateNestedManyWithoutCreatedByInput
+  stockMovementsCreated?: Prisma.StockMovementUncheckedCreateNestedManyWithoutCreatedByInput
+  purchasesCreated?: Prisma.PurchaseTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  issuesCreated?: Prisma.IssueTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  issuesReceived?: Prisma.IssueTransactionUncheckedCreateNestedManyWithoutIssuedToInput
+  kypSubmissions?: Prisma.KYPSubmissionUncheckedCreateNestedManyWithoutSubmittedByInput
+  preAuthHandled?: Prisma.PreAuthorizationUncheckedCreateNestedManyWithoutHandledByInput
+  queriesRaised?: Prisma.InsuranceQueryUncheckedCreateNestedManyWithoutRaisedByInput
+  queriesAnswered?: Prisma.InsuranceQueryUncheckedCreateNestedManyWithoutAnsweredByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUncheckedCreateNestedManyWithoutCreatedByInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUncheckedCreateNestedManyWithoutCreatedByInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUncheckedCreateNestedManyWithoutHandledByInput
+  departmentHeadOf?: Prisma.DepartmentUncheckedCreateNestedManyWithoutHeadInput
+  preAuthsRaised?: Prisma.PreAuthorizationUncheckedCreateNestedManyWithoutPreAuthRaisedByInput
+  pdfsCreated?: Prisma.PreAuthPDFUncheckedCreateNestedManyWithoutCreatedByInput
+  admissionsInitiated?: Prisma.AdmissionRecordUncheckedCreateNestedManyWithoutInitiatedByInput
+  caseStageChanges?: Prisma.CaseStageHistoryUncheckedCreateNestedManyWithoutChangedByInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  tasksAssigned?: Prisma.TaskUncheckedCreateNestedManyWithoutAssigneeInput
+  tasksCreated?: Prisma.TaskUncheckedCreateNestedManyWithoutCreatedByInput
+  tasksCompleted?: Prisma.TaskUncheckedCreateNestedManyWithoutCompletedByInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUncheckedCreateNestedManyWithoutRequestedByInput
+  taskProjectsCreated?: Prisma.TaskProjectUncheckedCreateNestedManyWithoutCreatedByInput
+  taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
+  taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
+  workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
+  warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
+  warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+}
+
+export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+}
+
+export type UserUpsertWithoutPushSubscriptionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPushSubscriptionsInput, Prisma.UserUncheckedUpdateWithoutPushSubscriptionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPushSubscriptionsInput, Prisma.UserUncheckedCreateWithoutPushSubscriptionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPushSubscriptionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPushSubscriptionsInput, Prisma.UserUncheckedUpdateWithoutPushSubscriptionsInput>
+}
+
+export type UserUpdateWithoutPushSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
+  createdLeads?: Prisma.LeadUpdateManyWithoutCreatedByNestedInput
+  assignedLeads?: Prisma.LeadUpdateManyWithoutBdNestedInput
+  updatedLeads?: Prisma.LeadUpdateManyWithoutUpdatedByNestedInput
+  leadStageEvents?: Prisma.LeadStageEventUpdateManyWithoutChangedByNestedInput
+  createdTargets?: Prisma.TargetUpdateManyWithoutCreatedByNestedInput
+  salesHeadTeams?: Prisma.TeamUpdateManyWithoutSalesHeadNestedInput
+  insuranceCases?: Prisma.InsuranceCaseUpdateManyWithoutHandledByNestedInput
+  plRecords?: Prisma.PLRecordUpdateManyWithoutHandledByNestedInput
+  employee?: Prisma.EmployeeUpdateOneWithoutUserNestedInput
+  approvedLeaves?: Prisma.LeaveRequestUpdateManyWithoutApprovedByNestedInput
+  createdLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutCreatedByNestedInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutApprovedByNestedInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutDeletedByNestedInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutEditRequestedByNestedInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutEditApprovedByNestedInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUpdateManyWithoutPerformedByNestedInput
+  createdSalesEntries?: Prisma.SalesEntryUpdateManyWithoutCreatedByNestedInput
+  stockMovementsCreated?: Prisma.StockMovementUpdateManyWithoutCreatedByNestedInput
+  purchasesCreated?: Prisma.PurchaseTransactionUpdateManyWithoutCreatedByNestedInput
+  issuesCreated?: Prisma.IssueTransactionUpdateManyWithoutCreatedByNestedInput
+  issuesReceived?: Prisma.IssueTransactionUpdateManyWithoutIssuedToNestedInput
+  kypSubmissions?: Prisma.KYPSubmissionUpdateManyWithoutSubmittedByNestedInput
+  preAuthHandled?: Prisma.PreAuthorizationUpdateManyWithoutHandledByNestedInput
+  queriesRaised?: Prisma.InsuranceQueryUpdateManyWithoutRaisedByNestedInput
+  queriesAnswered?: Prisma.InsuranceQueryUpdateManyWithoutAnsweredByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUpdateManyWithoutCreatedByNestedInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUpdateManyWithoutCreatedByNestedInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUpdateManyWithoutHandledByNestedInput
+  departmentHeadOf?: Prisma.DepartmentUpdateManyWithoutHeadNestedInput
+  preAuthsRaised?: Prisma.PreAuthorizationUpdateManyWithoutPreAuthRaisedByNestedInput
+  pdfsCreated?: Prisma.PreAuthPDFUpdateManyWithoutCreatedByNestedInput
+  admissionsInitiated?: Prisma.AdmissionRecordUpdateManyWithoutInitiatedByNestedInput
+  caseStageChanges?: Prisma.CaseStageHistoryUpdateManyWithoutChangedByNestedInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUpdateManyWithoutSenderNestedInput
+  tasksAssigned?: Prisma.TaskUpdateManyWithoutAssigneeNestedInput
+  tasksCreated?: Prisma.TaskUpdateManyWithoutCreatedByNestedInput
+  tasksCompleted?: Prisma.TaskUpdateManyWithoutCompletedByNestedInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUpdateManyWithoutRequestedByNestedInput
+  taskProjectsCreated?: Prisma.TaskProjectUpdateManyWithoutCreatedByNestedInput
+  taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
+  taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
+  workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
+  warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
+  warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedLeads?: Prisma.LeadUncheckedUpdateManyWithoutBdNestedInput
+  updatedLeads?: Prisma.LeadUncheckedUpdateManyWithoutUpdatedByNestedInput
+  leadStageEvents?: Prisma.LeadStageEventUncheckedUpdateManyWithoutChangedByNestedInput
+  createdTargets?: Prisma.TargetUncheckedUpdateManyWithoutCreatedByNestedInput
+  salesHeadTeams?: Prisma.TeamUncheckedUpdateManyWithoutSalesHeadNestedInput
+  insuranceCases?: Prisma.InsuranceCaseUncheckedUpdateManyWithoutHandledByNestedInput
+  plRecords?: Prisma.PLRecordUncheckedUpdateManyWithoutHandledByNestedInput
+  employee?: Prisma.EmployeeUncheckedUpdateOneWithoutUserNestedInput
+  approvedLeaves?: Prisma.LeaveRequestUncheckedUpdateManyWithoutApprovedByNestedInput
+  createdLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutCreatedByNestedInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutApprovedByNestedInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutDeletedByNestedInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutEditRequestedByNestedInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutEditApprovedByNestedInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUncheckedUpdateManyWithoutPerformedByNestedInput
+  createdSalesEntries?: Prisma.SalesEntryUncheckedUpdateManyWithoutCreatedByNestedInput
+  stockMovementsCreated?: Prisma.StockMovementUncheckedUpdateManyWithoutCreatedByNestedInput
+  purchasesCreated?: Prisma.PurchaseTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  issuesCreated?: Prisma.IssueTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  issuesReceived?: Prisma.IssueTransactionUncheckedUpdateManyWithoutIssuedToNestedInput
+  kypSubmissions?: Prisma.KYPSubmissionUncheckedUpdateManyWithoutSubmittedByNestedInput
+  preAuthHandled?: Prisma.PreAuthorizationUncheckedUpdateManyWithoutHandledByNestedInput
+  queriesRaised?: Prisma.InsuranceQueryUncheckedUpdateManyWithoutRaisedByNestedInput
+  queriesAnswered?: Prisma.InsuranceQueryUncheckedUpdateManyWithoutAnsweredByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUncheckedUpdateManyWithoutCreatedByNestedInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUncheckedUpdateManyWithoutCreatedByNestedInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUncheckedUpdateManyWithoutHandledByNestedInput
+  departmentHeadOf?: Prisma.DepartmentUncheckedUpdateManyWithoutHeadNestedInput
+  preAuthsRaised?: Prisma.PreAuthorizationUncheckedUpdateManyWithoutPreAuthRaisedByNestedInput
+  pdfsCreated?: Prisma.PreAuthPDFUncheckedUpdateManyWithoutCreatedByNestedInput
+  admissionsInitiated?: Prisma.AdmissionRecordUncheckedUpdateManyWithoutInitiatedByNestedInput
+  caseStageChanges?: Prisma.CaseStageHistoryUncheckedUpdateManyWithoutChangedByNestedInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  tasksAssigned?: Prisma.TaskUncheckedUpdateManyWithoutAssigneeNestedInput
+  tasksCreated?: Prisma.TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+  tasksCompleted?: Prisma.TaskUncheckedUpdateManyWithoutCompletedByNestedInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUncheckedUpdateManyWithoutRequestedByNestedInput
+  taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
+  taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
+  taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -13149,6 +13608,7 @@ export type UserUpdateWithoutTeamInput = {
   taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
@@ -13206,6 +13666,7 @@ export type UserUncheckedUpdateWithoutTeamInput = {
   taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
   taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
   workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
@@ -13270,6 +13731,7 @@ export type UserCountOutputType = {
   taskComments: number
   taskActivityLogs: number
   workLogs: number
+  pushSubscriptions: number
   mdTaskTeamsOwned: number
   mdWatchlistOwned: number
   warningsReceived: number
@@ -13319,6 +13781,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   taskComments?: boolean | UserCountOutputTypeCountTaskCommentsArgs
   taskActivityLogs?: boolean | UserCountOutputTypeCountTaskActivityLogsArgs
   workLogs?: boolean | UserCountOutputTypeCountWorkLogsArgs
+  pushSubscriptions?: boolean | UserCountOutputTypeCountPushSubscriptionsArgs
   mdTaskTeamsOwned?: boolean | UserCountOutputTypeCountMdTaskTeamsOwnedArgs
   mdWatchlistOwned?: boolean | UserCountOutputTypeCountMdWatchlistOwnedArgs
   warningsReceived?: boolean | UserCountOutputTypeCountWarningsReceivedArgs
@@ -13632,6 +14095,13 @@ export type UserCountOutputTypeCountWorkLogsArgs<ExtArgs extends runtime.Types.E
 /**
  * UserCountOutputType without action
  */
+export type UserCountOutputTypeCountPushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PushSubscriptionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
 export type UserCountOutputTypeCountMdTaskTeamsOwnedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.MDTaskTeamWhereInput
 }
@@ -13711,6 +14181,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   taskComments?: boolean | Prisma.User$taskCommentsArgs<ExtArgs>
   taskActivityLogs?: boolean | Prisma.User$taskActivityLogsArgs<ExtArgs>
   workLogs?: boolean | Prisma.User$workLogsArgs<ExtArgs>
+  pushSubscriptions?: boolean | Prisma.User$pushSubscriptionsArgs<ExtArgs>
   mdTaskTeamsOwned?: boolean | Prisma.User$mdTaskTeamsOwnedArgs<ExtArgs>
   mdWatchlistOwned?: boolean | Prisma.User$mdWatchlistOwnedArgs<ExtArgs>
   warningsReceived?: boolean | Prisma.User$warningsReceivedArgs<ExtArgs>
@@ -13799,6 +14270,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   taskComments?: boolean | Prisma.User$taskCommentsArgs<ExtArgs>
   taskActivityLogs?: boolean | Prisma.User$taskActivityLogsArgs<ExtArgs>
   workLogs?: boolean | Prisma.User$workLogsArgs<ExtArgs>
+  pushSubscriptions?: boolean | Prisma.User$pushSubscriptionsArgs<ExtArgs>
   mdTaskTeamsOwned?: boolean | Prisma.User$mdTaskTeamsOwnedArgs<ExtArgs>
   mdWatchlistOwned?: boolean | Prisma.User$mdWatchlistOwnedArgs<ExtArgs>
   warningsReceived?: boolean | Prisma.User$warningsReceivedArgs<ExtArgs>
@@ -13859,6 +14331,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     taskComments: Prisma.$TaskCommentPayload<ExtArgs>[]
     taskActivityLogs: Prisma.$TaskActivityLogPayload<ExtArgs>[]
     workLogs: Prisma.$WorkLogPayload<ExtArgs>[]
+    pushSubscriptions: Prisma.$PushSubscriptionPayload<ExtArgs>[]
     mdTaskTeamsOwned: Prisma.$MDTaskTeamPayload<ExtArgs>[]
     mdWatchlistOwned: Prisma.$MDWatchlistEmployeePayload<ExtArgs>[]
     warningsReceived: Prisma.$WarningPayload<ExtArgs>[]
@@ -14311,6 +14784,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   taskComments<T extends Prisma.User$taskCommentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$taskCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TaskCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   taskActivityLogs<T extends Prisma.User$taskActivityLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$taskActivityLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TaskActivityLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   workLogs<T extends Prisma.User$workLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$workLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pushSubscriptions<T extends Prisma.User$pushSubscriptionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushSubscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushSubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mdTaskTeamsOwned<T extends Prisma.User$mdTaskTeamsOwnedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mdTaskTeamsOwnedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MDTaskTeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mdWatchlistOwned<T extends Prisma.User$mdWatchlistOwnedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mdWatchlistOwnedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MDWatchlistEmployeePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   warningsReceived<T extends Prisma.User$warningsReceivedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$warningsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WarningPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -15796,6 +16270,30 @@ export type User$workLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.WorkLogScalarFieldEnum | Prisma.WorkLogScalarFieldEnum[]
+}
+
+/**
+ * User.pushSubscriptions
+ */
+export type User$pushSubscriptionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PushSubscription
+   */
+  select?: Prisma.PushSubscriptionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PushSubscription
+   */
+  omit?: Prisma.PushSubscriptionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PushSubscriptionInclude<ExtArgs> | null
+  where?: Prisma.PushSubscriptionWhereInput
+  orderBy?: Prisma.PushSubscriptionOrderByWithRelationInput | Prisma.PushSubscriptionOrderByWithRelationInput[]
+  cursor?: Prisma.PushSubscriptionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PushSubscriptionScalarFieldEnum | Prisma.PushSubscriptionScalarFieldEnum[]
 }
 
 /**

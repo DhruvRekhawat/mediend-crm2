@@ -326,6 +326,7 @@ model User {
   taskComments        TaskComment[]
   taskActivityLogs    TaskActivityLog[]
   workLogs            WorkLog[]
+  pushSubscriptions   PushSubscription[]
   mdTaskTeamsOwned    MDTaskTeam[]         @relation("MDTaskTeamOwner")
   mdWatchlistOwned    MDWatchlistEmployee[] @relation("MDWatchlistOwner")
   warningsReceived    Warning[]            @relation("EmployeeWarnings")
@@ -2235,6 +2236,19 @@ model WorkLog {
   @@unique([employeeId, logDate, intervalStart])
   @@index([employeeId])
   @@index([logDate])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @db.Text
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, endpoint])
+  @@index([userId])
 }
 
 // Observability: Cron job execution logs

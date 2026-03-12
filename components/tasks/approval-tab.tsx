@@ -5,7 +5,7 @@ import { format } from "date-fns"
 import { Check, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/hooks/use-auth"
-import { useTaskApprovals, useApproveTaskDueDate, useTasks, type Task } from "@/hooks/use-tasks"
+import { useTaskApprovals, useApproveTaskDueDate, useTasks, useWarnings, type Task } from "@/hooks/use-tasks"
 import { TaskRow } from "./task-row"
 import { getTaskCardClass } from "./task-card-class"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
@@ -17,6 +17,14 @@ export function ApprovalTab() {
     { status: "EMPLOYEE_DONE" },
     { enabled: true }
   )
+  const { data: allWarnings = [] } = useWarnings()
+  const taskWarningCountMap = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const w of allWarnings) {
+      if (w.taskId) map[w.taskId] = (map[w.taskId] ?? 0) + 1
+    }
+    return map
+  }, [allWarnings])
   const approveMutation = useApproveTaskDueDate()
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
   const [exitingTask, setExitingTask] = useState<Task | null>(null)
@@ -151,6 +159,7 @@ export function ApprovalTab() {
                   onClick={() => !exitingTask && canReviewTask(task) && setTaskToComplete(task)}
                   showAssignee
                   showProject
+                  warningCount={taskWarningCountMap[task.id] ?? 0}
                   isAssignee={false}
                   canMarkComplete={false}
                   showCompletionRating={false}

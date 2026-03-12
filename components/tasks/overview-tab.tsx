@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { startOfDay } from "date-fns"
-import { useTaskStats, useTasks } from "@/hooks/use-tasks"
+import { useTaskStats, useTasks, useWarnings } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { Progress } from "@/components/ui/progress"
 import { StatCard } from "@/components/ui/stat-card"
@@ -17,6 +17,14 @@ export function OverviewTab() {
   const { user } = useAuth()
   const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorDetail } = useTaskStats()
   const { data: tasks = [], isLoading: tasksLoading } = useTasks()
+  const { data: allWarnings = [] } = useWarnings()
+  const taskWarningCountMap = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const w of allWarnings) {
+      if (w.taskId) map[w.taskId] = (map[w.taskId] ?? 0) + 1
+    }
+    return map
+  }, [allWarnings])
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null)
   const [expandedAssigneeId, setExpandedAssigneeId] = useState<string | null>(null)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
@@ -93,6 +101,7 @@ export function OverviewTab() {
                   onClick={() => setDetailTaskId(task.id)}
                   showAssignee
                   showProject
+                  warningCount={taskWarningCountMap[task.id] ?? 0}
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -163,6 +172,7 @@ export function OverviewTab() {
                                 onClick={() => setDetailTaskId(task.id)}
                                 showAssignee={false}
                                 showProject
+                                warningCount={taskWarningCountMap[task.id] ?? 0}
                                 isAssignee={task.assigneeId === user?.id}
                                 canMarkComplete={canMarkComplete(task)}
                                 onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -238,6 +248,7 @@ export function OverviewTab() {
                                 onClick={() => setDetailTaskId(task.id)}
                                 showAssignee
                                 showProject={false}
+                                warningCount={taskWarningCountMap[task.id] ?? 0}
                                 isAssignee={task.assigneeId === user?.id}
                                 canMarkComplete={canMarkComplete(task)}
                                 onMarkCompleteRequest={() => setTaskToComplete(task)}

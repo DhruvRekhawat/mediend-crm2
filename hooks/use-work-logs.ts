@@ -65,8 +65,8 @@ export function useWorkLogCheck(options?: UseWorkLogCheckOptions) {
 
 export interface CreateWorkLogInput {
   logDate: string
-  intervalStart: 9 | 12 | 15
-  intervalEnd: 12 | 15 | 18
+  intervalStart: 0 | 9 | 11 | 13 | 15 | 17
+  intervalEnd: 9 | 11 | 13 | 15 | 17 | 19
   description: string
   tzOffsetMinutes?: number
 }

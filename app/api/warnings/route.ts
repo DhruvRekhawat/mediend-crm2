@@ -6,7 +6,7 @@ import { z } from "zod"
 
 const createWarningSchema = z.object({
   employeeId: z.string().min(1),
-  taskId: z.string().optional().nullable(),
+  taskId: z.string().min(1),
   type: z.enum(["REPEATED_DEADLINE_MISS", "LOW_QUALITY_WORK", "UNRESPONSIVE", "TASK_ABANDONMENT", "OTHER"]),
   note: z.string().min(1),
 })
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const warning = await prisma.warning.create({
     data: {
       employeeId: parsed.data.employeeId,
-      taskId: parsed.data.taskId ?? null,
+      taskId: parsed.data.taskId,
       type: parsed.data.type,
       note: parsed.data.note.trim(),
       issuedById: user.id,

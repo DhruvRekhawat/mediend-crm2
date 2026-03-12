@@ -40,6 +40,7 @@ mkdir -p /var/log
 touch /var/log/cron-attendance.log
 touch /var/log/cron-leads.log
 touch /var/log/cron-cleanup.log
+touch /var/log/cron-work-log-reminders.log
 chmod 644 /var/log/cron-*.log
 echo "✓ Created log files"
 
@@ -80,6 +81,9 @@ crontab -l 2>/dev/null | grep -v "mediend-crm\|api/cron" | crontab - 2>/dev/null
 # Leads sync - every 5 minutes
 */5 * * * * curl -sf -X POST http://localhost:3000/api/cron/leads -H "Authorization: Bearer ${CRON_SECRET}" >> /var/log/cron-leads.log 2>&1
 
+# Work log reminders (push notifications) - every 15 min, IST (tzOffsetMinutes=330)
+*/15 * * * * curl -sf -X GET "http://localhost:3000/api/cron/work-log-reminders?tzOffsetMinutes=330" -H "Authorization: Bearer ${CRON_SECRET}" >> /var/log/cron-work-log-reminders.log 2>&1
+
 # Database backup - daily at 2 AM UTC
 0 2 * * * ${BACKUP_SCRIPT} >> /var/log/pg_backup.log 2>&1
 
@@ -115,18 +119,28 @@ else
   echo "✗ Leads endpoint test failed (this is OK if app is not running)"
 fi
 
+echo "Testing work-log-reminders endpoint..."
+REMINDERS_TEST=$(curl -sf -X GET "http://localhost:3000/api/cron/work-log-reminders?tzOffsetMinutes=330" -H "Authorization: Bearer ${CRON_SECRET}" -w "\nHTTP_CODE:%{http_code}" 2>&1 || echo "HTTP_CODE:000")
+if echo "$REMINDERS_TEST" | grep -q "HTTP_CODE:200"; then
+  echo "✓ Work log reminders endpoint is working"
+else
+  echo "✗ Work log reminders endpoint test failed (this is OK if app is not running)"
+fi
+
 echo ""
 echo "===> Setup complete!"
 echo ""
 echo "Cron jobs configured:"
 echo "  - Attendance sync: every 5 minutes"
 echo "  - Leads sync: every 5 minutes"
+echo "  - Work log reminders (push): every 15 minutes"
 echo "  - Database backup: daily at 2 AM UTC"
 echo "  - Log cleanup: daily at 3 AM UTC"
 echo ""
 echo "Log files:"
 echo "  - /var/log/cron-attendance.log"
 echo "  - /var/log/cron-leads.log"
+echo "  - /var/log/cron-work-log-reminders.log"
 echo "  - /var/log/cron-cleanup.log"
 echo "  - /var/log/pg_backup.log"
 echo ""

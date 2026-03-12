@@ -91,6 +91,10 @@ NEXT_PUBLIC_APP_URL=https://workspace.mediend.com
 NODE_ENV=production
 CRON_SECRET=<openssl rand -base64 32>
 
+# Push notifications (work log reminders) - generate with: npx web-push generate-vapid-keys
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<public-key>
+VAPID_PRIVATE_KEY=<private-key>
+
 # Add all other env vars (AWS, AI, MySQL, etc.)
 ```
 
@@ -171,6 +175,9 @@ Add these lines (replace YOUR_CRON_SECRET with actual value from .env.production
 
 # Leads sync - every 5 minutes
 */5 * * * * curl -sf -X POST http://localhost:3000/api/cron/leads -H "Authorization: Bearer YOUR_CRON_SECRET" >> /var/log/cron-leads.log 2>&1
+
+# Work log reminders (push) - every 15 min, IST
+*/15 * * * * curl -sf -X GET "http://localhost:3000/api/cron/work-log-reminders?tzOffsetMinutes=330" -H "Authorization: Bearer YOUR_CRON_SECRET" >> /var/log/cron-work-log-reminders.log 2>&1
 
 # Database backup - daily at 2 AM UTC
 0 2 * * * /opt/backups/pg_backup.sh >> /var/log/pg_backup.log 2>&1

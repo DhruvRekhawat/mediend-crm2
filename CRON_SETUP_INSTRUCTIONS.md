@@ -78,6 +78,9 @@ Add these lines (replace `YOUR_CRON_SECRET` with the actual value from `.env.pro
 # Leads sync - every 5 minutes
 */5 * * * * curl -sf -X POST http://localhost:3000/api/cron/leads -H "Authorization: Bearer YOUR_CRON_SECRET" >> /var/log/cron-leads.log 2>&1
 
+# Work log reminders (push notifications) - every 15 min, IST
+*/15 * * * * curl -sf -X GET "http://localhost:3000/api/cron/work-log-reminders?tzOffsetMinutes=330" -H "Authorization: Bearer YOUR_CRON_SECRET" >> /var/log/cron-work-log-reminders.log 2>&1
+
 # Database backup - daily at 2 AM UTC
 0 2 * * * /opt/backups/pg_backup.sh >> /var/log/pg_backup.log 2>&1
 
@@ -97,6 +100,9 @@ curl -X POST http://localhost:3000/api/cron/attendance \
 
 curl -X POST http://localhost:3000/api/cron/leads \
   -H "Authorization: Bearer YOUR_CRON_SECRET"
+
+curl -X GET "http://localhost:3000/api/cron/work-log-reminders?tzOffsetMinutes=330" \
+  -H "Authorization: Bearer YOUR_CRON_SECRET"
 ```
 
 ### 5. Monitor logs
@@ -107,6 +113,9 @@ tail -f /var/log/cron-attendance.log
 
 # Watch leads sync logs
 tail -f /var/log/cron-leads.log
+
+# Watch work log reminders logs
+tail -f /var/log/cron-work-log-reminders.log
 
 # Watch cleanup logs
 tail -f /var/log/cron-cleanup.log
@@ -150,6 +159,10 @@ tail -f /var/log/pg_backup.log
    # Test leads
    curl -X POST http://localhost:3000/api/cron/leads \
      -H "Authorization: Bearer $CRON_SECRET"
+   
+   # Test work log reminders
+   curl -X GET "http://localhost:3000/api/cron/work-log-reminders?tzOffsetMinutes=330" \
+     -H "Authorization: Bearer $CRON_SECRET"
    ```
 
 ### 401 Unauthorized errors
@@ -171,13 +184,29 @@ tail -f /var/log/pg_backup.log
 - Verify the underlying sync endpoints work:
   - `/api/attendance/sync/daily` requires `ATTENDANCE_SYNC_SECRET`
   - `/api/sync/mysql-leads` requires `SYNC_API_SECRET` or `LEADS_API_SECRET`
+- For work log reminders: ensure `NEXT_PUBLIC_VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are set (see Push Notifications below)
 
 ## Cron Job Schedule
 
 - **Attendance Sync**: Every 5 minutes (`*/5 * * * *`)
 - **Leads Sync**: Every 5 minutes (`*/5 * * * *`)
+- **Work Log Reminders**: Every 15 minutes (`*/15 * * * *`) – sends push notifications to MD team members before work log deadlines
 - **Database Backup**: Daily at 2 AM UTC (`0 2 * * *`)
 - **Log Cleanup**: Daily at 3 AM UTC (`0 3 * * *`)
+
+## Push Notifications (Work Log Reminders)
+
+Work log reminders use Web Push. Ensure these env vars are set in your production `.env`:
+
+```bash
+# Generate with: npx web-push generate-vapid-keys
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<public-key>
+VAPID_PRIVATE_KEY=<private-key>
+```
+
+- The app must be served over **HTTPS** for push to work (service worker requirement).
+- Users must enable reminders on the home page to receive push notifications.
+- Restart the app container after adding/updating VAPID keys.
 
 ## Viewing Cron Job History
 

@@ -118,6 +118,7 @@ export const ModelName = {
   MDTaskTeamMember: 'MDTaskTeamMember',
   MDWatchlistEmployee: 'MDWatchlistEmployee',
   WorkLog: 'WorkLog',
+  PushSubscription: 'PushSubscription',
   CronJobLog: 'CronJobLog',
   AppSetting: 'AppSetting',
   RequestLog: 'RequestLog'
@@ -1477,6 +1478,18 @@ export const WorkLogScalarFieldEnum = {
 } as const
 
 export type WorkLogScalarFieldEnum = (typeof WorkLogScalarFieldEnum)[keyof typeof WorkLogScalarFieldEnum]
+
+
+export const PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt'
+} as const
+
+export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
 export const CronJobLogScalarFieldEnum = {
