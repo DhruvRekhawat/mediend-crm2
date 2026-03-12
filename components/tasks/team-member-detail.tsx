@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, AlertTriangle, Star, ArrowUpRight, Crown, Users, FileText, CheckCircle2, Clock, MoreVertical, ClipboardList, ShieldAlert, ListChecks } from "lucide-react"
+import { Plus, AlertTriangle, Star, ArrowUpRight, Crown, Users, FileText, CheckCircle2, Clock, MoreVertical, ClipboardList, ShieldAlert } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -17,7 +17,6 @@ import { MarkCompleteDrawer } from "./mark-complete-drawer"
 import { IssueWarningDialog } from "./issue-warning-dialog"
 import { WorkLogViewerDrawer } from "./work-log-viewer-drawer"
 import { WarningsDrawer } from "./warnings-drawer"
-import { TaskActivityLogsDrawer } from "./task-activity-logs-drawer"
 import {
   Sheet,
   SheetContent,
@@ -97,7 +96,6 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
   const [issueWarningOpen, setIssueWarningOpen] = useState(false)
   const [workLogDrawerOpen, setWorkLogDrawerOpen] = useState(false)
   const [warningsDrawerOpen, setWarningsDrawerOpen] = useState(false)
-  const [logsDrawerOpen, setLogsDrawerOpen] = useState(false)
   const [actionsSheetOpen, setActionsSheetOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>("active")
 
@@ -308,10 +306,10 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
             {canIssueWarning && (
               <button
                 type="button"
-                onClick={() => setLogsDrawerOpen(true)}
+                onClick={() => setWorkLogDrawerOpen(true)}
                 className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 border text-sm transition-colors bg-white/60 dark:bg-white/5 border-border hover:bg-muted/50"
               >
-                <ListChecks className="h-3.5 w-3.5" />
+                <FileText className="h-3.5 w-3.5" />
                 <span className="text-muted-foreground">logs</span>
               </button>
             )}
@@ -609,12 +607,6 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
         memberName={member.name}
         warnings={warnings}
       />
-      <TaskActivityLogsDrawer
-        open={logsDrawerOpen}
-        onOpenChange={setLogsDrawerOpen}
-        memberId={member.id}
-        memberName={member.name}
-      />
       <Sheet open={actionsSheetOpen} onOpenChange={setActionsSheetOpen}>
         <SheetContent side="right" className="w-full max-w-xs sm:max-w-sm">
           <SheetHeader>
@@ -633,19 +625,6 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
                 <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               </div>
               <span className="font-medium">View Work Logs</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setActionsSheetOpen(false)
-                setLogsDrawerOpen(true)
-              }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted/80"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/40">
-                <ListChecks className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <span className="font-medium">View Logs</span>
             </button>
             {canIssueWarning && (
               <>
