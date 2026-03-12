@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { AppointmentStatus } from '@prisma/client'
+import { AppointmentStatus } from '@/generated/prisma/client'
 
 const updateAppointmentSchema = z.object({
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'COMPLETED']),

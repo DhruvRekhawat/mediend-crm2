@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { CaseStage, FlowType, NotificationType } from '@prisma/client'
+import { CaseStage, FlowType, NotificationType } from '@/generated/prisma/client'
 
 const reviewSchema = z.object({
   action: z.enum(['APPROVE', 'HOLD']),

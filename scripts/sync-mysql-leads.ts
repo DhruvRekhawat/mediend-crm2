@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
 import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@/generated/prisma/client'
 import pLimit from 'p-limit'
 
 interface MySQLRemarkRow {

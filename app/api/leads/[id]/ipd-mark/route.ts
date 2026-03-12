@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
-import { CaseStage, IpdStatus } from '@prisma/client'
+import { CaseStage, IpdStatus } from '@/generated/prisma/client'
 
 const ipdMarkSchema = z.object({
   status: z.enum(['ADMITTED_DONE', 'IPD_DONE', 'POSTPONED', 'CANCELLED', 'DISCHARGED']),

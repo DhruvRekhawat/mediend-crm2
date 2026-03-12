@@ -1,4 +1,4 @@
-import { PayrollRecord, PayrollComponent, PayrollComponentType } from '@prisma/client'
+import { PayrollRecord, PayrollComponent, PayrollComponentType } from '@/generated/prisma/client'
 
 export interface PayrollRecordWithComponents extends PayrollRecord {
   components: PayrollComponent[]

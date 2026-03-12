@@ -1,4 +1,4 @@
-import { LocationType, StockMovementType, InventoryTransactionStatus } from '@prisma/client'
+import { LocationType, StockMovementType, InventoryTransactionStatus } from '@/generated/prisma/client'
 
 // Location Master
 export interface LocationMaster {

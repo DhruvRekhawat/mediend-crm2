@@ -7,7 +7,7 @@ import {
   DEFAULT_DEPARTMENT_TIMING,
   type DepartmentTiming,
 } from '@/lib/hrms/attendance-utils'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 
 function getDepartmentTiming(department: {
   shiftStartHour: number

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerStatus, LedgerAuditAction, Prisma, TransactionType } from '@prisma/client'
+import { LedgerStatus, LedgerAuditAction, Prisma, TransactionType } from '@/generated/prisma/client'
 import { reverseBalanceUpdate, updatePaymentModeBalance } from '@/lib/finance'
 
 export async function POST(

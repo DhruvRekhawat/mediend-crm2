@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { successResponse, errorResponse } from '@/lib/api-utils'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/client'
 
 export async function POST(request: NextRequest) {
   try {

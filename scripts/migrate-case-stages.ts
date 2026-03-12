@@ -10,7 +10,7 @@
 
 import 'dotenv/config'
 import { prisma } from '@/lib/prisma'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/client'
 
 async function migrateCaseStages() {
   console.log('Starting case stage migration...')

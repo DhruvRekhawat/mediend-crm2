@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerStatus } from '@prisma/client'
+import { LedgerStatus } from '@/generated/prisma/client'
 
 export interface BadgeCounts {
   pendingFinanceApprovals: number

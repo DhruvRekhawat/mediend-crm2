@@ -4,7 +4,7 @@ import {
   PartyType, 
   FinancePaymentType,
   LedgerAuditAction 
-} from '@prisma/client'
+} from '@/generated/prisma/client'
 
 // Re-export Prisma types for convenience
 export { 

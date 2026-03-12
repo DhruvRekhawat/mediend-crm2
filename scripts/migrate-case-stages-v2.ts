@@ -11,7 +11,7 @@
 
 import 'dotenv/config'
 import { prisma } from '@/lib/prisma'
-import { CaseStage, Prisma } from '@prisma/client'
+import { CaseStage, Prisma } from '@/generated/prisma/client'
 
 const OLD_TO_NEW_STAGE: Record<string, CaseStage> = {
   KYP_PENDING: CaseStage.KYP_BASIC_PENDING,

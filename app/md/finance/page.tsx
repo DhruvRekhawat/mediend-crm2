@@ -256,7 +256,7 @@ export default function MDFinanceDashboardPage() {
           <>
             {/* KPI Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Card className="border-l-4 border-l-green-500 bg-linear-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-green-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                   <ArrowUpRight className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -269,7 +269,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500 bg-linear-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-red-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
                   <ArrowDownRight className="h-5 w-5 text-red-600 dark:text-red-400" />
@@ -282,7 +282,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500 bg-linear-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-blue-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Cash Flow</CardTitle>
                   <TrendingUp className={`h-5 w-5 ${analytics.kpis.netCashFlow >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`} />
@@ -295,7 +295,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-amber-500 bg-linear-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-amber-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
                   <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -308,7 +308,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-emerald-500 bg-linear-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-emerald-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Approved Amount</CardTitle>
                   <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -321,7 +321,7 @@ export default function MDFinanceDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500 bg-linear-to-br from-red-50 to-white dark:from-red-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-red-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Rejected Amount</CardTitle>
                   <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />

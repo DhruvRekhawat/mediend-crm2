@@ -4,9 +4,9 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { calculatePayroll } from '@/lib/hrms/payroll-utils'
-import { PayrollComponentType } from '@prisma/client'
+import { PayrollComponentType } from '@/generated/prisma/client'
 import { z } from 'zod'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 
 const createPayrollSchema = z.object({
   employeeId: z.string(),

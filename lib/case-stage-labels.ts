@@ -1,4 +1,4 @@
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/enums'
 
 /**
  * Shared case stage display config. Used by insurance dashboard and BD KYP page

@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/client'
 
 const initiateSchema = z.object({
   admissionDate: z.string().min(1, 'Admission date is required'),

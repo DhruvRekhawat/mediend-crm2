@@ -11,32 +11,32 @@ const variantStyles: Record<
   tasks: {
     active: 'bg-blue-600 text-white border-blue-600',
     inactive:
-      'border-border bg-muted/30 text-muted-foreground hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
-    list: 'border-b border-border gap-0',
+      'border-border bg-card text-muted-foreground hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
+    list: 'border-b border-border gap-0 bg-card',
   },
   'core-hr': {
     active: 'bg-green-600 text-white border-green-600',
     inactive:
-      'border-border bg-muted/30 text-muted-foreground hover:bg-green-50 hover:text-green-700 hover:border-green-200',
-    list: 'border-b border-border gap-0',
+      'border-border bg-card text-muted-foreground hover:bg-green-50 hover:text-green-700 hover:border-green-200',
+    list: 'border-b border-border gap-0 bg-card',
   },
   financial: {
     active: 'bg-teal-600 text-white border-teal-600',
     inactive:
-      'border-border bg-muted/30 text-muted-foreground hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200',
-    list: 'border-b border-border gap-0',
+      'border-border bg-card text-muted-foreground hover:bg-teal-50 hover:text-teal-700 hover:border-teal-200',
+    list: 'border-b border-border gap-0 bg-card',
   },
   support: {
     active: 'bg-emerald-700 text-white border-emerald-700',
     inactive:
-      'border-border bg-muted/30 text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200',
-    list: 'border-b border-border gap-0',
+      'border-border bg-card text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200',
+    list: 'border-b border-border gap-0 bg-card',
   },
   'mental-health': {
     active: 'bg-rose-600 text-white border-rose-600',
     inactive:
-      'border-border bg-muted/30 text-muted-foreground hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200',
-    list: 'border-b border-border gap-0',
+      'border-border bg-card text-muted-foreground hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200',
+    list: 'border-b border-border gap-0 bg-card',
   },
 }
 

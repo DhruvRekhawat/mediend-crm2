@@ -33,7 +33,6 @@ import {
   FolderTree,
   Heart,
   LogOut,
-  Mail,
   MessageSquare,
   Package,
   ShieldCheck,
@@ -41,7 +40,6 @@ import {
   Ticket,
   TrendingUp,
   User,
-  UserCircle,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -50,7 +48,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import * as React from 'react'
 import logo from '@/public/logo-mediend.png'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@/generated/prisma/enums'
 
 function getBadgeCount(
   itemTitle: string,
@@ -88,11 +86,8 @@ export function AppSidebar() {
     if (isMobile) setOpenMobile(false)
   }, [isMobile, setOpenMobile])
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({
-    myHrms: false,
     services: false,
-    hrManagement: false,
     finance: false,
-    mdPortal: false,
   })
 
   const toggleSection = (section: string) => {
@@ -131,7 +126,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border bg-[#062D4C]">
+      <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-1 p-2">
           <div className="relative h-8 w-32 shrink-0">
             <Image
@@ -173,52 +168,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {user.role !== 'ADMIN' && user.role !== 'TESTER' && (
-          <SidebarGroup className="pb-1">
-            <button
-              onClick={() => toggleSection('myHrms')}
-              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <UserCircle className="h-4 w-4" />
-                <span>My HRMS</span>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform duration-200 ${
-                  openSections.myHrms ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-            <div
-              className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                openSections.myHrms ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-              }`}
-            >
-              {openSections.myHrms && (
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                  {itemsWithUrls
-                    .filter((item) => item.title.startsWith('My '))
-                    .map((item) => {
-                      const Icon = item.icon
-                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                            <Link href={item.url} onClick={closeSidebarOnMobile}>
-                              <Icon />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              )}
-            </div>
-          </SidebarGroup>
-        )}
         {user.role !== 'ADMIN' && user.role !== 'TESTER' && itemsWithUrls.some((item) => item.title.startsWith('Svc ')) && (
           <SidebarGroup className="pb-1">
             <button
@@ -265,52 +214,6 @@ export function AppSidebar() {
               </div>
             </SidebarGroup>
         )}
-        {user.role !== 'ADMIN' && user.role !== 'TESTER' && user.role !== 'USER' && itemsWithUrls.some((item) => item.title.startsWith('HR ')) && (
-          <SidebarGroup className="pb-1">
-            <button
-              onClick={() => toggleSection('hrManagement')}
-              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>HR Management</span>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform duration-200 ${
-                  openSections.hrManagement ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-            <div
-              className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                openSections.hrManagement ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-              }`}
-            >
-              {openSections.hrManagement && (
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                  {itemsWithUrls
-                    .filter((item) => item.title.startsWith('HR ') || item.title === 'Departments' || item.title === 'Leave Types' || item.title === 'Leave Balances' || item.title === 'Normalizations')
-                    .map((item) => {
-                      const Icon = item.icon
-                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                            <Link href={item.url} onClick={closeSidebarOnMobile}>
-                              <Icon />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      )
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              )}
-            </div>
-          </SidebarGroup>
-        )}
         {itemsWithUrls.some((item) => item.title.startsWith('Fin ')) && (
           <SidebarGroup className="pb-1">
             <button
@@ -349,58 +252,6 @@ export function AppSidebar() {
                                 <span>{item.title.replace('Fin ', '')}</span>
                                 {badgeCount > 0 && (
                                   <SidebarMenuBadge className="bg-destructive text-white">
-                                    {badgeCount > 99 ? '99+' : badgeCount}
-                                  </SidebarMenuBadge>
-                                )}
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        )
-                      })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              )}
-            </div>
-          </SidebarGroup>
-        )}
-        {(user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER') && (
-          <SidebarGroup className="pb-1">
-            <button
-              onClick={() => toggleSection('mdPortal')}
-              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span>MD Portal</span>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 transition-transform duration-200 ${
-                  openSections.mdPortal ? 'rotate-180' : ''
-                }`}
-              />
-            </button>
-            <div
-              className={`overflow-hidden transition-all duration-200 ease-in-out ${
-                openSections.mdPortal ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
-              }`}
-            >
-              {openSections.mdPortal && (
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {itemsWithUrls
-                      .filter((item) => item.title.startsWith('MD '))
-                      .map((item) => {
-                        const Icon = item.icon
-                        const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
-                        const badgeCount = getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin)
-                        return (
-                          <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title.replace('MD ', '')}>
-                            <Link href={item.url} onClick={closeSidebarOnMobile}>
-                                <Icon />
-                                <span>{item.title.replace('MD ', '')}</span>
-                                {badgeCount > 0 && (
-                                  <SidebarMenuBadge className="bg-destructive text-destructive-foreground">
                                     {badgeCount > 99 ? '99+' : badgeCount}
                                   </SidebarMenuBadge>
                                 )}

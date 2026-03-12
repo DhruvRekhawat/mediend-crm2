@@ -1,4 +1,4 @@
-import { LeaveRequest, LeaveBalance, LeaveTypeMaster } from '@prisma/client'
+import { LeaveRequest, LeaveBalance, LeaveTypeMaster } from '@/generated/prisma/client'
 
 export interface LeaveBalanceWithType extends LeaveBalance {
   leaveType: LeaveTypeMaster

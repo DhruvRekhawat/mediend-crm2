@@ -5,6 +5,7 @@ import { startOfDay } from "date-fns"
 import { useTaskStats, useTasks } from "@/hooks/use-tasks"
 import { useAuth } from "@/hooks/use-auth"
 import { Progress } from "@/components/ui/progress"
+import { StatCard } from "@/components/ui/stat-card"
 import { TaskRow } from "./task-row"
 import { getTaskCardClass } from "./task-card-class"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
@@ -71,30 +72,12 @@ export function OverviewTab() {
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="rounded-lg border border-l-4 border-l-blue-500 bg-muted/30 px-3 py-3">
-          <p className="text-sm md:text-xs text-muted-foreground">Total</p>
-          <p className="text-2xl font-semibold">{stats.total}</p>
-        </div>
-        <div className="rounded-lg border border-l-4 border-l-green-500 bg-muted/30 px-3 py-3">
-          <p className="text-sm md:text-xs text-muted-foreground">Completed</p>
-          <p className="text-2xl font-semibold text-green-600">{stats.completed}</p>
-        </div>
-        <div className="rounded-lg border border-l-4 border-l-amber-500 bg-muted/30 px-3 py-3">
-          <p className="text-sm md:text-xs text-muted-foreground">Pending</p>
-          <p className="text-2xl font-semibold">{stats.pending}</p>
-        </div>
-        <div className="rounded-lg border border-l-4 border-l-purple-500 bg-muted/30 px-3 py-3">
-          <p className="text-sm md:text-xs text-muted-foreground">Pending review</p>
-          <p className="text-2xl font-semibold text-purple-600">{stats.pendingReview ?? 0}</p>
-        </div>
-        <div className="rounded-lg border border-l-4 border-l-red-500 bg-muted/30 px-3 py-3">
-          <p className="text-sm md:text-xs text-muted-foreground">Overdue</p>
-          <p className="text-2xl font-semibold text-red-600">{stats.overdue}</p>
-        </div>
-        <div className="rounded-lg border border-l-4 border-l-orange-500 bg-muted/30 px-3 py-3">
-          <p className="text-sm md:text-xs text-muted-foreground">Employees w/ warnings</p>
-          <p className="text-2xl font-semibold text-orange-600">{stats.employeesWithWarnings ?? 0}</p>
-        </div>
+        <StatCard label="Total" value={stats.total} accent="blue" />
+        <StatCard label="Completed" value={stats.completed} accent="green" valueAccent />
+        <StatCard label="Pending" value={stats.pending} accent="amber" />
+        <StatCard label="Pending review" value={stats.pendingReview ?? 0} accent="purple" valueAccent />
+        <StatCard label="Overdue" value={stats.overdue} accent="red" valueAccent />
+        <StatCard label="Employees w/ warnings" value={stats.employeesWithWarnings ?? 0} accent="orange" valueAccent />
       </section>
 
       {overdueTasks.length > 0 && (

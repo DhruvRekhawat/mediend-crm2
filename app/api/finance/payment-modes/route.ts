@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { Prisma, TransactionType, LedgerStatus } from '@prisma/client'
+import { Prisma, TransactionType, LedgerStatus } from '@/generated/prisma/client'
 
 /**
  * Calculate opening balance for a payment mode on a specific date

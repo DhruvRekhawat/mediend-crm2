@@ -183,8 +183,8 @@ export function TaskInput({
       ref={wrapperRef}
       className={cn(
         "min-w-0 w-full",
-        !bottomAnchored && "rounded-lg border bg-background shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-primary/20",
-        bottomAnchored && "bg-transparent focus-within:ring-0 scroll-mb-[40vh]",
+        !bottomAnchored && "rounded-lg border border-border bg-card shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-primary/20",
+        bottomAnchored && "bg-card focus-within:ring-0 scroll-mb-[40vh]",
         className
       )}
     >

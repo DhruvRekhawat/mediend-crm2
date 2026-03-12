@@ -1,4 +1,4 @@
-import { CaseStage, UserRole, FlowType } from '@prisma/client'
+import { CaseStage, UserRole, FlowType } from '@/generated/prisma/enums'
 
 interface User {
   id: string

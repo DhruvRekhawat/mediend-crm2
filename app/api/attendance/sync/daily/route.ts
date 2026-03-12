@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { errorResponse, successResponse } from '@/lib/api-utils'
 import { fetchAttendanceLogs } from '@/lib/hrms/biometric-api-client'
 import { normalizePunchDirection } from '@/lib/hrms/attendance-utils'
-import { PunchDirection } from '@prisma/client'
+import { PunchDirection } from '@/generated/prisma/client'
 import { format, subDays } from 'date-fns'
 
 /**

@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission, canAssignDepartmentHead } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 
 const updateDepartmentSchema = z.object({
   name: z.string().min(1).optional(),

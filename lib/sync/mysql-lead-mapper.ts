@@ -1,4 +1,4 @@
-import { PipelineStage, UserRole } from '@prisma/client'
+import { PipelineStage, UserRole } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { mapCategoryCode, mapCircleCode, mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'

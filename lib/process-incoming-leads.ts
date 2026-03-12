@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { UserRole, PipelineStage } from '@prisma/client'
+import { UserRole, PipelineStage } from '@/generated/prisma/client'
 import { hashPassword } from '@/lib/auth'
 
 interface IncomingLeadPayload {

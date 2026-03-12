@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation'
-
-export default function FinancePage() {
-  redirect('/finance/ledger')
-}
+/**
+ * /finance shows the ledger so users land without a redirect.
+ */
+export { default } from '@/app/finance/ledger/page'
 

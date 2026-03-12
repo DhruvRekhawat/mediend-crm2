@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { InventoryTransactionStatus, Prisma, StockMovementType } from '@prisma/client'
+import { InventoryTransactionStatus, Prisma, StockMovementType } from '@/generated/prisma/client'
 import { generatePurchaseNumber, updateItemStock, checkStockLevels } from '@/lib/finance/inventory-utils'
 
 export async function GET(request: NextRequest) {

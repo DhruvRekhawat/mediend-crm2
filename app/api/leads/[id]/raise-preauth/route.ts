@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/client'
 
 const raisePreAuthSchema = z.object({
   requestedHospitalName: z.string().min(1, 'Hospital name is required'),

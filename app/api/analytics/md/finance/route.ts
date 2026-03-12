@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { Prisma, LedgerStatus, TransactionType } from '@prisma/client'
+import { Prisma, LedgerStatus, TransactionType } from '@/generated/prisma/client'
 import { getSession } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 

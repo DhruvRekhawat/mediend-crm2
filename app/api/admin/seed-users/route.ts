@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { successResponse, errorResponse } from '@/lib/api-utils'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@/generated/prisma/client'
 
 const VALID_ROLES = Object.values(UserRole)
 

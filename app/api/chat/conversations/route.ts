@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead } from '@/lib/rbac'
 import { getSubordinateUserIdsForLeadAccess } from '@/lib/hierarchy'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 import { maskPhoneNumber } from '@/lib/phone-utils'
 
 export async function GET(request: NextRequest) {

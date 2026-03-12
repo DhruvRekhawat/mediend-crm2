@@ -10,7 +10,7 @@ import {
   generateRelievingLetterHTML 
 } from '@/lib/hrms/document-templates'
 import { z } from 'zod'
-import { DocumentType } from '@prisma/client'
+import { DocumentType } from '@/generated/prisma/client'
 
 const generateDocumentSchema = z.object({
   employeeId: z.string(),

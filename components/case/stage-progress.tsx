@@ -1,6 +1,6 @@
 'use client'
 
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/enums'
 import { cn } from '@/lib/utils'
 import { CheckCircle2, Clock } from 'lucide-react'
 

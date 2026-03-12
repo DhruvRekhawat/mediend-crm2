@@ -1,19 +1,6 @@
-'use client'
-
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { redirect } from 'next/navigation'
 
 /**
- * Team leads use the same pipeline as BD. Redirect to BD pipeline.
+ * Team leads use the same pipeline as BD. Serve BD pipeline at this URL so no client redirect.
  */
-export default function TeamLeadPipelinePage() {
-  const router = useRouter()
-  useEffect(() => {
-    router.replace('/bd/pipeline')
-  }, [router])
-  return (
-    <div className="flex items-center justify-center min-h-[200px] text-muted-foreground">
-      Redirecting to pipeline...
-    </div>
-  )
-}
+export { default } from '@/app/bd/pipeline/page'

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/session";
-import { UserRole } from "@prisma/client";
+import { UserRole } from "@/generated/prisma/client";
 import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/api-utils";
 import os from "os";
 import { exec } from "child_process";

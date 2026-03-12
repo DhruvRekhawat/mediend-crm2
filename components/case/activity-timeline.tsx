@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { formatDistanceToNow } from 'date-fns'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/enums'
 import { CheckCircle2, FileText, Clock, Activity, Receipt, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

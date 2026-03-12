@@ -1,4 +1,4 @@
-import { TransactionType, LedgerStatus, PrismaClient } from '@prisma/client'
+import { TransactionType, LedgerStatus, PrismaClient } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 
 export type PrismaTransactionClient = Omit<

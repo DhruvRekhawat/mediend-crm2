@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@/generated/prisma/enums'
 import { SessionUser } from './auth'
 
 export type Permission = 

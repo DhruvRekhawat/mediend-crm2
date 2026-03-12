@@ -1,9 +1,4 @@
-import { redirect } from 'next/navigation'
-
 /**
- * /md has no index content. Redirect to the canonical MD landing page.
- * MD/ADMIN users land on /md/sales per getDashboardUrl in sidebar-nav.
+ * /md shows the same content as /md/sales (Sales Dashboard) so users land without a redirect.
  */
-export default function MDIndexPage() {
-  redirect('/md/sales')
-}
+export { default } from '@/app/md/sales/page'

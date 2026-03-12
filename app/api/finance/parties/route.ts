@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { PartyType, Prisma } from '@prisma/client'
+import { PartyType, Prisma } from '@/generated/prisma/client'
 
 export async function GET(request: NextRequest) {
   try {

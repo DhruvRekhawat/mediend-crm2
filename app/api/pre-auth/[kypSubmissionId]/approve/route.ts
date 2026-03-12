@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { hasPermission } from '@/lib/rbac'
-import { CaseStage, PreAuthStatus } from '@prisma/client'
+import { CaseStage, PreAuthStatus } from '@/generated/prisma/client'
 import { z } from 'zod'
 
 const approveSchema = z.object({

@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
   output: "standalone",
   // PWA plugin uses webpack; use `next build --webpack` so build uses webpack. Empty turbopack silences config check.
   turbopack: {},
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "mediend-crm-uploads-prod.s3.ap-south-1.amazonaws.com",
+        pathname: "/**",
+      },
+    ],
+  },
   async headers() {
     const origin = process.env.NEXT_PUBLIC_APP_URL || "https://workspace.mediend.com";
     return [

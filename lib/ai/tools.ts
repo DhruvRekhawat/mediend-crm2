@@ -5,7 +5,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { Prisma, PipelineStage } from '@prisma/client'
+import { Prisma, PipelineStage } from '@/generated/prisma/client'
 import { SessionUser } from '@/lib/auth'
 import { getTableInfo, getAllTables } from './schema-context'
 

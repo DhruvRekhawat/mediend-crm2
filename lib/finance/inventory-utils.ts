@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { StockMovementType } from '@prisma/client'
+import { StockMovementType } from '@/generated/prisma/client'
 
 const SERIAL_PREFIX = {
   ITEM: 'ITM',

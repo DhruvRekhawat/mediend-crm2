@@ -1,4 +1,4 @@
-import { TransactionType } from '@prisma/client'
+import { TransactionType } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 
 const SERIAL_PREFIX: Record<TransactionType, string> = {

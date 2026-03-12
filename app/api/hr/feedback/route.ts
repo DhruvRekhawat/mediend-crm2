@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { FeedbackStatus } from '@prisma/client'
+import { FeedbackStatus } from '@/generated/prisma/client'
 
 const updateFeedbackSchema = z.object({
   status: z.enum(['PENDING', 'REVIEWED', 'ACKNOWLEDGED']),

@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
-import { PipelineStage } from '@prisma/client'
+import { PipelineStage } from '@/generated/prisma/client'
 
 const LOST_REASONS = ['Patient Declined', 'Ghosted', 'Financial Issue', 'Other'] as const
 

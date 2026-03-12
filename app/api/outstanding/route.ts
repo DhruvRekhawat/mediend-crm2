@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { PipelineStage, Prisma } from '@prisma/client'
+import { PipelineStage, Prisma } from '@/generated/prisma/client'
 
 export async function GET(request: NextRequest) {
   try {

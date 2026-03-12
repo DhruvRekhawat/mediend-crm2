@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@/generated/prisma/enums'
 
 export interface SessionUser {
   id: string

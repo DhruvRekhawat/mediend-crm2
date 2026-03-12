@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { MonthlyPayrollStatus } from '@prisma/client'
+import { MonthlyPayrollStatus } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'

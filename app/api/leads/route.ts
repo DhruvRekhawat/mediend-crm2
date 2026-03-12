@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { canAccessLead, hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { mapStatusCode, mapSourceCode } from '@/lib/mysql-code-mappings'
-import { FlowType, Prisma, PipelineStage } from '@prisma/client'
+import { FlowType, Prisma, PipelineStage } from '@/generated/prisma/client'
 import { maskPhoneNumber } from '@/lib/phone-utils'
 import { getSubordinateUserIdsForLeadAccess } from '@/lib/hierarchy'
 

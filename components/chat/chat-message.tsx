@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { FileText, User } from 'lucide-react'
-import { ChatMessageType } from '@prisma/client'
+import { ChatMessageType } from '@/generated/prisma/enums'
 
 export interface ChatMessageData {
   id: string

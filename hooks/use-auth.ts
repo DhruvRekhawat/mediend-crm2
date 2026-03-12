@@ -2,10 +2,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiPost, apiGet } from '@/lib/api-client'
-import { getFirstNavUrl } from '@/lib/sidebar-nav'
 import { useRouter } from 'next/navigation'
 import { SessionUser } from '@/lib/auth'
-import { UserRole } from '@prisma/client'
+import { UserRole } from '@/generated/prisma/enums'
 import { useState } from 'react'
 
 const TESTER_ROLE_KEY = 'mediend_tester_active_role'
@@ -49,7 +48,7 @@ export function useAuth() {
       // Clear TESTER role on login
       localStorage.removeItem(TESTER_ROLE_KEY)
       setActiveRoleState(null)
-      router.push(getFirstNavUrl(data.user))
+      router.push('/home')
     },
   })
 

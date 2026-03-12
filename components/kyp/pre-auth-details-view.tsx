@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { File, ExternalLink, CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CaseStage, PreAuthStatus } from '@prisma/client'
+import { CaseStage, PreAuthStatus } from '@/generated/prisma/enums'
 
 interface SuggestedHospital {
   id: string

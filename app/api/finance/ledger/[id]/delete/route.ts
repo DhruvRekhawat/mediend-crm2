@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerAuditAction, LedgerStatus, TransactionType } from '@prisma/client'
+import { LedgerAuditAction, LedgerStatus, TransactionType } from '@/generated/prisma/client'
 import { reverseBalanceUpdate } from '@/lib/finance'
 
 export async function DELETE(

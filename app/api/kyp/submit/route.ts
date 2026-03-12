@@ -5,7 +5,7 @@ import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { postCaseChatSystemMessage } from '@/lib/case-chat'
 import { z } from 'zod'
-import { UserRole, CaseStage, InsuranceType } from '@prisma/client'
+import { UserRole, CaseStage, InsuranceType } from '@/generated/prisma/client'
 
 const submitKYPSchema = z.object({
   leadId: z.string(),

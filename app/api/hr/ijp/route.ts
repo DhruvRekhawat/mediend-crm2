@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { ApplicationStatus } from '@prisma/client'
+import { ApplicationStatus } from '@/generated/prisma/client'
 
 const createPostingSchema = z.object({
   title: z.string().min(5),

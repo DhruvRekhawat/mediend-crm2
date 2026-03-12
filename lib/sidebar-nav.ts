@@ -393,6 +393,8 @@ export function getFilteredNavItemsWithUrls(user: SessionUser | null): (NavItem 
  * Use for post-login and root redirect so users never hit 404.
  */
 export function getFirstNavUrl(user: SessionUser | null): string {
+  // Always land on home page first; individual role routes are discoverable from there
+  if (user) return '/home'
   const items = getFilteredNavItemsWithUrls(user)
   const first = items[0]
   return first?.url ?? '/dashboard'

@@ -269,7 +269,7 @@ export function MobileTaskDrawer({
       <Drawer open={open} onOpenChange={onOpenChange} direction="bottom" repositionInputs={false}>
         <DrawerContent
           className={cn(
-            "inset-x-0 bottom-0 mt-0 flex h-dvh max-h-dvh flex-col rounded-t-2xl border-t",
+            "inset-x-0 bottom-0 mt-0 flex h-dvh max-h-dvh flex-col rounded-t-2xl border-t border-border bg-card",
             "[&>div:first-child]:hidden"
           )}
         >
@@ -373,10 +373,10 @@ export function MobileTaskDrawer({
       <Sheet open={pickerOpen === "assignee"} onOpenChange={(o) => !o && setPickerOpen(null)}>
         <SheetContent
           side="right"
-          className="w-full max-w-full sm:max-w-full flex flex-col p-0"
+          className="w-full max-w-full sm:max-w-full flex flex-col p-0 bg-card"
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <SheetHeader className="border-b px-4 py-4">
+          <SheetHeader className="border-b border-border px-4 py-4">
             <SheetTitle className="text-xl font-semibold pr-8">Assignees</SheetTitle>
           </SheetHeader>
           <div className="px-4 pb-2">
@@ -526,8 +526,8 @@ export function MobileTaskDrawer({
 
       {/* Date picker */}
       <Sheet open={pickerOpen === "date"} onOpenChange={(o) => !o && setPickerOpen(null)}>
-        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0 gap-0">
-          <SheetHeader className="border-b px-3 py-4 shrink-0">
+        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0 gap-0 bg-card">
+          <SheetHeader className="border-b border-border px-3 py-4 shrink-0">
             <SheetTitle className="text-xl font-semibold pr-8">Set date</SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1 min-h-0">
@@ -550,8 +550,8 @@ export function MobileTaskDrawer({
 
       {/* Priority picker */}
       <Sheet open={pickerOpen === "priority"} onOpenChange={(o) => !o && setPickerOpen(null)}>
-        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0">
-          <SheetHeader className="border-b px-4 py-4">
+        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0 bg-card">
+          <SheetHeader className="border-b border-border px-4 py-4">
             <SheetTitle className="text-xl font-semibold pr-8">Priority</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col p-2">
@@ -579,8 +579,8 @@ export function MobileTaskDrawer({
 
       {/* Project picker */}
       <Sheet open={pickerOpen === "project"} onOpenChange={(o) => !o && setPickerOpen(null)}>
-        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0">
-          <SheetHeader className="border-b px-4 py-4">
+        <SheetContent side="right" className="w-full max-w-full sm:max-w-full flex flex-col p-0 bg-card">
+          <SheetHeader className="border-b border-border px-4 py-4">
             <SheetTitle className="text-xl font-semibold pr-8">Project</SheetTitle>
           </SheetHeader>
           <ScrollArea className="flex-1 min-h-0">

@@ -9,14 +9,14 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { format, startOfDay, startOfMonth } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/enums'
 import { useState, useMemo } from 'react'
 import {
   FileText, AlertCircle, CheckCircle2, Clock, ArrowRight,
   Receipt, Shield, Activity, Search, LayoutList, CalendarDays, BarChart3,
   AlertTriangle,
 } from 'lucide-react'
-import { PreAuthStatus } from '@prisma/client'
+import { PreAuthStatus } from '@/generated/prisma/enums'
 import { useAuth } from '@/hooks/use-auth'
 import { getCaseStageBadgeConfig } from '@/lib/case-stage-labels'
 import { canViewPhoneNumber } from '@/lib/case-permissions'
@@ -328,7 +328,7 @@ export default function InsuranceDashboardPage() {
 
           {/* ── Pending Hospital Suggestions Alert ────────────────────────── */}
           {pendingSuggestions.length > 0 && (
-            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 border-l-4 border-l-amber-500">
+            <Card className="border-border border-l-4 border-l-amber-500 bg-card">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />

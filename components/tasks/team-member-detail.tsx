@@ -218,7 +218,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
           <div className="space-y-4 pb-6">
             {/* Warnings */}
             {canIssueWarning && warnings.length > 0 && (
-              <section className="rounded-xl border border-l-4 border-l-amber-500 bg-amber-50/80 dark:bg-amber-950/30 p-3">
+              <section className="rounded-xl border border-border border-l-4 border-l-amber-500 bg-card p-3">
                 <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-amber-800 dark:text-amber-200">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
                   Warnings ({warnings.length})
@@ -242,7 +242,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
 
             {/* Extension Requests - pink, click navigates to approval tab */}
             {extensionRequests.length > 0 && (
-              <section className="rounded-xl border border-l-4 border-l-pink-500 bg-pink-50/80 p-3">
+              <section className="rounded-xl border border-border border-l-4 border-l-pink-500 bg-card p-3">
                 <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-pink-800">
                   <ArrowUpRight className="h-4 w-4 shrink-0" />
                   Extension Requests ({extensionRequests.length})
@@ -280,7 +280,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
             )}
 
             {/* MD Tasks card */}
-            <section className="rounded-xl border border-l-4 border-l-blue-500 bg-blue-50/40 dark:bg-blue-950/20 p-3">
+            <section className="rounded-xl border border-border border-l-4 border-l-blue-500 bg-card p-3">
               <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-blue-800 dark:text-blue-200">
                 <Crown className="h-4 w-4 shrink-0" />
                 MD Tasks ({mdTasks.length})
@@ -339,7 +339,7 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
             </section>
 
             {/* Team Tasks card */}
-            <section className="rounded-xl border border-l-4 border-l-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 p-3">
+            <section className="rounded-xl border border-border border-l-4 border-l-emerald-500 bg-card p-3">
               <h2 className="text-sm font-semibold mb-2 flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
                 <Users className="h-4 w-4 shrink-0" />
                 Team Tasks ({teamTasks.length})

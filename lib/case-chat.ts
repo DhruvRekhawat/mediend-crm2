@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { ChatMessageType } from '@prisma/client'
+import { ChatMessageType } from '@/generated/prisma/enums'
 
 /**
  * Post a system message to the case chat (e.g. on stage change).

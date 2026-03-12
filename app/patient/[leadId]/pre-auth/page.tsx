@@ -12,7 +12,7 @@ import { useParams, useRouter } from 'next/navigation'
 
 import { PreAuthInlineApproval } from '@/components/insurance/pre-auth-inline-approval'
 import { canCompletePreAuth } from '@/lib/case-permissions'
-import { PreAuthStatus } from '@prisma/client'
+import { PreAuthStatus } from '@/generated/prisma/enums'
 
 interface KYPSubmission {
   id: string

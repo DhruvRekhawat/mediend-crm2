@@ -8,7 +8,7 @@
  */
 
 import 'dotenv/config'
-import { PrismaClient, UserRole } from '@prisma/client'
+import { PrismaClient, UserRole } from '@/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import pkg from 'pg'
 import * as fs from 'fs'

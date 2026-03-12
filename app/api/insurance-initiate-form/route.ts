@@ -4,7 +4,7 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { hasPermission } from '@/lib/rbac'
 import { z } from 'zod'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/client'
 
 const createInsuranceInitiateFormSchema = z.object({
   leadId: z.string(),

@@ -1,4 +1,4 @@
-import { AttendanceLog, PunchDirection } from '@prisma/client'
+import { AttendanceLog, PunchDirection } from '@/generated/prisma/client'
 
 export type AttendanceStatus =
   | 'on-time'

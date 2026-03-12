@@ -5,7 +5,7 @@ import { canAccessLead } from '@/lib/rbac'
 import { getSubordinateUserIdsForLeadAccess } from '@/lib/hierarchy'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
-import { ChatMessageType } from '@prisma/client'
+import { ChatMessageType } from '@/generated/prisma/client'
 
 const sendMessageSchema = z.object({
   type: z.enum([ChatMessageType.TEXT, ChatMessageType.FILE]),

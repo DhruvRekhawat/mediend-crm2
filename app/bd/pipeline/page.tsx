@@ -18,7 +18,7 @@ import { apiGet } from '@/lib/api-client'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
 import { getStatusColor } from '@/lib/lead-status-colors'
 import { mapStatusCode } from '@/lib/mysql-code-mappings'
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/enums'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import {

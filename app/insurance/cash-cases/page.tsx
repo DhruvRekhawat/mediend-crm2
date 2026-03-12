@@ -9,7 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import { format } from 'date-fns'
 import { useRouter } from 'next/navigation'
-import { CaseStage, FlowType } from '@prisma/client'
+import { CaseStage, FlowType } from '@/generated/prisma/enums'
 import { useState, useMemo } from 'react'
 import {
   FileText, AlertCircle, CheckCircle2, Clock, ArrowRight,

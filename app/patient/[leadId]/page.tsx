@@ -49,7 +49,7 @@ import {
   isDischargeBlockedByInitiateForm
 } from '@/lib/case-permissions'
 import { getKYPStatusLabel } from '@/lib/kyp-status-labels'
-import { CaseStage, FlowType } from '@prisma/client'
+import { CaseStage, FlowType } from '@/generated/prisma/enums'
 import { format, formatDistanceToNow } from 'date-fns'
 import { Loader2 } from 'lucide-react'
 import Link from 'next/link'

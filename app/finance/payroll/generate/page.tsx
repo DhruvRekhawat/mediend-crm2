@@ -652,7 +652,7 @@ export default function GeneratePayrollPage() {
           {hasStructure && !hasPayroll && (!employeeDetails.bankAccountNumber?.trim() || !employeeDetails.panNumber?.trim()) && (
             <p className="text-amber-600 text-sm">Bank account number and PAN are required to generate payroll. Update them in the employee details above.</p>
           )}
-            <div className="rounded-lg border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-950/10 p-4 space-y-4">
+            <div className="rounded-lg border border-border border-l-4 border-l-green-500 bg-card p-4 space-y-4">
               <h3 className="font-semibold text-green-800 dark:text-green-300">Earnings</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -685,7 +685,7 @@ export default function GeneratePayrollPage() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg border-l-4 border-l-red-500 bg-red-50/50 dark:bg-red-950/10 p-4 space-y-4">
+            <div className="rounded-lg border border-border border-l-4 border-l-red-500 bg-card p-4 space-y-4">
               <h3 className="font-semibold text-red-800 dark:text-red-300">Deductions</h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>

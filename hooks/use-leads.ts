@@ -19,7 +19,7 @@ export interface LeadFilters {
   endDate?: string
 }
 
-import { CaseStage } from '@prisma/client'
+import { CaseStage } from '@/generated/prisma/enums'
 
 export interface Lead {
   id: string

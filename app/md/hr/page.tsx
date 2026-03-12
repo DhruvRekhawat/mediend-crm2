@@ -256,7 +256,7 @@ export default function MDHRDashboardPage() {
           <>
             {/* KPI Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="border-l-4 border-l-blue-500 bg-linear-to-br from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-blue-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">BD Count</CardTitle>
                   <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -269,7 +269,7 @@ export default function MDHRDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-purple-500 bg-linear-to-br from-purple-50 to-white dark:from-purple-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-purple-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Active Teams</CardTitle>
                   <Building2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -282,7 +282,7 @@ export default function MDHRDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-green-500 bg-linear-to-br from-green-50 to-white dark:from-green-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-green-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
                   <UserCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -295,7 +295,7 @@ export default function MDHRDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-amber-500 bg-linear-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-amber-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Late Arrivals</CardTitle>
                   <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -310,7 +310,7 @@ export default function MDHRDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-cyan-500 bg-linear-to-br from-cyan-50 to-white dark:from-cyan-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-cyan-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Leaves</CardTitle>
                   <Calendar className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
@@ -323,7 +323,7 @@ export default function MDHRDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-indigo-500 bg-linear-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-background">
+              <Card className="border-l-4 border-l-indigo-500 bg-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Leaves/BD</CardTitle>
                   <TrendingUp className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
