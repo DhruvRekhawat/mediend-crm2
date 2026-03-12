@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,11 +12,18 @@ import logo from '@/public/logo-mediend.png'
 import { Eye, EyeOff, Download } from 'lucide-react'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<{ prompt: () => Promise<{ outcome: string }> } | null>(null)
-  const { login, isLoggingIn } = useAuth()
+  const { user, isLoading, login, isLoggingIn } = useAuth()
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace('/home')
+    }
+  }, [user, isLoading, router])
 
   useEffect(() => {
     const handler = (e: Event) => {

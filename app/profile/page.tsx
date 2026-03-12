@@ -63,10 +63,10 @@ export default function ProfilePage() {
 
   if (isLoadingUser) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <Card>
-          <CardContent className="py-8">
-            <div className="text-center text-muted-foreground">Loading...</div>
+          <CardContent className="py-6 md:py-8 px-4">
+            <div className="text-center text-muted-foreground text-sm">Loading...</div>
           </CardContent>
         </Card>
       </div>
@@ -75,10 +75,10 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6">
         <Card>
-          <CardContent className="py-8">
-            <div className="text-center text-muted-foreground">User not found</div>
+          <CardContent className="py-6 md:py-8 px-4">
+            <div className="text-center text-muted-foreground text-sm">User not found</div>
           </CardContent>
         </Card>
       </div>
@@ -86,16 +86,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Birthday Wish Card */}
       {employee && <BirthdayCard />}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="text-muted-foreground mt-1">View and manage your profile information</p>
+          <h1 className="text-2xl md:text-3xl font-bold">My Profile</h1>
+          <p className="text-muted-foreground mt-1 text-sm md:text-base">View and manage your profile information</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <ChangePasswordDialog
             userId={user.id}
             isOpen={isChangePasswordDialogOpen}
@@ -112,14 +112,14 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2">
         {/* Personal Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>Your basic account details</CardDescription>
+        <Card className="overflow-hidden">
+          <CardHeader className="px-4 py-3 md:px-6 md:py-4">
+            <CardTitle className="text-base md:text-lg">Personal Information</CardTitle>
+            <CardDescription className="text-sm">Your basic account details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 md:space-y-4 px-4 pb-4 md:px-6 md:pb-6">
             <div className="flex items-center gap-3">
               <User className="h-5 w-5 text-muted-foreground" />
               <div className="flex-1">
@@ -149,17 +149,17 @@ export default function ProfilePage() {
         {/* Employee Details Card */}
         {isLoadingEmployee ? (
           <Card>
-            <CardContent className="py-8">
-              <div className="text-center text-muted-foreground">Loading employee details...</div>
+            <CardContent className="py-6 md:py-8 px-4">
+              <div className="text-center text-muted-foreground text-sm">Loading employee details...</div>
             </CardContent>
           </Card>
         ) : employee ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Employment Details</CardTitle>
-              <CardDescription>Your employment information</CardDescription>
+          <Card className="overflow-hidden">
+            <CardHeader className="px-4 py-3 md:px-6 md:py-4">
+              <CardTitle className="text-base md:text-lg">Employment Details</CardTitle>
+              <CardDescription className="text-sm">Your employment information</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 md:space-y-4 px-4 pb-4 md:px-6 md:pb-6">
               <div className="flex items-center gap-3">
                 <Hash className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
@@ -204,12 +204,12 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Employment Details</CardTitle>
-              <CardDescription>Your employment information</CardDescription>
+          <Card className="overflow-hidden">
+            <CardHeader className="px-4 py-3 md:px-6 md:py-4">
+              <CardTitle className="text-base md:text-lg">Employment Details</CardTitle>
+              <CardDescription className="text-sm">Your employment information</CardDescription>
             </CardHeader>
-            <CardContent className="py-8">
+            <CardContent className="py-6 md:py-8 px-4 md:px-6">
               <div className="text-center text-muted-foreground">
                 <p>Employee record not found</p>
                 <p className="text-sm mt-2">Contact HR to set up your employee profile</p>

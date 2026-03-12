@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Plus } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 import { TabNavigation, type TabItem } from "@/components/employee/tab-navigation"
 import { TaskInput } from "@/components/tasks/task-input"
 import { MobileTaskDrawer } from "@/components/tasks/mobile-task-drawer"
@@ -16,6 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { apiGet } from "@/lib/api-client"
 
 export default function MDTasksPage() {
+  const { user } = useAuth()
   const [isManager, setIsManager] = useState<boolean | null>(null)
   const [activeTab, setActiveTab] = useState("overview")
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -97,7 +99,7 @@ export default function MDTasksPage() {
           <TaskInput
             onSuccess={() => {}}
             className="w-full"
-            isMD
+            isMD={user?.role === "MD"}
           />
         )}
       </div>
@@ -133,7 +135,7 @@ export default function MDTasksPage() {
             open={drawerOpen}
             onOpenChange={setDrawerOpen}
             onSuccess={() => {}}
-            isMD
+            isMD={user?.role === "MD"}
           />
         </>
       )}

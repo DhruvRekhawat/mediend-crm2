@@ -14,6 +14,7 @@ import {
   FileText,
   FolderTree,
   Heart,
+  Home,
   IndianRupee,
   LayoutDashboard,
   Mail,
@@ -42,6 +43,11 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
+  {
+    title: 'Home',
+    url: '/home',
+    icon: Home,
+  },
   {
     title: 'Tasks',
     url: '/md/tasks',
@@ -333,7 +339,7 @@ export function getDashboardUrl(role: string): string {
 function filterNavItems(user: SessionUser | null): NavItem[] {
   if (!user) return []
   return navItems.filter((item) => {
-    if (item.title === 'Tasks') return true
+    if (item.title === 'Home' || item.title === 'Tasks') return true
     if (user.role === 'MD') {
       return (
         item.title === 'Sales Dashboard' ||

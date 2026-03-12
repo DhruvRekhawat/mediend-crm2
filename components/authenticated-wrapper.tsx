@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils'
 import { hasPermission } from '@/lib/rbac'
 import type { SessionUser } from '@/lib/auth'
 import { usePushSubscription } from '@/hooks/use-push-subscription'
+import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
 
 function AIHeaderButton() {
   const { user } = useAuth()
@@ -234,6 +235,7 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
 
   return (
     <ProtectedRoute>
+      <WorkLogEnforcer />
       {shouldShowSidebar ? (
         <SidebarProvider defaultOpen={true}>
           <AppSidebar />

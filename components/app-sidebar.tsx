@@ -106,6 +106,7 @@ export function AppSidebar() {
     user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER'
       ? itemsWithUrls.filter(
           (item) =>
+            item.title === 'Home' ||
             item.title === 'Tasks' ||
             item.title === 'Sales Dashboard' ||
             item.title === 'Finance Dashboard' ||
@@ -114,14 +115,15 @@ export function AppSidebar() {
         )
       : itemsWithUrls.filter(
           (item) =>
-            !item.title.startsWith('My ') &&
-            !item.title.startsWith('Svc ') &&
-            !item.title.startsWith('HR ') &&
-            !item.title.startsWith('MD ') &&
-            !item.title.startsWith('Fin ') &&
-            item.title !== 'Departments' &&
-            item.title !== 'Leave Types' &&
-            item.title !== 'Leave Balances'
+            item.title === 'Home' ||
+            (!item.title.startsWith('My ') &&
+              !item.title.startsWith('Svc ') &&
+              !item.title.startsWith('HR ') &&
+              !item.title.startsWith('MD ') &&
+              !item.title.startsWith('Fin ') &&
+              item.title !== 'Departments' &&
+              item.title !== 'Leave Types' &&
+              item.title !== 'Leave Balances')
         )
 
   return (

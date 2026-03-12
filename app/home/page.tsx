@@ -41,7 +41,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
-import { WorkLogEnforcer } from '@/components/calendar/work-log-enforcer'
 import { usePushSubscription } from '@/hooks/use-push-subscription'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
@@ -486,7 +485,6 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto w-full">
-      <WorkLogEnforcer />
       {/* Banner + Greeting */}
       {uploading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">

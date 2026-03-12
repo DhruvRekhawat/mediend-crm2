@@ -40,90 +40,91 @@ export default function MDAnonymousMessagesPage() {
 
   return (
     <AuthenticatedLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Anonymous Messages</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold">Anonymous Messages</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
               Messages from employees with complete anonymity
             </p>
           </div>
           {unreadCount > 0 && (
-            <Badge variant="destructive" className="text-lg px-4 py-2">
+            <Badge variant="destructive" className="text-sm md:text-base px-3 py-1.5 md:px-4 md:py-2 w-fit">
               {unreadCount} Unread
             </Badge>
           )}
         </div>
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+        <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2">
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Total Messages</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{messages?.length || 0}</div>
+            <CardContent className="px-3 md:px-4 pb-3 md:pb-4">
+              <div className="text-xl md:text-2xl font-bold">{messages?.length || 0}</div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unread Messages</CardTitle>
-              <Mail className="h-4 w-4 text-blue-500" />
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
+              <CardTitle className="text-xs md:text-sm font-medium">Unread</CardTitle>
+              <Mail className="h-4 w-4 text-blue-500 shrink-0" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{unreadCount}</div>
+            <CardContent className="px-3 md:px-4 pb-3 md:pb-4">
+              <div className="text-xl md:text-2xl font-bold text-blue-600">{unreadCount}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Messages List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Messages</CardTitle>
-            <CardDescription>
+        <Card className="overflow-hidden">
+          <CardHeader className="px-4 py-3 md:px-6 md:py-4">
+            <CardTitle className="text-base md:text-lg">All Messages</CardTitle>
+            <CardDescription className="text-sm">
               These messages are completely anonymous - no sender information is available
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 pb-4 md:px-6 md:pb-6">
             {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Loading...</div>
+              <div className="text-center py-6 md:py-8 text-muted-foreground text-sm">Loading...</div>
             ) : messages && messages.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`border rounded-lg p-4 ${!msg.isRead ? 'bg-blue-50 border-blue-200' : ''}`}
+                    className={`border rounded-lg p-3 md:p-4 dark:border-border ${!msg.isRead ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800' : 'bg-muted/30 dark:bg-muted/20'}`}
                   >
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         {msg.isRead ? (
-                          <MailOpen className="h-5 w-5 text-muted-foreground" />
+                          <MailOpen className="h-4 w-4 text-muted-foreground shrink-0" />
                         ) : (
-                          <Mail className="h-5 w-5 text-blue-600" />
+                          <Mail className="h-4 w-4 text-blue-600 shrink-0" />
                         )}
-                        <span className="text-sm text-muted-foreground">
-                          {format(new Date(msg.createdAt), 'PPP p')}
+                        <span className="text-xs md:text-sm text-muted-foreground truncate">
+                          {format(new Date(msg.createdAt), 'PPp')}
                         </span>
                       </div>
                       {!msg.isRead && (
-                        <Badge variant="default">New</Badge>
+                        <Badge variant="default" className="text-xs shrink-0">New</Badge>
                       )}
                     </div>
                     
-                    <p className="whitespace-pre-wrap bg-white p-4 rounded border">
+                    <p className="whitespace-pre-wrap text-sm md:text-base bg-background dark:bg-muted/50 p-3 rounded border border-border text-foreground">
                       {msg.message}
                     </p>
                     
                     {!msg.isRead && (
-                      <div className="mt-4">
+                      <div className="mt-3">
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-8 text-xs md:text-sm"
                           onClick={() => markReadMutation.mutate(msg.id)}
                           disabled={markReadMutation.isPending}
                         >
-                          <Eye className="h-4 w-4 mr-1" />
+                          <Eye className="h-3.5 w-3.5 mr-1" />
                           Mark as Read
                         </Button>
                       </div>
@@ -132,9 +133,9 @@ export default function MDAnonymousMessagesPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No anonymous messages yet</p>
+              <div className="text-center py-8 md:py-12 text-muted-foreground">
+                <MessageSquare className="h-10 w-10 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 opacity-50" />
+                <p className="text-sm md:text-base">No anonymous messages yet</p>
               </div>
             )}
           </CardContent>
