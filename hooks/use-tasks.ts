@@ -34,6 +34,8 @@ export interface Task {
   createdBy?: { id: string; name: string }
   completedBy?: { id: string; name: string } | null
   project?: { id: string; name: string } | null
+  approvals?: { id: string; oldDueDate: string | null; newDueDate: string | null; reason: string; status: string; createdAt: string; requestedBy: { id: string; name: string } }[]
+  _count?: { approvals: number }
 }
 
 export interface TasksQueryParams {
@@ -82,7 +84,7 @@ export interface TaskStats {
   overdue: number
   employeesWithWarnings: number
   projectWise: { projectId: string | null; projectName: string; count: number }[]
-  employeeWise: { assigneeId: string; assigneeName: string; total: number; completed: number }[]
+  employeeWise: { assigneeId: string; assigneeName: string; total: number; completed: number; avgRating: number | null }[]
 }
 
 export function useTasks(
@@ -178,6 +180,8 @@ export function useUpdateTask() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] })
       queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks", "stats"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks", "performance"] })
     },
   })
 }
@@ -305,6 +309,33 @@ export function useTaskStats() {
   return useQuery<TaskStats>({
     queryKey: ["tasks", "stats"],
     queryFn: () => apiGet<TaskStats>("/api/tasks/stats"),
+  })
+}
+
+export interface PerformanceData {
+  month: number
+  teamStats: {
+    totalRatings: number
+    avgRating: number | null
+    completedCount: number
+    rejectedCount: number
+  }
+  employees: {
+    employeeId: string
+    employeeName: string
+    avgRating: number | null
+    totalRatings: number
+    completedCount: number
+    rejectedCount: number
+    ratingDistribution: { 1: number; 2: number; 3: number; 4: number; 5: number }
+    ratings: { grade: number; action: string; taskTitle: string; comments: string | null; createdAt: Date }[]
+  }[]
+}
+
+export function usePerformanceData(month: number) {
+  return useQuery<PerformanceData>({
+    queryKey: ["tasks", "performance", month],
+    queryFn: () => apiGet<PerformanceData>(`/api/tasks/performance?month=${month}`),
   })
 }
 

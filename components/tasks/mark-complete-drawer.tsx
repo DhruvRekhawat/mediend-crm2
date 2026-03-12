@@ -104,11 +104,15 @@ export function MarkCompleteDrawer({
   }
 
   const handleReject = async () => {
-    if (!task) return
+    if (!task || !rating) return
     try {
       await updateTask.mutateAsync({
         id: task.id,
-        data: { status: "IN_PROGRESS" },
+        data: {
+          status: "IN_PROGRESS",
+          grade: String(rating) as "1" | "2" | "3" | "4" | "5",
+          completionComments: comments.trim() || undefined,
+        },
       })
       toast.success("Task sent back to in progress")
       setRating(null)
@@ -132,6 +136,7 @@ export function MarkCompleteDrawer({
 
   const activeRating = hoverRating ?? rating
   const canApprove = task && rating
+  const canReject = task && rating
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -147,7 +152,7 @@ export function MarkCompleteDrawer({
         {task && (
           <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-auto py-5 px-1 sm:px-2">
             <div>
-              <p className="text-sm font-medium mb-3">Rating (required to approve)</p>
+              <p className="text-sm font-medium mb-3">Rating (required)</p>
               <div className="flex items-center gap-1" role="group" aria-label="Select rating">
                 {RATINGS.map((r) => (
                   <button
@@ -213,7 +218,7 @@ export function MarkCompleteDrawer({
               <Button
                 variant="outline"
                 onClick={handleReject}
-                disabled={updateTask.isPending}
+                disabled={!canReject || updateTask.isPending}
                 className="text-destructive hover:text-destructive"
               >
                 Reject

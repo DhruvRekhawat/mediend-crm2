@@ -78,6 +78,7 @@ export async function GET(request: NextRequest) {
       assignee: { select: { id: true, name: true, email: true } },
       createdBy: { select: { id: true, name: true } },
       project: { select: { id: true, name: true } },
+      _count: { select: { approvals: true } },
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
   })

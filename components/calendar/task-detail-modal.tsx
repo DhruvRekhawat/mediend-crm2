@@ -25,7 +25,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon, Clock, User, FolderOpen, Trash2 } from "lucide-react"
+import { CalendarIcon, Clock, User, FolderOpen, Trash2, CalendarClock } from "lucide-react"
 import { PriorityIcon } from "@/components/tasks/priority-icon"
 import { format } from "date-fns"
 import {
@@ -667,6 +667,45 @@ function TaskDetailContent({
             </ul>
           )}
         </div>
+
+        {/* Date Extensions */}
+        {(task.approvals?.length ?? 0) > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-base md:text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <CalendarClock className="h-4 w-4" />
+              Date Extensions
+            </h3>
+            <ul className="space-y-2 text-sm md:text-xs">
+              {task.approvals!.map((a) => {
+                const statusColors =
+                  a.status === "APPROVED"
+                    ? { border: "border-emerald-200 dark:border-emerald-800", bg: "bg-emerald-50/60 dark:bg-emerald-950/30", badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400" }
+                    : a.status === "REJECTED"
+                      ? { border: "border-red-200 dark:border-red-800", bg: "bg-red-50/60 dark:bg-red-950/30", badge: "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-400" }
+                      : { border: "border-amber-200 dark:border-amber-800", bg: "bg-amber-50/60 dark:bg-amber-950/30", badge: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-400" }
+                const oldStr = a.oldDueDate ? format(new Date(a.oldDueDate), "MMM d") : "—"
+                const newStr = a.newDueDate ? format(new Date(a.newDueDate), "MMM d") : "—"
+                return (
+                  <li key={a.id} className={cn("flex flex-col gap-1 rounded-md border-l-2 px-2.5 py-1.5", statusColors.border, statusColors.bg)}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground">{a.requestedBy.name}</span>
+                      <Badge variant="secondary" className={cn("text-[10px] px-1.5 py-0", statusColors.badge)}>
+                        {a.status}
+                      </Badge>
+                    </div>
+                    <span className="text-foreground/80">
+                      {oldStr} → {newStr}
+                    </span>
+                    {a.reason && <span className="text-muted-foreground italic">{a.reason}</span>}
+                    <span className="text-muted-foreground">
+                      {format(new Date(a.createdAt), "MMM d, HH:mm")}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )}
 
         {/* Hidden portal components */}
         <MarkCompleteDrawer

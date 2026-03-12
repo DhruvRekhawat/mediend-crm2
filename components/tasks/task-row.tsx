@@ -7,7 +7,7 @@ import { format } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
-import { Star, AlertTriangle } from "lucide-react"
+import { Star, AlertTriangle, CalendarClock } from "lucide-react"
 
 const DING_SOUND = "/ding-sound-effect_1.mp3"
 
@@ -66,6 +66,8 @@ interface TaskRowProps {
   showCompletionRating?: boolean
   /** Number of warnings attached to this task. When > 0, shows warning icon with count. */
   warningCount?: number
+  /** Number of date extensions for this task. When > 0, shows extension icon with count. */
+  extensionCount?: number
   /** When false, strikethrough is not shown for done tasks (e.g. in Approval tab). */
   showStrikethrough?: boolean
   /** When true, applies exit pop animation (task is being removed from list). */
@@ -84,6 +86,7 @@ export function TaskRow({
   onMarkCompleteRequest,
   showCompletionRating = false,
   warningCount = 0,
+  extensionCount = 0,
   showStrikethrough = true,
   exitAnimation = false,
   onExitAnimationEnd,
@@ -203,6 +206,15 @@ export function TaskRow({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        {extensionCount > 0 && (
+          <span
+            className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400"
+            title={`${extensionCount} extension${extensionCount !== 1 ? "s" : ""}`}
+          >
+            <CalendarClock className="h-4 w-4" />
+            <span className="text-xs font-medium">{extensionCount}</span>
+          </span>
+        )}
         {warningCount > 0 && (
           <span
             className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400"

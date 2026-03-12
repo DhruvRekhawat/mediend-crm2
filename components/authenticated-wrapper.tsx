@@ -18,10 +18,11 @@ import { CalendarIcon, CheckSquare, LayoutDashboard, ListTodo, MessageSquare, Se
 import { useAI } from '@/components/ai/ai-provider'
 import { CommandPalette } from '@/components/command-palette'
 import { PageTransition } from '@/components/page-transition'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { hasPermission } from '@/lib/rbac'
 import type { SessionUser } from '@/lib/auth'
+import { usePushSubscription } from '@/hooks/use-push-subscription'
 
 function AIHeaderButton() {
   const { user } = useAuth()
@@ -106,6 +107,14 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
   const { user, isLoading } = useAuth()
   const { data: badgeCounts } = useBadgeCounts()
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const { subscribe, isSupported } = usePushSubscription()
+  const pushTriedRef = useRef(false)
+
+  useEffect(() => {
+    if (!user || !isSupported || pushTriedRef.current) return
+    pushTriedRef.current = true
+    subscribe()
+  }, [user, isSupported, subscribe])
 
   // Dynamic bottom nav (role-based like sidebar). Home is always the center item (index 2).
   // Must be called unconditionally (before any early return) to satisfy rules of hooks.

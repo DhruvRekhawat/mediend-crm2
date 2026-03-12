@@ -322,6 +322,8 @@ model User {
   tasksCreated        Task[]               @relation("TaskCreator")
   tasksCompleted      Task[]               @relation("TaskCompletedBy")
   taskApprovalsRequested TaskDueDateApproval[]
+  taskRatingsGiven      TaskRating[]      @relation("TaskRatingsGiven")
+  taskRatingsReceived   TaskRating[]      @relation("TaskRatingsReceived")
   taskProjectsCreated TaskProject[]       @relation("TaskProjectCreator")
   taskComments        TaskComment[]
   taskActivityLogs    TaskActivityLog[]
@@ -2098,6 +2100,7 @@ model Task {
   comments    TaskComment[]
   activityLogs TaskActivityLog[]
   warnings    Warning[]
+  ratings     TaskRating[]
 
   @@index([assigneeId])
   @@index([createdById])
@@ -2122,6 +2125,24 @@ model TaskDueDateApproval {
   @@index([taskId])
   @@index([requestedById])
   @@index([status])
+}
+
+model TaskRating {
+  id         String   @id @default(cuid())
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  ratedById  String
+  ratedBy    User     @relation("TaskRatingsGiven", fields: [ratedById], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   User     @relation("TaskRatingsReceived", fields: [employeeId], references: [id], onDelete: Cascade)
+  grade      Int      // 1-5
+  comments   String?  @db.Text
+  action     String   // "APPROVED" or "REJECTED"
+  month      Int      // YYYYMM format, e.g. 202603
+  createdAt  DateTime @default(now())
+
+  @@index([employeeId, month])
+  @@index([taskId])
 }
 
 model TaskProject {

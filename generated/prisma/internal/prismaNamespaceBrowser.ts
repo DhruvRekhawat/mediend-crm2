@@ -110,6 +110,7 @@ export const ModelName = {
   OutstandingCase: 'OutstandingCase',
   Task: 'Task',
   TaskDueDateApproval: 'TaskDueDateApproval',
+  TaskRating: 'TaskRating',
   TaskProject: 'TaskProject',
   TaskComment: 'TaskComment',
   TaskActivityLog: 'TaskActivityLog',
@@ -1387,6 +1388,21 @@ export const TaskDueDateApprovalScalarFieldEnum = {
 } as const
 
 export type TaskDueDateApprovalScalarFieldEnum = (typeof TaskDueDateApprovalScalarFieldEnum)[keyof typeof TaskDueDateApprovalScalarFieldEnum]
+
+
+export const TaskRatingScalarFieldEnum = {
+  id: 'id',
+  taskId: 'taskId',
+  ratedById: 'ratedById',
+  employeeId: 'employeeId',
+  grade: 'grade',
+  comments: 'comments',
+  action: 'action',
+  month: 'month',
+  createdAt: 'createdAt'
+} as const
+
+export type TaskRatingScalarFieldEnum = (typeof TaskRatingScalarFieldEnum)[keyof typeof TaskRatingScalarFieldEnum]
 
 
 export const TaskProjectScalarFieldEnum = {

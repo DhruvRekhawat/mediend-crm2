@@ -10,6 +10,7 @@ import { OverviewTab } from "@/components/tasks/overview-tab"
 import { CalendarTab } from "@/components/tasks/calendar-tab"
 import { TeamTab } from "@/components/tasks/team-tab"
 import { TodayTab } from "@/components/tasks/today-tab"
+import { PerformanceTab } from "@/components/tasks/performance-tab"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { apiGet } from "@/lib/api-client"
@@ -50,6 +51,7 @@ export default function MDTasksPage() {
       { value: "approval", label: "Approval" },
       { value: "all", label: "All tasks" },
       { value: "calendar", label: "Calendar" },
+      { value: "performance", label: "Performance" },
     ],
     [isManager]
   )
@@ -114,6 +116,7 @@ export default function MDTasksPage() {
         {activeTab === "approval" && <ApprovalTab />}
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "calendar" && <CalendarTab />}
+        {activeTab === "performance" && <PerformanceTab />}
       </div>
 
       {isMobile && (

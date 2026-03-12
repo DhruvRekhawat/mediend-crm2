@@ -10,8 +10,15 @@ import { TaskRow } from "./task-row"
 import { getTaskCardClass } from "./task-card-class"
 import { TaskDetailModal } from "@/components/calendar/task-detail-modal"
 import { MarkCompleteDrawer } from "./mark-complete-drawer"
-import { ChevronDown, ChevronRight, LayoutGrid, Users } from "lucide-react"
+import { ChevronDown, ChevronRight, LayoutGrid, Users, Star, Trophy, Medal } from "lucide-react"
 import type { Task } from "@/hooks/use-tasks"
+import { useIsMobile } from "@/hooks/use-mobile"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
 export function OverviewTab() {
   const { user } = useAuth()
@@ -29,6 +36,8 @@ export function OverviewTab() {
   const [expandedAssigneeId, setExpandedAssigneeId] = useState<string | null>(null)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
+  const [statDrawer, setStatDrawer] = useState<"total" | "completed" | "pending" | "pendingReview" | null>(null)
+  const isMobile = useIsMobile()
 
   const canMarkComplete = (task: Task) =>
     !!user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
@@ -77,16 +86,125 @@ export function OverviewTab() {
     ? tasks.filter((t) => t.assigneeId === expandedAssigneeId)
     : []
 
+  const statDrawerTasks = useMemo(() => {
+    if (!statDrawer) return []
+    const today = startOfDay(new Date())
+    switch (statDrawer) {
+      case "total":
+        return tasks.filter((t) => t.status !== "CANCELLED")
+      case "completed":
+        return tasks.filter((t) => t.status === "COMPLETED")
+      case "pending":
+        return tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS")
+      case "pendingReview":
+        return tasks.filter((t) => t.status === "EMPLOYEE_DONE")
+      default:
+        return []
+    }
+  }, [statDrawer, tasks])
+
+  const statDrawerTitle =
+    statDrawer === "total"
+      ? "All tasks"
+      : statDrawer === "completed"
+        ? "Completed"
+        : statDrawer === "pending"
+          ? "Pending"
+          : statDrawer === "pendingReview"
+            ? "Needs review"
+            : ""
+
   return (
     <div className="space-y-6">
       <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard label="Total" value={stats.total} accent="blue" />
-        <StatCard label="Completed" value={stats.completed} accent="green" valueAccent />
-        <StatCard label="Pending" value={stats.pending} accent="amber" />
-        <StatCard label="Pending review" value={stats.pendingReview ?? 0} accent="purple" valueAccent />
-        <StatCard label="Overdue" value={stats.overdue} accent="red" valueAccent />
-        <StatCard label="Employees w/ warnings" value={stats.employeesWithWarnings ?? 0} accent="orange" valueAccent />
+        {isMobile ? (
+          <>
+            <StatCard
+              label="Total"
+              value={stats.total}
+              accent="blue"
+              className="cursor-pointer active:opacity-80"
+              onClick={() => setStatDrawer("total")}
+            />
+            <StatCard
+              label="Completed"
+              value={stats.completed}
+              accent="green"
+              valueAccent
+              className="cursor-pointer active:opacity-80"
+              onClick={() => setStatDrawer("completed")}
+            />
+            <StatCard
+              label="Pending"
+              value={stats.pending}
+              accent="amber"
+              className="cursor-pointer active:opacity-80"
+              onClick={() => setStatDrawer("pending")}
+            />
+            <StatCard
+              label="Pending review"
+              value={stats.pendingReview ?? 0}
+              accent="purple"
+              valueAccent
+              className="cursor-pointer active:opacity-80"
+              onClick={() => setStatDrawer("pendingReview")}
+            />
+            <StatCard label="Overdue" value={stats.overdue} accent="red" valueAccent />
+          </>
+        ) : (
+          <>
+            <StatCard label="Total" value={stats.total} accent="blue" />
+            <StatCard label="Completed" value={stats.completed} accent="green" valueAccent />
+            <StatCard label="Pending" value={stats.pending} accent="amber" />
+            <StatCard label="Pending review" value={stats.pendingReview ?? 0} accent="purple" valueAccent />
+            <StatCard label="Overdue" value={stats.overdue} accent="red" valueAccent />
+            <StatCard label="Employees w/ warnings" value={stats.employeesWithWarnings ?? 0} accent="orange" valueAccent />
+          </>
+        )}
       </section>
+
+      {isMobile && (
+        <Sheet open={!!statDrawer} onOpenChange={(open) => !open && setStatDrawer(null)}>
+          <SheetContent side="bottom" className="rounded-t-2xl flex flex-col max-h-[85dvh]">
+            <SheetHeader className="text-left">
+              <SheetTitle>{statDrawerTitle}</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 min-h-0 overflow-auto py-4 space-y-2">
+              {tasksLoading ? (
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              ) : statDrawerTasks.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No tasks</p>
+              ) : (
+                statDrawerTasks.map((task) => {
+                  const today = startOfDay(new Date())
+                  const isOverdue = !!task.dueDate && new Date(task.dueDate) < today && task.status !== "COMPLETED"
+                  return (
+                    <div key={task.id} className={getTaskCardClass(task, { isOverdue })}>
+                      <TaskRow
+                        task={task}
+                        onClick={() => {
+                          setDetailTaskId(task.id)
+                          setStatDrawer(null)
+                        }}
+                        showAssignee
+                        showProject
+                        warningCount={taskWarningCountMap[task.id] ?? 0}
+                        extensionCount={task._count?.approvals ?? 0}
+                        isAssignee={task.assigneeId === user?.id}
+                        canMarkComplete={canMarkComplete(task)}
+                        onMarkCompleteRequest={() => {
+                          setTaskToComplete(task)
+                          setStatDrawer(null)
+                        }}
+                      />
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
 
       {overdueTasks.length > 0 && (
         <section>
@@ -102,6 +220,7 @@ export function OverviewTab() {
                   showAssignee
                   showProject
                   warningCount={taskWarningCountMap[task.id] ?? 0}
+                  extensionCount={task._count?.approvals ?? 0}
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -114,43 +233,81 @@ export function OverviewTab() {
 
       <section>
         <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
-          <Users className="h-4 w-4" />
-          By person
+          <Trophy className="h-4 w-4" />
+          Leaderboard
         </h2>
         <div className="space-y-2">
           {stats.employeeWise.length === 0 ? (
             <p className="text-sm text-muted-foreground">No tasks yet.</p>
           ) : (
-            stats.employeeWise.map((e) => {
-              const isExpanded = expandedAssigneeId === e.assigneeId
-              return (
-                <div
-                  key={e.assigneeId}
-                  className="rounded-md border"
-                >
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted/50"
-                    onClick={() =>
-                      setExpandedAssigneeId(
-                        isExpanded ? null : e.assigneeId
-                      )
-                    }
+            [...stats.employeeWise]
+              .sort((a, b) => {
+                const aVal = a.avgRating ?? -1
+                const bVal = b.avgRating ?? -1
+                return bVal - aVal
+              })
+              .map((e, idx) => {
+                const rank = idx + 1
+                const isExpanded = expandedAssigneeId === e.assigneeId
+                return (
+                  <div
+                    key={e.assigneeId}
+                    className="rounded-xl border border-border border-l-4 overflow-hidden transition-colors hover:bg-muted/30"
+                    style={{
+                      borderLeftColor:
+                        rank === 1
+                          ? "var(--color-amber-500)"
+                          : rank === 2
+                            ? "var(--color-slate-400)"
+                            : rank === 3
+                              ? "var(--color-amber-700)"
+                              : undefined,
+                    }}
                   >
-                    {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 shrink-0" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 shrink-0" />
-                    )}
-                    <span className="flex-1 font-medium">{e.assigneeName}</span>
-                    <span className="text-muted-foreground">
-                      {e.completed}/{e.total}
-                    </span>
-                    <Progress
-                      value={e.total ? (e.completed / e.total) * 100 : 0}
-                      className="w-16 h-1.5"
-                    />
-                  </button>
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm hover:bg-muted/50"
+                      onClick={() =>
+                        setExpandedAssigneeId(
+                          isExpanded ? null : e.assigneeId
+                        )
+                      }
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold">
+                        {rank <= 3 ? (
+                          rank === 1 ? (
+                            <Trophy className="h-5 w-5 text-amber-500" />
+                          ) : rank === 2 ? (
+                            <Medal className="h-5 w-5 text-slate-400" />
+                          ) : (
+                            <Medal className="h-5 w-5 text-amber-700" />
+                          )
+                        ) : (
+                          <span className="text-muted-foreground">{rank}</span>
+                        )}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-medium block truncate">{e.assigneeName}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {e.completed}/{e.total} tasks
+                        </span>
+                      </div>
+                      {e.avgRating != null ? (
+                        <div className="flex shrink-0 items-center gap-1">
+                          <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+                          <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                            {e.avgRating.toFixed(1)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground shrink-0">—</span>
+                      )}
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4 shrink-0" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 shrink-0" />
+                      )}
+                    </button>
                   {isExpanded && (
                     <div className="border-t px-2 py-2 space-y-2">
                       {tasksLoading ? (
@@ -173,6 +330,7 @@ export function OverviewTab() {
                                 showAssignee={false}
                                 showProject
                                 warningCount={taskWarningCountMap[task.id] ?? 0}
+                                extensionCount={task._count?.approvals ?? 0}
                                 isAssignee={task.assigneeId === user?.id}
                                 canMarkComplete={canMarkComplete(task)}
                                 onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -249,6 +407,7 @@ export function OverviewTab() {
                                 showAssignee
                                 showProject={false}
                                 warningCount={taskWarningCountMap[task.id] ?? 0}
+                                extensionCount={task._count?.approvals ?? 0}
                                 isAssignee={task.assigneeId === user?.id}
                                 canMarkComplete={canMarkComplete(task)}
                                 onMarkCompleteRequest={() => setTaskToComplete(task)}

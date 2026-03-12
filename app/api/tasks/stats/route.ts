@@ -90,11 +90,29 @@ export async function GET(_request: NextRequest) {
   })
   const completedMap = Object.fromEntries(completedByAssignee.map((c) => [c.assigneeId, c._count.id]))
 
+  const currentMonth = now.getFullYear() * 100 + (now.getMonth() + 1)
+  const ratingsThisMonth =
+    assigneeIds.length > 0
+      ? await prisma.taskRating.groupBy({
+          by: ["employeeId"],
+          where: { month: currentMonth, employeeId: { in: assigneeIds } },
+          _avg: { grade: true },
+          _count: { id: true },
+        })
+      : []
+  const avgRatingMap = Object.fromEntries(
+    ratingsThisMonth.map((r) => [
+      r.employeeId,
+      r._count.id > 0 && r._avg.grade != null ? Math.round(r._avg.grade * 10) / 10 : null,
+    ])
+  )
+
   const employeeWise = byAssignee.map((a) => ({
     assigneeId: a.assigneeId,
     assigneeName: assigneeMap[a.assigneeId] ?? "Unknown",
     total: a._count.id,
     completed: completedMap[a.assigneeId] ?? 0,
+    avgRating: avgRatingMap[a.assigneeId] ?? null,
   }))
 
   return successResponse({

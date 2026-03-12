@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server"
+import type { Prisma } from "@prisma/client"
 import { getSessionFromRequest } from "@/lib/session"
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
@@ -94,8 +95,14 @@ export async function PATCH(
       return errorResponse("Rating (1-5) is required when approving a task", 400)
     }
   }
-  if (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE" && !canReviewTask) {
-    return errorResponse("Only the manager can reject a task back to in progress", 403)
+  if (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE") {
+    if (!canReviewTask) {
+      return errorResponse("Only the manager can reject a task back to in progress", 403)
+    }
+    const grade = parsed.data.grade
+    if (!grade || !["1", "2", "3", "4", "5"].includes(grade)) {
+      return errorResponse("Rating (1-5) is required when rejecting a task", 400)
+    }
   }
 
   // Employees cannot change due date directly; only MD, ADMIN, or task creator can. Others must request with a reason.
@@ -193,7 +200,14 @@ export async function PATCH(
     activityLogs.push({ action: "PROJECT_CHANGED", details: parsed.data.projectId || "Removed" })
   }
 
-  const [updated] = await prisma.$transaction([
+  const now = new Date()
+  const month = now.getFullYear() * 100 + (now.getMonth() + 1)
+  const gradeInt = parsed.data.grade ? parseInt(parsed.data.grade, 10) : null
+  const createRating =
+    parsed.data.status === "COMPLETED" ||
+    (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE" && gradeInt != null)
+
+  const txOps: Prisma.PrismaPromise<unknown>[] = [
     prisma.task.update({
       where: { id },
       data: updateData,
@@ -214,7 +228,25 @@ export async function PATCH(
         },
       })
     ),
-  ])
+  ]
+  if (createRating && gradeInt != null) {
+    const action = parsed.data.status === "COMPLETED" ? "APPROVED" : "REJECTED"
+    txOps.push(
+      prisma.taskRating.create({
+        data: {
+          taskId: id,
+          ratedById: user.id,
+          employeeId: task.assigneeId,
+          grade: gradeInt,
+          comments: parsed.data.completionComments?.trim() ?? null,
+          action,
+          month,
+        },
+      })
+    )
+  }
+  const results = await prisma.$transaction(txOps)
+  const updated = results[0]
 
   return successResponse(updated)
 }

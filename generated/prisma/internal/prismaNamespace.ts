@@ -443,6 +443,7 @@ export const ModelName = {
   OutstandingCase: 'OutstandingCase',
   Task: 'Task',
   TaskDueDateApproval: 'TaskDueDateApproval',
+  TaskRating: 'TaskRating',
   TaskProject: 'TaskProject',
   TaskComment: 'TaskComment',
   TaskActivityLog: 'TaskActivityLog',
@@ -470,7 +471,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "appSetting" | "requestLog"
+    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "appSetting" | "requestLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4840,6 +4841,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TaskRating: {
+      payload: Prisma.$TaskRatingPayload<ExtArgs>
+      fields: Prisma.TaskRatingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TaskRatingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TaskRatingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>
+        }
+        findFirst: {
+          args: Prisma.TaskRatingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TaskRatingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>
+        }
+        findMany: {
+          args: Prisma.TaskRatingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>[]
+        }
+        create: {
+          args: Prisma.TaskRatingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>
+        }
+        createMany: {
+          args: Prisma.TaskRatingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TaskRatingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>[]
+        }
+        delete: {
+          args: Prisma.TaskRatingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>
+        }
+        update: {
+          args: Prisma.TaskRatingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>
+        }
+        deleteMany: {
+          args: Prisma.TaskRatingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TaskRatingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TaskRatingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>[]
+        }
+        upsert: {
+          args: Prisma.TaskRatingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskRatingPayload>
+        }
+        aggregate: {
+          args: Prisma.TaskRatingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTaskRating>
+        }
+        groupBy: {
+          args: Prisma.TaskRatingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TaskRatingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TaskRatingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TaskRatingCountAggregateOutputType> | number
+        }
+      }
+    }
     TaskProject: {
       payload: Prisma.$TaskProjectPayload<ExtArgs>
       fields: Prisma.TaskProjectFieldRefs
@@ -7016,6 +7091,21 @@ export const TaskDueDateApprovalScalarFieldEnum = {
 export type TaskDueDateApprovalScalarFieldEnum = (typeof TaskDueDateApprovalScalarFieldEnum)[keyof typeof TaskDueDateApprovalScalarFieldEnum]
 
 
+export const TaskRatingScalarFieldEnum = {
+  id: 'id',
+  taskId: 'taskId',
+  ratedById: 'ratedById',
+  employeeId: 'employeeId',
+  grade: 'grade',
+  comments: 'comments',
+  action: 'action',
+  month: 'month',
+  createdAt: 'createdAt'
+} as const
+
+export type TaskRatingScalarFieldEnum = (typeof TaskRatingScalarFieldEnum)[keyof typeof TaskRatingScalarFieldEnum]
+
+
 export const TaskProjectScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -8016,6 +8106,7 @@ export type GlobalOmitConfig = {
   outstandingCase?: Prisma.OutstandingCaseOmit
   task?: Prisma.TaskOmit
   taskDueDateApproval?: Prisma.TaskDueDateApprovalOmit
+  taskRating?: Prisma.TaskRatingOmit
   taskProject?: Prisma.TaskProjectOmit
   taskComment?: Prisma.TaskCommentOmit
   taskActivityLog?: Prisma.TaskActivityLogOmit
