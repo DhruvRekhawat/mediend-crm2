@@ -19,6 +19,7 @@ export interface MDTeamOverviewMember {
   extensionRequests: number
   attendanceStatus: AttendanceStatus
   inTime: string | null
+  lastWorkLogAt: string | null
   source: TeamMemberSource
 }
 

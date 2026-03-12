@@ -23,6 +23,7 @@ export interface MDTeamOverviewMember {
   extensionRequests: number
   attendanceStatus: AttendanceStatus
   inTime: string | null
+  lastWorkLogAt: string | null // ISO string of most recent work log createdAt
   source: TeamMemberSource
 }
 
@@ -212,6 +213,19 @@ export async function GET(request: NextRequest) {
       extensionCountMap.set(r.requestedById, r._count.id)
     }
 
+    // Latest work log per user (WorkLog.employeeId = userId)
+    const latestWorkLogs = await prisma.workLog.findMany({
+      where: { employeeId: { in: userIds } },
+      select: { employeeId: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    })
+    const lastWorkLogByUserId = new Map<string, Date>()
+    for (const w of latestWorkLogs) {
+      if (!lastWorkLogByUserId.has(w.employeeId)) {
+        lastWorkLogByUserId.set(w.employeeId, w.createdAt)
+      }
+    }
+
     // Today's attendance — matches attendance route / heatmap logic.
     // inTime = earliest punch, outTime = latest punch (only if 2+ punches AND gap > 5 min).
     // Biometric devices often record duplicate/close-together punches for a single check-in,
@@ -267,6 +281,7 @@ export async function GET(request: NextRequest) {
         continue
       }
       const att = attendanceByEmployeeId.get(empId) ?? { status: "out" as AttendanceStatus, inTime: null }
+      const lastWorkLog = lastWorkLogByUserId.get(userId)
       members.push({
         id: userId,
         employeeId: empId,
@@ -282,6 +297,7 @@ export async function GET(request: NextRequest) {
         extensionRequests: extensionCountMap.get(userId) ?? 0,
         attendanceStatus: att.status,
         inTime: att.inTime,
+        lastWorkLogAt: lastWorkLog ? lastWorkLog.toISOString() : null,
         source,
       })
     }

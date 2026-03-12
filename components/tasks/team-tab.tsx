@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Search, UserPlus, Star, ArrowUpRight } from "lucide-react"
+import { Search, UserPlus, Star, ArrowUpRight, Clock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -31,6 +31,14 @@ const STAR_COLOR: Record<number, string> = {
 function getStarColor(rating: number): string {
   const rounded = Math.round(rating)
   return STAR_COLOR[Math.min(5, Math.max(1, rounded))] ?? "text-amber-500"
+}
+
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
+
+function hasStaleWorkLog(lastWorkLogAt: string | null): boolean {
+  if (!lastWorkLogAt) return true
+  const last = new Date(lastWorkLogAt).getTime()
+  return Date.now() - last > TWENTY_FOUR_HOURS_MS
 }
 
 export function TeamTab() {
@@ -158,7 +166,7 @@ function TeamMemberCard({
       </p>
 
       {/* Optional: attendance badge */}
-      <div className="mt-1.5 flex justify-center">
+      <div className="mt-1.5 flex flex-col items-center gap-1">
         <span
           className={cn(
             "rounded px-2 py-0.5 text-xs font-medium",
@@ -169,6 +177,12 @@ function TeamMemberCard({
         >
           {isLeave ? "Leave" : isIn ? "IN" : "OUT"}
         </span>
+        {hasStaleWorkLog(member.lastWorkLogAt) && (
+          <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">
+            <Clock className="h-3 w-3" />
+            No work log 24h+
+          </span>
+        )}
       </div>
 
       {/* Task overview: ACTIVE · DONE · WARN */}

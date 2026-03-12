@@ -103,7 +103,7 @@ export function AppSidebar() {
 
   const itemsWithUrls = getFilteredNavItemsWithUrls(user)
   const navigationItems =
-    user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER'
+    user.role === 'MD'
       ? itemsWithUrls.filter(
           (item) =>
             item.title === 'Home' ||
@@ -113,18 +113,39 @@ export function AppSidebar() {
             item.title === 'HR Dashboard' ||
             item.title.startsWith('MD ')
         )
-      : itemsWithUrls.filter(
-          (item) =>
-            item.title === 'Home' ||
-            (!item.title.startsWith('My ') &&
-              !item.title.startsWith('Svc ') &&
-              !item.title.startsWith('HR ') &&
-              !item.title.startsWith('MD ') &&
-              !item.title.startsWith('Fin ') &&
-              item.title !== 'Departments' &&
-              item.title !== 'Leave Types' &&
-              item.title !== 'Leave Balances')
-        )
+      : user.role === 'ADMIN' || user.role === 'TESTER'
+        ? itemsWithUrls.filter(
+            (item) =>
+              item.title === 'Home' ||
+              item.title === 'Tasks' ||
+              item.title === 'Sales Dashboard' ||
+              item.title === 'Finance Dashboard' ||
+              item.title === 'HR Dashboard' ||
+              item.title.startsWith('MD ') ||
+              item.title.startsWith('HR ') ||
+              item.title === 'Departments' ||
+              item.title === 'Leave Types' ||
+              item.title === 'Leave Balances'
+          )
+        : user.role === 'USER'
+          ? itemsWithUrls.filter(
+              (item) =>
+                item.title === 'Home' ||
+                item.title === 'Tasks' ||
+                item.title.startsWith('My ')
+            )
+          : itemsWithUrls.filter(
+              (item) =>
+                item.title === 'Home' ||
+                item.title.startsWith('My ') ||
+                item.title.startsWith('HR ') ||
+                item.title === 'Departments' ||
+                item.title === 'Leave Types' ||
+                item.title === 'Leave Balances' ||
+                (!item.title.startsWith('Svc ') &&
+                  !item.title.startsWith('MD ') &&
+                  !item.title.startsWith('Fin '))
+            )
 
   return (
     <Sidebar>
