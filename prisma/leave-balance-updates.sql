@@ -1,11 +1,12 @@
--- Generated from prisma/leaves.json
--- Current balance import from CARRY_FORRWARD_AFTER_ADJ_IN_FEB
+-- Generated from prisma/employee-leave-balances.json
+-- Current balance import up to Feb 2026
 -- This sets allocated = remaining = imported balance, and used = 0
+-- March and later accruals are added by the app leave calculator.
 -- Review before running.
 
 BEGIN;
 
--- B.ASHWANI [2405]
+-- ASHWANI [2405]
 INSERT INTO "LeaveBalance" (
   id,
   "employeeId",
@@ -20,9 +21,9 @@ SELECT
   'import-2405-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  2.0::double precision,
   0::double precision,
-  0.0::double precision,
+  2.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -78,9 +79,9 @@ SELECT
   'import-2405-EL',
   e.id,
   lt.id,
-  3.0::double precision,
+  1.0::double precision,
   0::double precision,
-  3.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -109,9 +110,9 @@ SELECT
   'import-2404-CL',
   e.id,
   lt.id,
-  2.5::double precision,
+  2.0::double precision,
   0::double precision,
-  2.5::double precision,
+  2.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -138,9 +139,9 @@ SELECT
   'import-2404-SL',
   e.id,
   lt.id,
-  6.0::double precision,
+  1.0::double precision,
   0::double precision,
-  6.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -167,9 +168,9 @@ SELECT
   'import-2404-EL',
   e.id,
   lt.id,
-  6.5::double precision,
+  1.0::double precision,
   0::double precision,
-  6.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -227,9 +228,9 @@ SELECT
   'import-2480-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -256,9 +257,9 @@ SELECT
   'import-2480-EL',
   e.id,
   lt.id,
-  3.0::double precision,
+  1.0::double precision,
   0::double precision,
-  3.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -405,9 +406,9 @@ SELECT
   'import-2434-SL',
   e.id,
   lt.id,
-  5.5::double precision,
+  1.0::double precision,
   0::double precision,
-  5.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -434,9 +435,9 @@ SELECT
   'import-2434-EL',
   e.id,
   lt.id,
-  5.5::double precision,
+  1.0::double precision,
   0::double precision,
-  5.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -465,9 +466,9 @@ SELECT
   'import-2371-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  2.0::double precision,
   0::double precision,
-  0.0::double precision,
+  2.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -494,9 +495,9 @@ SELECT
   'import-2371-SL',
   e.id,
   lt.id,
-  3.0::double precision,
+  1.0::double precision,
   0::double precision,
-  3.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -523,9 +524,9 @@ SELECT
   'import-2371-EL',
   e.id,
   lt.id,
-  7.0::double precision,
+  1.0::double precision,
   0::double precision,
-  7.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -554,9 +555,9 @@ SELECT
   'import-2484-CL',
   e.id,
   lt.id,
-  0.5::double precision,
+  2.0::double precision,
   0::double precision,
-  0.5::double precision,
+  2.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -583,9 +584,9 @@ SELECT
   'import-2484-SL',
   e.id,
   lt.id,
-  3.5::double precision,
+  1.0::double precision,
   0::double precision,
-  3.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -612,9 +613,9 @@ SELECT
   'import-2484-EL',
   e.id,
   lt.id,
-  3.5::double precision,
+  1.0::double precision,
   0::double precision,
-  3.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -643,9 +644,9 @@ SELECT
   'import-2436-CL',
   e.id,
   lt.id,
-  4.0::double precision,
+  2.0::double precision,
   0::double precision,
-  4.0::double precision,
+  2.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -672,9 +673,9 @@ SELECT
   'import-2436-SL',
   e.id,
   lt.id,
-  4.0::double precision,
+  1.0::double precision,
   0::double precision,
-  4.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -701,9 +702,9 @@ SELECT
   'import-2436-EL',
   e.id,
   lt.id,
-  6.0::double precision,
+  1.0::double precision,
   0::double precision,
-  6.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -879,9 +880,9 @@ SELECT
   'import-2047-EL',
   e.id,
   lt.id,
-  0.0::double precision,
+  0.5::double precision,
   0::double precision,
-  0.0::double precision,
+  0.5::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1057,9 +1058,9 @@ SELECT
   'import-2503-EL',
   e.id,
   lt.id,
-  3.5::double precision,
+  1.0::double precision,
   0::double precision,
-  3.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1117,9 +1118,9 @@ SELECT
   'import-2171-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1146,9 +1147,9 @@ SELECT
   'import-2171-EL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1266,9 +1267,9 @@ SELECT
   'import-2053-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1295,9 +1296,9 @@ SELECT
   'import-2053-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  0.5::double precision,
   0::double precision,
-  0.0::double precision,
+  0.5::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1324,9 +1325,9 @@ SELECT
   'import-2053-EL',
   e.id,
   lt.id,
-  0.0::double precision,
+  0.5::double precision,
   0::double precision,
-  0.0::double precision,
+  0.5::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1384,9 +1385,9 @@ SELECT
   'import-1321-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  0.5::double precision,
   0::double precision,
-  0.0::double precision,
+  0.5::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1413,9 +1414,9 @@ SELECT
   'import-1321-EL',
   e.id,
   lt.id,
-  0.5::double precision,
+  1.0::double precision,
   0::double precision,
-  0.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1444,9 +1445,9 @@ SELECT
   'import-1403-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1502,9 +1503,9 @@ SELECT
   'import-1403-EL',
   e.id,
   lt.id,
-  4.0::double precision,
+  1.0::double precision,
   0::double precision,
-  4.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1591,9 +1592,9 @@ SELECT
   'import-1836-EL',
   e.id,
   lt.id,
-  0.0::double precision,
+  0.5::double precision,
   0::double precision,
-  0.0::double precision,
+  0.5::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1622,9 +1623,9 @@ SELECT
   'import-2311-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  2.0::double precision,
   0::double precision,
-  0.0::double precision,
+  2.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1651,9 +1652,9 @@ SELECT
   'import-2311-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1680,9 +1681,9 @@ SELECT
   'import-2311-EL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1829,9 +1830,9 @@ SELECT
   'import-1445-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1858,9 +1859,9 @@ SELECT
   'import-1445-EL',
   e.id,
   lt.id,
-  6.0::double precision,
+  1.0::double precision,
   0::double precision,
-  6.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1889,9 +1890,9 @@ SELECT
   'import-2414-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1918,9 +1919,9 @@ SELECT
   'import-2414-SL',
   e.id,
   lt.id,
-  0.5::double precision,
+  1.0::double precision,
   0::double precision,
-  0.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -1947,9 +1948,9 @@ SELECT
   'import-2414-EL',
   e.id,
   lt.id,
-  3.0::double precision,
+  1.0::double precision,
   0::double precision,
-  3.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2007,9 +2008,9 @@ SELECT
   'import-1330-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2036,9 +2037,9 @@ SELECT
   'import-1330-EL',
   e.id,
   lt.id,
-  0.5::double precision,
+  1.0::double precision,
   0::double precision,
-  0.5::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2096,9 +2097,9 @@ SELECT
   'import-2357-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2125,9 +2126,9 @@ SELECT
   'import-2357-EL',
   e.id,
   lt.id,
-  6.0::double precision,
+  1.0::double precision,
   0::double precision,
-  6.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2185,9 +2186,9 @@ SELECT
   'import-2510-SL',
   e.id,
   lt.id,
-  1.0::double precision,
+  0.0::double precision,
   0::double precision,
-  1.0::double precision,
+  0.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2214,9 +2215,9 @@ SELECT
   'import-2510-EL',
   e.id,
   lt.id,
-  3.0::double precision,
+  1.0::double precision,
   0::double precision,
-  3.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2245,9 +2246,9 @@ SELECT
   'import-2362-CL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2274,9 +2275,9 @@ SELECT
   'import-2362-SL',
   e.id,
   lt.id,
-  0.0::double precision,
+  0.5::double precision,
   0::double precision,
-  0.0::double precision,
+  0.5::double precision,
   NOW(),
   NOW()
 FROM "Employee" e
@@ -2303,9 +2304,9 @@ SELECT
   'import-2362-EL',
   e.id,
   lt.id,
-  0.0::double precision,
+  1.0::double precision,
   0::double precision,
-  0.0::double precision,
+  1.0::double precision,
   NOW(),
   NOW()
 FROM "Employee" e

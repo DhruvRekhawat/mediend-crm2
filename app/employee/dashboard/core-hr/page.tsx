@@ -378,13 +378,32 @@ function LeavesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <p className="text-sm text-muted-foreground">
+        View your leave balance and history. Policy: 1 CL, 0.5 SL, 0.5 EL per month; EL carries to next year; CL & SL reset yearly.
+      </p>
+
+      {isLoading ? (
+        <div className="rounded-lg border bg-muted/30 p-6 text-center text-muted-foreground">
+          Loading your leave balance…
+        </div>
+      ) : leaveData?.balances && leaveData.balances.length > 0 ? (
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Your leave balance</h2>
+          <LeaveBalanceCard balances={leaveData.balances} />
+        </div>
+      ) : leaveData && !leaveData.balances?.length ? (
+        <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+          No leave balance data available. Contact HR if this is unexpected.
+        </div>
+      ) : null}
+
+      <div className="flex items-center justify-between flex-wrap gap-2">
         {isProbation ? (
           <p className="text-sm text-muted-foreground">
             Leave applications are locked during your first 6 months. You will be able to apply after completing probation.
           </p>
         ) : (
-          <span className="text-muted-foreground" />
+          <span />
         )}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -429,13 +448,6 @@ function LeavesTab() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {leaveData?.balances && leaveData.balances.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold mb-4">Leave balance</h2>
-          <LeaveBalanceCard balances={leaveData.balances} />
-        </div>
-      )}
 
       {leaveData?.requests && leaveData.requests.filter((r) => r.status === 'APPROVED' && r.isUnpaid).length > 0 && (
         <div className="rounded-lg border border-rose-200 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-800 p-4">

@@ -62,7 +62,6 @@ export async function PATCH(
       }
     }
 
-    // Update leave request. Balances are computed from policy + approved leave history; no LeaveBalance update needed.
     const updated = await prisma.leaveRequest.update({
       where: { id: leaveId },
       data: {
@@ -72,6 +71,9 @@ export async function PATCH(
         remarks: remarks || null,
       },
     })
+
+    // LeaveBalance rows are treated as imported baseline snapshots.
+    // Current balances are derived from that snapshot + later accruals + approved leave history.
 
     return successResponse(updated, `Leave request ${status.toLowerCase()}`)
   } catch (error) {

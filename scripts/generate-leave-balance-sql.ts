@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 type CarryForwardRow = {
@@ -20,6 +20,19 @@ type LeavesJson = {
   CARRY_FORRWARD_AFTER_ADJ_IN_FEB: CarryForwardRow[]
   PROBATION_LEAVES: ProbationRow[]
   PRO_DATA?: ProbationRow[]
+}
+
+type EmployeeLeaveBalanceRow = {
+  EMP_ID: number
+  BDM: string
+  DEPT: string
+  BALANCE_CL: number
+  BALANCE_SL: number
+  BALANCE_EL: number
+}
+
+type EmployeeLeaveBalancesJson = {
+  employee_leave_balances: EmployeeLeaveBalanceRow[]
 }
 
 type BalanceCode = 'CL' | 'SL' | 'EL'
@@ -80,62 +93,95 @@ function buildBalanceSql(employeeCode: string, leaveCode: BalanceCode, balance: 
   ].join('\n')
 }
 
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath)
+    return true
+  } catch {
+    return false
+  }
+}
+
 async function main() {
   const workspaceRoot = process.cwd()
-  const jsonPath = path.join(workspaceRoot, 'prisma', 'leaves.json')
+  const correctedJsonPath = path.join(workspaceRoot, 'prisma', 'employee-leave-balances.json')
+  const legacyJsonPath = path.join(workspaceRoot, 'prisma', 'leaves.json')
   const outputPath = path.join(workspaceRoot, 'prisma', 'leave-balance-updates.sql')
-
-  const raw = await readFile(jsonPath, 'utf8')
-  const data = JSON.parse(raw) as LeavesJson
-
-  const idLookupRows = [...(data.PROBATION_LEAVES ?? []), ...(data.PRO_DATA ?? [])]
-
-  const probationByName = new Map<string, ProbationRow[]>()
-  for (const row of idLookupRows) {
-    for (const key of buildNameKeys(row.BDM)) {
-      const list = probationByName.get(key) ?? []
-      list.push(row)
-      probationByName.set(key, list)
-    }
-  }
-
   const unmatched: string[] = []
   const ambiguous: string[] = []
   const statements: string[] = []
+  let sourceLabel = 'prisma/leaves.json'
 
-  for (const row of data.CARRY_FORRWARD_AFTER_ADJ_IN_FEB) {
-    const keyMatches = buildNameKeys(row.BDM).flatMap((key) => probationByName.get(key) ?? [])
-    let matches = Array.from(new Map(keyMatches.map((match) => [String(match.EMP_ID), match])).values())
+  if (await fileExists(correctedJsonPath)) {
+    const raw = await readFile(correctedJsonPath, 'utf8')
+    const data = JSON.parse(raw) as EmployeeLeaveBalancesJson
+    sourceLabel = 'prisma/employee-leave-balances.json'
 
-    if (matches.length !== 1) {
-      const deptMatches = matches.filter((item) => item.DEPT.trim().toUpperCase() === row.DEPT.trim().toUpperCase())
-      if (deptMatches.length > 0) {
-        matches = deptMatches
+    for (const row of data.employee_leave_balances ?? []) {
+      const employeeCode = String(row.EMP_ID).trim()
+      if (!employeeCode) {
+        unmatched.push(`${row.BDM} [${row.DEPT}]`)
+        continue
+      }
+
+      statements.push(`-- ${row.BDM} [${employeeCode}]`)
+      statements.push(buildBalanceSql(employeeCode, 'CL', Number(row.BALANCE_CL) || 0))
+      statements.push(buildBalanceSql(employeeCode, 'SL', Number(row.BALANCE_SL) || 0))
+      statements.push(buildBalanceSql(employeeCode, 'EL', Number(row.BALANCE_EL) || 0))
+      statements.push('')
+    }
+  } else {
+    const raw = await readFile(legacyJsonPath, 'utf8')
+    const data = JSON.parse(raw) as LeavesJson
+
+    const idLookupRows = [...(data.PROBATION_LEAVES ?? []), ...(data.PRO_DATA ?? [])]
+    const probationByName = new Map<string, ProbationRow[]>()
+
+    for (const row of idLookupRows) {
+      for (const key of buildNameKeys(row.BDM)) {
+        const list = probationByName.get(key) ?? []
+        list.push(row)
+        probationByName.set(key, list)
       }
     }
 
-    if (matches.length === 0) {
-      unmatched.push(`${row.BDM} [${row.DEPT}]`)
-      continue
-    }
+    for (const row of data.CARRY_FORRWARD_AFTER_ADJ_IN_FEB) {
+      const keyMatches = buildNameKeys(row.BDM).flatMap((key) => probationByName.get(key) ?? [])
+      let matches = Array.from(new Map(keyMatches.map((match) => [String(match.EMP_ID), match])).values())
 
-    if (matches.length > 1) {
-      ambiguous.push(`${row.BDM} [${row.DEPT}] -> ${matches.map((m) => m.EMP_ID).join(', ')}`)
-      continue
-    }
+      if (matches.length !== 1) {
+        const deptMatches = matches.filter(
+          (item) => item.DEPT.trim().toUpperCase() === row.DEPT.trim().toUpperCase()
+        )
+        if (deptMatches.length > 0) {
+          matches = deptMatches
+        }
+      }
 
-    const employeeCode = String(matches[0].EMP_ID)
-    statements.push(`-- ${row.BDM} [${employeeCode}]`)
-    statements.push(buildBalanceSql(employeeCode, 'CL', Number(row.CL) || 0))
-    statements.push(buildBalanceSql(employeeCode, 'SL', Number(row.SL) || 0))
-    statements.push(buildBalanceSql(employeeCode, 'EL', Number(row.EL) || 0))
-    statements.push('')
+      if (matches.length === 0) {
+        unmatched.push(`${row.BDM} [${row.DEPT}]`)
+        continue
+      }
+
+      if (matches.length > 1) {
+        ambiguous.push(`${row.BDM} [${row.DEPT}] -> ${matches.map((m) => m.EMP_ID).join(', ')}`)
+        continue
+      }
+
+      const employeeCode = String(matches[0].EMP_ID)
+      statements.push(`-- ${row.BDM} [${employeeCode}]`)
+      statements.push(buildBalanceSql(employeeCode, 'CL', Number(row.CL) || 0))
+      statements.push(buildBalanceSql(employeeCode, 'SL', Number(row.SL) || 0))
+      statements.push(buildBalanceSql(employeeCode, 'EL', Number(row.EL) || 0))
+      statements.push('')
+    }
   }
 
   const header = [
-    '-- Generated from prisma/leaves.json',
-    '-- Current balance import from CARRY_FORRWARD_AFTER_ADJ_IN_FEB',
+    `-- Generated from ${sourceLabel}`,
+    '-- Current balance import up to Feb 2026',
     '-- This sets allocated = remaining = imported balance, and used = 0',
+    '-- March and later accruals are added by the app leave calculator.',
     '-- Review before running.',
     '',
     'BEGIN;',
