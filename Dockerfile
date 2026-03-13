@@ -38,6 +38,7 @@ COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/node_modules/dotenv ./node_modules/dotenv
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/valibot ./node_modules/valibot
 COPY --from=builder /app/node_modules/effect ./node_modules/effect
 COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 RUN chmod +x ./scripts/docker-entrypoint.sh \
