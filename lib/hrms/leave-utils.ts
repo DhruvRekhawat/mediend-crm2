@@ -17,18 +17,19 @@ export interface LeaveRequestWithDetails extends LeaveRequest {
   }
 }
 
-export function calculateLeaveDays(startDate: Date, endDate: Date): number {
+/** Calculate leave days. Inclusive of start and end. Supports half-days. */
+export function calculateLeaveDays(
+  startDate: Date,
+  endDate: Date,
+  halfDayCount: number = 0
+): number {
   const start = new Date(startDate)
   const end = new Date(endDate)
-  
-  // Set time to midnight for accurate day calculation
   start.setHours(0, 0, 0, 0)
   end.setHours(0, 0, 0, 0)
-  
   const diffTime = end.getTime() - start.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-  return diffDays + 1 // Inclusive of both start and end dates
+  const fullDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+  return fullDays - halfDayCount * 0.5
 }
 
 export function validateLeaveBalance(
@@ -58,7 +59,7 @@ export function checkDateConflict(
   const end = new Date(endDate)
 
   for (const leave of existingLeaves) {
-    if (leave.status !== 'APPROVED') continue
+    if (leave.status !== 'APPROVED' && leave.status !== 'PENDING') continue
 
     const existingStart = new Date(leave.startDate)
     const existingEnd = new Date(leave.endDate)

@@ -7,7 +7,11 @@ import { z } from 'zod'
 
 const updateLeaveTypeSchema = z.object({
   name: z.string().min(1).optional(),
+  code: z.string().optional().nullable(),
   maxDays: z.number().int().positive().optional(),
+  monthlyAccrual: z.number().min(0).optional(),
+  carryForward: z.boolean().optional(),
+  probationUnlockDays: z.number().min(0).optional().nullable(),
   isActive: z.boolean().optional(),
 })
 

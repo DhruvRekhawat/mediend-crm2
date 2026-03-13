@@ -5,14 +5,13 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { hasPermission } from '@/lib/rbac'
 import { z } from 'zod'
 
-const updateLeaveTypeSchema = z.object({
-  maxDays: z.number().int().positive().optional(),
-  isActive: z.boolean().optional(),
-})
-
 const createLeaveTypeSchema = z.object({
   name: z.string().min(1),
+  code: z.string().optional().nullable(),
   maxDays: z.number().int().positive(),
+  monthlyAccrual: z.number().min(0).optional().default(0),
+  carryForward: z.boolean().optional().default(false),
+  probationUnlockDays: z.number().min(0).optional().nullable(),
   isActive: z.boolean().optional().default(true),
 })
 

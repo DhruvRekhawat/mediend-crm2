@@ -15,8 +15,17 @@ interface LeaveType {
   isActive: boolean
 }
 
+interface BalanceForType {
+  leaveTypeId: string
+  remaining: number
+  allocated: number
+  locked?: number
+  isProbation?: boolean
+}
+
 interface LeaveApplicationFormProps {
   leaveTypes: LeaveType[]
+  balances?: BalanceForType[]
   onSubmit: (data: {
     leaveTypeId: string
     startDate: Date
@@ -28,6 +37,7 @@ interface LeaveApplicationFormProps {
 
 export function LeaveApplicationForm({
   leaveTypes,
+  balances = [],
   onSubmit,
   isLoading = false,
 }: LeaveApplicationFormProps) {
@@ -49,7 +59,6 @@ export function LeaveApplicationForm({
       endDate: formData.endDate,
       reason: formData.reason || undefined,
     })
-    // Reset form
     setFormData({
       leaveTypeId: '',
       startDate: undefined,
@@ -64,6 +73,13 @@ export function LeaveApplicationForm({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     return diffDays + 1
   }
+
+  const requestedDays = formData.startDate && formData.endDate ? calculateDays() : 0
+  const selectedBalance = formData.leaveTypeId
+    ? balances.find((b) => b.leaveTypeId === formData.leaveTypeId)
+    : null
+  const wouldBeUnpaid =
+    selectedBalance && requestedDays > 0 && requestedDays > selectedBalance.remaining
 
   const activeLeaveTypes = leaveTypes?.filter((lt) => lt.isActive) || []
 
@@ -85,11 +101,19 @@ export function LeaveApplicationForm({
               <SelectValue placeholder="Select leave type" />
             </SelectTrigger>
             <SelectContent>
-              {activeLeaveTypes.map((leaveType) => (
-                <SelectItem key={leaveType.id} value={leaveType.id}>
-                  {leaveType.name}
-                </SelectItem>
-              ))}
+              {activeLeaveTypes.map((leaveType) => {
+                const bal = balances.find((b) => b.leaveTypeId === leaveType.id)
+                const suffix =
+                  bal != null
+                    ? ` — ${bal.remaining} available` +
+                      (bal.locked != null && bal.locked > 0 ? ` (${bal.locked} locked)` : '')
+                    : ''
+                return (
+                  <SelectItem key={leaveType.id} value={leaveType.id}>
+                    {leaveType.name}{suffix}
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
         )}
@@ -130,7 +154,13 @@ export function LeaveApplicationForm({
       {formData.startDate && formData.endDate && (
         <div>
           <Label>Total Days</Label>
-          <Input value={`${calculateDays()} days`} disabled />
+          <Input value={`${requestedDays} days`} disabled />
+        </div>
+      )}
+
+      {wouldBeUnpaid && selectedBalance && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+          You have {selectedBalance.remaining} day(s) remaining. {requestedDays - selectedBalance.remaining} day(s) will be marked as unpaid leave.
         </div>
       )}
 

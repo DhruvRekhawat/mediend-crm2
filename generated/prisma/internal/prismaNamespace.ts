@@ -6271,7 +6271,11 @@ export type AttendanceNormalizationScalarFieldEnum = (typeof AttendanceNormaliza
 export const LeaveTypeMasterScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  code: 'code',
   maxDays: 'maxDays',
+  monthlyAccrual: 'monthlyAccrual',
+  carryForward: 'carryForward',
+  probationUnlockDays: 'probationUnlockDays',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

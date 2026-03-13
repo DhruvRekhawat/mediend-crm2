@@ -42,6 +42,12 @@ function maskBankAccount(acc: string) {
   return '••••' + acc.slice(-4)
 }
 
+function maskUan(uan: string) {
+  const cleaned = uan.replace(/\s/g, '')
+  if (cleaned.length < 4) return uan
+  return '••••••••' + cleaned.slice(-4)
+}
+
 // ── Field row (mobile-friendly tap target) ───────────────────────────────────
 function FieldRow({
   icon: Icon,
@@ -262,6 +268,14 @@ export default function ProfilePage() {
                   icon={FileText}
                   label="Aadhar"
                   value={employee.aadharNumber ? maskAadhar(employee.aadharNumber) : null}
+                  mono
+                />
+              </div>
+              <div className="px-4 sm:px-5">
+                <FieldRow
+                  icon={CreditCard}
+                  label="UAN"
+                  value={employee.uanNumber ? maskUan(employee.uanNumber) : null}
                   mono
                 />
               </div>

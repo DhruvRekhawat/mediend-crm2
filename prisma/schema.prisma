@@ -807,17 +807,22 @@ model AttendanceNormalization {
 }
 
 model LeaveTypeMaster {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  maxDays   Int
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  code                String?  @unique // e.g. "CL", "SL", "EL" for policy lookup
+  maxDays             Int      // legacy/display; policy uses monthlyAccrual
+  monthlyAccrual      Float    @default(0) // accrual per month (e.g. 1, 0.5)
+  carryForward        Boolean  @default(false) // EL rolls to next year; CL/SL reset monthly
+  probationUnlockDays Float?   // EL: 12 on month 7; others: null
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   leaveRequests LeaveRequest[]
   leaveBalances LeaveBalance[]
 
   @@index([name])
+  @@index([code])
   @@index([isActive])
 }
 
@@ -829,7 +834,7 @@ model LeaveRequest {
   leaveType         LeaveTypeMaster    @relation(fields: [leaveTypeId], references: [id])
   startDate         DateTime
   endDate           DateTime
-  days              Int
+  days              Float // supports half-days (0.5)
   reason            String?
   isUnpaid          Boolean  @default(false)
   status            LeaveRequestStatus @default(PENDING)

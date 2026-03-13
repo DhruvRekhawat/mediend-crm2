@@ -15,6 +15,7 @@ const updateProfileSchema = z.object({
   // Employee fields - first-time only by user, then HR only
   panNumber: z.string().max(10).optional().nullable(),
   aadharNumber: z.string().max(12).optional().nullable(),
+  uanNumber: z.string().max(12).optional().nullable(),
   bankAccountName: z.string().max(100).optional().nullable(),
   bankAccountNumber: z.string().max(50).optional().nullable(),
   ifscCode: z.string().max(11).optional().nullable(),
@@ -92,6 +93,7 @@ export async function PATCH(request: NextRequest) {
             id: true,
             panNumber: true,
             aadharNumber: true,
+            uanNumber: true,
             bankAccountName: true,
             bankAccountNumber: true,
             ifscCode: true,
@@ -120,7 +122,7 @@ export async function PATCH(request: NextRequest) {
       const emp = user.employee
       const empUpdate: Record<string, unknown> = {}
 
-      const hrOnlyFields = ['panNumber', 'aadharNumber', 'bankAccountName', 'bankAccountNumber', 'ifscCode']
+      const hrOnlyFields = ['panNumber', 'aadharNumber', 'uanNumber', 'bankAccountName', 'bankAccountNumber', 'ifscCode']
       for (const field of hrOnlyFields) {
         const val = data[field as keyof typeof data]
         if (val === undefined) continue
@@ -134,7 +136,7 @@ export async function PATCH(request: NextRequest) {
           empUpdate[field] = val ?? null
         } else if (!isFirstTime && !isHr) {
           return errorResponse(
-            `${field === 'panNumber' ? 'PAN' : field === 'aadharNumber' ? 'Aadhar' : 'Bank account details'} can only be changed by HR once saved`,
+            `${field === 'panNumber' ? 'PAN' : field === 'aadharNumber' ? 'Aadhar' : field === 'uanNumber' ? 'UAN' : 'Bank account details'} can only be changed by HR once saved`,
             403
           )
         }

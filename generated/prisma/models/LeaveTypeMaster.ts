@@ -28,16 +28,24 @@ export type AggregateLeaveTypeMaster = {
 
 export type LeaveTypeMasterAvgAggregateOutputType = {
   maxDays: number | null
+  monthlyAccrual: number | null
+  probationUnlockDays: number | null
 }
 
 export type LeaveTypeMasterSumAggregateOutputType = {
   maxDays: number | null
+  monthlyAccrual: number | null
+  probationUnlockDays: number | null
 }
 
 export type LeaveTypeMasterMinAggregateOutputType = {
   id: string | null
   name: string | null
+  code: string | null
   maxDays: number | null
+  monthlyAccrual: number | null
+  carryForward: boolean | null
+  probationUnlockDays: number | null
   isActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -46,7 +54,11 @@ export type LeaveTypeMasterMinAggregateOutputType = {
 export type LeaveTypeMasterMaxAggregateOutputType = {
   id: string | null
   name: string | null
+  code: string | null
   maxDays: number | null
+  monthlyAccrual: number | null
+  carryForward: boolean | null
+  probationUnlockDays: number | null
   isActive: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -55,7 +67,11 @@ export type LeaveTypeMasterMaxAggregateOutputType = {
 export type LeaveTypeMasterCountAggregateOutputType = {
   id: number
   name: number
+  code: number
   maxDays: number
+  monthlyAccrual: number
+  carryForward: number
+  probationUnlockDays: number
   isActive: number
   createdAt: number
   updatedAt: number
@@ -65,16 +81,24 @@ export type LeaveTypeMasterCountAggregateOutputType = {
 
 export type LeaveTypeMasterAvgAggregateInputType = {
   maxDays?: true
+  monthlyAccrual?: true
+  probationUnlockDays?: true
 }
 
 export type LeaveTypeMasterSumAggregateInputType = {
   maxDays?: true
+  monthlyAccrual?: true
+  probationUnlockDays?: true
 }
 
 export type LeaveTypeMasterMinAggregateInputType = {
   id?: true
   name?: true
+  code?: true
   maxDays?: true
+  monthlyAccrual?: true
+  carryForward?: true
+  probationUnlockDays?: true
   isActive?: true
   createdAt?: true
   updatedAt?: true
@@ -83,7 +107,11 @@ export type LeaveTypeMasterMinAggregateInputType = {
 export type LeaveTypeMasterMaxAggregateInputType = {
   id?: true
   name?: true
+  code?: true
   maxDays?: true
+  monthlyAccrual?: true
+  carryForward?: true
+  probationUnlockDays?: true
   isActive?: true
   createdAt?: true
   updatedAt?: true
@@ -92,7 +120,11 @@ export type LeaveTypeMasterMaxAggregateInputType = {
 export type LeaveTypeMasterCountAggregateInputType = {
   id?: true
   name?: true
+  code?: true
   maxDays?: true
+  monthlyAccrual?: true
+  carryForward?: true
+  probationUnlockDays?: true
   isActive?: true
   createdAt?: true
   updatedAt?: true
@@ -188,7 +220,11 @@ export type LeaveTypeMasterGroupByArgs<ExtArgs extends runtime.Types.Extensions.
 export type LeaveTypeMasterGroupByOutputType = {
   id: string
   name: string
+  code: string | null
   maxDays: number
+  monthlyAccrual: number
+  carryForward: boolean
+  probationUnlockDays: number | null
   isActive: boolean
   createdAt: Date
   updatedAt: Date
@@ -220,7 +256,11 @@ export type LeaveTypeMasterWhereInput = {
   NOT?: Prisma.LeaveTypeMasterWhereInput | Prisma.LeaveTypeMasterWhereInput[]
   id?: Prisma.StringFilter<"LeaveTypeMaster"> | string
   name?: Prisma.StringFilter<"LeaveTypeMaster"> | string
+  code?: Prisma.StringNullableFilter<"LeaveTypeMaster"> | string | null
   maxDays?: Prisma.IntFilter<"LeaveTypeMaster"> | number
+  monthlyAccrual?: Prisma.FloatFilter<"LeaveTypeMaster"> | number
+  carryForward?: Prisma.BoolFilter<"LeaveTypeMaster"> | boolean
+  probationUnlockDays?: Prisma.FloatNullableFilter<"LeaveTypeMaster"> | number | null
   isActive?: Prisma.BoolFilter<"LeaveTypeMaster"> | boolean
   createdAt?: Prisma.DateTimeFilter<"LeaveTypeMaster"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LeaveTypeMaster"> | Date | string
@@ -231,7 +271,11 @@ export type LeaveTypeMasterWhereInput = {
 export type LeaveTypeMasterOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  code?: Prisma.SortOrderInput | Prisma.SortOrder
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  carryForward?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -242,21 +286,29 @@ export type LeaveTypeMasterOrderByWithRelationInput = {
 export type LeaveTypeMasterWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   name?: string
+  code?: string
   AND?: Prisma.LeaveTypeMasterWhereInput | Prisma.LeaveTypeMasterWhereInput[]
   OR?: Prisma.LeaveTypeMasterWhereInput[]
   NOT?: Prisma.LeaveTypeMasterWhereInput | Prisma.LeaveTypeMasterWhereInput[]
   maxDays?: Prisma.IntFilter<"LeaveTypeMaster"> | number
+  monthlyAccrual?: Prisma.FloatFilter<"LeaveTypeMaster"> | number
+  carryForward?: Prisma.BoolFilter<"LeaveTypeMaster"> | boolean
+  probationUnlockDays?: Prisma.FloatNullableFilter<"LeaveTypeMaster"> | number | null
   isActive?: Prisma.BoolFilter<"LeaveTypeMaster"> | boolean
   createdAt?: Prisma.DateTimeFilter<"LeaveTypeMaster"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LeaveTypeMaster"> | Date | string
   leaveRequests?: Prisma.LeaveRequestListRelationFilter
   leaveBalances?: Prisma.LeaveBalanceListRelationFilter
-}, "id" | "name">
+}, "id" | "name" | "code">
 
 export type LeaveTypeMasterOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  code?: Prisma.SortOrderInput | Prisma.SortOrder
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  carryForward?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrderInput | Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -273,7 +325,11 @@ export type LeaveTypeMasterScalarWhereWithAggregatesInput = {
   NOT?: Prisma.LeaveTypeMasterScalarWhereWithAggregatesInput | Prisma.LeaveTypeMasterScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"LeaveTypeMaster"> | string
   name?: Prisma.StringWithAggregatesFilter<"LeaveTypeMaster"> | string
+  code?: Prisma.StringNullableWithAggregatesFilter<"LeaveTypeMaster"> | string | null
   maxDays?: Prisma.IntWithAggregatesFilter<"LeaveTypeMaster"> | number
+  monthlyAccrual?: Prisma.FloatWithAggregatesFilter<"LeaveTypeMaster"> | number
+  carryForward?: Prisma.BoolWithAggregatesFilter<"LeaveTypeMaster"> | boolean
+  probationUnlockDays?: Prisma.FloatNullableWithAggregatesFilter<"LeaveTypeMaster"> | number | null
   isActive?: Prisma.BoolWithAggregatesFilter<"LeaveTypeMaster"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"LeaveTypeMaster"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"LeaveTypeMaster"> | Date | string
@@ -282,7 +338,11 @@ export type LeaveTypeMasterScalarWhereWithAggregatesInput = {
 export type LeaveTypeMasterCreateInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -293,7 +353,11 @@ export type LeaveTypeMasterCreateInput = {
 export type LeaveTypeMasterUncheckedCreateInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -304,7 +368,11 @@ export type LeaveTypeMasterUncheckedCreateInput = {
 export type LeaveTypeMasterUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -315,7 +383,11 @@ export type LeaveTypeMasterUpdateInput = {
 export type LeaveTypeMasterUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -326,7 +398,11 @@ export type LeaveTypeMasterUncheckedUpdateInput = {
 export type LeaveTypeMasterCreateManyInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -335,7 +411,11 @@ export type LeaveTypeMasterCreateManyInput = {
 export type LeaveTypeMasterUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -344,7 +424,11 @@ export type LeaveTypeMasterUpdateManyMutationInput = {
 export type LeaveTypeMasterUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -353,7 +437,11 @@ export type LeaveTypeMasterUncheckedUpdateManyInput = {
 export type LeaveTypeMasterCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  code?: Prisma.SortOrder
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  carryForward?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -361,12 +449,18 @@ export type LeaveTypeMasterCountOrderByAggregateInput = {
 
 export type LeaveTypeMasterAvgOrderByAggregateInput = {
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrder
 }
 
 export type LeaveTypeMasterMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  code?: Prisma.SortOrder
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  carryForward?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -375,7 +469,11 @@ export type LeaveTypeMasterMaxOrderByAggregateInput = {
 export type LeaveTypeMasterMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  code?: Prisma.SortOrder
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  carryForward?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -383,6 +481,8 @@ export type LeaveTypeMasterMinOrderByAggregateInput = {
 
 export type LeaveTypeMasterSumOrderByAggregateInput = {
   maxDays?: Prisma.SortOrder
+  monthlyAccrual?: Prisma.SortOrder
+  probationUnlockDays?: Prisma.SortOrder
 }
 
 export type LeaveTypeMasterScalarRelationFilter = {
@@ -421,7 +521,11 @@ export type LeaveTypeMasterUpdateOneRequiredWithoutLeaveBalancesNestedInput = {
 export type LeaveTypeMasterCreateWithoutLeaveRequestsInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -431,7 +535,11 @@ export type LeaveTypeMasterCreateWithoutLeaveRequestsInput = {
 export type LeaveTypeMasterUncheckedCreateWithoutLeaveRequestsInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -457,7 +565,11 @@ export type LeaveTypeMasterUpdateToOneWithWhereWithoutLeaveRequestsInput = {
 export type LeaveTypeMasterUpdateWithoutLeaveRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -467,7 +579,11 @@ export type LeaveTypeMasterUpdateWithoutLeaveRequestsInput = {
 export type LeaveTypeMasterUncheckedUpdateWithoutLeaveRequestsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -477,7 +593,11 @@ export type LeaveTypeMasterUncheckedUpdateWithoutLeaveRequestsInput = {
 export type LeaveTypeMasterCreateWithoutLeaveBalancesInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -487,7 +607,11 @@ export type LeaveTypeMasterCreateWithoutLeaveBalancesInput = {
 export type LeaveTypeMasterUncheckedCreateWithoutLeaveBalancesInput = {
   id?: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -513,7 +637,11 @@ export type LeaveTypeMasterUpdateToOneWithWhereWithoutLeaveBalancesInput = {
 export type LeaveTypeMasterUpdateWithoutLeaveBalancesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -523,7 +651,11 @@ export type LeaveTypeMasterUpdateWithoutLeaveBalancesInput = {
 export type LeaveTypeMasterUncheckedUpdateWithoutLeaveBalancesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   maxDays?: Prisma.IntFieldUpdateOperationsInput | number
+  monthlyAccrual?: Prisma.FloatFieldUpdateOperationsInput | number
+  carryForward?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  probationUnlockDays?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -573,7 +705,11 @@ export type LeaveTypeMasterCountOutputTypeCountLeaveBalancesArgs<ExtArgs extends
 export type LeaveTypeMasterSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  code?: boolean
   maxDays?: boolean
+  monthlyAccrual?: boolean
+  carryForward?: boolean
+  probationUnlockDays?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -585,7 +721,11 @@ export type LeaveTypeMasterSelect<ExtArgs extends runtime.Types.Extensions.Inter
 export type LeaveTypeMasterSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  code?: boolean
   maxDays?: boolean
+  monthlyAccrual?: boolean
+  carryForward?: boolean
+  probationUnlockDays?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -594,7 +734,11 @@ export type LeaveTypeMasterSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
 export type LeaveTypeMasterSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  code?: boolean
   maxDays?: boolean
+  monthlyAccrual?: boolean
+  carryForward?: boolean
+  probationUnlockDays?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -603,13 +747,17 @@ export type LeaveTypeMasterSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
 export type LeaveTypeMasterSelectScalar = {
   id?: boolean
   name?: boolean
+  code?: boolean
   maxDays?: boolean
+  monthlyAccrual?: boolean
+  carryForward?: boolean
+  probationUnlockDays?: boolean
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type LeaveTypeMasterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "maxDays" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["leaveTypeMaster"]>
+export type LeaveTypeMasterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "code" | "maxDays" | "monthlyAccrual" | "carryForward" | "probationUnlockDays" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["leaveTypeMaster"]>
 export type LeaveTypeMasterInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   leaveRequests?: boolean | Prisma.LeaveTypeMaster$leaveRequestsArgs<ExtArgs>
   leaveBalances?: boolean | Prisma.LeaveTypeMaster$leaveBalancesArgs<ExtArgs>
@@ -627,7 +775,11 @@ export type $LeaveTypeMasterPayload<ExtArgs extends runtime.Types.Extensions.Int
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
+    code: string | null
     maxDays: number
+    monthlyAccrual: number
+    carryForward: boolean
+    probationUnlockDays: number | null
     isActive: boolean
     createdAt: Date
     updatedAt: Date
@@ -1058,7 +1210,11 @@ export interface Prisma__LeaveTypeMasterClient<T, Null = never, ExtArgs extends 
 export interface LeaveTypeMasterFieldRefs {
   readonly id: Prisma.FieldRef<"LeaveTypeMaster", 'String'>
   readonly name: Prisma.FieldRef<"LeaveTypeMaster", 'String'>
+  readonly code: Prisma.FieldRef<"LeaveTypeMaster", 'String'>
   readonly maxDays: Prisma.FieldRef<"LeaveTypeMaster", 'Int'>
+  readonly monthlyAccrual: Prisma.FieldRef<"LeaveTypeMaster", 'Float'>
+  readonly carryForward: Prisma.FieldRef<"LeaveTypeMaster", 'Boolean'>
+  readonly probationUnlockDays: Prisma.FieldRef<"LeaveTypeMaster", 'Float'>
   readonly isActive: Prisma.FieldRef<"LeaveTypeMaster", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"LeaveTypeMaster", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"LeaveTypeMaster", 'DateTime'>

@@ -62,7 +62,7 @@ export async function PATCH(
       }
     }
 
-    // Update leave request
+    // Update leave request. Balances are computed from policy + approved leave history; no LeaveBalance update needed.
     const updated = await prisma.leaveRequest.update({
       where: { id: leaveId },
       data: {
@@ -72,42 +72,6 @@ export async function PATCH(
         remarks: remarks || null,
       },
     })
-
-    // Update leave balance if approved and not unpaid leave (unpaid leave does not deduct balance)
-    if (status === 'APPROVED' && !leaveRequest.isUnpaid) {
-      const balance = await prisma.leaveBalance.findUnique({
-        where: {
-          employeeId_leaveTypeId: {
-            employeeId: leaveRequest.employeeId,
-            leaveTypeId: leaveRequest.leaveTypeId,
-          },
-        },
-      })
-
-      if (balance) {
-        const newUsed = balance.used + leaveRequest.days
-        const newRemaining = balance.remaining - leaveRequest.days
-
-        if (newRemaining < 0) {
-          console.warn(`Warning: Leave balance would go negative for employee ${leaveRequest.employeeId}`)
-        }
-
-        await prisma.leaveBalance.update({
-          where: {
-            employeeId_leaveTypeId: {
-              employeeId: leaveRequest.employeeId,
-              leaveTypeId: leaveRequest.leaveTypeId,
-            },
-          },
-          data: {
-            used: newUsed,
-            remaining: Math.max(0, newRemaining),
-          },
-        })
-      } else {
-        console.warn(`Warning: Leave balance not found for employee ${leaveRequest.employeeId}, leave type ${leaveRequest.leaveTypeId}`)
-      }
-    }
 
     return successResponse(updated, `Leave request ${status.toLowerCase()}`)
   } catch (error) {

@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { calculateLeaveDays, validateLeaveBalance, checkDateConflict } from '@/lib/hrms/leave-utils'
-import { ensureLeaveBalance } from '@/lib/hrms/leave-balance-utils'
+import { calculateLeaveDays, checkDateConflict } from '@/lib/hrms/leave-utils'
+import { getComputedBalancesForEmployee, validateComputedBalance } from '@/lib/hrms/leave-policy-calculator'
 import { findLeaveApprover } from '@/lib/hierarchy'
 import { z } from 'zod'
 
@@ -29,11 +29,11 @@ export async function POST(request: NextRequest) {
       return errorResponse('Employee record not found', 404)
     }
 
-    // Check 6-month probation period
+    // Check 6-month probation period (leaves locked during probation)
     if (employee.joinDate) {
       const sixMonthsAgo = new Date()
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-      
+
       if (employee.joinDate > sixMonthsAgo) {
         const probationEndDate = new Date(employee.joinDate)
         probationEndDate.setMonth(probationEndDate.getMonth() + 6)
@@ -68,21 +68,14 @@ export async function POST(request: NextRequest) {
     // Calculate days
     const days = calculateLeaveDays(startDate, endDate)
 
-    // Ensure leave balance exists (create if missing)
-    await ensureLeaveBalance(employee.id, leaveTypeId)
-
-    // Check leave balance
-    const balance = await prisma.leaveBalance.findUnique({
-      where: {
-        employeeId_leaveTypeId: {
-          employeeId: employee.id,
-          leaveTypeId,
-        },
-      },
-    })
-
-    const balanceValidation = validateLeaveBalance(balance, days)
+    // Validate against policy-computed balance
+    const balances = await getComputedBalancesForEmployee(employee.id)
+    const balanceValidation = validateComputedBalance(balances, leaveTypeId, days)
     const isUnpaid = !balanceValidation.valid
+
+    if (!balanceValidation.valid && !balanceValidation.error?.includes('Insufficient')) {
+      return errorResponse(balanceValidation.error ?? 'Cannot apply for leave', 400)
+    }
 
     // Check for date conflicts
     const existingLeaves = await prisma.leaveRequest.findMany({

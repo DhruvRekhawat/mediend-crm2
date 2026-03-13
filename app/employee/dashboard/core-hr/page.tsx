@@ -95,9 +95,13 @@ interface LeaveData {
   requests: LeaveRequest[]
   balances: Array<{
     id: string
+    leaveTypeId: string
     allocated: number
     used: number
     remaining: number
+    locked?: number
+    isProbation?: boolean
+    carryForward?: boolean
     leaveType: LeaveType
   }>
 }
@@ -337,6 +341,8 @@ function LeavesTab() {
     queryFn: () => apiGet<LeaveType[]>('/api/leaves/types?activeOnly=true'),
   })
 
+  const isProbation = leaveData?.balances?.[0]?.isProbation ?? false
+
   const applyLeaveMutation = useMutation({
     mutationFn: (data: {
       leaveTypeId: string
@@ -373,25 +379,47 @@ function LeavesTab() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <span className="text-muted-foreground"></span>
+        {isProbation ? (
+          <p className="text-sm text-muted-foreground">
+            Leave applications are locked during your first 6 months. You will be able to apply after completing probation.
+          </p>
+        ) : (
+          <span className="text-muted-foreground" />
+        )}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button
+              className="bg-green-600 hover:bg-green-700"
+              disabled={isProbation}
+            >
               Apply for Leave
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Apply for Leave</DialogTitle>
-              <DialogDescription>Submit a new leave request</DialogDescription>
+              <DialogDescription>
+                Submit a new leave request. Balances are computed from policy (1 CL, 0.5 SL, 0.5 EL per month; EL carries forward).
+              </DialogDescription>
             </DialogHeader>
-            {leaveTypesLoading ? (
+            {isProbation ? (
+              <p className="text-sm text-muted-foreground py-4">
+                Leave applications are not available during your probation period (first 6 months).
+              </p>
+            ) : leaveTypesLoading ? (
               <div className="text-center py-4 text-muted-foreground">Loading leave types...</div>
             ) : leaveTypesError ? (
               <div className="text-center py-4 text-red-500">Failed to load leave types.</div>
             ) : leaveTypes && leaveTypes.length > 0 ? (
               <LeaveApplicationForm
                 leaveTypes={leaveTypes}
+                balances={leaveData?.balances?.map((b) => ({
+                  leaveTypeId: b.leaveTypeId,
+                  remaining: b.remaining,
+                  allocated: b.allocated,
+                  locked: b.locked,
+                  isProbation: b.isProbation,
+                })) ?? []}
                 onSubmit={(data) => applyLeaveMutation.mutate(data)}
                 isLoading={applyLeaveMutation.isPending}
               />

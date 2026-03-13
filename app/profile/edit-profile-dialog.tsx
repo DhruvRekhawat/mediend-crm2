@@ -29,6 +29,7 @@ export interface ProfileEmployee {
   dateOfBirth: Date | null
   panNumber: string | null
   aadharNumber: string | null
+  uanNumber: string | null
   bankAccountName: string | null
   bankAccountNumber: string | null
   ifscCode: string | null
@@ -63,6 +64,7 @@ export function EditProfileDialog({ profile, isOpen, onOpenChange, onSuccess }: 
     profilePicture: user.profilePicture ?? '',
     panNumber: employee?.panNumber ?? '',
     aadharNumber: employee?.aadharNumber ?? '',
+    uanNumber: employee?.uanNumber ?? '',
     bankAccountName: employee?.bankAccountName ?? '',
     bankAccountNumber: employee?.bankAccountNumber ?? '',
     ifscCode: employee?.ifscCode ?? '',
@@ -70,6 +72,7 @@ export function EditProfileDialog({ profile, isOpen, onOpenChange, onSuccess }: 
 
   const panLocked = !!(employee?.panNumber)
   const aadharLocked = !!(employee?.aadharNumber)
+  const uanLocked = !!(employee?.uanNumber)
   const bankLocked =
     !!(employee?.bankAccountName) || !!(employee?.bankAccountNumber) || !!(employee?.ifscCode)
 
@@ -111,6 +114,7 @@ export function EditProfileDialog({ profile, isOpen, onOpenChange, onSuccess }: 
         profilePicture: user.profilePicture ?? '',
         panNumber: employee?.panNumber ?? '',
         aadharNumber: employee?.aadharNumber ?? '',
+        uanNumber: employee?.uanNumber ?? '',
         bankAccountName: employee?.bankAccountName ?? '',
         bankAccountNumber: employee?.bankAccountNumber ?? '',
         ifscCode: employee?.ifscCode ?? '',
@@ -130,6 +134,7 @@ export function EditProfileDialog({ profile, isOpen, onOpenChange, onSuccess }: 
     if (employee) {
       if (!panLocked) payload.panNumber = formData.panNumber || null
       if (!aadharLocked) payload.aadharNumber = formData.aadharNumber || null
+      if (!uanLocked) payload.uanNumber = formData.uanNumber || null
       if (!bankLocked) {
         payload.bankAccountName = formData.bankAccountName || null
         payload.bankAccountNumber = formData.bankAccountNumber || null
@@ -152,7 +157,7 @@ export function EditProfileDialog({ profile, isOpen, onOpenChange, onSuccess }: 
         <DialogHeader>
           <DialogTitle>Edit profile</DialogTitle>
           <DialogDescription>
-            PAN, Aadhar and bank details can only be changed by HR once saved.
+            PAN, Aadhar, UAN and bank details can only be changed by HR once saved.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -249,6 +254,20 @@ export function EditProfileDialog({ profile, isOpen, onOpenChange, onSuccess }: 
                   className="mt-1.5 font-mono"
                 />
                 {aadharLocked && <p className="text-xs text-muted-foreground mt-1">Contact HR to update</p>}
+              </div>
+              <div>
+                <Label>UAN</Label>
+                <Input
+                  value={formData.uanNumber}
+                  onChange={(e) =>
+                    setFormData((p) => ({ ...p, uanNumber: e.target.value.replace(/\D/g, '').slice(0, 12) }))
+                  }
+                  placeholder="12 digits"
+                  maxLength={12}
+                  disabled={uanLocked}
+                  className="mt-1.5 font-mono"
+                />
+                {uanLocked && <p className="text-xs text-muted-foreground mt-1">Contact HR to update</p>}
               </div>
               <div>
                 <Label>Bank account holder</Label>

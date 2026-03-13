@@ -286,7 +286,7 @@ export type LeaveRequestWhereInput = {
   leaveTypeId?: Prisma.StringFilter<"LeaveRequest"> | string
   startDate?: Prisma.DateTimeFilter<"LeaveRequest"> | Date | string
   endDate?: Prisma.DateTimeFilter<"LeaveRequest"> | Date | string
-  days?: Prisma.IntFilter<"LeaveRequest"> | number
+  days?: Prisma.FloatFilter<"LeaveRequest"> | number
   reason?: Prisma.StringNullableFilter<"LeaveRequest"> | string | null
   isUnpaid?: Prisma.BoolFilter<"LeaveRequest"> | boolean
   status?: Prisma.EnumLeaveRequestStatusFilter<"LeaveRequest"> | $Enums.LeaveRequestStatus
@@ -333,7 +333,7 @@ export type LeaveRequestWhereUniqueInput = Prisma.AtLeast<{
   leaveTypeId?: Prisma.StringFilter<"LeaveRequest"> | string
   startDate?: Prisma.DateTimeFilter<"LeaveRequest"> | Date | string
   endDate?: Prisma.DateTimeFilter<"LeaveRequest"> | Date | string
-  days?: Prisma.IntFilter<"LeaveRequest"> | number
+  days?: Prisma.FloatFilter<"LeaveRequest"> | number
   reason?: Prisma.StringNullableFilter<"LeaveRequest"> | string | null
   isUnpaid?: Prisma.BoolFilter<"LeaveRequest"> | boolean
   status?: Prisma.EnumLeaveRequestStatusFilter<"LeaveRequest"> | $Enums.LeaveRequestStatus
@@ -381,7 +381,7 @@ export type LeaveRequestScalarWhereWithAggregatesInput = {
   leaveTypeId?: Prisma.StringWithAggregatesFilter<"LeaveRequest"> | string
   startDate?: Prisma.DateTimeWithAggregatesFilter<"LeaveRequest"> | Date | string
   endDate?: Prisma.DateTimeWithAggregatesFilter<"LeaveRequest"> | Date | string
-  days?: Prisma.IntWithAggregatesFilter<"LeaveRequest"> | number
+  days?: Prisma.FloatWithAggregatesFilter<"LeaveRequest"> | number
   reason?: Prisma.StringNullableWithAggregatesFilter<"LeaveRequest"> | string | null
   isUnpaid?: Prisma.BoolWithAggregatesFilter<"LeaveRequest"> | boolean
   status?: Prisma.EnumLeaveRequestStatusWithAggregatesFilter<"LeaveRequest"> | $Enums.LeaveRequestStatus
@@ -433,7 +433,7 @@ export type LeaveRequestUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -453,7 +453,7 @@ export type LeaveRequestUncheckedUpdateInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -487,7 +487,7 @@ export type LeaveRequestUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -503,7 +503,7 @@ export type LeaveRequestUncheckedUpdateManyInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -828,7 +828,7 @@ export type LeaveRequestScalarWhereInput = {
   leaveTypeId?: Prisma.StringFilter<"LeaveRequest"> | string
   startDate?: Prisma.DateTimeFilter<"LeaveRequest"> | Date | string
   endDate?: Prisma.DateTimeFilter<"LeaveRequest"> | Date | string
-  days?: Prisma.IntFilter<"LeaveRequest"> | number
+  days?: Prisma.FloatFilter<"LeaveRequest"> | number
   reason?: Prisma.StringNullableFilter<"LeaveRequest"> | string | null
   isUnpaid?: Prisma.BoolFilter<"LeaveRequest"> | boolean
   status?: Prisma.EnumLeaveRequestStatusFilter<"LeaveRequest"> | $Enums.LeaveRequestStatus
@@ -1041,7 +1041,7 @@ export type LeaveRequestUpdateWithoutApprovedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1060,7 +1060,7 @@ export type LeaveRequestUncheckedUpdateWithoutApprovedByInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1077,7 +1077,7 @@ export type LeaveRequestUncheckedUpdateManyWithoutApprovedByInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1126,7 +1126,7 @@ export type LeaveRequestUpdateWithoutEmployeeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1144,7 +1144,7 @@ export type LeaveRequestUncheckedUpdateWithoutEmployeeInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1161,7 +1161,7 @@ export type LeaveRequestUncheckedUpdateManyWithoutEmployeeInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1177,7 +1177,7 @@ export type LeaveRequestUpdateWithoutTargetApproverInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1196,7 +1196,7 @@ export type LeaveRequestUncheckedUpdateWithoutTargetApproverInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1213,7 +1213,7 @@ export type LeaveRequestUncheckedUpdateManyWithoutTargetApproverInput = {
   leaveTypeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1245,7 +1245,7 @@ export type LeaveRequestUpdateWithoutLeaveTypeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1263,7 +1263,7 @@ export type LeaveRequestUncheckedUpdateWithoutLeaveTypeInput = {
   employeeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1280,7 +1280,7 @@ export type LeaveRequestUncheckedUpdateManyWithoutLeaveTypeInput = {
   employeeId?: Prisma.StringFieldUpdateOperationsInput | string
   startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  days?: Prisma.IntFieldUpdateOperationsInput | number
+  days?: Prisma.FloatFieldUpdateOperationsInput | number
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isUnpaid?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumLeaveRequestStatusFieldUpdateOperationsInput | $Enums.LeaveRequestStatus
@@ -1854,7 +1854,7 @@ export interface LeaveRequestFieldRefs {
   readonly leaveTypeId: Prisma.FieldRef<"LeaveRequest", 'String'>
   readonly startDate: Prisma.FieldRef<"LeaveRequest", 'DateTime'>
   readonly endDate: Prisma.FieldRef<"LeaveRequest", 'DateTime'>
-  readonly days: Prisma.FieldRef<"LeaveRequest", 'Int'>
+  readonly days: Prisma.FieldRef<"LeaveRequest", 'Float'>
   readonly reason: Prisma.FieldRef<"LeaveRequest", 'String'>
   readonly isUnpaid: Prisma.FieldRef<"LeaveRequest", 'Boolean'>
   readonly status: Prisma.FieldRef<"LeaveRequest", 'LeaveRequestStatus'>

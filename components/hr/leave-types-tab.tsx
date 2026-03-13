@@ -17,7 +17,11 @@ import { Badge } from '@/components/ui/badge'
 interface LeaveType {
   id: string
   name: string
+  code?: string | null
   maxDays: number
+  monthlyAccrual?: number
+  carryForward?: boolean
+  probationUnlockDays?: number | null
   isActive: boolean
 }
 
@@ -107,7 +111,9 @@ export function LeaveTypesTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Max Days</TableHead>
+                  <TableHead>Monthly</TableHead>
+                  <TableHead>Carry</TableHead>
+                  <TableHead>Probation Unlock</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -119,9 +125,14 @@ export function LeaveTypesTab() {
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         {leaveType.name}
+                        {leaveType.code && (
+                          <Badge variant="outline" className="text-xs">{leaveType.code}</Badge>
+                        )}
                       </div>
                     </TableCell>
-                    <TableCell>{leaveType.maxDays} days</TableCell>
+                    <TableCell>{leaveType.monthlyAccrual ?? leaveType.maxDays / 12} /mo</TableCell>
+                    <TableCell>{leaveType.carryForward ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{leaveType.probationUnlockDays ?? '—'}</TableCell>
                     <TableCell>
                       {leaveType.isActive ? <Badge variant="default">Active</Badge> : <Badge variant="secondary">Inactive</Badge>}
                     </TableCell>
@@ -149,7 +160,7 @@ export function LeaveTypesTab() {
                 ))}
                 {(!leaveTypes || leaveTypes.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                       No leave types found
                     </TableCell>
                   </TableRow>

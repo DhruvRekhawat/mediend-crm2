@@ -1136,9 +1136,9 @@ export async function POST() {
 
   /* ---------- LEAVE TYPES ---------- */
   const leaveTypes = [
-    { name: "CL", maxDays: 12 },
-    { name: "SL", maxDays: 12 },
-    { name: "EL", maxDays: 18 }
+    { name: "CL", code: "CL", maxDays: 12, monthlyAccrual: 1, carryForward: false, probationUnlockDays: null },
+    { name: "SL", code: "SL", maxDays: 6, monthlyAccrual: 0.5, carryForward: false, probationUnlockDays: null },
+    { name: "EL", code: "EL", maxDays: 18, monthlyAccrual: 0.5, carryForward: true, probationUnlockDays: 12 },
   ];
 
   for (const lt of leaveTypes) {
@@ -1148,12 +1148,13 @@ export async function POST() {
 
     if (!existing) {
       await prisma.leaveTypeMaster.create({ data: lt });
+    } else {
+      await prisma.leaveTypeMaster.update({
+        where: { id: existing.id },
+        data: { code: lt.code, monthlyAccrual: lt.monthlyAccrual, carryForward: lt.carryForward, probationUnlockDays: lt.probationUnlockDays },
+      });
     }
   }
-
-  const leaveTypeMap = Object.fromEntries(
-    (await prisma.leaveTypeMaster.findMany()).map(l => [l.name, l.id])
-  );
 
   /* ---------- CACHES ---------- */
   const departmentCache = new Map<string, string>(); // name -> id
@@ -1270,38 +1271,7 @@ export async function POST() {
       }
     });
 
-    /* ---------- LEAVE BALANCES ---------- */
-    const leaves = [
-      { type: "CL", value: row["CL_FINAL"] },
-      { type: "SL", value: row["SL_FINAL"] },
-      { type: "EL", value: row["EL_FINAL"] }
-    ];
-
-    for (const l of leaves) {
-      const remaining = Number(l.value) || 0;
-      const leaveTypeId = leaveTypeMap[l.type];
-      if (!leaveTypeId) continue;
-
-      await prisma.leaveBalance.upsert({
-        where: {
-          employeeId_leaveTypeId: {
-            employeeId: employee.id,
-            leaveTypeId
-          }
-        },
-        update: {
-          allocated: remaining,
-          remaining
-        },
-        create: {
-          employeeId: employee.id,
-          leaveTypeId,
-          allocated: remaining,
-          used: 0,
-          remaining
-        }
-      });
-    }
+    /* Leave balances are now computed from policy; no manual seed. */
 
     processed++;
   }
