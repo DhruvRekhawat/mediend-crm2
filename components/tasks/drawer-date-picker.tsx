@@ -102,8 +102,11 @@ export function DrawerDatePicker({
               nav: "hidden",
               month_caption: "flex w-full items-center justify-center px-0 text-base font-semibold",
               caption_label: "w-full text-center text-base font-semibold",
-              weekday: "text-xs font-medium text-muted-foreground",
-              day: "text-base",
+              weekdays: "flex w-full",
+              weekday: "text-xs font-medium text-muted-foreground flex-1 text-center",
+              week: "flex w-full mt-1",
+              day: "relative flex-1 h-full p-0 text-center aspect-square select-none",
+              today: "bg-primary/15 text-primary font-bold rounded-md",
             }}
           />
         ))}

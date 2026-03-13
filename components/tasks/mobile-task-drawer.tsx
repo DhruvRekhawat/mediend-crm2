@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { DrawerDatePicker } from "./drawer-date-picker"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -91,7 +90,6 @@ export function MobileTaskDrawer({
   const prefillAssigneeName = prefillAssignee?.name
 
   const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
   const [dueDate, setDueDate] = useState<Date | undefined>()
   const [priority, setPriority] = useState<CreateTaskInput["priority"]>("MEDIUM")
   const [assigneeId, setAssigneeId] = useState<string>(() => {
@@ -136,7 +134,8 @@ export function MobileTaskDrawer({
     if (isMD) {
       return [...teamSection, ...otherUsers]
     }
-    const list = assignableUsers
+    // Self shown as "Me" separately — exclude from list. API already restricts to self + direct reports.
+    const list = assignableUsers.filter((u) => u.id !== user?.id)
     if (!assigneeSearch.trim()) return list
     const q = assigneeSearch.trim().toLowerCase()
     return list.filter(
@@ -144,7 +143,7 @@ export function MobileTaskDrawer({
         u.name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q)
     )
-  }, [isMD, teamSection, otherUsers, assignableUsers, assigneeSearch])
+  }, [isMD, teamSection, otherUsers, assignableUsers, assigneeSearch, user?.id])
 
   const effectiveAssigneeId = prefillAssigneeId ?? assigneeId
   const assigneeRequired = isMD || !!prefillAssigneeId
@@ -168,7 +167,6 @@ export function MobileTaskDrawer({
 
   const reset = useCallback(() => {
     setTitle("")
-    setDescription("")
     setDueDate(undefined)
     setPriority("MEDIUM")
     setAssigneeId(prefillAssigneeId ?? (isMD ? "" : user?.id ?? ""))
@@ -195,7 +193,6 @@ export function MobileTaskDrawer({
 
     const payload: CreateTaskInput = {
       title: trimmed,
-      description: description.trim() || undefined,
       dueDate: dueDate ? dueDate.toISOString() : undefined,
       priority,
       assigneeId: effectiveAssigneeId || undefined,
@@ -298,16 +295,6 @@ export function MobileTaskDrawer({
                   aria-label="Task name"
                 />
               </div>
-              <div className="border-b border-border px-4 py-3">
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add a description..."
-                  className="min-h-[80px] resize-none border-0 px-0 shadow-none focus-visible:ring-0 placeholder:text-muted-foreground text-base"
-                  aria-label="Description"
-                />
-              </div>
-
               <RowButton
                 icon={User}
                 label="Add assignees"

@@ -207,17 +207,18 @@ export async function getEmployeeWithSubordinates(employeeId: string) {
 }
 
 /**
- * Returns true if the user is in the MD-managed cohort: under MD hierarchy
- * (someone in their management chain has role MD), in any MD's watchlist, or
- * in any MD's task team. Used to grant expanded task-assignment scope
- * (assign to anyone except MD/ADMIN).
+ * Returns true if the user is a direct MD team member: direct report of MD,
+ * explicitly in any MD's task team, or in MD's watchlist.
+ * Used to grant expanded task-assignment scope (assign to anyone except MD/ADMIN).
+ * NOTE: Indirect descendants of MD (e.g. reports-to-reports) are NOT included —
+ * they can only assign tasks to themselves and their own direct subordinates.
  */
 export async function isUserInMDManagedCohort(userId: string): Promise<boolean> {
   const employee = await getEmployeeByUserId(userId)
   if (employee) {
-    const chain = await getManagementChain(employee.id)
-    const managers = chain.slice(1)
-    if (managers.some((e) => e.user?.role === 'MD')) return true
+    // Direct report: immediate manager has MD role
+    if (employee.manager?.user?.role === 'MD') return true
+    // Explicitly added to an MD's task team
     const inTaskTeam = await prisma.mDTaskTeamMember.findFirst({
       where: {
         employeeId: employee.id,
@@ -227,6 +228,7 @@ export async function isUserInMDManagedCohort(userId: string): Promise<boolean> 
     })
     if (inTaskTeam) return true
   }
+  // Explicitly on MD's watchlist
   const inWatchlist = await prisma.mDWatchlistEmployee.findFirst({
     where: { employee: { userId } },
     select: { id: true },

@@ -80,9 +80,9 @@ export function TaskInput({
   const createProjectMutation = useCreateTaskProject()
 
   const assigneeOptions = useMemo(() => {
-    const list = isMD
-      ? assignableUsers.filter((u) => u.id !== user?.id)
-      : assignableUsers
+    // Self is shown as "Me" button separately for non-MD; MD has no self-option.
+    // API already restricts non-MD users to self + direct reports only.
+    const list = assignableUsers.filter((u) => u.id !== user?.id)
     if (!assigneeSearch.trim()) return list
     const q = assigneeSearch.trim().toLowerCase()
     return list.filter(
@@ -90,7 +90,7 @@ export function TaskInput({
         u.name?.toLowerCase().includes(q) ||
         u.email?.toLowerCase().includes(q)
     )
-  }, [assignableUsers, assigneeSearch, isMD, user?.id])
+  }, [assignableUsers, assigneeSearch, user?.id])
 
   const effectiveAssigneeId = prefillAssignee ? prefillAssignee.id : assigneeId
   const assigneeRequired = isMD || !!prefillAssignee
