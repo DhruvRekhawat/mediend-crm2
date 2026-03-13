@@ -44,7 +44,8 @@ services:
       - uptime-kuma-data:/app/data
 
   # One-off: run Prisma migrations (apply all pending migrations)
-  # Usage: docker compose run --rm migrate-deploy
+  # Usage: docker compose --profile tools run --rm migrate-deploy
+  # Fallback when Bun image cannot be pulled (Docker Hub timeout): use migrate-deploy-node instead
   migrate-deploy:
     build:
       context: .
@@ -58,6 +59,20 @@ services:
     profiles:
       - tools
     entrypoint: ["bunx", "prisma", "migrate", "deploy"]
+
+  # Same as migrate-deploy but uses Node.js (no Bun). Use when Docker Hub times out pulling oven/bun.
+  # Usage: docker compose --profile tools run --rm --build migrate-deploy-node
+  migrate-deploy-node:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
 
   # One-off: run case-stages migration (same env as app, then exit)
   # Usage: docker compose run --rm migrate
