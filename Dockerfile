@@ -40,15 +40,13 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/valibot ./node_modules/valibot
 COPY --from=builder /app/node_modules/effect ./node_modules/effect
-COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-RUN chmod +x ./scripts/docker-entrypoint.sh \
-  && mkdir -p .next/cache \
+RUN mkdir -p .next/cache \
   && chown -R nextjs:nodejs .next
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-CMD ["./scripts/docker-entrypoint.sh"]
+CMD ["node", "server.js"]
 
 # Stage for running one-off migrations (has full source + deps)
 FROM builder AS migrate

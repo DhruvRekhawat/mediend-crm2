@@ -51,13 +51,13 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
     profiles:
       - tools
-    entrypoint: ["node", "./node_modules/prisma/build/index.js", "migrate", "deploy"]
+    entrypoint: ["bunx", "prisma", "migrate", "deploy"]
 
   # One-off: run case-stages migration (same env as app, then exit)
   # Usage: docker compose run --rm migrate
