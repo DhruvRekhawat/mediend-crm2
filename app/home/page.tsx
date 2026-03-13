@@ -157,7 +157,7 @@ function BannerSection({
 
 // ─── Thought of the Day ───────────────────────────────────────────────────────
 
-const DEFAULT_BANNER = '/neat(2).png'
+const DEFAULT_BANNER = '/Serene Night Scene with Shooting Star.png'
 
 function getThoughtOfTheDay(): string {
   const start = new Date(new Date().getFullYear(), 0, 0)
