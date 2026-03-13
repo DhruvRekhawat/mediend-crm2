@@ -23,7 +23,8 @@
     "migrate:case-stages-v2": "bunx prisma generate && bun scripts/migrate-case-stages-v2.ts",
     "fix:lead-mappings": "tsx scripts/fix-existing-lead-mappings.ts",
     "fix:lead-categories-circles": "bun run scripts/fix-lead-categories-circles.ts",
-    "seed:employees": "bun scripts/seed-employees-from-json.ts"
+    "seed:employees": "bun scripts/seed-employees-from-json.ts",
+    "seed:leads": "tsx prisma/seed-leads.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

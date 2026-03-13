@@ -135,7 +135,7 @@ function TeamMemberCard({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-xl border bg-card shadow-sm w-full text-center transition-colors",
+        "relative rounded-xl border bg-card shadow-sm w-full text-center transition-colors",
         "hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring touch-manipulation active:opacity-90",
         "flex flex-col items-stretch p-4"
       )}
@@ -184,6 +184,16 @@ function TeamMemberCard({
           </span>
         )}
       </div>
+
+      {/* Activity badge */}
+      {(member.unseenActivityCount ?? 0) > 0 && (
+        <span
+          className="absolute right-2 top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-medium text-primary-foreground"
+          title={`${member.unseenActivityCount} new activit${member.unseenActivityCount !== 1 ? "ies" : "y"}`}
+        >
+          {member.unseenActivityCount! > 99 ? "99+" : member.unseenActivityCount}
+        </span>
+      )}
 
       {/* Task overview: ACTIVE · DONE · WARN */}
       <div className="mt-3 pt-3 border-t border-border flex items-center justify-center gap-4 text-sm">

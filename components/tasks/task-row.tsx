@@ -68,6 +68,8 @@ interface TaskRowProps {
   warningCount?: number
   /** Number of date extensions for this task. When > 0, shows extension icon with count. */
   extensionCount?: number
+  /** Unseen activity count (comments, extension requests, approvals). When > 0, shows notification badge. */
+  activityCount?: number
   /** When false, strikethrough is not shown for done tasks (e.g. in Approval tab). */
   showStrikethrough?: boolean
   /** When true, applies exit pop animation (task is being removed from list). */
@@ -87,6 +89,7 @@ export function TaskRow({
   showCompletionRating = false,
   warningCount = 0,
   extensionCount = 0,
+  activityCount = 0,
   showStrikethrough = true,
   exitAnimation = false,
   onExitAnimationEnd,
@@ -155,7 +158,7 @@ export function TaskRow({
       }}
       onAnimationEnd={exitAnimation ? onExitAnimationEnd : undefined}
       className={cn(
-        "flex min-h-[44px] cursor-pointer items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex min-h-[48px] cursor-pointer items-start gap-3 rounded-md px-2 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isCompleted && "opacity-70",
         exitAnimation && "animate-[task-exit-pop_0.35s_ease-out_forwards]",
         className
@@ -177,7 +180,7 @@ export function TaskRow({
         <span className="relative inline-block min-w-0 max-w-full">
           <span
             className={cn(
-              "block truncate text-base md:text-sm",
+              "block break-words text-base md:text-sm",
               isDone && "text-muted-foreground"
             )}
           >
@@ -206,6 +209,14 @@ export function TaskRow({
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        {activityCount > 0 && (
+          <span
+            className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-medium text-primary-foreground"
+            title={`${activityCount} new activit${activityCount !== 1 ? "ies" : "y"}`}
+          >
+            {activityCount > 99 ? "99+" : activityCount}
+          </span>
+        )}
         {extensionCount > 0 && (
           <span
             className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400"

@@ -78,12 +78,47 @@ export async function GET(request: NextRequest) {
       assignee: { select: { id: true, name: true, email: true } },
       createdBy: { select: { id: true, name: true } },
       project: { select: { id: true, name: true } },
-      _count: { select: { approvals: true } },
+      _count: { select: { approvals: true, comments: true } },
+      approvals: {
+        where: { status: "PENDING" },
+        select: { id: true, createdAt: true },
+      },
+      comments: { select: { id: true, createdAt: true } },
+      userTaskSeen: {
+        where: { userId: user.id },
+        select: { lastSeenAt: true },
+      },
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
   })
 
-  return successResponse(tasks)
+  const lastSeenByTaskId = new Map<string, Date>()
+  for (const t of tasks) {
+    const seen = t.userTaskSeen?.[0]
+    if (seen?.lastSeenAt) lastSeenByTaskId.set(t.id, seen.lastSeenAt)
+  }
+
+  const mapped = tasks.map((t) => {
+    const lastSeenAt = lastSeenByTaskId.get(t.id) ?? null
+    const cutoff = lastSeenAt ?? new Date(0)
+
+    const unseenComments = (t.comments ?? []).filter((c) => new Date(c.createdAt) > cutoff).length
+    const unseenApprovals = (t.approvals ?? []).filter((a) => new Date(a.createdAt) > cutoff).length
+    const unseenEmployeeDone =
+      t.status === "EMPLOYEE_DONE" && new Date(t.updatedAt) > cutoff ? 1 : 0
+
+    const unseenActivityCount = unseenComments + unseenApprovals + unseenEmployeeDone
+
+    const { userTaskSeen, comments, approvals, ...rest } = t
+    return {
+      ...rest,
+      _count: { ...t._count, approvals: t._count.approvals },
+      pendingApprovalCount: (t.approvals ?? []).length,
+      unseenActivityCount,
+    }
+  })
+
+  return successResponse(mapped)
 }
 
 export async function POST(request: NextRequest) {

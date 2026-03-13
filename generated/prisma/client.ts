@@ -337,6 +337,11 @@ export type Task = Prisma.TaskModel
  */
 export type TaskDueDateApproval = Prisma.TaskDueDateApprovalModel
 /**
+ * Model UserTaskSeen
+ * 
+ */
+export type UserTaskSeen = Prisma.UserTaskSeenModel
+/**
  * Model TaskRating
  * 
  */

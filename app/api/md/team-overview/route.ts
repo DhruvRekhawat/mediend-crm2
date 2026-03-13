@@ -21,6 +21,7 @@ export interface MDTeamOverviewMember {
   completedCount: number
   averageRating: number | null
   extensionRequests: number
+  unseenActivityCount: number
   attendanceStatus: AttendanceStatus
   inTime: string | null
   lastWorkLogAt: string | null // ISO string of most recent work log createdAt
@@ -213,6 +214,39 @@ export async function GET(request: NextRequest) {
       extensionCountMap.set(r.requestedById, r._count.id)
     }
 
+    // Unseen activity count per assignee (for MD/manager: comments, pending approvals, EMPLOYEE_DONE after lastSeenAt)
+    const tasksForUnseen = await prisma.task.findMany({
+      where: { assigneeId: { in: userIds } },
+      select: {
+        id: true,
+        assigneeId: true,
+        status: true,
+        updatedAt: true,
+        comments: { select: { createdAt: true } },
+        approvals: {
+          where: { status: "PENDING" },
+          select: { createdAt: true },
+        },
+        userTaskSeen: {
+          where: { userId: user.id },
+          select: { lastSeenAt: true },
+        },
+      },
+    })
+    const unseenByAssignee = new Map<string, number>()
+    for (const t of tasksForUnseen) {
+      const lastSeenAt = t.userTaskSeen?.[0]?.lastSeenAt ?? null
+      const cutoff = lastSeenAt ?? new Date(0)
+      const unseenComments = t.comments.filter((c) => new Date(c.createdAt) > cutoff).length
+      const unseenApprovals = t.approvals.filter((a) => new Date(a.createdAt) > cutoff).length
+      const unseenEmployeeDone =
+        t.status === "EMPLOYEE_DONE" && new Date(t.updatedAt) > cutoff ? 1 : 0
+      const count = unseenComments + unseenApprovals + unseenEmployeeDone
+      if (count > 0) {
+        unseenByAssignee.set(t.assigneeId, (unseenByAssignee.get(t.assigneeId) ?? 0) + count)
+      }
+    }
+
     // Latest work log per user (WorkLog.employeeId = userId)
     const latestWorkLogs = await prisma.workLog.findMany({
       where: { employeeId: { in: userIds } },
@@ -295,6 +329,7 @@ export async function GET(request: NextRequest) {
         completedCount: completedCountMap.get(userId) ?? 0,
         averageRating: avgRatingMap.get(userId) ?? null,
         extensionRequests: extensionCountMap.get(userId) ?? 0,
+        unseenActivityCount: unseenByAssignee.get(userId) ?? 0,
         attendanceStatus: att.status,
         inTime: att.inTime,
         lastWorkLogAt: lastWorkLog ? lastWorkLog.toISOString() : null,

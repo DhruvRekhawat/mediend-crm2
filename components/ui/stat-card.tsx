@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 export type StatCardAccent =
@@ -65,6 +66,8 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   accent?: StatCardAccent
   /** If true, the value uses the accent color; if false, uses default foreground */
   valueAccent?: boolean
+  /** When set, the card becomes a link to this URL */
+  href?: string
 }
 
 function StatCard({
@@ -72,20 +75,19 @@ function StatCard({
   value,
   accent = "neutral",
   valueAccent = false,
+  href,
   className,
   ...props
 }: StatCardProps) {
   const styles = accentStyles[accent]
-  return (
-    <div
-      data-slot="stat-card"
-      className={cn(
-        "rounded-lg border border-border border-l-4 bg-card px-3 py-3 shadow-sm",
-        styles.border,
-        className
-      )}
-      {...props}
-    >
+  const baseClassName = cn(
+    "rounded-lg border border-border border-l-4 bg-card px-3 py-3 shadow-sm block",
+    styles.border,
+    href && "cursor-pointer transition-colors hover:bg-muted/50 active:scale-[0.98]",
+    className
+  )
+  const content = (
+    <>
       <p className="text-sm md:text-xs text-muted-foreground">{label}</p>
       <p
         className={cn(
@@ -95,6 +97,23 @@ function StatCard({
       >
         {value}
       </p>
+    </>
+  )
+  if (href) {
+    return (
+      <Link
+        data-slot="stat-card"
+        href={href}
+        className={baseClassName}
+        {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+      >
+        {content}
+      </Link>
+    )
+  }
+  return (
+    <div data-slot="stat-card" className={baseClassName} {...props}>
+      {content}
     </div>
   )
 }

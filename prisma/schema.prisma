@@ -333,6 +333,7 @@ model User {
   mdWatchlistOwned    MDWatchlistEmployee[] @relation("MDWatchlistOwner")
   warningsReceived    Warning[]            @relation("EmployeeWarnings")
   warningsIssued      Warning[]            @relation("IssuedWarnings")
+  userTaskSeen        UserTaskSeen[]
 
   @@index([email])
   @@index([role])
@@ -2101,6 +2102,7 @@ model Task {
   activityLogs TaskActivityLog[]
   warnings    Warning[]
   ratings     TaskRating[]
+  userTaskSeen UserTaskSeen[]
 
   @@index([assigneeId])
   @@index([createdById])
@@ -2125,6 +2127,19 @@ model TaskDueDateApproval {
   @@index([taskId])
   @@index([requestedById])
   @@index([status])
+}
+
+model UserTaskSeen {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId     String
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  lastSeenAt DateTime @default(now())
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@index([taskId])
 }
 
 model TaskRating {

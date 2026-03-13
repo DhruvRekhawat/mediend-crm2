@@ -257,6 +257,7 @@ export type UserWhereInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeListRelationFilter
   warningsReceived?: Prisma.WarningListRelationFilter
   warningsIssued?: Prisma.WarningListRelationFilter
+  userTaskSeen?: Prisma.UserTaskSeenListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -319,6 +320,7 @@ export type UserOrderByWithRelationInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeOrderByRelationAggregateInput
   warningsReceived?: Prisma.WarningOrderByRelationAggregateInput
   warningsIssued?: Prisma.WarningOrderByRelationAggregateInput
+  userTaskSeen?: Prisma.UserTaskSeenOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -384,6 +386,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeListRelationFilter
   warningsReceived?: Prisma.WarningListRelationFilter
   warningsIssued?: Prisma.WarningListRelationFilter
+  userTaskSeen?: Prisma.UserTaskSeenListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -473,6 +476,7 @@ export type UserCreateInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -534,6 +538,7 @@ export type UserUncheckedCreateInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -595,6 +600,7 @@ export type UserUpdateInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -656,6 +662,7 @@ export type UserUncheckedUpdateInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1375,6 +1382,20 @@ export type UserUpdateOneRequiredWithoutTaskApprovalsRequestedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTaskApprovalsRequestedInput, Prisma.UserUpdateWithoutTaskApprovalsRequestedInput>, Prisma.UserUncheckedUpdateWithoutTaskApprovalsRequestedInput>
 }
 
+export type UserCreateNestedOneWithoutUserTaskSeenInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutUserTaskSeenInput, Prisma.UserUncheckedCreateWithoutUserTaskSeenInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutUserTaskSeenInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutUserTaskSeenNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutUserTaskSeenInput, Prisma.UserUncheckedCreateWithoutUserTaskSeenInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutUserTaskSeenInput
+  upsert?: Prisma.UserUpsertWithoutUserTaskSeenInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUserTaskSeenInput, Prisma.UserUpdateWithoutUserTaskSeenInput>, Prisma.UserUncheckedUpdateWithoutUserTaskSeenInput>
+}
+
 export type UserCreateNestedOneWithoutTaskRatingsGivenInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutTaskRatingsGivenInput, Prisma.UserUncheckedCreateWithoutTaskRatingsGivenInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutTaskRatingsGivenInput
@@ -1587,6 +1608,7 @@ export type UserCreateWithoutSalesHeadTeamsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSalesHeadTeamsInput = {
@@ -1647,6 +1669,7 @@ export type UserUncheckedCreateWithoutSalesHeadTeamsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSalesHeadTeamsInput = {
@@ -1712,6 +1735,7 @@ export type UserCreateWithoutTeamInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTeamInput = {
@@ -1772,6 +1796,7 @@ export type UserUncheckedCreateWithoutTeamInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTeamInput = {
@@ -1853,6 +1878,7 @@ export type UserUpdateWithoutSalesHeadTeamsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSalesHeadTeamsInput = {
@@ -1913,6 +1939,7 @@ export type UserUncheckedUpdateWithoutSalesHeadTeamsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithWhereUniqueWithoutTeamInput = {
@@ -2003,6 +2030,7 @@ export type UserCreateWithoutAssignedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedLeadsInput = {
@@ -2063,6 +2091,7 @@ export type UserUncheckedCreateWithoutAssignedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedLeadsInput = {
@@ -2128,6 +2157,7 @@ export type UserCreateWithoutCreatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedLeadsInput = {
@@ -2188,6 +2218,7 @@ export type UserUncheckedCreateWithoutCreatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedLeadsInput = {
@@ -2253,6 +2284,7 @@ export type UserCreateWithoutUpdatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUpdatedLeadsInput = {
@@ -2313,6 +2345,7 @@ export type UserUncheckedCreateWithoutUpdatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUpdatedLeadsInput = {
@@ -2389,6 +2422,7 @@ export type UserUpdateWithoutAssignedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedLeadsInput = {
@@ -2449,6 +2483,7 @@ export type UserUncheckedUpdateWithoutAssignedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutCreatedLeadsInput = {
@@ -2520,6 +2555,7 @@ export type UserUpdateWithoutCreatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedLeadsInput = {
@@ -2580,6 +2616,7 @@ export type UserUncheckedUpdateWithoutCreatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutUpdatedLeadsInput = {
@@ -2651,6 +2688,7 @@ export type UserUpdateWithoutUpdatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUpdatedLeadsInput = {
@@ -2711,6 +2749,7 @@ export type UserUncheckedUpdateWithoutUpdatedLeadsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLeadStageEventsInput = {
@@ -2771,6 +2810,7 @@ export type UserCreateWithoutLeadStageEventsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLeadStageEventsInput = {
@@ -2831,6 +2871,7 @@ export type UserUncheckedCreateWithoutLeadStageEventsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLeadStageEventsInput = {
@@ -2907,6 +2948,7 @@ export type UserUpdateWithoutLeadStageEventsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLeadStageEventsInput = {
@@ -2967,6 +3009,7 @@ export type UserUncheckedUpdateWithoutLeadStageEventsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCreatedTargetsInput = {
@@ -3027,6 +3070,7 @@ export type UserCreateWithoutCreatedTargetsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedTargetsInput = {
@@ -3087,6 +3131,7 @@ export type UserUncheckedCreateWithoutCreatedTargetsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedTargetsInput = {
@@ -3163,6 +3208,7 @@ export type UserUpdateWithoutCreatedTargetsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedTargetsInput = {
@@ -3223,6 +3269,7 @@ export type UserUncheckedUpdateWithoutCreatedTargetsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInsuranceCasesInput = {
@@ -3283,6 +3330,7 @@ export type UserCreateWithoutInsuranceCasesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInsuranceCasesInput = {
@@ -3343,6 +3391,7 @@ export type UserUncheckedCreateWithoutInsuranceCasesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInsuranceCasesInput = {
@@ -3419,6 +3468,7 @@ export type UserUpdateWithoutInsuranceCasesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInsuranceCasesInput = {
@@ -3479,6 +3529,7 @@ export type UserUncheckedUpdateWithoutInsuranceCasesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlRecordsInput = {
@@ -3539,6 +3590,7 @@ export type UserCreateWithoutPlRecordsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlRecordsInput = {
@@ -3599,6 +3651,7 @@ export type UserUncheckedCreateWithoutPlRecordsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlRecordsInput = {
@@ -3675,6 +3728,7 @@ export type UserUpdateWithoutPlRecordsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlRecordsInput = {
@@ -3735,6 +3789,7 @@ export type UserUncheckedUpdateWithoutPlRecordsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDepartmentHeadOfInput = {
@@ -3795,6 +3850,7 @@ export type UserCreateWithoutDepartmentHeadOfInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDepartmentHeadOfInput = {
@@ -3855,6 +3911,7 @@ export type UserUncheckedCreateWithoutDepartmentHeadOfInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDepartmentHeadOfInput = {
@@ -3931,6 +3988,7 @@ export type UserUpdateWithoutDepartmentHeadOfInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDepartmentHeadOfInput = {
@@ -3991,6 +4049,7 @@ export type UserUncheckedUpdateWithoutDepartmentHeadOfInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutEmployeeInput = {
@@ -4051,6 +4110,7 @@ export type UserCreateWithoutEmployeeInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutEmployeeInput = {
@@ -4111,6 +4171,7 @@ export type UserUncheckedCreateWithoutEmployeeInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutEmployeeInput = {
@@ -4187,6 +4248,7 @@ export type UserUpdateWithoutEmployeeInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEmployeeInput = {
@@ -4247,6 +4309,7 @@ export type UserUncheckedUpdateWithoutEmployeeInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutApprovedLeavesInput = {
@@ -4307,6 +4370,7 @@ export type UserCreateWithoutApprovedLeavesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApprovedLeavesInput = {
@@ -4367,6 +4431,7 @@ export type UserUncheckedCreateWithoutApprovedLeavesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApprovedLeavesInput = {
@@ -4443,6 +4508,7 @@ export type UserUpdateWithoutApprovedLeavesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApprovedLeavesInput = {
@@ -4503,6 +4569,7 @@ export type UserUncheckedUpdateWithoutApprovedLeavesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDeletedLedgerEntriesInput = {
@@ -4563,6 +4630,7 @@ export type UserCreateWithoutDeletedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDeletedLedgerEntriesInput = {
@@ -4623,6 +4691,7 @@ export type UserUncheckedCreateWithoutDeletedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDeletedLedgerEntriesInput = {
@@ -4688,6 +4757,7 @@ export type UserCreateWithoutEditRequestedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutEditRequestedLedgerEntriesInput = {
@@ -4748,6 +4818,7 @@ export type UserUncheckedCreateWithoutEditRequestedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutEditRequestedLedgerEntriesInput = {
@@ -4813,6 +4884,7 @@ export type UserCreateWithoutEditApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutEditApprovedLedgerEntriesInput = {
@@ -4873,6 +4945,7 @@ export type UserUncheckedCreateWithoutEditApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutEditApprovedLedgerEntriesInput = {
@@ -4938,6 +5011,7 @@ export type UserCreateWithoutCreatedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedLedgerEntriesInput = {
@@ -4998,6 +5072,7 @@ export type UserUncheckedCreateWithoutCreatedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedLedgerEntriesInput = {
@@ -5063,6 +5138,7 @@ export type UserCreateWithoutApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutApprovedLedgerEntriesInput = {
@@ -5123,6 +5199,7 @@ export type UserUncheckedCreateWithoutApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutApprovedLedgerEntriesInput = {
@@ -5199,6 +5276,7 @@ export type UserUpdateWithoutDeletedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeletedLedgerEntriesInput = {
@@ -5259,6 +5337,7 @@ export type UserUncheckedUpdateWithoutDeletedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutEditRequestedLedgerEntriesInput = {
@@ -5330,6 +5409,7 @@ export type UserUpdateWithoutEditRequestedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEditRequestedLedgerEntriesInput = {
@@ -5390,6 +5470,7 @@ export type UserUncheckedUpdateWithoutEditRequestedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutEditApprovedLedgerEntriesInput = {
@@ -5461,6 +5542,7 @@ export type UserUpdateWithoutEditApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEditApprovedLedgerEntriesInput = {
@@ -5521,6 +5603,7 @@ export type UserUncheckedUpdateWithoutEditApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutCreatedLedgerEntriesInput = {
@@ -5592,6 +5675,7 @@ export type UserUpdateWithoutCreatedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedLedgerEntriesInput = {
@@ -5652,6 +5736,7 @@ export type UserUncheckedUpdateWithoutCreatedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutApprovedLedgerEntriesInput = {
@@ -5723,6 +5808,7 @@ export type UserUpdateWithoutApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApprovedLedgerEntriesInput = {
@@ -5783,6 +5869,7 @@ export type UserUncheckedUpdateWithoutApprovedLedgerEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLedgerAuditLogsInput = {
@@ -5843,6 +5930,7 @@ export type UserCreateWithoutLedgerAuditLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLedgerAuditLogsInput = {
@@ -5903,6 +5991,7 @@ export type UserUncheckedCreateWithoutLedgerAuditLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLedgerAuditLogsInput = {
@@ -5979,6 +6068,7 @@ export type UserUpdateWithoutLedgerAuditLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLedgerAuditLogsInput = {
@@ -6039,6 +6129,7 @@ export type UserUncheckedUpdateWithoutLedgerAuditLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCreatedSalesEntriesInput = {
@@ -6099,6 +6190,7 @@ export type UserCreateWithoutCreatedSalesEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCreatedSalesEntriesInput = {
@@ -6159,6 +6251,7 @@ export type UserUncheckedCreateWithoutCreatedSalesEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCreatedSalesEntriesInput = {
@@ -6235,6 +6328,7 @@ export type UserUpdateWithoutCreatedSalesEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedSalesEntriesInput = {
@@ -6295,6 +6389,7 @@ export type UserUncheckedUpdateWithoutCreatedSalesEntriesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutStockMovementsCreatedInput = {
@@ -6355,6 +6450,7 @@ export type UserCreateWithoutStockMovementsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStockMovementsCreatedInput = {
@@ -6415,6 +6511,7 @@ export type UserUncheckedCreateWithoutStockMovementsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStockMovementsCreatedInput = {
@@ -6491,6 +6588,7 @@ export type UserUpdateWithoutStockMovementsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStockMovementsCreatedInput = {
@@ -6551,6 +6649,7 @@ export type UserUncheckedUpdateWithoutStockMovementsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPurchasesCreatedInput = {
@@ -6611,6 +6710,7 @@ export type UserCreateWithoutPurchasesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPurchasesCreatedInput = {
@@ -6671,6 +6771,7 @@ export type UserUncheckedCreateWithoutPurchasesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPurchasesCreatedInput = {
@@ -6747,6 +6848,7 @@ export type UserUpdateWithoutPurchasesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPurchasesCreatedInput = {
@@ -6807,6 +6909,7 @@ export type UserUncheckedUpdateWithoutPurchasesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutIssuesReceivedInput = {
@@ -6867,6 +6970,7 @@ export type UserCreateWithoutIssuesReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutIssuesReceivedInput = {
@@ -6927,6 +7031,7 @@ export type UserUncheckedCreateWithoutIssuesReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutIssuesReceivedInput = {
@@ -6992,6 +7097,7 @@ export type UserCreateWithoutIssuesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutIssuesCreatedInput = {
@@ -7052,6 +7158,7 @@ export type UserUncheckedCreateWithoutIssuesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutIssuesCreatedInput = {
@@ -7128,6 +7235,7 @@ export type UserUpdateWithoutIssuesReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIssuesReceivedInput = {
@@ -7188,6 +7296,7 @@ export type UserUncheckedUpdateWithoutIssuesReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutIssuesCreatedInput = {
@@ -7259,6 +7368,7 @@ export type UserUpdateWithoutIssuesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIssuesCreatedInput = {
@@ -7319,6 +7429,7 @@ export type UserUncheckedUpdateWithoutIssuesCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutKypSubmissionsInput = {
@@ -7379,6 +7490,7 @@ export type UserCreateWithoutKypSubmissionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutKypSubmissionsInput = {
@@ -7439,6 +7551,7 @@ export type UserUncheckedCreateWithoutKypSubmissionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutKypSubmissionsInput = {
@@ -7515,6 +7628,7 @@ export type UserUpdateWithoutKypSubmissionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutKypSubmissionsInput = {
@@ -7575,6 +7689,7 @@ export type UserUncheckedUpdateWithoutKypSubmissionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPreAuthsRaisedInput = {
@@ -7635,6 +7750,7 @@ export type UserCreateWithoutPreAuthsRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPreAuthsRaisedInput = {
@@ -7695,6 +7811,7 @@ export type UserUncheckedCreateWithoutPreAuthsRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPreAuthsRaisedInput = {
@@ -7760,6 +7877,7 @@ export type UserCreateWithoutPreAuthHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPreAuthHandledInput = {
@@ -7820,6 +7938,7 @@ export type UserUncheckedCreateWithoutPreAuthHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPreAuthHandledInput = {
@@ -7896,6 +8015,7 @@ export type UserUpdateWithoutPreAuthsRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPreAuthsRaisedInput = {
@@ -7956,6 +8076,7 @@ export type UserUncheckedUpdateWithoutPreAuthsRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutPreAuthHandledInput = {
@@ -8027,6 +8148,7 @@ export type UserUpdateWithoutPreAuthHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPreAuthHandledInput = {
@@ -8087,6 +8209,7 @@ export type UserUncheckedUpdateWithoutPreAuthHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -8147,6 +8270,7 @@ export type UserCreateWithoutNotificationsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -8207,6 +8331,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -8283,6 +8408,7 @@ export type UserUpdateWithoutNotificationsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -8343,6 +8469,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutQueriesRaisedInput = {
@@ -8403,6 +8530,7 @@ export type UserCreateWithoutQueriesRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutQueriesRaisedInput = {
@@ -8463,6 +8591,7 @@ export type UserUncheckedCreateWithoutQueriesRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutQueriesRaisedInput = {
@@ -8528,6 +8657,7 @@ export type UserCreateWithoutQueriesAnsweredInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutQueriesAnsweredInput = {
@@ -8588,6 +8718,7 @@ export type UserUncheckedCreateWithoutQueriesAnsweredInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutQueriesAnsweredInput = {
@@ -8664,6 +8795,7 @@ export type UserUpdateWithoutQueriesRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQueriesRaisedInput = {
@@ -8724,6 +8856,7 @@ export type UserUncheckedUpdateWithoutQueriesRaisedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutQueriesAnsweredInput = {
@@ -8795,6 +8928,7 @@ export type UserUpdateWithoutQueriesAnsweredInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQueriesAnsweredInput = {
@@ -8855,6 +8989,7 @@ export type UserUncheckedUpdateWithoutQueriesAnsweredInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPdfsCreatedInput = {
@@ -8915,6 +9050,7 @@ export type UserCreateWithoutPdfsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPdfsCreatedInput = {
@@ -8975,6 +9111,7 @@ export type UserUncheckedCreateWithoutPdfsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPdfsCreatedInput = {
@@ -9051,6 +9188,7 @@ export type UserUpdateWithoutPdfsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPdfsCreatedInput = {
@@ -9111,6 +9249,7 @@ export type UserUncheckedUpdateWithoutPdfsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAdmissionsInitiatedInput = {
@@ -9171,6 +9310,7 @@ export type UserCreateWithoutAdmissionsInitiatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAdmissionsInitiatedInput = {
@@ -9231,6 +9371,7 @@ export type UserUncheckedCreateWithoutAdmissionsInitiatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAdmissionsInitiatedInput = {
@@ -9307,6 +9448,7 @@ export type UserUpdateWithoutAdmissionsInitiatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAdmissionsInitiatedInput = {
@@ -9367,6 +9509,7 @@ export type UserUncheckedUpdateWithoutAdmissionsInitiatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInsuranceInitiateFormsCreatedInput = {
@@ -9427,6 +9570,7 @@ export type UserCreateWithoutInsuranceInitiateFormsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInsuranceInitiateFormsCreatedInput = {
@@ -9487,6 +9631,7 @@ export type UserUncheckedCreateWithoutInsuranceInitiateFormsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInsuranceInitiateFormsCreatedInput = {
@@ -9563,6 +9708,7 @@ export type UserUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInsuranceInitiateFormsCreatedInput = {
@@ -9623,6 +9769,7 @@ export type UserUncheckedUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCaseStageChangesInput = {
@@ -9683,6 +9830,7 @@ export type UserCreateWithoutCaseStageChangesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCaseStageChangesInput = {
@@ -9743,6 +9891,7 @@ export type UserUncheckedCreateWithoutCaseStageChangesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCaseStageChangesInput = {
@@ -9819,6 +9968,7 @@ export type UserUpdateWithoutCaseStageChangesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCaseStageChangesInput = {
@@ -9879,6 +10029,7 @@ export type UserUncheckedUpdateWithoutCaseStageChangesInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCaseChatMessagesSentInput = {
@@ -9939,6 +10090,7 @@ export type UserCreateWithoutCaseChatMessagesSentInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCaseChatMessagesSentInput = {
@@ -9999,6 +10151,7 @@ export type UserUncheckedCreateWithoutCaseChatMessagesSentInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCaseChatMessagesSentInput = {
@@ -10075,6 +10228,7 @@ export type UserUpdateWithoutCaseChatMessagesSentInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCaseChatMessagesSentInput = {
@@ -10135,6 +10289,7 @@ export type UserUncheckedUpdateWithoutCaseChatMessagesSentInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDischargeSheetsCreatedInput = {
@@ -10195,6 +10350,7 @@ export type UserCreateWithoutDischargeSheetsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDischargeSheetsCreatedInput = {
@@ -10255,6 +10411,7 @@ export type UserUncheckedCreateWithoutDischargeSheetsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDischargeSheetsCreatedInput = {
@@ -10331,6 +10488,7 @@ export type UserUpdateWithoutDischargeSheetsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDischargeSheetsCreatedInput = {
@@ -10391,6 +10549,7 @@ export type UserUncheckedUpdateWithoutDischargeSheetsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOutstandingCasesHandledInput = {
@@ -10451,6 +10610,7 @@ export type UserCreateWithoutOutstandingCasesHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOutstandingCasesHandledInput = {
@@ -10511,6 +10671,7 @@ export type UserUncheckedCreateWithoutOutstandingCasesHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOutstandingCasesHandledInput = {
@@ -10587,6 +10748,7 @@ export type UserUpdateWithoutOutstandingCasesHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOutstandingCasesHandledInput = {
@@ -10647,6 +10809,7 @@ export type UserUncheckedUpdateWithoutOutstandingCasesHandledInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTasksAssignedInput = {
@@ -10707,6 +10870,7 @@ export type UserCreateWithoutTasksAssignedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTasksAssignedInput = {
@@ -10767,6 +10931,7 @@ export type UserUncheckedCreateWithoutTasksAssignedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTasksAssignedInput = {
@@ -10832,6 +10997,7 @@ export type UserCreateWithoutTasksCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTasksCreatedInput = {
@@ -10892,6 +11058,7 @@ export type UserUncheckedCreateWithoutTasksCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTasksCreatedInput = {
@@ -10957,6 +11124,7 @@ export type UserCreateWithoutTasksCompletedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTasksCompletedInput = {
@@ -11017,6 +11185,7 @@ export type UserUncheckedCreateWithoutTasksCompletedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTasksCompletedInput = {
@@ -11093,6 +11262,7 @@ export type UserUpdateWithoutTasksAssignedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTasksAssignedInput = {
@@ -11153,6 +11323,7 @@ export type UserUncheckedUpdateWithoutTasksAssignedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutTasksCreatedInput = {
@@ -11224,6 +11395,7 @@ export type UserUpdateWithoutTasksCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTasksCreatedInput = {
@@ -11284,6 +11456,7 @@ export type UserUncheckedUpdateWithoutTasksCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutTasksCompletedInput = {
@@ -11355,6 +11528,7 @@ export type UserUpdateWithoutTasksCompletedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTasksCompletedInput = {
@@ -11415,6 +11589,7 @@ export type UserUncheckedUpdateWithoutTasksCompletedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTaskApprovalsRequestedInput = {
@@ -11475,6 +11650,7 @@ export type UserCreateWithoutTaskApprovalsRequestedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTaskApprovalsRequestedInput = {
@@ -11535,6 +11711,7 @@ export type UserUncheckedCreateWithoutTaskApprovalsRequestedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTaskApprovalsRequestedInput = {
@@ -11611,6 +11788,7 @@ export type UserUpdateWithoutTaskApprovalsRequestedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskApprovalsRequestedInput = {
@@ -11660,6 +11838,267 @@ export type UserUncheckedUpdateWithoutTaskApprovalsRequestedInput = {
   tasksAssigned?: Prisma.TaskUncheckedUpdateManyWithoutAssigneeNestedInput
   tasksCreated?: Prisma.TaskUncheckedUpdateManyWithoutCreatedByNestedInput
   tasksCompleted?: Prisma.TaskUncheckedUpdateManyWithoutCompletedByNestedInput
+  taskRatingsGiven?: Prisma.TaskRatingUncheckedUpdateManyWithoutRatedByNestedInput
+  taskRatingsReceived?: Prisma.TaskRatingUncheckedUpdateManyWithoutEmployeeNestedInput
+  taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
+  taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
+  taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
+  warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
+  warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutUserTaskSeenInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name: string
+  role: $Enums.UserRole
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  team?: Prisma.TeamCreateNestedOneWithoutMembersInput
+  createdLeads?: Prisma.LeadCreateNestedManyWithoutCreatedByInput
+  assignedLeads?: Prisma.LeadCreateNestedManyWithoutBdInput
+  updatedLeads?: Prisma.LeadCreateNestedManyWithoutUpdatedByInput
+  leadStageEvents?: Prisma.LeadStageEventCreateNestedManyWithoutChangedByInput
+  createdTargets?: Prisma.TargetCreateNestedManyWithoutCreatedByInput
+  salesHeadTeams?: Prisma.TeamCreateNestedManyWithoutSalesHeadInput
+  insuranceCases?: Prisma.InsuranceCaseCreateNestedManyWithoutHandledByInput
+  plRecords?: Prisma.PLRecordCreateNestedManyWithoutHandledByInput
+  employee?: Prisma.EmployeeCreateNestedOneWithoutUserInput
+  approvedLeaves?: Prisma.LeaveRequestCreateNestedManyWithoutApprovedByInput
+  createdLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutCreatedByInput
+  approvedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutApprovedByInput
+  deletedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutDeletedByInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutEditRequestedByInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutEditApprovedByInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogCreateNestedManyWithoutPerformedByInput
+  createdSalesEntries?: Prisma.SalesEntryCreateNestedManyWithoutCreatedByInput
+  stockMovementsCreated?: Prisma.StockMovementCreateNestedManyWithoutCreatedByInput
+  purchasesCreated?: Prisma.PurchaseTransactionCreateNestedManyWithoutCreatedByInput
+  issuesCreated?: Prisma.IssueTransactionCreateNestedManyWithoutCreatedByInput
+  issuesReceived?: Prisma.IssueTransactionCreateNestedManyWithoutIssuedToInput
+  kypSubmissions?: Prisma.KYPSubmissionCreateNestedManyWithoutSubmittedByInput
+  preAuthHandled?: Prisma.PreAuthorizationCreateNestedManyWithoutHandledByInput
+  queriesRaised?: Prisma.InsuranceQueryCreateNestedManyWithoutRaisedByInput
+  queriesAnswered?: Prisma.InsuranceQueryCreateNestedManyWithoutAnsweredByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetCreateNestedManyWithoutCreatedByInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormCreateNestedManyWithoutCreatedByInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseCreateNestedManyWithoutHandledByInput
+  departmentHeadOf?: Prisma.DepartmentCreateNestedManyWithoutHeadInput
+  preAuthsRaised?: Prisma.PreAuthorizationCreateNestedManyWithoutPreAuthRaisedByInput
+  pdfsCreated?: Prisma.PreAuthPDFCreateNestedManyWithoutCreatedByInput
+  admissionsInitiated?: Prisma.AdmissionRecordCreateNestedManyWithoutInitiatedByInput
+  caseStageChanges?: Prisma.CaseStageHistoryCreateNestedManyWithoutChangedByInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageCreateNestedManyWithoutSenderInput
+  tasksAssigned?: Prisma.TaskCreateNestedManyWithoutAssigneeInput
+  tasksCreated?: Prisma.TaskCreateNestedManyWithoutCreatedByInput
+  tasksCompleted?: Prisma.TaskCreateNestedManyWithoutCompletedByInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalCreateNestedManyWithoutRequestedByInput
+  taskRatingsGiven?: Prisma.TaskRatingCreateNestedManyWithoutRatedByInput
+  taskRatingsReceived?: Prisma.TaskRatingCreateNestedManyWithoutEmployeeInput
+  taskProjectsCreated?: Prisma.TaskProjectCreateNestedManyWithoutCreatedByInput
+  taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
+  taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
+  workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
+  warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
+  warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+}
+
+export type UserUncheckedCreateWithoutUserTaskSeenInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name: string
+  role: $Enums.UserRole
+  teamId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutBdInput
+  updatedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutUpdatedByInput
+  leadStageEvents?: Prisma.LeadStageEventUncheckedCreateNestedManyWithoutChangedByInput
+  createdTargets?: Prisma.TargetUncheckedCreateNestedManyWithoutCreatedByInput
+  salesHeadTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutSalesHeadInput
+  insuranceCases?: Prisma.InsuranceCaseUncheckedCreateNestedManyWithoutHandledByInput
+  plRecords?: Prisma.PLRecordUncheckedCreateNestedManyWithoutHandledByInput
+  employee?: Prisma.EmployeeUncheckedCreateNestedOneWithoutUserInput
+  approvedLeaves?: Prisma.LeaveRequestUncheckedCreateNestedManyWithoutApprovedByInput
+  createdLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutCreatedByInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutApprovedByInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutDeletedByInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutEditRequestedByInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutEditApprovedByInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUncheckedCreateNestedManyWithoutPerformedByInput
+  createdSalesEntries?: Prisma.SalesEntryUncheckedCreateNestedManyWithoutCreatedByInput
+  stockMovementsCreated?: Prisma.StockMovementUncheckedCreateNestedManyWithoutCreatedByInput
+  purchasesCreated?: Prisma.PurchaseTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  issuesCreated?: Prisma.IssueTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  issuesReceived?: Prisma.IssueTransactionUncheckedCreateNestedManyWithoutIssuedToInput
+  kypSubmissions?: Prisma.KYPSubmissionUncheckedCreateNestedManyWithoutSubmittedByInput
+  preAuthHandled?: Prisma.PreAuthorizationUncheckedCreateNestedManyWithoutHandledByInput
+  queriesRaised?: Prisma.InsuranceQueryUncheckedCreateNestedManyWithoutRaisedByInput
+  queriesAnswered?: Prisma.InsuranceQueryUncheckedCreateNestedManyWithoutAnsweredByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUncheckedCreateNestedManyWithoutCreatedByInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUncheckedCreateNestedManyWithoutCreatedByInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUncheckedCreateNestedManyWithoutHandledByInput
+  departmentHeadOf?: Prisma.DepartmentUncheckedCreateNestedManyWithoutHeadInput
+  preAuthsRaised?: Prisma.PreAuthorizationUncheckedCreateNestedManyWithoutPreAuthRaisedByInput
+  pdfsCreated?: Prisma.PreAuthPDFUncheckedCreateNestedManyWithoutCreatedByInput
+  admissionsInitiated?: Prisma.AdmissionRecordUncheckedCreateNestedManyWithoutInitiatedByInput
+  caseStageChanges?: Prisma.CaseStageHistoryUncheckedCreateNestedManyWithoutChangedByInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  tasksAssigned?: Prisma.TaskUncheckedCreateNestedManyWithoutAssigneeInput
+  tasksCreated?: Prisma.TaskUncheckedCreateNestedManyWithoutCreatedByInput
+  tasksCompleted?: Prisma.TaskUncheckedCreateNestedManyWithoutCompletedByInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUncheckedCreateNestedManyWithoutRequestedByInput
+  taskRatingsGiven?: Prisma.TaskRatingUncheckedCreateNestedManyWithoutRatedByInput
+  taskRatingsReceived?: Prisma.TaskRatingUncheckedCreateNestedManyWithoutEmployeeInput
+  taskProjectsCreated?: Prisma.TaskProjectUncheckedCreateNestedManyWithoutCreatedByInput
+  taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
+  taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
+  workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
+  warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
+  warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+}
+
+export type UserCreateOrConnectWithoutUserTaskSeenInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutUserTaskSeenInput, Prisma.UserUncheckedCreateWithoutUserTaskSeenInput>
+}
+
+export type UserUpsertWithoutUserTaskSeenInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutUserTaskSeenInput, Prisma.UserUncheckedUpdateWithoutUserTaskSeenInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutUserTaskSeenInput, Prisma.UserUncheckedCreateWithoutUserTaskSeenInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutUserTaskSeenInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutUserTaskSeenInput, Prisma.UserUncheckedUpdateWithoutUserTaskSeenInput>
+}
+
+export type UserUpdateWithoutUserTaskSeenInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
+  createdLeads?: Prisma.LeadUpdateManyWithoutCreatedByNestedInput
+  assignedLeads?: Prisma.LeadUpdateManyWithoutBdNestedInput
+  updatedLeads?: Prisma.LeadUpdateManyWithoutUpdatedByNestedInput
+  leadStageEvents?: Prisma.LeadStageEventUpdateManyWithoutChangedByNestedInput
+  createdTargets?: Prisma.TargetUpdateManyWithoutCreatedByNestedInput
+  salesHeadTeams?: Prisma.TeamUpdateManyWithoutSalesHeadNestedInput
+  insuranceCases?: Prisma.InsuranceCaseUpdateManyWithoutHandledByNestedInput
+  plRecords?: Prisma.PLRecordUpdateManyWithoutHandledByNestedInput
+  employee?: Prisma.EmployeeUpdateOneWithoutUserNestedInput
+  approvedLeaves?: Prisma.LeaveRequestUpdateManyWithoutApprovedByNestedInput
+  createdLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutCreatedByNestedInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutApprovedByNestedInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutDeletedByNestedInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutEditRequestedByNestedInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutEditApprovedByNestedInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUpdateManyWithoutPerformedByNestedInput
+  createdSalesEntries?: Prisma.SalesEntryUpdateManyWithoutCreatedByNestedInput
+  stockMovementsCreated?: Prisma.StockMovementUpdateManyWithoutCreatedByNestedInput
+  purchasesCreated?: Prisma.PurchaseTransactionUpdateManyWithoutCreatedByNestedInput
+  issuesCreated?: Prisma.IssueTransactionUpdateManyWithoutCreatedByNestedInput
+  issuesReceived?: Prisma.IssueTransactionUpdateManyWithoutIssuedToNestedInput
+  kypSubmissions?: Prisma.KYPSubmissionUpdateManyWithoutSubmittedByNestedInput
+  preAuthHandled?: Prisma.PreAuthorizationUpdateManyWithoutHandledByNestedInput
+  queriesRaised?: Prisma.InsuranceQueryUpdateManyWithoutRaisedByNestedInput
+  queriesAnswered?: Prisma.InsuranceQueryUpdateManyWithoutAnsweredByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUpdateManyWithoutCreatedByNestedInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUpdateManyWithoutCreatedByNestedInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUpdateManyWithoutHandledByNestedInput
+  departmentHeadOf?: Prisma.DepartmentUpdateManyWithoutHeadNestedInput
+  preAuthsRaised?: Prisma.PreAuthorizationUpdateManyWithoutPreAuthRaisedByNestedInput
+  pdfsCreated?: Prisma.PreAuthPDFUpdateManyWithoutCreatedByNestedInput
+  admissionsInitiated?: Prisma.AdmissionRecordUpdateManyWithoutInitiatedByNestedInput
+  caseStageChanges?: Prisma.CaseStageHistoryUpdateManyWithoutChangedByNestedInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUpdateManyWithoutSenderNestedInput
+  tasksAssigned?: Prisma.TaskUpdateManyWithoutAssigneeNestedInput
+  tasksCreated?: Prisma.TaskUpdateManyWithoutCreatedByNestedInput
+  tasksCompleted?: Prisma.TaskUpdateManyWithoutCompletedByNestedInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUpdateManyWithoutRequestedByNestedInput
+  taskRatingsGiven?: Prisma.TaskRatingUpdateManyWithoutRatedByNestedInput
+  taskRatingsReceived?: Prisma.TaskRatingUpdateManyWithoutEmployeeNestedInput
+  taskProjectsCreated?: Prisma.TaskProjectUpdateManyWithoutCreatedByNestedInput
+  taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
+  taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
+  workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
+  warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
+  warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutUserTaskSeenInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedLeads?: Prisma.LeadUncheckedUpdateManyWithoutBdNestedInput
+  updatedLeads?: Prisma.LeadUncheckedUpdateManyWithoutUpdatedByNestedInput
+  leadStageEvents?: Prisma.LeadStageEventUncheckedUpdateManyWithoutChangedByNestedInput
+  createdTargets?: Prisma.TargetUncheckedUpdateManyWithoutCreatedByNestedInput
+  salesHeadTeams?: Prisma.TeamUncheckedUpdateManyWithoutSalesHeadNestedInput
+  insuranceCases?: Prisma.InsuranceCaseUncheckedUpdateManyWithoutHandledByNestedInput
+  plRecords?: Prisma.PLRecordUncheckedUpdateManyWithoutHandledByNestedInput
+  employee?: Prisma.EmployeeUncheckedUpdateOneWithoutUserNestedInput
+  approvedLeaves?: Prisma.LeaveRequestUncheckedUpdateManyWithoutApprovedByNestedInput
+  createdLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutCreatedByNestedInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutApprovedByNestedInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutDeletedByNestedInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutEditRequestedByNestedInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutEditApprovedByNestedInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUncheckedUpdateManyWithoutPerformedByNestedInput
+  createdSalesEntries?: Prisma.SalesEntryUncheckedUpdateManyWithoutCreatedByNestedInput
+  stockMovementsCreated?: Prisma.StockMovementUncheckedUpdateManyWithoutCreatedByNestedInput
+  purchasesCreated?: Prisma.PurchaseTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  issuesCreated?: Prisma.IssueTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  issuesReceived?: Prisma.IssueTransactionUncheckedUpdateManyWithoutIssuedToNestedInput
+  kypSubmissions?: Prisma.KYPSubmissionUncheckedUpdateManyWithoutSubmittedByNestedInput
+  preAuthHandled?: Prisma.PreAuthorizationUncheckedUpdateManyWithoutHandledByNestedInput
+  queriesRaised?: Prisma.InsuranceQueryUncheckedUpdateManyWithoutRaisedByNestedInput
+  queriesAnswered?: Prisma.InsuranceQueryUncheckedUpdateManyWithoutAnsweredByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUncheckedUpdateManyWithoutCreatedByNestedInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUncheckedUpdateManyWithoutCreatedByNestedInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUncheckedUpdateManyWithoutHandledByNestedInput
+  departmentHeadOf?: Prisma.DepartmentUncheckedUpdateManyWithoutHeadNestedInput
+  preAuthsRaised?: Prisma.PreAuthorizationUncheckedUpdateManyWithoutPreAuthRaisedByNestedInput
+  pdfsCreated?: Prisma.PreAuthPDFUncheckedUpdateManyWithoutCreatedByNestedInput
+  admissionsInitiated?: Prisma.AdmissionRecordUncheckedUpdateManyWithoutInitiatedByNestedInput
+  caseStageChanges?: Prisma.CaseStageHistoryUncheckedUpdateManyWithoutChangedByNestedInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  tasksAssigned?: Prisma.TaskUncheckedUpdateManyWithoutAssigneeNestedInput
+  tasksCreated?: Prisma.TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+  tasksCompleted?: Prisma.TaskUncheckedUpdateManyWithoutCompletedByNestedInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUncheckedUpdateManyWithoutRequestedByNestedInput
   taskRatingsGiven?: Prisma.TaskRatingUncheckedUpdateManyWithoutRatedByNestedInput
   taskRatingsReceived?: Prisma.TaskRatingUncheckedUpdateManyWithoutEmployeeNestedInput
   taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11731,6 +12170,7 @@ export type UserCreateWithoutTaskRatingsGivenInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTaskRatingsGivenInput = {
@@ -11791,6 +12231,7 @@ export type UserUncheckedCreateWithoutTaskRatingsGivenInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTaskRatingsGivenInput = {
@@ -11856,6 +12297,7 @@ export type UserCreateWithoutTaskRatingsReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTaskRatingsReceivedInput = {
@@ -11916,6 +12358,7 @@ export type UserUncheckedCreateWithoutTaskRatingsReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTaskRatingsReceivedInput = {
@@ -11992,6 +12435,7 @@ export type UserUpdateWithoutTaskRatingsGivenInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskRatingsGivenInput = {
@@ -12052,6 +12496,7 @@ export type UserUncheckedUpdateWithoutTaskRatingsGivenInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutTaskRatingsReceivedInput = {
@@ -12123,6 +12568,7 @@ export type UserUpdateWithoutTaskRatingsReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskRatingsReceivedInput = {
@@ -12183,6 +12629,7 @@ export type UserUncheckedUpdateWithoutTaskRatingsReceivedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTaskProjectsCreatedInput = {
@@ -12243,6 +12690,7 @@ export type UserCreateWithoutTaskProjectsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTaskProjectsCreatedInput = {
@@ -12303,6 +12751,7 @@ export type UserUncheckedCreateWithoutTaskProjectsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTaskProjectsCreatedInput = {
@@ -12379,6 +12828,7 @@ export type UserUpdateWithoutTaskProjectsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskProjectsCreatedInput = {
@@ -12439,6 +12889,7 @@ export type UserUncheckedUpdateWithoutTaskProjectsCreatedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTaskCommentsInput = {
@@ -12499,6 +12950,7 @@ export type UserCreateWithoutTaskCommentsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTaskCommentsInput = {
@@ -12559,6 +13011,7 @@ export type UserUncheckedCreateWithoutTaskCommentsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTaskCommentsInput = {
@@ -12635,6 +13088,7 @@ export type UserUpdateWithoutTaskCommentsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskCommentsInput = {
@@ -12695,6 +13149,7 @@ export type UserUncheckedUpdateWithoutTaskCommentsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTaskActivityLogsInput = {
@@ -12755,6 +13210,7 @@ export type UserCreateWithoutTaskActivityLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTaskActivityLogsInput = {
@@ -12815,6 +13271,7 @@ export type UserUncheckedCreateWithoutTaskActivityLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTaskActivityLogsInput = {
@@ -12891,6 +13348,7 @@ export type UserUpdateWithoutTaskActivityLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskActivityLogsInput = {
@@ -12951,6 +13409,7 @@ export type UserUncheckedUpdateWithoutTaskActivityLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWarningsReceivedInput = {
@@ -13011,6 +13470,7 @@ export type UserCreateWithoutWarningsReceivedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWarningsReceivedInput = {
@@ -13071,6 +13531,7 @@ export type UserUncheckedCreateWithoutWarningsReceivedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWarningsReceivedInput = {
@@ -13136,6 +13597,7 @@ export type UserCreateWithoutWarningsIssuedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWarningsIssuedInput = {
@@ -13196,6 +13658,7 @@ export type UserUncheckedCreateWithoutWarningsIssuedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWarningsIssuedInput = {
@@ -13272,6 +13735,7 @@ export type UserUpdateWithoutWarningsReceivedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
@@ -13332,6 +13796,7 @@ export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutWarningsIssuedInput = {
@@ -13403,6 +13868,7 @@ export type UserUpdateWithoutWarningsIssuedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWarningsIssuedInput = {
@@ -13463,6 +13929,7 @@ export type UserUncheckedUpdateWithoutWarningsIssuedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMdTaskTeamsOwnedInput = {
@@ -13523,6 +13990,7 @@ export type UserCreateWithoutMdTaskTeamsOwnedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMdTaskTeamsOwnedInput = {
@@ -13583,6 +14051,7 @@ export type UserUncheckedCreateWithoutMdTaskTeamsOwnedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMdTaskTeamsOwnedInput = {
@@ -13659,6 +14128,7 @@ export type UserUpdateWithoutMdTaskTeamsOwnedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdTaskTeamsOwnedInput = {
@@ -13719,6 +14189,7 @@ export type UserUncheckedUpdateWithoutMdTaskTeamsOwnedInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMdWatchlistOwnedInput = {
@@ -13779,6 +14250,7 @@ export type UserCreateWithoutMdWatchlistOwnedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMdWatchlistOwnedInput = {
@@ -13839,6 +14311,7 @@ export type UserUncheckedCreateWithoutMdWatchlistOwnedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMdWatchlistOwnedInput = {
@@ -13915,6 +14388,7 @@ export type UserUpdateWithoutMdWatchlistOwnedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdWatchlistOwnedInput = {
@@ -13975,6 +14449,7 @@ export type UserUncheckedUpdateWithoutMdWatchlistOwnedInput = {
   mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWorkLogsInput = {
@@ -14035,6 +14510,7 @@ export type UserCreateWithoutWorkLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWorkLogsInput = {
@@ -14095,6 +14571,7 @@ export type UserUncheckedCreateWithoutWorkLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWorkLogsInput = {
@@ -14171,6 +14648,7 @@ export type UserUpdateWithoutWorkLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWorkLogsInput = {
@@ -14231,6 +14709,7 @@ export type UserUncheckedUpdateWithoutWorkLogsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPushSubscriptionsInput = {
@@ -14291,6 +14770,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
@@ -14351,6 +14831,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
   warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
   warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
@@ -14427,6 +14908,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
@@ -14487,6 +14969,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyTeamInput = {
@@ -14557,6 +15040,7 @@ export type UserUpdateWithoutTeamInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTeamInput = {
@@ -14617,6 +15101,7 @@ export type UserUncheckedUpdateWithoutTeamInput = {
   mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
   warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
   warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutTeamInput = {
@@ -14684,6 +15169,7 @@ export type UserCountOutputType = {
   mdWatchlistOwned: number
   warningsReceived: number
   warningsIssued: number
+  userTaskSeen: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -14736,6 +15222,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   mdWatchlistOwned?: boolean | UserCountOutputTypeCountMdWatchlistOwnedArgs
   warningsReceived?: boolean | UserCountOutputTypeCountWarningsReceivedArgs
   warningsIssued?: boolean | UserCountOutputTypeCountWarningsIssuedArgs
+  userTaskSeen?: boolean | UserCountOutputTypeCountUserTaskSeenArgs
 }
 
 /**
@@ -15091,6 +15578,13 @@ export type UserCountOutputTypeCountWarningsIssuedArgs<ExtArgs extends runtime.T
   where?: Prisma.WarningWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountUserTaskSeenArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserTaskSeenWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -15152,6 +15646,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   mdWatchlistOwned?: boolean | Prisma.User$mdWatchlistOwnedArgs<ExtArgs>
   warningsReceived?: boolean | Prisma.User$warningsReceivedArgs<ExtArgs>
   warningsIssued?: boolean | Prisma.User$warningsIssuedArgs<ExtArgs>
+  userTaskSeen?: boolean | Prisma.User$userTaskSeenArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -15243,6 +15738,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   mdWatchlistOwned?: boolean | Prisma.User$mdWatchlistOwnedArgs<ExtArgs>
   warningsReceived?: boolean | Prisma.User$warningsReceivedArgs<ExtArgs>
   warningsIssued?: boolean | Prisma.User$warningsIssuedArgs<ExtArgs>
+  userTaskSeen?: boolean | Prisma.User$userTaskSeenArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -15306,6 +15802,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     mdWatchlistOwned: Prisma.$MDWatchlistEmployeePayload<ExtArgs>[]
     warningsReceived: Prisma.$WarningPayload<ExtArgs>[]
     warningsIssued: Prisma.$WarningPayload<ExtArgs>[]
+    userTaskSeen: Prisma.$UserTaskSeenPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -15761,6 +16258,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   mdWatchlistOwned<T extends Prisma.User$mdWatchlistOwnedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mdWatchlistOwnedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MDWatchlistEmployeePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   warningsReceived<T extends Prisma.User$warningsReceivedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$warningsReceivedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WarningPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   warningsIssued<T extends Prisma.User$warningsIssuedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$warningsIssuedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WarningPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  userTaskSeen<T extends Prisma.User$userTaskSeenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$userTaskSeenArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserTaskSeenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -17410,6 +17908,30 @@ export type User$warningsIssuedArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.WarningScalarFieldEnum | Prisma.WarningScalarFieldEnum[]
+}
+
+/**
+ * User.userTaskSeen
+ */
+export type User$userTaskSeenArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserTaskSeen
+   */
+  select?: Prisma.UserTaskSeenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserTaskSeen
+   */
+  omit?: Prisma.UserTaskSeenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserTaskSeenInclude<ExtArgs> | null
+  where?: Prisma.UserTaskSeenWhereInput
+  orderBy?: Prisma.UserTaskSeenOrderByWithRelationInput | Prisma.UserTaskSeenOrderByWithRelationInput[]
+  cursor?: Prisma.UserTaskSeenWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserTaskSeenScalarFieldEnum | Prisma.UserTaskSeenScalarFieldEnum[]
 }
 
 /**

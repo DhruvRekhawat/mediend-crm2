@@ -32,6 +32,16 @@ export function OverviewTab() {
     }
     return map
   }, [allWarnings])
+  const activityCountByAssignee = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const t of tasks) {
+      const count = t.unseenActivityCount ?? 0
+      if (count > 0) {
+        map[t.assigneeId] = (map[t.assigneeId] ?? 0) + count
+      }
+    }
+    return map
+  }, [tasks])
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null)
   const [expandedAssigneeId, setExpandedAssigneeId] = useState<string | null>(null)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
@@ -188,7 +198,8 @@ export function OverviewTab() {
                         showAssignee
                         showProject
                         warningCount={taskWarningCountMap[task.id] ?? 0}
-                        extensionCount={task._count?.approvals ?? 0}
+                        extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                        activityCount={task.unseenActivityCount ?? 0}
                         isAssignee={task.assigneeId === user?.id}
                         canMarkComplete={canMarkComplete(task)}
                         onMarkCompleteRequest={() => {
@@ -219,7 +230,8 @@ export function OverviewTab() {
                   showAssignee
                   showProject
                   warningCount={taskWarningCountMap[task.id] ?? 0}
-                  extensionCount={task._count?.approvals ?? 0}
+                  extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                  activityCount={task.unseenActivityCount ?? 0}
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -289,6 +301,11 @@ export function OverviewTab() {
                         <span className="font-medium block truncate">{e.assigneeName}</span>
                         <span className="text-xs text-muted-foreground">
                           {e.completed}/{e.total} tasks
+                          {(activityCountByAssignee[e.assigneeId] ?? 0) > 0 && (
+                            <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground">
+                              {activityCountByAssignee[e.assigneeId]! > 99 ? "99+" : activityCountByAssignee[e.assigneeId]}
+                            </span>
+                          )}
                         </span>
                       </div>
                       {e.avgRating != null ? (
@@ -329,7 +346,8 @@ export function OverviewTab() {
                                 showAssignee={false}
                                 showProject
                                 warningCount={taskWarningCountMap[task.id] ?? 0}
-                                extensionCount={task._count?.approvals ?? 0}
+                                extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                                activityCount={task.unseenActivityCount ?? 0}
                                 isAssignee={task.assigneeId === user?.id}
                                 canMarkComplete={canMarkComplete(task)}
                                 onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -406,7 +424,8 @@ export function OverviewTab() {
                                 showAssignee
                                 showProject={false}
                                 warningCount={taskWarningCountMap[task.id] ?? 0}
-                                extensionCount={task._count?.approvals ?? 0}
+                                extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                                activityCount={task.unseenActivityCount ?? 0}
                                 isAssignee={task.assigneeId === user?.id}
                                 canMarkComplete={canMarkComplete(task)}
                                 onMarkCompleteRequest={() => setTaskToComplete(task)}

@@ -17,6 +17,7 @@ export interface MDTeamOverviewMember {
   completedCount: number
   averageRating: number | null
   extensionRequests: number
+  unseenActivityCount: number
   attendanceStatus: AttendanceStatus
   inTime: string | null
   lastWorkLogAt: string | null

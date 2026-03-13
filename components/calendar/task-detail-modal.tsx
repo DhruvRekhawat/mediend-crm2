@@ -35,6 +35,7 @@ import {
   useTaskActivity,
   useUpdateTask,
   useDeleteTask,
+  useMarkTaskSeen,
   type Task,
   type UpdateTaskInput,
 } from "@/hooks/use-tasks"
@@ -147,6 +148,7 @@ function TaskDetailContent({
   const { data: activity = [], refetch: refetchActivity } = useTaskActivity(taskId)
   const updateTask = useUpdateTask()
   const deleteTask = useDeleteTask()
+  const markSeen = useMarkTaskSeen()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const [commentText, setCommentText] = useState("")
@@ -167,6 +169,13 @@ function TaskDetailContent({
     (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)
   const canReviewTask = canEditDueDateDirectly
   const [markCompleteDrawerOpen, setMarkCompleteDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    if (task && user && (user.role === "MD" || user.role === "ADMIN" || task.createdById === user.id)) {
+      markSeen.mutate(taskId)
+    }
+  }, [task?.id, taskId, user?.id, user?.role])
+
   useEffect(() => {
     setHasShownCompletionModal(false)
   }, [taskId])

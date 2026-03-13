@@ -36,6 +36,8 @@ export interface Task {
   project?: { id: string; name: string } | null
   approvals?: { id: string; oldDueDate: string | null; newDueDate: string | null; reason: string; status: string; createdAt: string; requestedBy: { id: string; name: string } }[]
   _count?: { approvals: number }
+  unseenActivityCount?: number
+  pendingApprovalCount?: number
 }
 
 export interface TasksQueryParams {
@@ -113,6 +115,19 @@ export function useTask(id: string | null) {
     queryKey: ["tasks", id],
     queryFn: () => apiGet<Task>(`/api/tasks/${id}`),
     enabled: !!id,
+  })
+}
+
+export function useMarkTaskSeen() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (taskId: string) => apiPost<{ ok: boolean }>(`/api/tasks/${taskId}/seen`, {}),
+    onSuccess: (_, taskId) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["tasks", taskId] })
+      queryClient.invalidateQueries({ queryKey: ["badge-counts"] })
+      queryClient.invalidateQueries({ queryKey: ["md-team-overview"] })
+    },
   })
 }
 

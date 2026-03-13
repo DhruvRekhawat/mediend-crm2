@@ -125,7 +125,8 @@ export function TodayTab() {
                   showAssignee
                   showProject
                   warningCount={taskWarningCountMap[task.id] ?? 0}
-                  extensionCount={task._count?.approvals ?? 0}
+                  extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                  activityCount={task.unseenActivityCount ?? 0}
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -165,7 +166,8 @@ export function TodayTab() {
                     showAssignee
                     showProject
                     warningCount={taskWarningCountMap[task.id] ?? 0}
-                  extensionCount={task._count?.approvals ?? 0}
+                  extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                  activityCount={task.unseenActivityCount ?? 0}
                     isAssignee={task.assigneeId === user?.id}
                     canMarkComplete={canMarkComplete(task)}
                     onMarkCompleteRequest={() => setTaskToComplete(task)}
@@ -199,7 +201,8 @@ export function TodayTab() {
                   showAssignee
                   showProject
                   warningCount={taskWarningCountMap[task.id] ?? 0}
-                  extensionCount={task._count?.approvals ?? 0}
+                  extensionCount={task.pendingApprovalCount ?? task._count?.approvals ?? 0}
+                  activityCount={task.unseenActivityCount ?? 0}
                   isAssignee={task.assigneeId === user?.id}
                   canMarkComplete={canMarkComplete(task)}
                   onMarkCompleteRequest={() => setTaskToComplete(task)}

@@ -6,17 +6,13 @@ import Image from 'next/image'
 import { useAuth } from '@/hooks/use-auth'
 import { useBadgeCounts } from '@/hooks/use-badge-counts'
 import { useNotifications } from '@/hooks/use-notifications'
-import { useAppSettings, useUpdateSetting } from '@/hooks/use-settings'
+import { useUserBanner, useUpdateUserBanner } from '@/hooks/use-settings'
 import { useFileUpload } from '@/hooks/use-file-upload'
 import { getFilteredNavItemsWithUrls } from '@/lib/sidebar-nav'
 import { StatCard } from '@/components/ui/stat-card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import {
   Camera,
-  Edit3,
-  Check,
-  X,
   Bell,
   ExternalLink,
   Clock,
@@ -40,6 +36,7 @@ import {
   CheckCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { THOUGHTS_OF_THE_DAY } from '@/data/thoughts-of-the-day'
 import { formatDistanceToNow } from 'date-fns'
 import { usePushSubscription } from '@/hooks/use-push-subscription'
 
@@ -131,7 +128,7 @@ function BannerSection({
         <h1 className="text-white text-2xl md:text-4xl font-bold tracking-tight">{firstName} 👋</h1>
       </div>
 
-      {/* Change banner button - MD/ADMIN only */}
+      {/* Change banner button - every user can set their own */}
       {canEdit && (
         <button
           type="button"
@@ -158,68 +155,23 @@ function BannerSection({
 
 // ─── Thought of the Day ───────────────────────────────────────────────────────
 
-const DEFAULT_THOUGHT =
-  'The secret of getting ahead is getting started. — Mark Twain'
-
 const DEFAULT_BANNER = '/Multicolored Mountain Landscape.png'
 
-function ThoughtOfTheDay({
-  thought,
-  canEdit,
-  onSave,
-}: {
-  thought: string
-  canEdit: boolean
-  onSave: (val: string) => void
-}) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(thought)
+function getThoughtOfTheDay(): string {
+  const start = new Date(new Date().getFullYear(), 0, 0)
+  const diff = Date.now() - start.getTime()
+  const oneDay = 86400000
+  const dayOfYear = Math.floor(diff / oneDay)
+  const index = dayOfYear % THOUGHTS_OF_THE_DAY.length
+  const item = THOUGHTS_OF_THE_DAY[index]
+  return `${item.thought} — ${item.author}`
+}
 
-  const handleSave = () => {
-    onSave(draft)
-    setEditing(false)
-  }
-
-  const handleCancel = () => {
-    setDraft(thought)
-    setEditing(false)
-  }
-
+function ThoughtOfTheDay({ thought }: { thought: string }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4 flex gap-3 items-start shadow-sm">
       <Quote className="h-5 w-5 text-[#1EC5B7] shrink-0 mt-0.5" />
-      <div className="flex-1 min-w-0">
-        {editing ? (
-          <div className="flex flex-col gap-2">
-            <Input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              className="text-sm"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSave} className="gap-1">
-                <Check className="h-3.5 w-3.5" /> Save
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleCancel} className="gap-1">
-                <X className="h-3.5 w-3.5" /> Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground italic leading-relaxed">{thought}</p>
-        )}
-      </div>
-      {canEdit && !editing && (
-        <button
-          type="button"
-          onClick={() => { setDraft(thought); setEditing(true) }}
-          className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          aria-label="Edit thought of the day"
-        >
-          <Edit3 className="h-4 w-4" />
-        </button>
-      )}
+      <p className="text-sm text-muted-foreground italic leading-relaxed flex-1 min-w-0">{thought}</p>
     </div>
   )
 }
@@ -293,33 +245,39 @@ function KPISection() {
           value={badgeCounts?.pendingTaskReviews ?? '—'}
           accent="amber"
           valueAccent
+          href="/md/tasks#approval"
         />
         <StatCard
           label="My overdue tasks"
           value={badgeCounts?.myOverdueTasks ?? '—'}
           accent="red"
           valueAccent
+          href="/md/tasks"
         />
         <StatCard
           label="Finance approvals"
           value={badgeCounts?.pendingFinanceApprovals ?? '—'}
           accent="purple"
           valueAccent
+          href="/finance/ledger"
         />
         <StatCard
           label="Pending appointments"
           value={badgeCounts?.pendingAppointments ?? '—'}
           accent="blue"
+          href="/md/appointments"
         />
         <StatCard
           label="Unread messages"
           value={badgeCounts?.unreadMessages ?? '—'}
           accent="teal"
+          href="/md/anonymous-messages"
         />
         <StatCard
           label="Due date approvals"
           value={badgeCounts?.pendingDueDateApprovals ?? '—'}
           accent="orange"
+          href="/md/tasks#approval"
         />
       </div>
     )
@@ -332,17 +290,20 @@ function KPISection() {
         value={badgeCounts?.myPendingTasks ?? '—'}
         accent="amber"
         valueAccent
+        href="/md/tasks"
       />
       <StatCard
         label="Overdue tasks"
         value={badgeCounts?.myOverdueTasks ?? '—'}
         accent="red"
         valueAccent
+        href="/md/tasks"
       />
       <StatCard
         label="Due date approvals"
         value={badgeCounts?.pendingDueDateApprovals ?? '—'}
         accent="purple"
+        href="/md/tasks#approval"
       />
     </div>
   )
@@ -455,32 +416,23 @@ function PushReminderBanner() {
 
 export default function HomePage() {
   const { user } = useAuth()
-  const canEdit = user?.role === 'MD' || user?.role === 'ADMIN'
-
-  const { data: settings } = useAppSettings(['banner_image_url', 'thought_of_the_day'])
-  const updateSetting = useUpdateSetting()
+  const { data: userBanner } = useUserBanner()
+  const updateUserBanner = useUpdateUserBanner()
   const { uploadFile, uploading } = useFileUpload({ folder: 'home-banners' })
 
   const greeting = getGreeting()
   const firstName = user?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there'
-  const bannerUrl = settings?.banner_image_url || DEFAULT_BANNER
-  const thought = settings?.thought_of_the_day || DEFAULT_THOUGHT
+  const bannerUrl = userBanner?.bannerUrl || DEFAULT_BANNER
+  const thought = useMemo(() => getThoughtOfTheDay(), [])
 
   const handleBannerChange = useCallback(
     async (file: File) => {
       const result = await uploadFile(file)
       if (result?.url) {
-        updateSetting.mutate({ key: 'banner_image_url', value: result.url })
+        updateUserBanner.mutate(result.url)
       }
     },
-    [uploadFile, updateSetting]
-  )
-
-  const handleSaveThought = useCallback(
-    (value: string) => {
-      updateSetting.mutate({ key: 'thought_of_the_day', value })
-    },
-    [updateSetting]
+    [uploadFile, updateUserBanner]
   )
 
   return (
@@ -499,16 +451,12 @@ export default function HomePage() {
         bannerUrl={bannerUrl}
         greeting={greeting}
         firstName={firstName}
-        canEdit={canEdit}
+        canEdit={true}
         onBannerChange={handleBannerChange}
       />
 
       {/* Thought of the Day */}
-      <ThoughtOfTheDay
-        thought={thought}
-        canEdit={canEdit}
-        onSave={handleSaveThought}
-      />
+      <ThoughtOfTheDay thought={thought} />
 
       {/* Push reminder banner */}
       <PushReminderBanner />
