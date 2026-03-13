@@ -5924,6 +5924,9 @@ export const UserScalarFieldEnum = {
   name: 'name',
   role: 'role',
   teamId: 'teamId',
+  phoneNumber: 'phoneNumber',
+  address: 'address',
+  profilePicture: 'profilePicture',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -6224,6 +6227,7 @@ export const EmployeeScalarFieldEnum = {
   aadharDocUrl: 'aadharDocUrl',
   panDocUrl: 'panDocUrl',
   designation: 'designation',
+  bankAccountName: 'bankAccountName',
   bankAccountNumber: 'bankAccountNumber',
   ifscCode: 'ifscCode',
   uanNumber: 'uanNumber',

@@ -3,6 +3,13 @@
 import { useState, useMemo } from "react"
 import { usePerformanceData, type PerformanceData } from "@/hooks/use-tasks"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Star, Trophy, Medal, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -48,25 +55,21 @@ export function PerformanceTab() {
       {/* Month Picker */}
       <section>
         <p className="text-sm font-medium text-muted-foreground mb-2">Select month</p>
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex gap-2 pb-2">
+        <Select
+          value={String(selectedMonth)}
+          onValueChange={(v) => setSelectedMonth(Number(v))}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select month" />
+          </SelectTrigger>
+          <SelectContent>
             {recentMonths.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setSelectedMonth(m)}
-                className={cn(
-                  "shrink-0 rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors",
-                  selectedMonth === m
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:bg-muted/50"
-                )}
-              >
+              <SelectItem key={m} value={String(m)}>
                 {monthToLabel(m)}
-              </button>
+              </SelectItem>
             ))}
-          </div>
-        </ScrollArea>
+          </SelectContent>
+        </Select>
       </section>
 
       {isLoading ? (
@@ -79,44 +82,6 @@ export function PerformanceTab() {
         </div>
       ) : (
         <>
-          {/* Team Summary */}
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <h2 className="text-base font-semibold mb-4">Team performance</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="rounded-xl bg-muted/50 p-4">
-                <p className="text-xs text-muted-foreground">Avg rating</p>
-                <div className="flex items-center gap-1.5 mt-1">
-                  {data.teamStats.avgRating != null ? (
-                    <>
-                      <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
-                      <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                        {data.teamStats.avgRating.toFixed(1)}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-2xl font-bold text-muted-foreground">—</span>
-                  )}
-                </div>
-              </div>
-              <div className="rounded-xl bg-muted/50 p-4">
-                <p className="text-xs text-muted-foreground">Tasks rated</p>
-                <p className="text-2xl font-bold mt-1">{data.teamStats.totalRatings}</p>
-              </div>
-              <div className="rounded-xl bg-muted/50 p-4">
-                <p className="text-xs text-muted-foreground">Approved</p>
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                  {data.teamStats.completedCount}
-                </p>
-              </div>
-              <div className="rounded-xl bg-muted/50 p-4">
-                <p className="text-xs text-muted-foreground">Rejected</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">
-                  {data.teamStats.rejectedCount}
-                </p>
-              </div>
-            </div>
-          </section>
-
           {/* Employee Leaderboard */}
           <section>
             <h2 className="text-base font-semibold mb-3">Leaderboard</h2>

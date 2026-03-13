@@ -52,6 +52,7 @@ export type EmployeeMinAggregateOutputType = {
   aadharDocUrl: string | null
   panDocUrl: string | null
   designation: string | null
+  bankAccountName: string | null
   bankAccountNumber: string | null
   ifscCode: string | null
   uanNumber: string | null
@@ -75,6 +76,7 @@ export type EmployeeMaxAggregateOutputType = {
   aadharDocUrl: string | null
   panDocUrl: string | null
   designation: string | null
+  bankAccountName: string | null
   bankAccountNumber: string | null
   ifscCode: string | null
   uanNumber: string | null
@@ -98,6 +100,7 @@ export type EmployeeCountAggregateOutputType = {
   aadharDocUrl: number
   panDocUrl: number
   designation: number
+  bankAccountName: number
   bankAccountNumber: number
   ifscCode: number
   uanNumber: number
@@ -133,6 +136,7 @@ export type EmployeeMinAggregateInputType = {
   aadharDocUrl?: true
   panDocUrl?: true
   designation?: true
+  bankAccountName?: true
   bankAccountNumber?: true
   ifscCode?: true
   uanNumber?: true
@@ -156,6 +160,7 @@ export type EmployeeMaxAggregateInputType = {
   aadharDocUrl?: true
   panDocUrl?: true
   designation?: true
+  bankAccountName?: true
   bankAccountNumber?: true
   ifscCode?: true
   uanNumber?: true
@@ -179,6 +184,7 @@ export type EmployeeCountAggregateInputType = {
   aadharDocUrl?: true
   panDocUrl?: true
   designation?: true
+  bankAccountName?: true
   bankAccountNumber?: true
   ifscCode?: true
   uanNumber?: true
@@ -289,6 +295,7 @@ export type EmployeeGroupByOutputType = {
   aadharDocUrl: string | null
   panDocUrl: string | null
   designation: string | null
+  bankAccountName: string | null
   bankAccountNumber: string | null
   ifscCode: string | null
   uanNumber: string | null
@@ -335,6 +342,7 @@ export type EmployeeWhereInput = {
   aadharDocUrl?: Prisma.StringNullableFilter<"Employee"> | string | null
   panDocUrl?: Prisma.StringNullableFilter<"Employee"> | string | null
   designation?: Prisma.StringNullableFilter<"Employee"> | string | null
+  bankAccountName?: Prisma.StringNullableFilter<"Employee"> | string | null
   bankAccountNumber?: Prisma.StringNullableFilter<"Employee"> | string | null
   ifscCode?: Prisma.StringNullableFilter<"Employee"> | string | null
   uanNumber?: Prisma.StringNullableFilter<"Employee"> | string | null
@@ -383,6 +391,7 @@ export type EmployeeOrderByWithRelationInput = {
   aadharDocUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   panDocUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   designation?: Prisma.SortOrderInput | Prisma.SortOrder
+  bankAccountName?: Prisma.SortOrderInput | Prisma.SortOrder
   bankAccountNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   ifscCode?: Prisma.SortOrderInput | Prisma.SortOrder
   uanNumber?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -434,6 +443,7 @@ export type EmployeeWhereUniqueInput = Prisma.AtLeast<{
   aadharDocUrl?: Prisma.StringNullableFilter<"Employee"> | string | null
   panDocUrl?: Prisma.StringNullableFilter<"Employee"> | string | null
   designation?: Prisma.StringNullableFilter<"Employee"> | string | null
+  bankAccountName?: Prisma.StringNullableFilter<"Employee"> | string | null
   bankAccountNumber?: Prisma.StringNullableFilter<"Employee"> | string | null
   ifscCode?: Prisma.StringNullableFilter<"Employee"> | string | null
   uanNumber?: Prisma.StringNullableFilter<"Employee"> | string | null
@@ -482,6 +492,7 @@ export type EmployeeOrderByWithAggregationInput = {
   aadharDocUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   panDocUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   designation?: Prisma.SortOrderInput | Prisma.SortOrder
+  bankAccountName?: Prisma.SortOrderInput | Prisma.SortOrder
   bankAccountNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   ifscCode?: Prisma.SortOrderInput | Prisma.SortOrder
   uanNumber?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -513,6 +524,7 @@ export type EmployeeScalarWhereWithAggregatesInput = {
   aadharDocUrl?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   panDocUrl?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   designation?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
+  bankAccountName?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   bankAccountNumber?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   ifscCode?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
   uanNumber?: Prisma.StringNullableWithAggregatesFilter<"Employee"> | string | null
@@ -532,6 +544,7 @@ export type EmployeeCreateInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -580,6 +593,7 @@ export type EmployeeUncheckedCreateInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -620,6 +634,7 @@ export type EmployeeUpdateInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -668,6 +683,7 @@ export type EmployeeUncheckedUpdateInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -712,6 +728,7 @@ export type EmployeeCreateManyInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -731,6 +748,7 @@ export type EmployeeUpdateManyMutationInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -754,6 +772,7 @@ export type EmployeeUncheckedUpdateManyInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -792,6 +811,7 @@ export type EmployeeCountOrderByAggregateInput = {
   aadharDocUrl?: Prisma.SortOrder
   panDocUrl?: Prisma.SortOrder
   designation?: Prisma.SortOrder
+  bankAccountName?: Prisma.SortOrder
   bankAccountNumber?: Prisma.SortOrder
   ifscCode?: Prisma.SortOrder
   uanNumber?: Prisma.SortOrder
@@ -820,6 +840,7 @@ export type EmployeeMaxOrderByAggregateInput = {
   aadharDocUrl?: Prisma.SortOrder
   panDocUrl?: Prisma.SortOrder
   designation?: Prisma.SortOrder
+  bankAccountName?: Prisma.SortOrder
   bankAccountNumber?: Prisma.SortOrder
   ifscCode?: Prisma.SortOrder
   uanNumber?: Prisma.SortOrder
@@ -843,6 +864,7 @@ export type EmployeeMinOrderByAggregateInput = {
   aadharDocUrl?: Prisma.SortOrder
   panDocUrl?: Prisma.SortOrder
   designation?: Prisma.SortOrder
+  bankAccountName?: Prisma.SortOrder
   bankAccountNumber?: Prisma.SortOrder
   ifscCode?: Prisma.SortOrder
   uanNumber?: Prisma.SortOrder
@@ -1332,6 +1354,7 @@ export type EmployeeCreateWithoutUserInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1378,6 +1401,7 @@ export type EmployeeUncheckedCreateWithoutUserInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1434,6 +1458,7 @@ export type EmployeeUpdateWithoutUserInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1480,6 +1505,7 @@ export type EmployeeUncheckedUpdateWithoutUserInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1520,6 +1546,7 @@ export type EmployeeCreateWithoutDepartmentInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1566,6 +1593,7 @@ export type EmployeeUncheckedCreateWithoutDepartmentInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1639,6 +1667,7 @@ export type EmployeeScalarWhereInput = {
   aadharDocUrl?: Prisma.StringNullableFilter<"Employee"> | string | null
   panDocUrl?: Prisma.StringNullableFilter<"Employee"> | string | null
   designation?: Prisma.StringNullableFilter<"Employee"> | string | null
+  bankAccountName?: Prisma.StringNullableFilter<"Employee"> | string | null
   bankAccountNumber?: Prisma.StringNullableFilter<"Employee"> | string | null
   ifscCode?: Prisma.StringNullableFilter<"Employee"> | string | null
   uanNumber?: Prisma.StringNullableFilter<"Employee"> | string | null
@@ -1658,6 +1687,7 @@ export type EmployeeCreateWithoutTeamLeadOfInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1705,6 +1735,7 @@ export type EmployeeUncheckedCreateWithoutTeamLeadOfInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1749,6 +1780,7 @@ export type EmployeeCreateWithoutTeamInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1795,6 +1827,7 @@ export type EmployeeUncheckedCreateWithoutTeamInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -1856,6 +1889,7 @@ export type EmployeeUpdateWithoutTeamLeadOfInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1903,6 +1937,7 @@ export type EmployeeUncheckedUpdateWithoutTeamLeadOfInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1958,6 +1993,7 @@ export type EmployeeCreateWithoutSubordinatesInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2005,6 +2041,7 @@ export type EmployeeUncheckedCreateWithoutSubordinatesInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2049,6 +2086,7 @@ export type EmployeeCreateWithoutManagerInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2095,6 +2133,7 @@ export type EmployeeUncheckedCreateWithoutManagerInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2156,6 +2195,7 @@ export type EmployeeUpdateWithoutSubordinatesInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2203,6 +2243,7 @@ export type EmployeeUncheckedUpdateWithoutSubordinatesInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2258,6 +2299,7 @@ export type EmployeeCreateWithoutAttendanceLogsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2305,6 +2347,7 @@ export type EmployeeUncheckedCreateWithoutAttendanceLogsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2360,6 +2403,7 @@ export type EmployeeUpdateWithoutAttendanceLogsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2407,6 +2451,7 @@ export type EmployeeUncheckedUpdateWithoutAttendanceLogsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2446,6 +2491,7 @@ export type EmployeeCreateWithoutAttendanceNormalizationsAsSubjectInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2493,6 +2539,7 @@ export type EmployeeUncheckedCreateWithoutAttendanceNormalizationsAsSubjectInput
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2537,6 +2584,7 @@ export type EmployeeCreateWithoutAttendanceNormalizationsRequestedInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2584,6 +2632,7 @@ export type EmployeeUncheckedCreateWithoutAttendanceNormalizationsRequestedInput
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2628,6 +2677,7 @@ export type EmployeeCreateWithoutAttendanceNormalizationsApprovedInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2675,6 +2725,7 @@ export type EmployeeUncheckedCreateWithoutAttendanceNormalizationsApprovedInput 
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -2730,6 +2781,7 @@ export type EmployeeUpdateWithoutAttendanceNormalizationsAsSubjectInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2777,6 +2829,7 @@ export type EmployeeUncheckedUpdateWithoutAttendanceNormalizationsAsSubjectInput
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2827,6 +2880,7 @@ export type EmployeeUpdateWithoutAttendanceNormalizationsRequestedInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2874,6 +2928,7 @@ export type EmployeeUncheckedUpdateWithoutAttendanceNormalizationsRequestedInput
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2924,6 +2979,7 @@ export type EmployeeUpdateWithoutAttendanceNormalizationsApprovedInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2971,6 +3027,7 @@ export type EmployeeUncheckedUpdateWithoutAttendanceNormalizationsApprovedInput 
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3010,6 +3067,7 @@ export type EmployeeCreateWithoutLeaveRequestsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3057,6 +3115,7 @@ export type EmployeeUncheckedCreateWithoutLeaveRequestsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3101,6 +3160,7 @@ export type EmployeeCreateWithoutLeaveRequestsTargetApproverInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3148,6 +3208,7 @@ export type EmployeeUncheckedCreateWithoutLeaveRequestsTargetApproverInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3203,6 +3264,7 @@ export type EmployeeUpdateWithoutLeaveRequestsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3250,6 +3312,7 @@ export type EmployeeUncheckedUpdateWithoutLeaveRequestsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3300,6 +3363,7 @@ export type EmployeeUpdateWithoutLeaveRequestsTargetApproverInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3347,6 +3411,7 @@ export type EmployeeUncheckedUpdateWithoutLeaveRequestsTargetApproverInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3386,6 +3451,7 @@ export type EmployeeCreateWithoutLeaveBalancesInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3433,6 +3499,7 @@ export type EmployeeUncheckedCreateWithoutLeaveBalancesInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3488,6 +3555,7 @@ export type EmployeeUpdateWithoutLeaveBalancesInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3535,6 +3603,7 @@ export type EmployeeUncheckedUpdateWithoutLeaveBalancesInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3574,6 +3643,7 @@ export type EmployeeCreateWithoutPayrollRecordsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3621,6 +3691,7 @@ export type EmployeeUncheckedCreateWithoutPayrollRecordsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3676,6 +3747,7 @@ export type EmployeeUpdateWithoutPayrollRecordsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3723,6 +3795,7 @@ export type EmployeeUncheckedUpdateWithoutPayrollRecordsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3762,6 +3835,7 @@ export type EmployeeCreateWithoutSalaryStructuresInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3809,6 +3883,7 @@ export type EmployeeUncheckedCreateWithoutSalaryStructuresInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3864,6 +3939,7 @@ export type EmployeeUpdateWithoutSalaryStructuresInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3911,6 +3987,7 @@ export type EmployeeUncheckedUpdateWithoutSalaryStructuresInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3950,6 +4027,7 @@ export type EmployeeCreateWithoutMonthlyPayrollsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -3997,6 +4075,7 @@ export type EmployeeUncheckedCreateWithoutMonthlyPayrollsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4052,6 +4131,7 @@ export type EmployeeUpdateWithoutMonthlyPayrollsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4099,6 +4179,7 @@ export type EmployeeUncheckedUpdateWithoutMonthlyPayrollsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4138,6 +4219,7 @@ export type EmployeeCreateWithoutDocumentsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4185,6 +4267,7 @@ export type EmployeeUncheckedCreateWithoutDocumentsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4240,6 +4323,7 @@ export type EmployeeUpdateWithoutDocumentsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4287,6 +4371,7 @@ export type EmployeeUncheckedUpdateWithoutDocumentsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4326,6 +4411,7 @@ export type EmployeeCreateWithoutFeedbacksInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4373,6 +4459,7 @@ export type EmployeeUncheckedCreateWithoutFeedbacksInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4428,6 +4515,7 @@ export type EmployeeUpdateWithoutFeedbacksInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4475,6 +4563,7 @@ export type EmployeeUncheckedUpdateWithoutFeedbacksInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4514,6 +4603,7 @@ export type EmployeeCreateWithoutMdAppointmentsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4561,6 +4651,7 @@ export type EmployeeUncheckedCreateWithoutMdAppointmentsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4616,6 +4707,7 @@ export type EmployeeUpdateWithoutMdAppointmentsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4663,6 +4755,7 @@ export type EmployeeUncheckedUpdateWithoutMdAppointmentsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4702,6 +4795,7 @@ export type EmployeeCreateWithoutMentalHealthRequestsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4749,6 +4843,7 @@ export type EmployeeUncheckedCreateWithoutMentalHealthRequestsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4804,6 +4899,7 @@ export type EmployeeUpdateWithoutMentalHealthRequestsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4851,6 +4947,7 @@ export type EmployeeUncheckedUpdateWithoutMentalHealthRequestsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4890,6 +4987,7 @@ export type EmployeeCreateWithoutSupportTicketsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4937,6 +5035,7 @@ export type EmployeeUncheckedCreateWithoutSupportTicketsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -4992,6 +5091,7 @@ export type EmployeeUpdateWithoutSupportTicketsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5039,6 +5139,7 @@ export type EmployeeUncheckedUpdateWithoutSupportTicketsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5078,6 +5179,7 @@ export type EmployeeCreateWithoutIncrementRequestsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5125,6 +5227,7 @@ export type EmployeeUncheckedCreateWithoutIncrementRequestsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5180,6 +5283,7 @@ export type EmployeeUpdateWithoutIncrementRequestsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5227,6 +5331,7 @@ export type EmployeeUncheckedUpdateWithoutIncrementRequestsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5266,6 +5371,7 @@ export type EmployeeCreateWithoutIjpApplicationsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5313,6 +5419,7 @@ export type EmployeeUncheckedCreateWithoutIjpApplicationsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5368,6 +5475,7 @@ export type EmployeeUpdateWithoutIjpApplicationsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5415,6 +5523,7 @@ export type EmployeeUncheckedUpdateWithoutIjpApplicationsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5454,6 +5563,7 @@ export type EmployeeCreateWithoutMdTaskTeamMembershipsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5501,6 +5611,7 @@ export type EmployeeUncheckedCreateWithoutMdTaskTeamMembershipsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5556,6 +5667,7 @@ export type EmployeeUpdateWithoutMdTaskTeamMembershipsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5603,6 +5715,7 @@ export type EmployeeUncheckedUpdateWithoutMdTaskTeamMembershipsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5642,6 +5755,7 @@ export type EmployeeCreateWithoutMdWatchlistMembershipsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5689,6 +5803,7 @@ export type EmployeeUncheckedCreateWithoutMdWatchlistMembershipsInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5744,6 +5859,7 @@ export type EmployeeUpdateWithoutMdWatchlistMembershipsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5791,6 +5907,7 @@ export type EmployeeUncheckedUpdateWithoutMdWatchlistMembershipsInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5833,6 +5950,7 @@ export type EmployeeCreateManyDepartmentInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5852,6 +5970,7 @@ export type EmployeeUpdateWithoutDepartmentInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5898,6 +6017,7 @@ export type EmployeeUncheckedUpdateWithoutDepartmentInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5941,6 +6061,7 @@ export type EmployeeUncheckedUpdateManyWithoutDepartmentInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5963,6 +6084,7 @@ export type EmployeeCreateManyTeamInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -5982,6 +6104,7 @@ export type EmployeeUpdateWithoutTeamInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6028,6 +6151,7 @@ export type EmployeeUncheckedUpdateWithoutTeamInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6071,6 +6195,7 @@ export type EmployeeUncheckedUpdateManyWithoutTeamInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6093,6 +6218,7 @@ export type EmployeeCreateManyManagerInput = {
   aadharDocUrl?: string | null
   panDocUrl?: string | null
   designation?: string | null
+  bankAccountName?: string | null
   bankAccountNumber?: string | null
   ifscCode?: string | null
   uanNumber?: string | null
@@ -6112,6 +6238,7 @@ export type EmployeeUpdateWithoutManagerInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6158,6 +6285,7 @@ export type EmployeeUncheckedUpdateWithoutManagerInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6201,6 +6329,7 @@ export type EmployeeUncheckedUpdateManyWithoutManagerInput = {
   aadharDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   panDocUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   designation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bankAccountName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   bankAccountNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ifscCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uanNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6426,6 +6555,7 @@ export type EmployeeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   aadharDocUrl?: boolean
   panDocUrl?: boolean
   designation?: boolean
+  bankAccountName?: boolean
   bankAccountNumber?: boolean
   ifscCode?: boolean
   uanNumber?: boolean
@@ -6475,6 +6605,7 @@ export type EmployeeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   aadharDocUrl?: boolean
   panDocUrl?: boolean
   designation?: boolean
+  bankAccountName?: boolean
   bankAccountNumber?: boolean
   ifscCode?: boolean
   uanNumber?: boolean
@@ -6502,6 +6633,7 @@ export type EmployeeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   aadharDocUrl?: boolean
   panDocUrl?: boolean
   designation?: boolean
+  bankAccountName?: boolean
   bankAccountNumber?: boolean
   ifscCode?: boolean
   uanNumber?: boolean
@@ -6529,6 +6661,7 @@ export type EmployeeSelectScalar = {
   aadharDocUrl?: boolean
   panDocUrl?: boolean
   designation?: boolean
+  bankAccountName?: boolean
   bankAccountNumber?: boolean
   ifscCode?: boolean
   uanNumber?: boolean
@@ -6536,7 +6669,7 @@ export type EmployeeSelectScalar = {
   updatedAt?: boolean
 }
 
-export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "employeeCode" | "bdNumber" | "joinDate" | "salary" | "departmentId" | "teamId" | "managerId" | "dateOfBirth" | "aadharNumber" | "panNumber" | "aadharDocUrl" | "panDocUrl" | "designation" | "bankAccountNumber" | "ifscCode" | "uanNumber" | "createdAt" | "updatedAt", ExtArgs["result"]["employee"]>
+export type EmployeeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "employeeCode" | "bdNumber" | "joinDate" | "salary" | "departmentId" | "teamId" | "managerId" | "dateOfBirth" | "aadharNumber" | "panNumber" | "aadharDocUrl" | "panDocUrl" | "designation" | "bankAccountName" | "bankAccountNumber" | "ifscCode" | "uanNumber" | "createdAt" | "updatedAt", ExtArgs["result"]["employee"]>
 export type EmployeeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   department?: boolean | Prisma.Employee$departmentArgs<ExtArgs>
@@ -6623,6 +6756,7 @@ export type $EmployeePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     aadharDocUrl: string | null
     panDocUrl: string | null
     designation: string | null
+    bankAccountName: string | null
     bankAccountNumber: string | null
     ifscCode: string | null
     uanNumber: string | null
@@ -7091,6 +7225,7 @@ export interface EmployeeFieldRefs {
   readonly aadharDocUrl: Prisma.FieldRef<"Employee", 'String'>
   readonly panDocUrl: Prisma.FieldRef<"Employee", 'String'>
   readonly designation: Prisma.FieldRef<"Employee", 'String'>
+  readonly bankAccountName: Prisma.FieldRef<"Employee", 'String'>
   readonly bankAccountNumber: Prisma.FieldRef<"Employee", 'String'>
   readonly ifscCode: Prisma.FieldRef<"Employee", 'String'>
   readonly uanNumber: Prisma.FieldRef<"Employee", 'String'>

@@ -1,0 +1,172 @@
+'use client'
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiGet, apiPatch } from '@/lib/api-client'
+import { useState } from 'react'
+import { UserCheck, Check, X } from 'lucide-react'
+import { toast } from 'sonner'
+import { format, subMonths } from 'date-fns'
+
+interface NormalizationRow {
+  id: string
+  employeeId: string
+  employeeName: string
+  employeeCode: string
+  employeeEmail: string
+  date: string
+  type: string
+  status: string
+  reason: string | null
+  createdAt: string
+  requestedBy: string | null
+  requestedByEmail: string | null
+  approvedBy: string | null
+}
+
+interface HRNormalizationsResponse {
+  list: NormalizationRow[]
+}
+
+export function NormalizationsTab() {
+  const queryClient = useQueryClient()
+  const [statusFilter, setStatusFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING')
+  const [fromDate, setFromDate] = useState(() => format(subMonths(new Date(), 1), 'yyyy-MM-dd'))
+  const [toDate, setToDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
+
+  const queryParams = new URLSearchParams({ status: statusFilter })
+  if (fromDate) queryParams.set('fromDate', fromDate)
+  if (toDate) queryParams.set('toDate', toDate)
+
+  const { data, isLoading } = useQuery<HRNormalizationsResponse>({
+    queryKey: ['hr', 'normalizations', statusFilter, fromDate, toDate],
+    queryFn: () => apiGet<HRNormalizationsResponse>(`/api/hr/normalizations?${queryParams.toString()}`),
+  })
+
+  const approveMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'APPROVED' | 'REJECTED' }) =>
+      apiPatch(`/api/attendance/normalize/${id}/approve`, { status }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['hr', 'normalizations'] })
+      queryClient.invalidateQueries({ queryKey: ['hierarchy', 'my-team', 'attendance'] })
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team'] })
+      toast.success(variables.status === 'APPROVED' ? 'Normalization approved' : 'Normalization rejected')
+    },
+    onError: (e: Error) => toast.error(e.message || 'Failed to update'),
+  })
+
+  const list = data?.list ?? []
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Attendance Normalizations</h1>
+        <p className="text-muted-foreground mt-1">
+          Manager-applied normalization requests. Approve or reject to finalize.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter</CardTitle>
+          <CardDescription>Show requests by status and date range</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Button variant={statusFilter === 'PENDING' ? 'default' : 'outline'} size="sm" onClick={() => setStatusFilter('PENDING')}>
+              Pending
+            </Button>
+            <Button variant={statusFilter === 'APPROVED' ? 'default' : 'outline'} size="sm" onClick={() => setStatusFilter('APPROVED')}>
+              Approved
+            </Button>
+            <Button variant={statusFilter === 'REJECTED' ? 'default' : 'outline'} size="sm" onClick={() => setStatusFilter('REJECTED')}>
+              Rejected
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-end gap-4">
+            <div>
+              <Label className="text-xs text-muted-foreground">From date</Label>
+              <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="mt-1 w-[140px]" />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">To date</Label>
+              <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="mt-1 w-[140px]" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="h-5 w-5" />
+            Normalization requests
+          </CardTitle>
+          <CardDescription>
+            {list.length} request(s) with status &quot;{statusFilter}&quot;
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">Loading...</div>
+          ) : list.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">No normalization requests found.</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Requested by</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Status</TableHead>
+                  {statusFilter === 'PENDING' && <TableHead>Actions</TableHead>}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {list.map((row) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">
+                      {row.employeeName}
+                      <span className="block text-xs text-muted-foreground">{row.employeeCode} · {row.employeeEmail}</span>
+                    </TableCell>
+                    <TableCell>{format(new Date(row.date), 'PPP')}</TableCell>
+                    <TableCell>
+                      {row.requestedBy ?? '—'}
+                      {row.requestedByEmail && <span className="block text-xs text-muted-foreground">{row.requestedByEmail}</span>}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate">{row.reason || '—'}</TableCell>
+                    <TableCell>
+                      {row.status === 'PENDING' && <Badge variant="secondary">Pending</Badge>}
+                      {row.status === 'APPROVED' && <Badge variant="default">Approved</Badge>}
+                      {row.status === 'REJECTED' && <Badge variant="destructive">Rejected</Badge>}
+                    </TableCell>
+                    {statusFilter === 'PENDING' && (
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => approveMutation.mutate({ id: row.id, status: 'APPROVED' })} disabled={approveMutation.isPending}>
+                            <Check className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => approveMutation.mutate({ id: row.id, status: 'REJECTED' })} disabled={approveMutation.isPending}>
+                            <X className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

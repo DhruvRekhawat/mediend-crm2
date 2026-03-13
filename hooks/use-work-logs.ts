@@ -25,6 +25,8 @@ export interface WorkLogCheckResult {
   missingIntervals: { start: number; end: number; deadline: string }[]
   isExempt: boolean
   loggedIntervals: number[]
+  /** True when user is in MD team or MD watchlist (enforced to log work) */
+  subjectToWorkLogs?: boolean
 }
 
 export function useWorkLogs(startDate: Date, endDate: Date, employeeId?: string) {

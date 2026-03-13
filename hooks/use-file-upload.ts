@@ -9,6 +9,8 @@ interface UploadFileResult {
 
 interface UseFileUploadOptions {
   folder?: string
+  /** Custom upload endpoint. Use for home-banners (any user) instead of default kyp/upload (leads:write). */
+  endpoint?: string
   onSuccess?: (result: UploadFileResult) => void
   onError?: (error: Error) => void
 }
@@ -33,7 +35,8 @@ export function useFileUpload(options: UseFileUploadOptions = {}) {
         formData.append('folder', options.folder)
       }
 
-      const result = await apiPost<UploadFileResult>('/api/kyp/upload', formData)
+      const uploadEndpoint = options.endpoint ?? '/api/kyp/upload'
+      const result = await apiPost<UploadFileResult>(uploadEndpoint, formData)
 
       setProgress(100)
       options.onSuccess?.(result)

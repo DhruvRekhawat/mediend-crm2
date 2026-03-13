@@ -46,6 +46,13 @@ export default function MDTasksPage() {
     }
   }, [isManager, activeTab])
 
+  useEffect(() => {
+    if (user?.role !== "MD" && activeTab === "performance") {
+      setActiveTab("overview")
+      if (typeof window !== "undefined") window.location.hash = "overview"
+    }
+  }, [user?.role, activeTab])
+
   const tabs: TabItem[] = useMemo(
     () => [
       { value: "overview", label: "Overview" },
@@ -53,9 +60,9 @@ export default function MDTasksPage() {
       { value: "approval", label: "Approval" },
       { value: "all", label: "All tasks" },
       { value: "calendar", label: "Calendar" },
-      { value: "performance", label: "Performance" },
+      ...(user?.role === "MD" ? [{ value: "performance", label: "Performance" as const }] : []),
     ],
-    [isManager]
+    [isManager, user?.role]
   )
 
   const validTabValues = useMemo(() => new Set(tabs.map((t) => t.value)), [tabs])
@@ -69,8 +76,12 @@ export default function MDTasksPage() {
       setActiveTab("all")
       return
     }
+    if (effectiveHash === "performance" && user?.role !== "MD") {
+      setActiveTab("overview")
+      return
+    }
     setActiveTab(validTabValues.has(effectiveHash) ? effectiveHash : defaultTab)
-  }, [isManager, validTabValues])
+  }, [isManager, user?.role, validTabValues])
 
   useEffect(() => {
     syncFromHash()

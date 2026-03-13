@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       missingIntervals: [],
       isExempt: true,
       loggedIntervals: [],
+      subjectToWorkLogs: false,
     })
   }
 
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
       missingIntervals: [],
       isExempt: true,
       loggedIntervals: [],
+      subjectToWorkLogs: false,
     })
   }
 
@@ -63,6 +65,7 @@ export async function GET(request: NextRequest) {
       missingIntervals: [],
       isExempt: true,
       loggedIntervals: [],
+      subjectToWorkLogs: false,
     })
   }
 
@@ -98,6 +101,7 @@ export async function GET(request: NextRequest) {
       missingIntervals: [],
       isExempt: true,
       loggedIntervals: [],
+      subjectToWorkLogs: true,
     })
   }
 
@@ -113,6 +117,7 @@ export async function GET(request: NextRequest) {
       missingIntervals: [],
       isExempt: true,
       loggedIntervals: [],
+      subjectToWorkLogs: true,
     })
   }
 
@@ -134,6 +139,7 @@ export async function GET(request: NextRequest) {
       missingIntervals: [],
       isExempt: true,
       loggedIntervals: [],
+      subjectToWorkLogs: true,
     })
   }
 
@@ -174,5 +180,6 @@ export async function GET(request: NextRequest) {
     missingIntervals,
     isExempt,
     loggedIntervals: Array.from(loggedIntervals),
+    subjectToWorkLogs: true,
   })
 }

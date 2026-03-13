@@ -20,6 +20,7 @@ const updateEmployeeSchema = z.object({
   aadharDocUrl: z.string().url().optional().nullable().or(z.literal('')),
   panDocUrl: z.string().url().optional().nullable().or(z.literal('')),
   designation: z.string().max(200).optional().nullable(),
+  bankAccountName: z.string().max(100).optional().nullable(),
   bankAccountNumber: z.string().max(50).optional().nullable(),
   ifscCode: z.string().max(11).optional().nullable(),
   uanNumber: z.string().max(50).optional().nullable(),
@@ -87,7 +88,7 @@ export async function PATCH(
     const data = updateEmployeeSchema.parse(body)
 
     // Finance can only update payroll-related fields
-    const payrollOnlyFields = ['joinDate', 'designation', 'panNumber', 'bankAccountNumber', 'ifscCode', 'uanNumber']
+    const payrollOnlyFields = ['joinDate', 'designation', 'panNumber', 'bankAccountName', 'bankAccountNumber', 'ifscCode', 'uanNumber']
     if (canWritePayrollDetails && !canWriteFull) {
       const disallowed = Object.keys(data).filter((k) => !payrollOnlyFields.includes(k))
       if (disallowed.length > 0) {
@@ -278,6 +279,7 @@ export async function PATCH(
     if (data.aadharDocUrl !== undefined) updateData.aadharDocUrl = data.aadharDocUrl || null
     if (data.panDocUrl !== undefined) updateData.panDocUrl = data.panDocUrl || null
     if (data.designation !== undefined) updateData.designation = data.designation || null
+    if (data.bankAccountName !== undefined) updateData.bankAccountName = data.bankAccountName || null
     if (data.bankAccountNumber !== undefined) updateData.bankAccountNumber = data.bankAccountNumber || null
     if (data.ifscCode !== undefined) updateData.ifscCode = data.ifscCode || null
     if (data.uanNumber !== undefined) updateData.uanNumber = data.uanNumber || null

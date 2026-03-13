@@ -39,6 +39,8 @@ import { cn } from '@/lib/utils'
 import { THOUGHTS_OF_THE_DAY } from '@/data/thoughts-of-the-day'
 import { formatDistanceToNow } from 'date-fns'
 import { usePushSubscription } from '@/hooks/use-push-subscription'
+import { useWorkLogCheck } from '@/hooks/use-work-logs'
+import { AddWorkLogButton } from '@/components/calendar/add-work-log-button'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -155,7 +157,7 @@ function BannerSection({
 
 // ─── Thought of the Day ───────────────────────────────────────────────────────
 
-const DEFAULT_BANNER = '/Multicolored Mountain Landscape.png'
+const DEFAULT_BANNER = '/neat(2).png'
 
 function getThoughtOfTheDay(): string {
   const start = new Date(new Date().getFullYear(), 0, 0)
@@ -416,9 +418,16 @@ function PushReminderBanner() {
 
 export default function HomePage() {
   const { user } = useAuth()
+  const { data: workLogCheck } = useWorkLogCheck({
+    tzOffsetMinutes: -new Date().getTimezoneOffset(),
+  })
+  const subjectToWorkLogs = workLogCheck?.subjectToWorkLogs ?? false
   const { data: userBanner } = useUserBanner()
   const updateUserBanner = useUpdateUserBanner()
-  const { uploadFile, uploading } = useFileUpload({ folder: 'home-banners' })
+  const { uploadFile, uploading } = useFileUpload({
+    folder: 'home-banners',
+    endpoint: '/api/settings/home-banner/upload',
+  })
 
   const greeting = getGreeting()
   const firstName = user?.name?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there'
@@ -457,6 +466,13 @@ export default function HomePage() {
 
       {/* Thought of the Day */}
       <ThoughtOfTheDay thought={thought} />
+
+      {/* Add work log - MD team & watchlist users (those enforced to log) */}
+      {subjectToWorkLogs && (
+        <div className="flex justify-end">
+          <AddWorkLogButton visible={true} />
+        </div>
+      )}
 
       {/* Push reminder banner */}
       <PushReminderBanner />

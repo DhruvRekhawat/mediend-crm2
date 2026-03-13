@@ -210,10 +210,10 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
     }
 
     const profileItem: BottomNavItem = {
-      href: ['USER', 'BD'].includes(u.role) ? '/employee/dashboard/core-hr' : '/profile',
+      href: '/profile',
       label: 'Profile',
       icon: UserCircle,
-      matchPrefixes: ['/employee/dashboard', '/profile'],
+      matchPrefixes: ['/profile'],
     }
 
     const leftItems = left.map(({ show, ...item }) => item)

@@ -4,19 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { format } from 'date-fns'
-import {
-  AlertCircle,
-  Calendar,
-  Clock,
-  User,
-  Mail,
-  Hash,
-  Cake,
-  Building,
-  DollarSign,
-  FileText,
-  ExternalLink,
-} from 'lucide-react'
+import { Calendar, FileText, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,19 +28,16 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
-import { InfoField } from '@/components/employee/info-field'
 import { SectionContainer } from '@/components/employee/section-container'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { AttendanceHeatmap, type AttendanceDay as HeatmapAttendanceDay } from '@/components/employee/attendance-heatmap'
 import { LeaveBalanceCard } from '@/components/hrms/LeaveBalanceCard'
 import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
-import { BirthdayPopup } from '@/components/birthday-popup'
 import { useRouter } from 'next/navigation'
 
 const CORE_HR_TABS: TabItem[] = [
   { value: 'attendance', label: 'Attendance' },
   { value: 'leaves', label: 'Leaves' },
-  { value: 'profile', label: 'Profile' },
   { value: 'documents', label: 'Documents' },
 ]
 
@@ -117,16 +102,6 @@ interface LeaveData {
   }>
 }
 
-interface Employee {
-  id: string
-  employeeCode: string
-  joinDate: Date | null
-  salary: number | null
-  dateOfBirth: Date | null
-  user: { id: string; name: string; email: string; role: string }
-  department: { id: string; name: string; description: string | null } | null
-}
-
 interface EmployeeDocument {
   id: string
   documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER'
@@ -152,15 +127,6 @@ function formatTime(date: Date | string | null) {
   }).format(d)
 }
 
-function formatCurrency(amount: number | null) {
-  if (amount == null) return 'N/A'
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-  }).format(amount)
-}
-
 export default function CoreHRPage() {
   const [activeTab, setActiveTab] = useState('attendance')
   const router = useRouter()
@@ -178,7 +144,6 @@ export default function CoreHRPage() {
       <div className="mt-6">
         {activeTab === 'attendance' && <AttendanceTab />}
         {activeTab === 'leaves' && <LeavesTab />}
-        {activeTab === 'profile' && <ProfileTab />}
         {activeTab === 'documents' && <DocumentsTab router={router} />}
       </div>
     </div>
@@ -525,71 +490,6 @@ function LeavesTab() {
           </Table>
         )}
       </SectionContainer>
-    </div>
-  )
-}
-
-function ProfileTab() {
-  const { data: employee, isLoading } = useQuery<Employee>({
-    queryKey: ['employee', 'my'],
-    queryFn: () => apiGet<Employee>('/api/employees/my'),
-  })
-
-  return (
-    <div className="space-y-6">
-      <BirthdayPopup />
-      {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Loading...</div>
-      ) : employee ? (
-        <div className="grid gap-6 md:grid-cols-2">
-          <SectionContainer title="Personal information">
-            <div className="space-y-4">
-              <InfoField icon={User} label="Name" value={employee.user.name} />
-              <InfoField icon={Mail} label="Email" value={employee.user.email} />
-              <InfoField icon={Hash} label="Employee Code" value={employee.employeeCode} />
-              {employee.dateOfBirth && (
-                <InfoField
-                  icon={Cake}
-                  label="Date of Birth"
-                  value={format(new Date(employee.dateOfBirth), 'PPP')}
-                />
-              )}
-            </div>
-          </SectionContainer>
-          <SectionContainer title="Employment details">
-            <div className="space-y-4">
-              <InfoField
-                icon={Building}
-                label="Department"
-                value={employee.department?.name || 'N/A'}
-              />
-              <InfoField
-                icon={Calendar}
-                label="Join Date"
-                value={
-                  employee.joinDate
-                    ? format(new Date(employee.joinDate), 'PPP')
-                    : 'N/A'
-                }
-              />
-              <InfoField
-                icon={DollarSign}
-                label="Salary"
-                value={formatCurrency(employee.salary)}
-              />
-              <InfoField
-                icon={User}
-                label="Role"
-                value={employee.user.role.replace('_', ' ')}
-              />
-            </div>
-          </SectionContainer>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-destructive/50 bg-destructive/10 py-8 text-center text-muted-foreground">
-          Employee record not found
-        </div>
-      )}
     </div>
   )
 }

@@ -139,16 +139,17 @@ export function ApprovalTab() {
         <h2 className="text-sm font-semibold text-foreground mb-2">
           Tasks pending review ({visibleReviewTasks.length})
         </h2>
-        <p className="text-sm text-muted-foreground mb-3">
-          Employees marked these as done. Tap to review and rate.
-        </p>
         {loadingReview ? (
           <div className="py-4 text-center text-sm text-muted-foreground">
             Loading…
           </div>
         ) : visibleReviewTasks.length === 0 ? (
           <p className="text-sm text-muted-foreground py-2">
-            No tasks pending review.
+            {user?.role === "MD" || user?.role === "ADMIN" ? (
+              "No tasks pending review."
+            ) : (
+              "Your manager will rate and approve tasks when you mark them as done."
+            )}
           </p>
         ) : (
           <div className="space-y-2">
@@ -175,7 +176,7 @@ export function ApprovalTab() {
         )}
       </section>
 
-      {!hasAny && !loadingReview && (
+      {!hasAny && !loadingReview && (user?.role === "MD" || user?.role === "ADMIN") && (
         <p className="py-6 text-center text-sm text-muted-foreground">
           No pending due date change requests and no tasks pending review.
         </p>

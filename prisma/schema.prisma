@@ -252,15 +252,18 @@ enum PreAuthStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         UserRole
-  teamId       String?
-  team         Team?    @relation("TeamMembers", fields: [teamId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  role           UserRole
+  teamId         String?
+  team           Team?    @relation("TeamMembers", fields: [teamId], references: [id])
+  phoneNumber    String?
+  address        String?  @db.Text
+  profilePicture String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   createdLeads    Lead[]           @relation("LeadCreator")
@@ -718,6 +721,7 @@ model Employee {
   aadharDocUrl       String?
   panDocUrl          String?
   designation        String?
+  bankAccountName    String?
   bankAccountNumber  String?
   ifscCode           String?
   uanNumber          String?

@@ -122,10 +122,10 @@ export function AppSidebar() {
               item.title === 'Finance Dashboard' ||
               item.title === 'HR Dashboard' ||
               item.title.startsWith('MD ') ||
-              item.title.startsWith('HR ') ||
-              item.title === 'Departments' ||
-              item.title === 'Leave Types' ||
-              item.title === 'Leave Balances'
+              item.title === 'Attendance & Leaves' ||
+              item.title === 'People & Org' ||
+              item.title === 'Compensation & Docs' ||
+              item.title === 'Engagement'
           )
         : user.role === 'USER'
           ? itemsWithUrls.filter(
@@ -138,10 +138,10 @@ export function AppSidebar() {
               (item) =>
                 item.title === 'Home' ||
                 item.title.startsWith('My ') ||
-                item.title.startsWith('HR ') ||
-                item.title === 'Departments' ||
-                item.title === 'Leave Types' ||
-                item.title === 'Leave Balances' ||
+                item.title === 'Attendance & Leaves' ||
+                item.title === 'People & Org' ||
+                item.title === 'Compensation & Docs' ||
+                item.title === 'Engagement' ||
                 (!item.title.startsWith('Svc ') &&
                   !item.title.startsWith('MD ') &&
                   !item.title.startsWith('Fin '))

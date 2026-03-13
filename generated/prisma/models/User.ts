@@ -31,6 +31,9 @@ export type UserMinAggregateOutputType = {
   name: string | null
   role: $Enums.UserRole | null
   teamId: string | null
+  phoneNumber: string | null
+  address: string | null
+  profilePicture: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -42,6 +45,9 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   role: $Enums.UserRole | null
   teamId: string | null
+  phoneNumber: string | null
+  address: string | null
+  profilePicture: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -53,6 +59,9 @@ export type UserCountAggregateOutputType = {
   name: number
   role: number
   teamId: number
+  phoneNumber: number
+  address: number
+  profilePicture: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -66,6 +75,9 @@ export type UserMinAggregateInputType = {
   name?: true
   role?: true
   teamId?: true
+  phoneNumber?: true
+  address?: true
+  profilePicture?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -77,6 +89,9 @@ export type UserMaxAggregateInputType = {
   name?: true
   role?: true
   teamId?: true
+  phoneNumber?: true
+  address?: true
+  profilePicture?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -88,6 +103,9 @@ export type UserCountAggregateInputType = {
   name?: true
   role?: true
   teamId?: true
+  phoneNumber?: true
+  address?: true
+  profilePicture?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -172,6 +190,9 @@ export type UserGroupByOutputType = {
   name: string
   role: $Enums.UserRole
   teamId: string | null
+  phoneNumber: string | null
+  address: string | null
+  profilePicture: string | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -204,6 +225,9 @@ export type UserWhereInput = {
   name?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   teamId?: Prisma.StringNullableFilter<"User"> | string | null
+  phoneNumber?: Prisma.StringNullableFilter<"User"> | string | null
+  address?: Prisma.StringNullableFilter<"User"> | string | null
+  profilePicture?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   team?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
@@ -267,6 +291,9 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
   teamId?: Prisma.SortOrderInput | Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  address?: Prisma.SortOrderInput | Prisma.SortOrder
+  profilePicture?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   team?: Prisma.TeamOrderByWithRelationInput
@@ -333,6 +360,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   teamId?: Prisma.StringNullableFilter<"User"> | string | null
+  phoneNumber?: Prisma.StringNullableFilter<"User"> | string | null
+  address?: Prisma.StringNullableFilter<"User"> | string | null
+  profilePicture?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   team?: Prisma.XOR<Prisma.TeamNullableScalarRelationFilter, Prisma.TeamWhereInput> | null
@@ -396,6 +426,9 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
   teamId?: Prisma.SortOrderInput | Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  address?: Prisma.SortOrderInput | Prisma.SortOrder
+  profilePicture?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -413,6 +446,9 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
   teamId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  phoneNumber?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  address?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  profilePicture?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -423,6 +459,9 @@ export type UserCreateInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -486,6 +525,9 @@ export type UserUncheckedCreateInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -547,6 +589,9 @@ export type UserUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -610,6 +655,9 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -672,6 +720,9 @@ export type UserCreateManyInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -682,6 +733,9 @@ export type UserUpdateManyMutationInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -693,6 +747,9 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -704,6 +761,9 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrder
+  address?: Prisma.SortOrder
+  profilePicture?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -715,6 +775,9 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrder
+  address?: Prisma.SortOrder
+  profilePicture?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -726,6 +789,9 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   role?: Prisma.SortOrder
   teamId?: Prisma.SortOrder
+  phoneNumber?: Prisma.SortOrder
+  address?: Prisma.SortOrder
+  profilePicture?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -758,12 +824,12 @@ export type EnumUserRoleFieldUpdateOperationsInput = {
   set?: $Enums.UserRole
 }
 
-export type DateTimeFieldUpdateOperationsInput = {
-  set?: Date | string
-}
-
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string
 }
 
 export type UserCreateNestedOneWithoutSalesHeadTeamsInput = {
@@ -1556,6 +1622,9 @@ export type UserCreateWithoutSalesHeadTeamsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -1618,6 +1687,9 @@ export type UserUncheckedCreateWithoutSalesHeadTeamsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1683,6 +1755,9 @@ export type UserCreateWithoutTeamInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadCreateNestedManyWithoutCreatedByInput
@@ -1744,6 +1819,9 @@ export type UserUncheckedCreateWithoutTeamInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -1826,6 +1904,9 @@ export type UserUpdateWithoutSalesHeadTeamsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -1888,6 +1969,9 @@ export type UserUncheckedUpdateWithoutSalesHeadTeamsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -1968,6 +2052,9 @@ export type UserScalarWhereInput = {
   name?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   teamId?: Prisma.StringNullableFilter<"User"> | string | null
+  phoneNumber?: Prisma.StringNullableFilter<"User"> | string | null
+  address?: Prisma.StringNullableFilter<"User"> | string | null
+  profilePicture?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
 }
@@ -1978,6 +2065,9 @@ export type UserCreateWithoutAssignedLeadsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -2040,6 +2130,9 @@ export type UserUncheckedCreateWithoutAssignedLeadsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2105,6 +2198,9 @@ export type UserCreateWithoutCreatedLeadsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -2167,6 +2263,9 @@ export type UserUncheckedCreateWithoutCreatedLeadsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   assignedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutBdInput
@@ -2232,6 +2331,9 @@ export type UserCreateWithoutUpdatedLeadsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -2294,6 +2396,9 @@ export type UserUncheckedCreateWithoutUpdatedLeadsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2370,6 +2475,9 @@ export type UserUpdateWithoutAssignedLeadsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -2432,6 +2540,9 @@ export type UserUncheckedUpdateWithoutAssignedLeadsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2503,6 +2614,9 @@ export type UserUpdateWithoutCreatedLeadsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -2565,6 +2679,9 @@ export type UserUncheckedUpdateWithoutCreatedLeadsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assignedLeads?: Prisma.LeadUncheckedUpdateManyWithoutBdNestedInput
@@ -2636,6 +2753,9 @@ export type UserUpdateWithoutUpdatedLeadsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -2698,6 +2818,9 @@ export type UserUncheckedUpdateWithoutUpdatedLeadsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -2758,6 +2881,9 @@ export type UserCreateWithoutLeadStageEventsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -2820,6 +2946,9 @@ export type UserUncheckedCreateWithoutLeadStageEventsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -2896,6 +3025,9 @@ export type UserUpdateWithoutLeadStageEventsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -2958,6 +3090,9 @@ export type UserUncheckedUpdateWithoutLeadStageEventsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3018,6 +3153,9 @@ export type UserCreateWithoutCreatedTargetsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -3080,6 +3218,9 @@ export type UserUncheckedCreateWithoutCreatedTargetsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3156,6 +3297,9 @@ export type UserUpdateWithoutCreatedTargetsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -3218,6 +3362,9 @@ export type UserUncheckedUpdateWithoutCreatedTargetsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3278,6 +3425,9 @@ export type UserCreateWithoutInsuranceCasesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -3340,6 +3490,9 @@ export type UserUncheckedCreateWithoutInsuranceCasesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3416,6 +3569,9 @@ export type UserUpdateWithoutInsuranceCasesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -3478,6 +3634,9 @@ export type UserUncheckedUpdateWithoutInsuranceCasesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3538,6 +3697,9 @@ export type UserCreateWithoutPlRecordsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -3600,6 +3762,9 @@ export type UserUncheckedCreateWithoutPlRecordsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3676,6 +3841,9 @@ export type UserUpdateWithoutPlRecordsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -3738,6 +3906,9 @@ export type UserUncheckedUpdateWithoutPlRecordsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -3798,6 +3969,9 @@ export type UserCreateWithoutDepartmentHeadOfInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -3860,6 +4034,9 @@ export type UserUncheckedCreateWithoutDepartmentHeadOfInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -3936,6 +4113,9 @@ export type UserUpdateWithoutDepartmentHeadOfInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -3998,6 +4178,9 @@ export type UserUncheckedUpdateWithoutDepartmentHeadOfInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4058,6 +4241,9 @@ export type UserCreateWithoutEmployeeInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -4120,6 +4306,9 @@ export type UserUncheckedCreateWithoutEmployeeInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4196,6 +4385,9 @@ export type UserUpdateWithoutEmployeeInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -4258,6 +4450,9 @@ export type UserUncheckedUpdateWithoutEmployeeInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4318,6 +4513,9 @@ export type UserCreateWithoutApprovedLeavesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -4380,6 +4578,9 @@ export type UserUncheckedCreateWithoutApprovedLeavesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4456,6 +4657,9 @@ export type UserUpdateWithoutApprovedLeavesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -4518,6 +4722,9 @@ export type UserUncheckedUpdateWithoutApprovedLeavesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -4578,6 +4785,9 @@ export type UserCreateWithoutDeletedLedgerEntriesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -4640,6 +4850,9 @@ export type UserUncheckedCreateWithoutDeletedLedgerEntriesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4705,6 +4918,9 @@ export type UserCreateWithoutEditRequestedLedgerEntriesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -4767,6 +4983,9 @@ export type UserUncheckedCreateWithoutEditRequestedLedgerEntriesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4832,6 +5051,9 @@ export type UserCreateWithoutEditApprovedLedgerEntriesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -4894,6 +5116,9 @@ export type UserUncheckedCreateWithoutEditApprovedLedgerEntriesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -4959,6 +5184,9 @@ export type UserCreateWithoutCreatedLedgerEntriesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -5021,6 +5249,9 @@ export type UserUncheckedCreateWithoutCreatedLedgerEntriesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5086,6 +5317,9 @@ export type UserCreateWithoutApprovedLedgerEntriesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -5148,6 +5382,9 @@ export type UserUncheckedCreateWithoutApprovedLedgerEntriesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -5224,6 +5461,9 @@ export type UserUpdateWithoutDeletedLedgerEntriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -5286,6 +5526,9 @@ export type UserUncheckedUpdateWithoutDeletedLedgerEntriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5357,6 +5600,9 @@ export type UserUpdateWithoutEditRequestedLedgerEntriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -5419,6 +5665,9 @@ export type UserUncheckedUpdateWithoutEditRequestedLedgerEntriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5490,6 +5739,9 @@ export type UserUpdateWithoutEditApprovedLedgerEntriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -5552,6 +5804,9 @@ export type UserUncheckedUpdateWithoutEditApprovedLedgerEntriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5623,6 +5878,9 @@ export type UserUpdateWithoutCreatedLedgerEntriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -5685,6 +5943,9 @@ export type UserUncheckedUpdateWithoutCreatedLedgerEntriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5756,6 +6017,9 @@ export type UserUpdateWithoutApprovedLedgerEntriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -5818,6 +6082,9 @@ export type UserUncheckedUpdateWithoutApprovedLedgerEntriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -5878,6 +6145,9 @@ export type UserCreateWithoutLedgerAuditLogsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -5940,6 +6210,9 @@ export type UserUncheckedCreateWithoutLedgerAuditLogsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6016,6 +6289,9 @@ export type UserUpdateWithoutLedgerAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -6078,6 +6354,9 @@ export type UserUncheckedUpdateWithoutLedgerAuditLogsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6138,6 +6417,9 @@ export type UserCreateWithoutCreatedSalesEntriesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -6200,6 +6482,9 @@ export type UserUncheckedCreateWithoutCreatedSalesEntriesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6276,6 +6561,9 @@ export type UserUpdateWithoutCreatedSalesEntriesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -6338,6 +6626,9 @@ export type UserUncheckedUpdateWithoutCreatedSalesEntriesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6398,6 +6689,9 @@ export type UserCreateWithoutStockMovementsCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -6460,6 +6754,9 @@ export type UserUncheckedCreateWithoutStockMovementsCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6536,6 +6833,9 @@ export type UserUpdateWithoutStockMovementsCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -6598,6 +6898,9 @@ export type UserUncheckedUpdateWithoutStockMovementsCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6658,6 +6961,9 @@ export type UserCreateWithoutPurchasesCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -6720,6 +7026,9 @@ export type UserUncheckedCreateWithoutPurchasesCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -6796,6 +7105,9 @@ export type UserUpdateWithoutPurchasesCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -6858,6 +7170,9 @@ export type UserUncheckedUpdateWithoutPurchasesCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -6918,6 +7233,9 @@ export type UserCreateWithoutIssuesReceivedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -6980,6 +7298,9 @@ export type UserUncheckedCreateWithoutIssuesReceivedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7045,6 +7366,9 @@ export type UserCreateWithoutIssuesCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -7107,6 +7431,9 @@ export type UserUncheckedCreateWithoutIssuesCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7183,6 +7510,9 @@ export type UserUpdateWithoutIssuesReceivedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -7245,6 +7575,9 @@ export type UserUncheckedUpdateWithoutIssuesReceivedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7316,6 +7649,9 @@ export type UserUpdateWithoutIssuesCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -7378,6 +7714,9 @@ export type UserUncheckedUpdateWithoutIssuesCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7438,6 +7777,9 @@ export type UserCreateWithoutKypSubmissionsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -7500,6 +7842,9 @@ export type UserUncheckedCreateWithoutKypSubmissionsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7576,6 +7921,9 @@ export type UserUpdateWithoutKypSubmissionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -7638,6 +7986,9 @@ export type UserUncheckedUpdateWithoutKypSubmissionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -7698,6 +8049,9 @@ export type UserCreateWithoutPreAuthsRaisedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -7760,6 +8114,9 @@ export type UserUncheckedCreateWithoutPreAuthsRaisedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7825,6 +8182,9 @@ export type UserCreateWithoutPreAuthHandledInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -7887,6 +8247,9 @@ export type UserUncheckedCreateWithoutPreAuthHandledInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -7963,6 +8326,9 @@ export type UserUpdateWithoutPreAuthsRaisedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -8025,6 +8391,9 @@ export type UserUncheckedUpdateWithoutPreAuthsRaisedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8096,6 +8465,9 @@ export type UserUpdateWithoutPreAuthHandledInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -8158,6 +8530,9 @@ export type UserUncheckedUpdateWithoutPreAuthHandledInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8218,6 +8593,9 @@ export type UserCreateWithoutNotificationsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -8280,6 +8658,9 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8356,6 +8737,9 @@ export type UserUpdateWithoutNotificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -8418,6 +8802,9 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8478,6 +8865,9 @@ export type UserCreateWithoutQueriesRaisedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -8540,6 +8930,9 @@ export type UserUncheckedCreateWithoutQueriesRaisedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8605,6 +8998,9 @@ export type UserCreateWithoutQueriesAnsweredInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -8667,6 +9063,9 @@ export type UserUncheckedCreateWithoutQueriesAnsweredInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -8743,6 +9142,9 @@ export type UserUpdateWithoutQueriesRaisedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -8805,6 +9207,9 @@ export type UserUncheckedUpdateWithoutQueriesRaisedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8876,6 +9281,9 @@ export type UserUpdateWithoutQueriesAnsweredInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -8938,6 +9346,9 @@ export type UserUncheckedUpdateWithoutQueriesAnsweredInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -8998,6 +9409,9 @@ export type UserCreateWithoutPdfsCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -9060,6 +9474,9 @@ export type UserUncheckedCreateWithoutPdfsCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9136,6 +9553,9 @@ export type UserUpdateWithoutPdfsCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -9198,6 +9618,9 @@ export type UserUncheckedUpdateWithoutPdfsCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -9258,6 +9681,9 @@ export type UserCreateWithoutAdmissionsInitiatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -9320,6 +9746,9 @@ export type UserUncheckedCreateWithoutAdmissionsInitiatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9396,6 +9825,9 @@ export type UserUpdateWithoutAdmissionsInitiatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -9458,6 +9890,9 @@ export type UserUncheckedUpdateWithoutAdmissionsInitiatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -9518,6 +9953,9 @@ export type UserCreateWithoutInsuranceInitiateFormsCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -9580,6 +10018,9 @@ export type UserUncheckedCreateWithoutInsuranceInitiateFormsCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9656,6 +10097,9 @@ export type UserUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -9718,6 +10162,9 @@ export type UserUncheckedUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -9778,6 +10225,9 @@ export type UserCreateWithoutCaseStageChangesInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -9840,6 +10290,9 @@ export type UserUncheckedCreateWithoutCaseStageChangesInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -9916,6 +10369,9 @@ export type UserUpdateWithoutCaseStageChangesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -9978,6 +10434,9 @@ export type UserUncheckedUpdateWithoutCaseStageChangesInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10038,6 +10497,9 @@ export type UserCreateWithoutCaseChatMessagesSentInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -10100,6 +10562,9 @@ export type UserUncheckedCreateWithoutCaseChatMessagesSentInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10176,6 +10641,9 @@ export type UserUpdateWithoutCaseChatMessagesSentInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -10238,6 +10706,9 @@ export type UserUncheckedUpdateWithoutCaseChatMessagesSentInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10298,6 +10769,9 @@ export type UserCreateWithoutDischargeSheetsCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -10360,6 +10834,9 @@ export type UserUncheckedCreateWithoutDischargeSheetsCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10436,6 +10913,9 @@ export type UserUpdateWithoutDischargeSheetsCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -10498,6 +10978,9 @@ export type UserUncheckedUpdateWithoutDischargeSheetsCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10558,6 +11041,9 @@ export type UserCreateWithoutOutstandingCasesHandledInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -10620,6 +11106,9 @@ export type UserUncheckedCreateWithoutOutstandingCasesHandledInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10696,6 +11185,9 @@ export type UserUpdateWithoutOutstandingCasesHandledInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -10758,6 +11250,9 @@ export type UserUncheckedUpdateWithoutOutstandingCasesHandledInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -10818,6 +11313,9 @@ export type UserCreateWithoutTasksAssignedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -10880,6 +11378,9 @@ export type UserUncheckedCreateWithoutTasksAssignedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -10945,6 +11446,9 @@ export type UserCreateWithoutTasksCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -11007,6 +11511,9 @@ export type UserUncheckedCreateWithoutTasksCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11072,6 +11579,9 @@ export type UserCreateWithoutTasksCompletedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -11134,6 +11644,9 @@ export type UserUncheckedCreateWithoutTasksCompletedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11210,6 +11723,9 @@ export type UserUpdateWithoutTasksAssignedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -11272,6 +11788,9 @@ export type UserUncheckedUpdateWithoutTasksAssignedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11343,6 +11862,9 @@ export type UserUpdateWithoutTasksCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -11405,6 +11927,9 @@ export type UserUncheckedUpdateWithoutTasksCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11476,6 +12001,9 @@ export type UserUpdateWithoutTasksCompletedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -11538,6 +12066,9 @@ export type UserUncheckedUpdateWithoutTasksCompletedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11598,6 +12129,9 @@ export type UserCreateWithoutTaskApprovalsRequestedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -11660,6 +12194,9 @@ export type UserUncheckedCreateWithoutTaskApprovalsRequestedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11736,6 +12273,9 @@ export type UserUpdateWithoutTaskApprovalsRequestedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -11798,6 +12338,9 @@ export type UserUncheckedUpdateWithoutTaskApprovalsRequestedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -11858,6 +12401,9 @@ export type UserCreateWithoutUserTaskSeenInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -11920,6 +12466,9 @@ export type UserUncheckedCreateWithoutUserTaskSeenInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -11996,6 +12545,9 @@ export type UserUpdateWithoutUserTaskSeenInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -12058,6 +12610,9 @@ export type UserUncheckedUpdateWithoutUserTaskSeenInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12118,6 +12673,9 @@ export type UserCreateWithoutTaskRatingsGivenInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -12180,6 +12738,9 @@ export type UserUncheckedCreateWithoutTaskRatingsGivenInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -12245,6 +12806,9 @@ export type UserCreateWithoutTaskRatingsReceivedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -12307,6 +12871,9 @@ export type UserUncheckedCreateWithoutTaskRatingsReceivedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -12383,6 +12950,9 @@ export type UserUpdateWithoutTaskRatingsGivenInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -12445,6 +13015,9 @@ export type UserUncheckedUpdateWithoutTaskRatingsGivenInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12516,6 +13089,9 @@ export type UserUpdateWithoutTaskRatingsReceivedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -12578,6 +13154,9 @@ export type UserUncheckedUpdateWithoutTaskRatingsReceivedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12638,6 +13217,9 @@ export type UserCreateWithoutTaskProjectsCreatedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -12700,6 +13282,9 @@ export type UserUncheckedCreateWithoutTaskProjectsCreatedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -12776,6 +13361,9 @@ export type UserUpdateWithoutTaskProjectsCreatedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -12838,6 +13426,9 @@ export type UserUncheckedUpdateWithoutTaskProjectsCreatedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -12898,6 +13489,9 @@ export type UserCreateWithoutTaskCommentsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -12960,6 +13554,9 @@ export type UserUncheckedCreateWithoutTaskCommentsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -13036,6 +13633,9 @@ export type UserUpdateWithoutTaskCommentsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -13098,6 +13698,9 @@ export type UserUncheckedUpdateWithoutTaskCommentsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -13158,6 +13761,9 @@ export type UserCreateWithoutTaskActivityLogsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -13220,6 +13826,9 @@ export type UserUncheckedCreateWithoutTaskActivityLogsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -13296,6 +13905,9 @@ export type UserUpdateWithoutTaskActivityLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -13358,6 +13970,9 @@ export type UserUncheckedUpdateWithoutTaskActivityLogsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -13418,6 +14033,9 @@ export type UserCreateWithoutWarningsReceivedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -13480,6 +14098,9 @@ export type UserUncheckedCreateWithoutWarningsReceivedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -13545,6 +14166,9 @@ export type UserCreateWithoutWarningsIssuedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -13607,6 +14231,9 @@ export type UserUncheckedCreateWithoutWarningsIssuedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -13683,6 +14310,9 @@ export type UserUpdateWithoutWarningsReceivedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -13745,6 +14375,9 @@ export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -13816,6 +14449,9 @@ export type UserUpdateWithoutWarningsIssuedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -13878,6 +14514,9 @@ export type UserUncheckedUpdateWithoutWarningsIssuedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -13938,6 +14577,9 @@ export type UserCreateWithoutMdTaskTeamsOwnedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -14000,6 +14642,9 @@ export type UserUncheckedCreateWithoutMdTaskTeamsOwnedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -14076,6 +14721,9 @@ export type UserUpdateWithoutMdTaskTeamsOwnedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -14138,6 +14786,9 @@ export type UserUncheckedUpdateWithoutMdTaskTeamsOwnedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -14198,6 +14849,9 @@ export type UserCreateWithoutMdWatchlistOwnedInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -14260,6 +14914,9 @@ export type UserUncheckedCreateWithoutMdWatchlistOwnedInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -14336,6 +14993,9 @@ export type UserUpdateWithoutMdWatchlistOwnedInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -14398,6 +15058,9 @@ export type UserUncheckedUpdateWithoutMdWatchlistOwnedInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -14458,6 +15121,9 @@ export type UserCreateWithoutWorkLogsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -14520,6 +15186,9 @@ export type UserUncheckedCreateWithoutWorkLogsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -14596,6 +15265,9 @@ export type UserUpdateWithoutWorkLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -14658,6 +15330,9 @@ export type UserUncheckedUpdateWithoutWorkLogsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -14718,6 +15393,9 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   team?: Prisma.TeamCreateNestedOneWithoutMembersInput
@@ -14780,6 +15458,9 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   name: string
   role: $Enums.UserRole
   teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
@@ -14856,6 +15537,9 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
@@ -14918,6 +15602,9 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -14978,6 +15665,9 @@ export type UserCreateManyTeamInput = {
   passwordHash: string
   name: string
   role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -14988,6 +15678,9 @@ export type UserUpdateWithoutTeamInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUpdateManyWithoutCreatedByNestedInput
@@ -15049,6 +15742,9 @@ export type UserUncheckedUpdateWithoutTeamInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
@@ -15110,6 +15806,9 @@ export type UserUncheckedUpdateManyWithoutTeamInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -15593,6 +16292,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   role?: boolean
   teamId?: boolean
+  phoneNumber?: boolean
+  address?: boolean
+  profilePicture?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   team?: boolean | Prisma.User$teamArgs<ExtArgs>
@@ -15657,6 +16359,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   role?: boolean
   teamId?: boolean
+  phoneNumber?: boolean
+  address?: boolean
+  profilePicture?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   team?: boolean | Prisma.User$teamArgs<ExtArgs>
@@ -15669,6 +16374,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   role?: boolean
   teamId?: boolean
+  phoneNumber?: boolean
+  address?: boolean
+  profilePicture?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   team?: boolean | Prisma.User$teamArgs<ExtArgs>
@@ -15681,11 +16389,14 @@ export type UserSelectScalar = {
   name?: boolean
   role?: boolean
   teamId?: boolean
+  phoneNumber?: boolean
+  address?: boolean
+  profilePicture?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "role" | "teamId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "role" | "teamId" | "phoneNumber" | "address" | "profilePicture" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   team?: boolean | Prisma.User$teamArgs<ExtArgs>
   createdLeads?: boolean | Prisma.User$createdLeadsArgs<ExtArgs>
@@ -15811,6 +16522,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string
     role: $Enums.UserRole
     teamId: string | null
+    phoneNumber: string | null
+    address: string | null
+    profilePicture: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -16294,6 +17008,9 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
   readonly teamId: Prisma.FieldRef<"User", 'String'>
+  readonly phoneNumber: Prisma.FieldRef<"User", 'String'>
+  readonly address: Prisma.FieldRef<"User", 'String'>
+  readonly profilePicture: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

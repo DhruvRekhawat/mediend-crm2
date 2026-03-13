@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 
-export type TabVariant = 'core-hr' | 'financial' | 'support' | 'mental-health' | 'tasks'
+export type TabVariant = 'core-hr' | 'financial' | 'support' | 'mental-health' | 'tasks' | 'hr-core' | 'hr-people' | 'hr-compensation' | 'hr-engagement'
 
 const variantStyles: Record<
   TabVariant,
@@ -36,6 +36,30 @@ const variantStyles: Record<
     active: 'bg-rose-600 text-white border-rose-600',
     inactive:
       'border-border bg-card text-muted-foreground hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200',
+    list: 'border-b border-border gap-0 bg-card',
+  },
+  'hr-core': {
+    active: 'bg-green-600 text-white border-green-600',
+    inactive:
+      'border-border bg-card text-muted-foreground hover:bg-green-50 hover:text-green-700 hover:border-green-200',
+    list: 'border-b border-border gap-0 bg-card',
+  },
+  'hr-people': {
+    active: 'bg-blue-600 text-white border-blue-600',
+    inactive:
+      'border-border bg-card text-muted-foreground hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
+    list: 'border-b border-border gap-0 bg-card',
+  },
+  'hr-compensation': {
+    active: 'bg-amber-600 text-white border-amber-600',
+    inactive:
+      'border-border bg-card text-muted-foreground hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200',
+    list: 'border-b border-border gap-0 bg-card',
+  },
+  'hr-engagement': {
+    active: 'bg-violet-600 text-white border-violet-600',
+    inactive:
+      'border-border bg-card text-muted-foreground hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200',
     list: 'border-b border-border gap-0 bg-card',
   },
 }
