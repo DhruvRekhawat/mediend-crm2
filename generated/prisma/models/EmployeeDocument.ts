@@ -33,6 +33,9 @@ export type EmployeeDocumentMinAggregateOutputType = {
   generatedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
+  ackToken: string | null
+  acknowledgedAt: Date | null
+  acknowledgedIp: string | null
 }
 
 export type EmployeeDocumentMaxAggregateOutputType = {
@@ -44,6 +47,9 @@ export type EmployeeDocumentMaxAggregateOutputType = {
   generatedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
+  ackToken: string | null
+  acknowledgedAt: Date | null
+  acknowledgedIp: string | null
 }
 
 export type EmployeeDocumentCountAggregateOutputType = {
@@ -56,6 +62,9 @@ export type EmployeeDocumentCountAggregateOutputType = {
   generatedAt: number
   createdAt: number
   updatedAt: number
+  ackToken: number
+  acknowledgedAt: number
+  acknowledgedIp: number
   _all: number
 }
 
@@ -69,6 +78,9 @@ export type EmployeeDocumentMinAggregateInputType = {
   generatedAt?: true
   createdAt?: true
   updatedAt?: true
+  ackToken?: true
+  acknowledgedAt?: true
+  acknowledgedIp?: true
 }
 
 export type EmployeeDocumentMaxAggregateInputType = {
@@ -80,6 +92,9 @@ export type EmployeeDocumentMaxAggregateInputType = {
   generatedAt?: true
   createdAt?: true
   updatedAt?: true
+  ackToken?: true
+  acknowledgedAt?: true
+  acknowledgedIp?: true
 }
 
 export type EmployeeDocumentCountAggregateInputType = {
@@ -92,6 +107,9 @@ export type EmployeeDocumentCountAggregateInputType = {
   generatedAt?: true
   createdAt?: true
   updatedAt?: true
+  ackToken?: true
+  acknowledgedAt?: true
+  acknowledgedIp?: true
   _all?: true
 }
 
@@ -177,6 +195,9 @@ export type EmployeeDocumentGroupByOutputType = {
   generatedAt: Date
   createdAt: Date
   updatedAt: Date
+  ackToken: string | null
+  acknowledgedAt: Date | null
+  acknowledgedIp: string | null
   _count: EmployeeDocumentCountAggregateOutputType | null
   _min: EmployeeDocumentMinAggregateOutputType | null
   _max: EmployeeDocumentMaxAggregateOutputType | null
@@ -210,6 +231,9 @@ export type EmployeeDocumentWhereInput = {
   generatedAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
+  ackToken?: Prisma.StringNullableFilter<"EmployeeDocument"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableFilter<"EmployeeDocument"> | Date | string | null
+  acknowledgedIp?: Prisma.StringNullableFilter<"EmployeeDocument"> | string | null
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
 }
 
@@ -223,11 +247,15 @@ export type EmployeeDocumentOrderByWithRelationInput = {
   generatedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  ackToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  acknowledgedIp?: Prisma.SortOrderInput | Prisma.SortOrder
   employee?: Prisma.EmployeeOrderByWithRelationInput
 }
 
 export type EmployeeDocumentWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  ackToken?: string
   AND?: Prisma.EmployeeDocumentWhereInput | Prisma.EmployeeDocumentWhereInput[]
   OR?: Prisma.EmployeeDocumentWhereInput[]
   NOT?: Prisma.EmployeeDocumentWhereInput | Prisma.EmployeeDocumentWhereInput[]
@@ -239,8 +267,10 @@ export type EmployeeDocumentWhereUniqueInput = Prisma.AtLeast<{
   generatedAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
+  acknowledgedAt?: Prisma.DateTimeNullableFilter<"EmployeeDocument"> | Date | string | null
+  acknowledgedIp?: Prisma.StringNullableFilter<"EmployeeDocument"> | string | null
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
-}, "id">
+}, "id" | "ackToken">
 
 export type EmployeeDocumentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -252,6 +282,9 @@ export type EmployeeDocumentOrderByWithAggregationInput = {
   generatedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  ackToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  acknowledgedIp?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.EmployeeDocumentCountOrderByAggregateInput
   _max?: Prisma.EmployeeDocumentMaxOrderByAggregateInput
   _min?: Prisma.EmployeeDocumentMinOrderByAggregateInput
@@ -270,6 +303,9 @@ export type EmployeeDocumentScalarWhereWithAggregatesInput = {
   generatedAt?: Prisma.DateTimeWithAggregatesFilter<"EmployeeDocument"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"EmployeeDocument"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"EmployeeDocument"> | Date | string
+  ackToken?: Prisma.StringNullableWithAggregatesFilter<"EmployeeDocument"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"EmployeeDocument"> | Date | string | null
+  acknowledgedIp?: Prisma.StringNullableWithAggregatesFilter<"EmployeeDocument"> | string | null
 }
 
 export type EmployeeDocumentCreateInput = {
@@ -281,6 +317,9 @@ export type EmployeeDocumentCreateInput = {
   generatedAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  ackToken?: string | null
+  acknowledgedAt?: Date | string | null
+  acknowledgedIp?: string | null
   employee: Prisma.EmployeeCreateNestedOneWithoutDocumentsInput
 }
 
@@ -294,6 +333,9 @@ export type EmployeeDocumentUncheckedCreateInput = {
   generatedAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  ackToken?: string | null
+  acknowledgedAt?: Date | string | null
+  acknowledgedIp?: string | null
 }
 
 export type EmployeeDocumentUpdateInput = {
@@ -305,6 +347,9 @@ export type EmployeeDocumentUpdateInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   employee?: Prisma.EmployeeUpdateOneRequiredWithoutDocumentsNestedInput
 }
 
@@ -318,6 +363,9 @@ export type EmployeeDocumentUncheckedUpdateInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EmployeeDocumentCreateManyInput = {
@@ -330,6 +378,9 @@ export type EmployeeDocumentCreateManyInput = {
   generatedAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  ackToken?: string | null
+  acknowledgedAt?: Date | string | null
+  acknowledgedIp?: string | null
 }
 
 export type EmployeeDocumentUpdateManyMutationInput = {
@@ -341,6 +392,9 @@ export type EmployeeDocumentUpdateManyMutationInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EmployeeDocumentUncheckedUpdateManyInput = {
@@ -353,6 +407,9 @@ export type EmployeeDocumentUncheckedUpdateManyInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EmployeeDocumentListRelationFilter = {
@@ -375,6 +432,9 @@ export type EmployeeDocumentCountOrderByAggregateInput = {
   generatedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  ackToken?: Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrder
+  acknowledgedIp?: Prisma.SortOrder
 }
 
 export type EmployeeDocumentMaxOrderByAggregateInput = {
@@ -386,6 +446,9 @@ export type EmployeeDocumentMaxOrderByAggregateInput = {
   generatedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  ackToken?: Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrder
+  acknowledgedIp?: Prisma.SortOrder
 }
 
 export type EmployeeDocumentMinOrderByAggregateInput = {
@@ -397,6 +460,9 @@ export type EmployeeDocumentMinOrderByAggregateInput = {
   generatedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  ackToken?: Prisma.SortOrder
+  acknowledgedAt?: Prisma.SortOrder
+  acknowledgedIp?: Prisma.SortOrder
 }
 
 export type EmployeeDocumentCreateNestedManyWithoutEmployeeInput = {
@@ -454,6 +520,9 @@ export type EmployeeDocumentCreateWithoutEmployeeInput = {
   generatedAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  ackToken?: string | null
+  acknowledgedAt?: Date | string | null
+  acknowledgedIp?: string | null
 }
 
 export type EmployeeDocumentUncheckedCreateWithoutEmployeeInput = {
@@ -465,6 +534,9 @@ export type EmployeeDocumentUncheckedCreateWithoutEmployeeInput = {
   generatedAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  ackToken?: string | null
+  acknowledgedAt?: Date | string | null
+  acknowledgedIp?: string | null
 }
 
 export type EmployeeDocumentCreateOrConnectWithoutEmployeeInput = {
@@ -506,6 +578,9 @@ export type EmployeeDocumentScalarWhereInput = {
   generatedAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"EmployeeDocument"> | Date | string
+  ackToken?: Prisma.StringNullableFilter<"EmployeeDocument"> | string | null
+  acknowledgedAt?: Prisma.DateTimeNullableFilter<"EmployeeDocument"> | Date | string | null
+  acknowledgedIp?: Prisma.StringNullableFilter<"EmployeeDocument"> | string | null
 }
 
 export type EmployeeDocumentCreateManyEmployeeInput = {
@@ -517,6 +592,9 @@ export type EmployeeDocumentCreateManyEmployeeInput = {
   generatedAt?: Date | string
   createdAt?: Date | string
   updatedAt?: Date | string
+  ackToken?: string | null
+  acknowledgedAt?: Date | string | null
+  acknowledgedIp?: string | null
 }
 
 export type EmployeeDocumentUpdateWithoutEmployeeInput = {
@@ -528,6 +606,9 @@ export type EmployeeDocumentUpdateWithoutEmployeeInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EmployeeDocumentUncheckedUpdateWithoutEmployeeInput = {
@@ -539,6 +620,9 @@ export type EmployeeDocumentUncheckedUpdateWithoutEmployeeInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type EmployeeDocumentUncheckedUpdateManyWithoutEmployeeInput = {
@@ -550,6 +634,9 @@ export type EmployeeDocumentUncheckedUpdateManyWithoutEmployeeInput = {
   generatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ackToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  acknowledgedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  acknowledgedIp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -564,6 +651,9 @@ export type EmployeeDocumentSelect<ExtArgs extends runtime.Types.Extensions.Inte
   generatedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  ackToken?: boolean
+  acknowledgedAt?: boolean
+  acknowledgedIp?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employeeDocument"]>
 
@@ -577,6 +667,9 @@ export type EmployeeDocumentSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   generatedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  ackToken?: boolean
+  acknowledgedAt?: boolean
+  acknowledgedIp?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employeeDocument"]>
 
@@ -590,6 +683,9 @@ export type EmployeeDocumentSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   generatedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  ackToken?: boolean
+  acknowledgedAt?: boolean
+  acknowledgedIp?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["employeeDocument"]>
 
@@ -603,9 +699,12 @@ export type EmployeeDocumentSelectScalar = {
   generatedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  ackToken?: boolean
+  acknowledgedAt?: boolean
+  acknowledgedIp?: boolean
 }
 
-export type EmployeeDocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "documentType" | "documentUrl" | "title" | "metadata" | "generatedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["employeeDocument"]>
+export type EmployeeDocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "documentType" | "documentUrl" | "title" | "metadata" | "generatedAt" | "createdAt" | "updatedAt" | "ackToken" | "acknowledgedAt" | "acknowledgedIp", ExtArgs["result"]["employeeDocument"]>
 export type EmployeeDocumentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
 }
@@ -631,6 +730,9 @@ export type $EmployeeDocumentPayload<ExtArgs extends runtime.Types.Extensions.In
     generatedAt: Date
     createdAt: Date
     updatedAt: Date
+    ackToken: string | null
+    acknowledgedAt: Date | null
+    acknowledgedIp: string | null
   }, ExtArgs["result"]["employeeDocument"]>
   composites: {}
 }
@@ -1064,6 +1166,9 @@ export interface EmployeeDocumentFieldRefs {
   readonly generatedAt: Prisma.FieldRef<"EmployeeDocument", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"EmployeeDocument", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"EmployeeDocument", 'DateTime'>
+  readonly ackToken: Prisma.FieldRef<"EmployeeDocument", 'String'>
+  readonly acknowledgedAt: Prisma.FieldRef<"EmployeeDocument", 'DateTime'>
+  readonly acknowledgedIp: Prisma.FieldRef<"EmployeeDocument", 'String'>
 }
     
 

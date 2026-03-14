@@ -83,10 +83,23 @@ export async function POST(
     const metadata = document.metadata as Record<string, unknown> | null
 
     let htmlContent: string
+    let ackToken: string | null = null
 
     switch (document.documentType) {
       case 'OFFER_LETTER':
         htmlContent = generateOfferLetterHTML(employeeData, metadata || undefined)
+        ackToken = crypto.randomUUID()
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.mediend.com'
+        const ackUrl = `${baseUrl}/documents/acknowledge?token=${ackToken}`
+        const ackSection = `
+    <br><br>
+    <p style="margin: 20px 0; font-size: 14px;">To acknowledge and accept this offer online, click the button below:</p>
+    <p style="margin: 16px 0;">
+      <a href="${ackUrl}" style="display: inline-block; padding: 12px 24px; background: #1a365d; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;">I Acknowledge & Accept</a>
+    </p>
+    <p style="margin: 12px 0; font-size: 12px; color: #666;">Or copy this link: ${ackUrl}</p>
+    `
+        htmlContent = htmlContent.replace('<!-- ACK_PLACEHOLDER -->', ackSection)
         break
       case 'APPRAISAL_LETTER':
         htmlContent = generateAppraisalLetterHTML(employeeData, metadata || undefined)
@@ -99,6 +112,13 @@ export async function POST(
         break
       default:
         return errorResponse('Invalid document type', 400)
+    }
+
+    if (ackToken) {
+      await prisma.employeeDocument.update({
+        where: { id },
+        data: { ackToken },
+      })
     }
 
     const subjectLabel = DOCUMENT_TYPE_LABELS[document.documentType] ?? document.documentType

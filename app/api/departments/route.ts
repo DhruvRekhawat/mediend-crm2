@@ -15,7 +15,7 @@ const createDepartmentSchema = z.object({
     name: z.string().min(1),
     email: z.string().email(),
     password: z.string().min(6),
-    role: z.enum(['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']),
+    role: z.enum(['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']),
   }).optional(),
 }).refine((data) => data.headId || data.newHead, {
   message: 'Either headId or newHead must be provided',
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if user has a department head role
-      const deptHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']
+      const deptHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']
       if (!deptHeadRoles.includes(headUser.role)) {
         return errorResponse('Selected user must have a department head role', 400)
       }

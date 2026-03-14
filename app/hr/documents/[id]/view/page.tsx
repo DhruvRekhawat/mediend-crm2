@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Printer, ArrowLeft, Download, Mail } from 'lucide-react'
+import { Printer, ArrowLeft, Download, Mail, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 
@@ -16,7 +16,9 @@ interface DocumentData {
   document: {
     id: string
     employeeId: string
-    documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER'
+    documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+    documentUrl?: string | null
+    title?: string | null
     generatedAt: string
     metadata: Record<string, unknown>
     employee: {
@@ -30,11 +32,12 @@ interface DocumentData {
   htmlContent: string
 }
 
-const DOCUMENT_TITLES = {
+const DOCUMENT_TITLES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
   APPRAISAL_LETTER: 'Appraisal Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
+  CUSTOM: 'Document',
 }
 
 export default function DocumentViewPage() {
@@ -81,7 +84,47 @@ export default function DocumentViewPage() {
     )
   }
 
-  const documentTitle = DOCUMENT_TITLES[data.document.documentType]
+  const documentTitle = data.document.title || DOCUMENT_TITLES[data.document.documentType]
+  const isCustom = data.document.documentType === 'CUSTOM'
+  const documentUrl = data.document.documentUrl
+
+  if (isCustom && documentUrl) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="no-print p-4 bg-background border-b">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-lg font-semibold">{documentTitle}</h1>
+              <p className="text-sm text-muted-foreground">
+                {data.document.employee.user.name} ({data.document.employee.employeeCode})
+              </p>
+            </div>
+            <Button asChild>
+              <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Document
+              </a>
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center space-y-4">
+            <p className="text-muted-foreground">This is an uploaded document. Click below to open it.</p>
+            <Button asChild size="lg">
+              <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open in New Tab
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>

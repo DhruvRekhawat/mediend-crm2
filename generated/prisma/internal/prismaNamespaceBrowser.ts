@@ -651,7 +651,10 @@ export const EmployeeDocumentScalarFieldEnum = {
   metadata: 'metadata',
   generatedAt: 'generatedAt',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  ackToken: 'ackToken',
+  acknowledgedAt: 'acknowledgedAt',
+  acknowledgedIp: 'acknowledgedIp'
 } as const
 
 export type EmployeeDocumentScalarFieldEnum = (typeof EmployeeDocumentScalarFieldEnum)[keyof typeof EmployeeDocumentScalarFieldEnum]

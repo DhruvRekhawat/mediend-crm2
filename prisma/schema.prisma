@@ -1023,16 +1023,19 @@ model MonthlyPayroll {
 
 // Employee Documents (Offer Letter, Appraisal, etc.)
 model EmployeeDocument {
-  id           String       @id @default(cuid())
-  employeeId   String
-  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  documentType DocumentType
-  documentUrl  String?
-  title        String?
-  metadata     Json?
-  generatedAt  DateTime     @default(now())
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  employeeId     String
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  documentType   DocumentType
+  documentUrl    String?
+  title          String?
+  metadata       Json?
+  generatedAt    DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  ackToken       String?      @unique
+  acknowledgedAt DateTime?
+  acknowledgedIp String?
 
   @@index([employeeId])
   @@index([documentType])

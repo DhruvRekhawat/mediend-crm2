@@ -12,11 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import { useState, useMemo, useEffect } from 'react'
-import { FileText, Plus, ExternalLink, Mail, Upload, Search, ChevronRight } from 'lucide-react'
+import { FileText, Plus, ExternalLink, Mail, Upload, Search, ChevronRight, Check, Clock } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
-
 interface Employee {
   id: string
   employeeCode: string
@@ -39,6 +37,8 @@ interface EmployeeDocument {
   title?: string | null
   generatedAt: string
   metadata: Record<string, unknown>
+  ackToken?: string | null
+  acknowledgedAt?: string | null
   employee: {
     employeeCode: string
     user: {
@@ -61,13 +61,41 @@ function getDocumentLabel(doc: EmployeeDocument): string {
   return DOCUMENT_TYPES[doc.documentType] ?? doc.documentType
 }
 
+const DOC_TYPES_FOR_TABLE = ['OFFER_LETTER', 'APPRAISAL_LETTER', 'EXPERIENCE_LETTER', 'RELIEVING_LETTER', 'CUSTOM'] as const
+
+function DocStatusCell({ docs }: { docs: EmployeeDocument[] }) {
+  if (docs.length === 0) return <span className="text-muted-foreground/50">—</span>
+  const hasAck = docs.some((d) => d.acknowledgedAt)
+  const hasPending = docs.some((d) => d.ackToken && !d.acknowledgedAt)
+  if (hasAck) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-400">
+        <Check className="h-3 w-3" />
+        {docs.length}
+      </span>
+    )
+  }
+  if (hasPending) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-400">
+        <Clock className="h-3 w-3" />
+        {docs.length}
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800 dark:bg-sky-900/40 dark:text-sky-400">
+      <FileText className="h-3 w-3" />
+      {docs.length}
+    </span>
+  )
+}
+
 export default function HRDocumentsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [sheetEmployee, setSheetEmployee] = useState<Employee | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const queryClient = useQueryClient()
-  const router = useRouter()
-
   const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ['employees'],
     queryFn: () => apiGet<Employee[]>('/api/employees'),
@@ -118,7 +146,7 @@ export default function HRDocumentsPage() {
       queryClient.invalidateQueries({ queryKey: ['hr-documents'] })
       setIsDialogOpen(false)
       toast.success('Document generated successfully')
-      router.push(`/hr/documents/${data.document.id}/view`)
+      window.open(`/hr/documents/${data.document.id}/view`, '_blank', 'noopener,noreferrer')
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to generate document')
@@ -126,7 +154,7 @@ export default function HRDocumentsPage() {
   })
 
   const handleViewDocument = (docId: string) => {
-    router.push(`/hr/documents/${docId}/view`)
+    window.open(`/hr/documents/${docId}/view`, '_blank', 'noopener,noreferrer')
   }
 
   const invalidateDocuments = () => {
@@ -164,27 +192,32 @@ export default function HRDocumentsPage() {
 
       {/* Document Types Overview */}
       <div className="grid gap-4 md:grid-cols-5">
-        {Object.entries(DOCUMENT_TYPES).map(([key, label]) => (
-          <Card key={key}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{label}</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {documents.filter((d) => d.documentType === key).length}
-              </div>
-              <p className="text-xs text-muted-foreground">Documents</p>
-            </CardContent>
-          </Card>
-        ))}
+        {DOC_TYPES_FOR_TABLE.map((key) => {
+          const count = documents.filter((d) => d.documentType === key).length
+          const ackCount = documents.filter((d) => d.documentType === key && d.acknowledgedAt).length
+          const label = DOCUMENT_TYPES[key]
+          return (
+            <Card key={key} className="border-l-4 border-l-primary/50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{label}</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{count}</div>
+                <p className="text-xs text-muted-foreground">
+                  {ackCount > 0 ? `${ackCount} acknowledged` : 'Documents'}
+                </p>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
       {/* Employee List */}
       <Card>
         <CardHeader>
           <CardTitle>Employees</CardTitle>
-          <CardDescription>Click an employee to view and manage their documents</CardDescription>
+          <CardDescription>Click an employee to view and manage their documents. Green = acknowledged, Amber = pending, Blue = given</CardDescription>
           <div className="relative mt-2 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -199,47 +232,62 @@ export default function HRDocumentsPage() {
           {isLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Employee</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Documents</TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees.map((emp) => {
-                  const docCount = documentsByEmployee.get(emp.id)?.length ?? 0
-                  return (
-                    <TableRow
-                      key={emp.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setSheetEmployee(emp)}
-                    >
-                      <TableCell>
-                        <div className="font-medium">{emp.user.name}</div>
-                        <div className="text-sm text-muted-foreground">{emp.employeeCode}</div>
-                      </TableCell>
-                      <TableCell>{emp.department?.name ?? '—'}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{docCount} document{docCount !== 1 ? 's' : ''}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="font-semibold">Employee</TableHead>
+                    <TableHead className="font-semibold">Department</TableHead>
+                    {DOC_TYPES_FOR_TABLE.map((key) => (
+                      <TableHead key={key} className="text-center font-semibold whitespace-nowrap">
+                        {DOCUMENT_TYPES[key]}
+                      </TableHead>
+                    ))}
+                    <TableHead className="w-12" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEmployees.map((emp) => {
+                    const empDocs = documentsByEmployee.get(emp.id) ?? []
+                    const docsByType = DOC_TYPES_FOR_TABLE.reduce(
+                      (acc, type) => {
+                        acc[type] = empDocs.filter((d) => d.documentType === type)
+                        return acc
+                      },
+                      {} as Record<string, EmployeeDocument[]>
+                    )
+                    return (
+                      <TableRow
+                        key={emp.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => setSheetEmployee(emp)}
+                      >
+                        <TableCell className="font-medium">
+                          <div>{emp.user.name}</div>
+                          <div className="text-sm text-muted-foreground">{emp.employeeCode}</div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{emp.department?.name ?? '—'}</TableCell>
+                        {DOC_TYPES_FOR_TABLE.map((key) => (
+                          <TableCell key={key} className="text-center">
+                            <DocStatusCell docs={docsByType[key]} />
+                          </TableCell>
+                        ))}
+                        <TableCell>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                  {filteredEmployees.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                        {searchQuery ? 'No employees match your search' : 'No employees found'}
                       </TableCell>
                     </TableRow>
-                  )
-                })}
-                {filteredEmployees.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                      {searchQuery ? 'No employees match your search' : 'No employees found'}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -290,7 +338,19 @@ export default function HRDocumentsPage() {
                         {employeeDocs.map((doc) => (
                           <TableRow key={doc.id}>
                             <TableCell>
-                              <Badge variant="secondary">{getDocumentLabel(doc)}</Badge>
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <Badge variant="secondary">{getDocumentLabel(doc)}</Badge>
+                                {doc.acknowledgedAt && (
+                                  <Badge variant="default" className="bg-green-600 hover:bg-green-600">
+                                    Acknowledged {format(new Date(doc.acknowledgedAt), 'PP')}
+                                  </Badge>
+                                )}
+                                {doc.ackToken && !doc.acknowledgedAt && (
+                                  <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                    Pending
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {format(new Date(doc.generatedAt), 'PP')}
@@ -322,6 +382,7 @@ export default function HRDocumentsPage() {
                                       documentId={doc.id}
                                       defaultEmail={doc.employee.user.email}
                                       documentType={doc.documentType}
+                                      onSuccess={invalidateDocuments}
                                     />
                                   </>
                                 )}
@@ -424,14 +485,17 @@ function EmailDocumentButton({
   documentId,
   defaultEmail,
   documentType,
+  onSuccess,
 }: {
   documentId: string
   defaultEmail: string
   documentType: string
+  onSuccess?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState(defaultEmail)
   const [sending, setSending] = useState(false)
+  const queryClient = useQueryClient()
 
   const handleSend = async () => {
     if (!email.trim()) {
@@ -450,6 +514,8 @@ function EmailDocumentButton({
       if (!res.ok) throw new Error(data.error || 'Failed to send')
       toast.success('Email sent')
       setOpen(false)
+      queryClient.invalidateQueries({ queryKey: ['hr-documents'] })
+      onSuccess?.()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to send email')
     } finally {

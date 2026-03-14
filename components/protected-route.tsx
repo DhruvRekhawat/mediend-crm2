@@ -1,18 +1,26 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/use-auth'
+
+const PUBLIC_PATHS = ['/login', '/documents/acknowledge']
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
+  const isPublicPath = pathname && PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!isPublicPath && !isLoading && !user) {
       router.push('/login')
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, router, isPublicPath])
+
+  if (isPublicPath) {
+    return <>{children}</>
+  }
 
   if (isLoading) {
     return (

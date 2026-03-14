@@ -9,14 +9,35 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api-client'
-import { useState } from 'react'
-import { Plus, Edit, Trash2, Building, User, Network, UserPlus, Users, UserCog } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { Plus, Edit, Trash2, Building, User, UserPlus, Users, UserCog, ChevronDown, ChevronRight, Network } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/hooks/use-auth'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+const DEPT_HEAD_ROLES = [
+  'INSURANCE_HEAD',
+  'PL_HEAD',
+  'SALES_HEAD',
+  'HR_HEAD',
+  'FINANCE_HEAD',
+  'OUTSTANDING_HEAD',
+  'DIGITAL_MARKETING_HEAD',
+  'IT_HEAD',
+] as const
+
+const DEPT_HEAD_ROLE_LABELS: Record<string, string> = {
+  INSURANCE_HEAD: 'Insurance Head',
+  PL_HEAD: 'P/L Head',
+  SALES_HEAD: 'Sales Head',
+  HR_HEAD: 'HR Head',
+  FINANCE_HEAD: 'Finance Head',
+  OUTSTANDING_HEAD: 'Outstanding Head',
+  DIGITAL_MARKETING_HEAD: 'Digital Marketing Head',
+  IT_HEAD: 'IT Head',
+}
 
 interface Department {
   id: string
@@ -47,9 +68,18 @@ interface DepartmentHeadUser {
   role: string
 }
 
+interface Employee {
+  id: string
+  employeeCode: string
+  user: { id: string; name: string; email: string; role: string }
+  department?: { id: string; name: string } | null
+  manager?: { id: string; user: { id: string; name: string } } | null
+}
+
 export default function HRDepartmentsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingDept, setEditingDept] = useState<Department | null>(null)
+  const [expandedDeptIds, setExpandedDeptIds] = useState<Set<string>>(new Set())
   const queryClient = useQueryClient()
 
   const { data: departments, isLoading } = useQuery<Department[]>({
@@ -57,15 +87,28 @@ export default function HRDepartmentsPage() {
     queryFn: () => apiGet<Department[]>('/api/departments'),
   })
 
-  // Fetch department head users
+  const { data: allEmployees } = useQuery<Employee[]>({
+    queryKey: ['employees'],
+    queryFn: () => apiGet<Employee[]>('/api/employees'),
+  })
+
+  const employeesByDept = useMemo(() => {
+    const map = new Map<string, Employee[]>()
+    for (const emp of allEmployees || []) {
+      if (emp.department?.id) {
+        const list = map.get(emp.department.id) ?? []
+        list.push(emp)
+        map.set(emp.department.id, list)
+      }
+    }
+    return map
+  }, [allEmployees])
+
   const { data: deptHeadUsers } = useQuery<DepartmentHeadUser[]>({
     queryKey: ['dept-head-users'],
     queryFn: async () => {
       const users = await apiGet<any[]>('/api/users')
-      // Filter for department head roles
-      return users.filter((u: any) => 
-        ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD'].includes(u.role)
-      )
+      return users.filter((u: any) => DEPT_HEAD_ROLES.includes(u.role))
     },
   })
 
@@ -118,6 +161,15 @@ export default function HRDepartmentsPage() {
     },
   })
 
+  const toggleExpanded = (id: string) => {
+    setExpandedDeptIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   const handleEdit = (dept: Department) => {
     setEditingDept(dept)
     setIsDialogOpen(true)
@@ -134,7 +186,7 @@ export default function HRDepartmentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Department Management</h1>
-          <p className="text-muted-foreground mt-1">Create and manage departments</p>
+          <p className="text-muted-foreground mt-1">Create departments, assign heads, and view people and managers</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open)
@@ -183,108 +235,133 @@ export default function HRDepartmentsPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Departments</CardTitle>
-          <CardDescription>Manage all departments</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">Loading...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Head</TableHead>
-                  <TableHead>Headcount</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {departments?.map((dept) => (
-                  <TableRow key={dept.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        {dept.name}
+      {isLoading ? (
+        <div className="text-center py-12 text-muted-foreground">Loading departments...</div>
+      ) : (
+        <div className="space-y-3">
+          {departments?.map((dept) => {
+            const isExpanded = expandedDeptIds.has(dept.id)
+            const deptEmployees = employeesByDept.get(dept.id) ?? []
+            const headcount = dept.headcount ?? dept._count.employees
+
+            return (
+              <Card key={dept.id}>
+                <CardHeader className="py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => toggleExpanded(dept.id)}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Building className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <CardTitle className="text-lg truncate">{dept.name}</CardTitle>
                       </div>
-                    </TableCell>
-                    <TableCell>{dept.description || 'N/A'}</TableCell>
-                    <TableCell>
-                      {dept.head ? (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          <span>{dept.head.name}</span>
-                          <span className="text-xs text-muted-foreground">({dept.head.role.replace('_', ' ')})</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">No head assigned</span>
+                      {dept.head && (
+                        <Badge variant="secondary" className="shrink-0">
+                          <User className="h-3 w-3 mr-1" />
+                          {dept.head.name} ({dept.head.role.replace(/_/g, ' ')})
+                        </Badge>
                       )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{dept.headcount ?? dept._count.employees}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Link href={`/hr/departments/${dept.id}`}>
-                          <Button variant="outline" size="sm">
-                            <Network className="h-4 w-4 mr-1" />
-                            View Hierarchy
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(dept)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
+                      <Badge variant="outline" className="shrink-0">
+                        <Users className="h-3 w-3 mr-1" />
+                        {headcount}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link href={`/hr/departments/${dept.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <Network className="h-4 w-4 mr-1" />
+                          Hierarchy
                         </Button>
-                        <AssignEmployeesDialog
-                          department={dept}
-                          onSuccess={() => {
-                            queryClient.invalidateQueries({ queryKey: ['departments'] })
-                            queryClient.invalidateQueries({ queryKey: ['employees'] })
-                          }}
-                        />
-                        <AssignHeadDialog
-                          department={dept}
-                          deptHeadUsers={deptHeadUsers || []}
-                          onSuccess={() => {
-                            queryClient.invalidateQueries({ queryKey: ['departments'] })
-                            queryClient.invalidateQueries({ queryKey: ['dept-head-users'] })
-                          }}
-                        />
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(dept.id)}
-                          disabled={(dept.headcount ?? dept._count.employees) > 0}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
+                      </Link>
+                      <AssignEmployeesDialog
+                        department={dept}
+                        onSuccess={() => {
+                          queryClient.invalidateQueries({ queryKey: ['departments'] })
+                          queryClient.invalidateQueries({ queryKey: ['employees'] })
+                        }}
+                      />
+                      <AssignHeadDialog
+                        department={dept}
+                        deptHeadUsers={deptHeadUsers || []}
+                        onSuccess={() => {
+                          queryClient.invalidateQueries({ queryKey: ['departments'] })
+                          queryClient.invalidateQueries({ queryKey: ['dept-head-users'] })
+                        }}
+                      />
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(dept)}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(dept.id)}
+                        disabled={headcount > 0}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                {isExpanded && (
+                  <CardContent className="pt-0 pb-4">
+                    {deptEmployees.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Code</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Manager</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {deptEmployees.map((emp) => (
+                            <TableRow key={emp.id}>
+                              <TableCell className="font-medium">{emp.user.name}</TableCell>
+                              <TableCell>{emp.employeeCode}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs">
+                                  {emp.user.role.replace(/_/g, ' ')}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {emp.manager?.user?.name ?? '—'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground border rounded-lg bg-muted/30">
+                        No employees in this department yet. Use &quot;Assign Employees&quot; to add people.
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(!departments || departments.length === 0) && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                      No departments found
-                    </TableCell>
-                  </TableRow>
+                    )}
+                  </CardContent>
                 )}
-              </TableBody>
-            </Table>
+              </Card>
+            )
+          })}
+          {(!departments || departments.length === 0) && (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No departments found. Create one to get started.
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   )
 }
@@ -312,8 +389,7 @@ function DepartmentForm({
   isLoading: boolean
 }) {
   const { user: currentUser } = useAuth()
-  const isHRHead = currentUser?.role === 'HR_HEAD'
-  const canCreateHead = isHRHead || currentUser?.role === 'MD' || currentUser?.role === 'ADMIN'
+  const canCreateHead = currentUser?.role === 'HR_HEAD' || currentUser?.role === 'MD' || currentUser?.role === 'ADMIN'
 
   const [headSelectionMode, setHeadSelectionMode] = useState<'existing' | 'new'>('existing')
   const [formData, setFormData] = useState({
@@ -329,21 +405,16 @@ function DepartmentForm({
     newHeadName: '',
     newHeadEmail: '',
     newHeadPassword: '',
-    newHeadRole: 'INSURANCE_HEAD' as 'INSURANCE_HEAD' | 'PL_HEAD' | 'SALES_HEAD' | 'HR_HEAD' | 'FINANCE_HEAD' | 'OUTSTANDING_HEAD' | 'DIGITAL_MARKETING_HEAD',
+    newHeadRole: 'INSURANCE_HEAD' as (typeof DEPT_HEAD_ROLES)[number],
   })
 
-  // Get users who are not already heads of other departments
   const { data: allDepartments } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: () => apiGet<Department[]>('/api/departments'),
   })
 
   const availableHeads = deptHeadUsers.filter((user) => {
-    // If editing, allow current head
-    if (department?.head?.id === user.id) {
-      return true
-    }
-    // Otherwise, only show users who are not already heads
+    if (department?.head?.id === user.id) return true
     return !allDepartments?.some((dept) => dept.head?.id === user.id && dept.id !== department?.id)
   })
 
@@ -365,10 +436,8 @@ function DepartmentForm({
       description: formData.description || undefined,
     }
 
-    // Only include headId or newHead when creating (not editing)
     if (!department) {
       if (headSelectionMode === 'new' && canCreateHead) {
-        // Validate new head fields
         if (!formData.newHeadName || !formData.newHeadEmail || !formData.newHeadPassword) {
           toast.error('Please fill in all fields for the new department head')
           return
@@ -397,9 +466,9 @@ function DepartmentForm({
     }
     onSubmit(submitData)
     if (!department) {
-      setFormData({ 
-        name: '', 
-        description: '', 
+      setFormData({
+        name: '',
+        description: '',
         headId: '',
         shiftStartHour: 10,
         shiftStartMinute: 0,
@@ -439,7 +508,7 @@ function DepartmentForm({
           <div>
             <Label>Department Head *</Label>
             {canCreateHead ? (
-              <Tabs value={headSelectionMode} onValueChange={(value) => setHeadSelectionMode(value as 'existing' | 'new')} className="mt-2">
+              <Tabs value={headSelectionMode} onValueChange={(v) => setHeadSelectionMode(v as 'existing' | 'new')} className="mt-2">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="existing">Select Existing</TabsTrigger>
                   <TabsTrigger value="new">Create New</TabsTrigger>
@@ -447,7 +516,7 @@ function DepartmentForm({
                 <TabsContent value="existing" className="mt-4">
                   <Select
                     value={formData.headId}
-                    onValueChange={(value) => setFormData({ ...formData, headId: value })}
+                    onValueChange={(v) => setFormData({ ...formData, headId: v })}
                     required
                   >
                     <SelectTrigger>
@@ -459,15 +528,12 @@ function DepartmentForm({
                       ) : (
                         availableHeads.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.role.replace('_', ' ')})
+                            {user.name} ({user.role.replace(/_/g, ' ')})
                           </SelectItem>
                         ))
                       )}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Select a user with a department head role (Insurance Head, PL Head, Sales Head, HR Head, Finance Head)
-                  </p>
                 </TabsContent>
                 <TabsContent value="new" className="mt-4">
                   <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
@@ -512,19 +578,17 @@ function DepartmentForm({
                         <Label>Role *</Label>
                         <Select
                           value={formData.newHeadRole}
-                          onValueChange={(value) => setFormData({ ...formData, newHeadRole: value as any })}
+                          onValueChange={(v) => setFormData({ ...formData, newHeadRole: v as (typeof DEPT_HEAD_ROLES)[number] })}
                         >
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="INSURANCE_HEAD">Insurance Head</SelectItem>
-                            <SelectItem value="PL_HEAD">P/L Head</SelectItem>
-                            <SelectItem value="SALES_HEAD">Sales Head</SelectItem>
-                            <SelectItem value="HR_HEAD">HR Head</SelectItem>
-                            <SelectItem value="FINANCE_HEAD">Finance Head</SelectItem>
-                            <SelectItem value="OUTSTANDING_HEAD">Outstanding Head</SelectItem>
-                            <SelectItem value="DIGITAL_MARKETING_HEAD">Digital Marketing Head</SelectItem>
+                            {DEPT_HEAD_ROLES.map((role) => (
+                              <SelectItem key={role} value={role}>
+                                {DEPT_HEAD_ROLE_LABELS[role] ?? role}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -539,7 +603,7 @@ function DepartmentForm({
               <div className="mt-2">
                 <Select
                   value={formData.headId}
-                  onValueChange={(value) => setFormData({ ...formData, headId: value })}
+                  onValueChange={(v) => setFormData({ ...formData, headId: v })}
                   required
                 >
                   <SelectTrigger>
@@ -551,15 +615,12 @@ function DepartmentForm({
                     ) : (
                       availableHeads.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
-                          {user.name} ({user.role.replace('_', ' ')})
+                          {user.name} ({user.role.replace(/_/g, ' ')})
                         </SelectItem>
                       ))
                     )}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Select a user with a department head role (Insurance Head, PL Head, Sales Head, HR Head, Finance Head)
-                </p>
               </div>
             )}
           </div>
@@ -571,10 +632,10 @@ function DepartmentForm({
           <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
             <User className="h-4 w-4" />
             <span>{department.head.name}</span>
-            <span className="text-xs text-muted-foreground">({department.head.role.replace('_', ' ')})</span>
+            <span className="text-xs text-muted-foreground">({department.head.role.replace(/_/g, ' ')})</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Department head cannot be changed after creation. Contact MD/Admin to reassign.
+            Use &quot;Reassign Head&quot; on the department card to change.
           </p>
         </div>
       )}
@@ -582,7 +643,7 @@ function DepartmentForm({
         <div className="space-y-4 border-t pt-4">
           <h4 className="font-medium">Attendance shift timing</h4>
           <p className="text-xs text-muted-foreground">
-            Used for late/grace/penalty classification. E.g. 10:00 start = grace 1 until 10:15, grace 2 until 10:30, penalty until 11:00; after that = half-day.
+            Used for late/grace/penalty classification.
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -648,13 +709,13 @@ function DepartmentForm({
         </div>
       )}
       <div className="flex justify-end gap-2">
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           disabled={
-            isLoading || 
-            (!department && 
-              ((headSelectionMode === 'existing' && !formData.headId) || 
-               (headSelectionMode === 'new' && (!formData.newHeadName || !formData.newHeadEmail || !formData.newHeadPassword))))
+            isLoading ||
+            (!department &&
+              ((headSelectionMode === 'existing' && !formData.headId) ||
+                (headSelectionMode === 'new' && (!formData.newHeadName || !formData.newHeadEmail || !formData.newHeadPassword))))
           }
         >
           {isLoading ? 'Saving...' : department ? 'Update' : 'Create'}
@@ -674,9 +735,9 @@ function AssignEmployeesDialog({
   const [isOpen, setIsOpen] = useState(false)
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([])
 
-  const { data: allEmployees } = useQuery<any[]>({
-    queryKey: ['all-employees'],
-    queryFn: () => apiGet<any[]>('/api/employees'),
+  const { data: allEmployees } = useQuery<Employee[]>({
+    queryKey: ['employees'],
+    queryFn: () => apiGet<Employee[]>('/api/employees'),
     enabled: isOpen,
   })
 
@@ -694,15 +755,8 @@ function AssignEmployeesDialog({
     },
   })
 
-  // Get employees not in this department
-  const availableEmployees = allEmployees?.filter((emp) => {
-    return emp.department?.id !== department.id
-  }) || []
-
-  // Get current employees in this department
-  const currentEmployees = allEmployees?.filter((emp) => {
-    return emp.department?.id === department.id
-  }) || []
+  const availableEmployees = allEmployees?.filter((emp) => emp.department?.id !== department.id) ?? []
+  const currentEmployees = allEmployees?.filter((emp) => emp.department?.id === department.id) ?? []
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -715,9 +769,7 @@ function AssignEmployeesDialog({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Assign Employees to {department.name}</DialogTitle>
-          <DialogDescription>
-            Select employees to assign to this department
-          </DialogDescription>
+          <DialogDescription>Select employees to assign to this department</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           {currentEmployees.length > 0 && (
@@ -727,7 +779,7 @@ function AssignEmployeesDialog({
                 {currentEmployees.map((emp) => (
                   <div key={emp.id} className="flex items-center justify-between text-sm">
                     <span>{emp.user.name} ({emp.user.email})</span>
-                    <Badge variant="secondary">{emp.user.role.replace('_', ' ')}</Badge>
+                    <Badge variant="secondary">{emp.user.role.replace(/_/g, ' ')}</Badge>
                   </div>
                 ))}
               </div>
@@ -756,7 +808,7 @@ function AssignEmployeesDialog({
                     />
                     <label htmlFor={`emp-${emp.id}`} className="flex-1 flex items-center justify-between cursor-pointer text-sm">
                       <span>{emp.user.name} ({emp.user.email})</span>
-                      <Badge variant="outline">{emp.user.role.replace('_', ' ')}</Badge>
+                      <Badge variant="outline">{emp.user.role.replace(/_/g, ' ')}</Badge>
                     </label>
                   </div>
                 ))
@@ -764,9 +816,7 @@ function AssignEmployeesDialog({
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
             <Button
               onClick={() => assignMutation.mutate(selectedEmployeeIds)}
               disabled={selectedEmployeeIds.length === 0 || assignMutation.isPending}
@@ -794,6 +844,10 @@ function AssignHeadDialog({
   const { user: currentUser } = useAuth()
   const canAssignHead = currentUser?.role === 'HR_HEAD' || currentUser?.role === 'MD' || currentUser?.role === 'ADMIN'
 
+  useEffect(() => {
+    if (isOpen) setSelectedHeadId(department.head?.id || '')
+  }, [isOpen, department.head?.id])
+
   const { data: allDepartments } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: () => apiGet<Department[]>('/api/departments'),
@@ -801,8 +855,7 @@ function AssignHeadDialog({
   })
 
   const assignMutation = useMutation({
-    mutationFn: (headId: string | null) =>
-      apiPatch(`/api/departments/${department.id}`, { headId }),
+    mutationFn: (headId: string | null) => apiPatch(`/api/departments/${department.id}`, { headId }),
     onSuccess: () => {
       toast.success('Department head assigned successfully')
       setIsOpen(false)
@@ -813,17 +866,12 @@ function AssignHeadDialog({
     },
   })
 
-  // Get users who are not already heads of other departments (or are current head)
   const availableHeads = deptHeadUsers.filter((user) => {
-    if (department.head?.id === user.id) {
-      return true // Allow current head
-    }
+    if (department.head?.id === user.id) return true
     return !allDepartments?.some((dept) => dept.head?.id === user.id && dept.id !== department.id)
   })
 
-  if (!canAssignHead) {
-    return null
-  }
+  if (!canAssignHead) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -836,16 +884,14 @@ function AssignHeadDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{department.head ? 'Reassign' : 'Assign'} Department Head</DialogTitle>
-          <DialogDescription>
-            Select a department head for {department.name}
-          </DialogDescription>
+          <DialogDescription>Select a department head for {department.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <Label>Department Head</Label>
             <Select
               value={selectedHeadId || 'none'}
-              onValueChange={(value) => setSelectedHeadId(value === 'none' ? '' : value)}
+              onValueChange={(v) => setSelectedHeadId(v === 'none' ? '' : v)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select department head" />
@@ -854,21 +900,17 @@ function AssignHeadDialog({
                 <SelectItem value="none">No Head (Remove)</SelectItem>
                 {availableHeads.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
-                    {user.name} ({user.role.replace('_', ' ')})
+                    {user.name} ({user.role.replace(/_/g, ' ')})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {department.head && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Current head: {department.head.name}
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Current head: {department.head.name}</p>
             )}
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
             <Button
               onClick={() => assignMutation.mutate(selectedHeadId || null)}
               disabled={assignMutation.isPending}
@@ -881,4 +923,3 @@ function AssignHeadDialog({
     </Dialog>
   )
 }
-

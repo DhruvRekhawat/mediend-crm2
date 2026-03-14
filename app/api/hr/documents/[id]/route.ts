@@ -67,6 +67,10 @@ export async function GET(
     switch (document.documentType) {
       case 'OFFER_LETTER':
         htmlContent = generateOfferLetterHTML(employeeData, metadata || undefined)
+        htmlContent = htmlContent.replace(
+          '<!-- ACK_PLACEHOLDER -->',
+          '<br><br><p>Signature: _________________ &nbsp;&nbsp;&nbsp;&nbsp; Date: _________________</p>'
+        )
         break
       case 'APPRAISAL_LETTER':
         htmlContent = generateAppraisalLetterHTML(employeeData, metadata || undefined)
@@ -76,6 +80,12 @@ export async function GET(
         break
       case 'RELIEVING_LETTER':
         htmlContent = generateRelievingLetterHTML(employeeData, metadata || undefined)
+        break
+      case 'CUSTOM':
+        // CUSTOM documents are uploaded files; view page will show link/embed
+        htmlContent = document.documentUrl
+          ? `<div style="padding:2rem;text-align:center;"><p>Uploaded document.</p><p><a href="${document.documentUrl}" target="_blank" rel="noopener noreferrer">Open document</a></p></div>`
+          : '<div style="padding:2rem;text-align:center;"><p>No file linked to this document.</p></div>'
         break
       default:
         return errorResponse('Invalid document type', 400)

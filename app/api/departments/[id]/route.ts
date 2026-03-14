@@ -83,7 +83,7 @@ export async function PATCH(
         }
 
         // Check if user has a department head role
-        const deptHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD']
+        const deptHeadRoles = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']
         if (!deptHeadRoles.includes(headUser.role)) {
           return errorResponse('Selected user must have a department head role', 400)
         }

@@ -21,7 +21,7 @@ const PROBATION_MONTHS = 6
 export async function getComputedBalancesForEmployee(
   employeeId: string
 ): Promise<ComputedBalance[]> {
-  const [employee, leaveTypes, approvedLeaves] = await Promise.all([
+  const [employee, leaveTypes, approvedLeaves, dbBalances] = await Promise.all([
     prisma.employee.findUnique({
       where: { id: employeeId },
       select: { joinDate: true },
@@ -43,6 +43,10 @@ export async function getComputedBalancesForEmployee(
       },
       select: { leaveTypeId: true, days: true },
     }),
+    prisma.leaveBalance.findMany({
+      where: { employeeId },
+      select: { leaveTypeId: true, allocated: true },
+    }),
   ])
 
   const joinDate = employee?.joinDate
@@ -56,11 +60,19 @@ export async function getComputedBalancesForEmployee(
     usedByLeaveType.set(l.leaveTypeId, (usedByLeaveType.get(l.leaveTypeId) ?? 0) + l.days)
   }
 
+  const dbBalanceByLeaveType = new Map(dbBalances.map((b) => [b.leaveTypeId, b]))
+
   const balances: ComputedBalance[] = leaveTypes.map((lt) => {
     let allocated = 0
     let locked = 0
 
-    if (joinDate) {
+    const dbBalance = dbBalanceByLeaveType.get(lt.id)
+    if (dbBalance) {
+      // Active employee with imported balance: use DB allocated, subtract CRM-approved leaves
+      allocated = dbBalance.allocated
+      locked = 0
+    } else if (joinDate) {
+      // Probation / new employee: use DOJ formula (no DB record)
       const monthsWorked = Math.max(0, differenceInMonths(now, joinDate))
       allocated = monthsWorked * lt.monthlyAccrual
 

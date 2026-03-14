@@ -12,8 +12,8 @@ import { hasPermission } from '@/lib/rbac'
 import type { BadgeCounts } from '@/app/api/badge-counts/route'
 
 const ALL_TABS: (TabItem & { permission?: string })[] = [
-  { value: 'increments', label: 'Increments', permission: 'hrms:employees:read' },
   { value: 'documents', label: 'Documents', permission: 'hrms:employees:read' },
+  { value: 'increments', label: 'Increments', permission: 'hrms:employees:read' },
 ]
 
 export default function HRCompensationPage() {
@@ -35,7 +35,7 @@ export default function HRCompensationPage() {
     })
   }, [user, badges])
 
-  const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'increments')
+  const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'documents')
 
   useEffect(() => {
     if (tabs.length > 0 && !tabs.some((t) => t.value === activeTab)) {

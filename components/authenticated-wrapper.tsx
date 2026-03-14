@@ -232,11 +232,12 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
   const isPayslipPage = pathname?.includes('/payroll/') && pathname?.includes('/slip')
   const isDocumentViewPage = pathname?.includes('/documents/') && pathname?.includes('/view')
   const isPrintPage = pathname?.includes('/print/')
+  const isAcknowledgePage = pathname?.startsWith('/documents/acknowledge')
 
   const shouldShowSidebar =
-    !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage && !isPrintPage
+    !isLoading && user && !isLoginPage && !isPayslipPage && !isDocumentViewPage && !isPrintPage && !isAcknowledgePage
 
-  if (isLoginPage || isPayslipPage || isDocumentViewPage || isPrintPage) {
+  if (isLoginPage || isPayslipPage || isDocumentViewPage || isPrintPage || isAcknowledgePage) {
     return <>{children}</>
   }
 

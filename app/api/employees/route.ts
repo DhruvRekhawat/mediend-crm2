@@ -157,6 +157,11 @@ export async function GET(request: NextRequest) {
             name: true,
           },
         },
+        manager: {
+          include: {
+            user: { select: { id: true, name: true } },
+          },
+        },
       },
       orderBy: {
         user: {

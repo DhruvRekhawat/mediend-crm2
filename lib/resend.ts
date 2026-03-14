@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
-const FROM_EMAIL = 'HR <hr@mediend.in>'
+const FROM_EMAIL = 'HR <hr@mediend.com>'
 
 export async function sendDocumentEmail(
   to: string,

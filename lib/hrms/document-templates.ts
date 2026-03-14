@@ -25,7 +25,7 @@ const COMPANY_DATA: CompanyData = {
   city: 'Noida',
   state: 'Uttar Pradesh',
   pincode: '201309',
-  email: 'hr@mediend.in',
+  email: 'hr@mediend.com',
 }
 
 function formatCurrency(amount: number): string {
@@ -133,8 +133,7 @@ export function generateOfferLetterHTML(employee: EmployeeData, metadata?: { des
   <div style="margin-top: 60px; border-top: 1px dashed #999; padding-top: 20px;">
     <p><strong>Acceptance:</strong></p>
     <p>I, ${employee.name}, hereby accept the offer of employment as mentioned above.</p>
-    <br><br>
-    <p>Signature: _________________ &nbsp;&nbsp;&nbsp;&nbsp; Date: _________________</p>
+    <!-- ACK_PLACEHOLDER -->
   </div>
   
   <div class="footer">
