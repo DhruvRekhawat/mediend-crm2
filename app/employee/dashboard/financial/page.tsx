@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
+import type { BadgeCounts } from '@/app/api/badge-counts/route'
 import { format } from 'date-fns'
 import {
   Calendar,
@@ -34,10 +35,10 @@ import { SectionContainer } from '@/components/employee/section-container'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { toast } from 'sonner'
 
-const FINANCIAL_TABS: TabItem[] = [
+const FINANCIAL_TAB_VALUES = [
   { value: 'payroll', label: 'Payroll' },
   { value: 'increment', label: 'Increment' },
-]
+] as const
 
 interface PayrollComponent {
   id: string
@@ -110,11 +111,26 @@ function getMonthName(month: number) {
 export default function FinancialPage() {
   const [activeTab, setActiveTab] = useState('payroll')
 
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ['badge-counts'],
+    queryFn: () => apiGet<BadgeCounts>('/api/badge-counts'),
+    refetchInterval: 60_000,
+  })
+
+  const tabs: TabItem[] = useMemo(
+    () =>
+      FINANCIAL_TAB_VALUES.map((t) => ({
+        ...t,
+        badge: t.value === 'increment' ? badges?.pendingIncrementRequests : undefined,
+      })),
+    [badges]
+  )
+
   return (
     <div className="space-y-6">
 
       <TabNavigation
-        tabs={FINANCIAL_TABS}
+        tabs={tabs}
         value={activeTab}
         onValueChange={setActiveTab}
         variant="financial"

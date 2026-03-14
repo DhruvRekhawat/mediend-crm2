@@ -20,6 +20,20 @@ export interface BadgeCounts {
   pendingNotices: number
   pendingFinanceTeamApprovals: number
   pendingMDApprovals: number
+  // Granular counts for tab badges
+  pendingLeaveRequests: number
+  pendingFeedback: number
+  pendingIncrementRequests: number
+  pendingMDAppointments: number
+  pendingMentalHealth: number
+  hrPendingFeedback: number
+  hrPendingTickets: number
+  hrPendingMentalHealth: number
+  hrPendingNormalizations: number
+  hrPendingLeaves: number
+  hrPendingIncrements: number
+  taskApprovalCount: number
+  taskOverdueCount: number
 }
 
 export async function GET(request: NextRequest) {
@@ -47,9 +61,131 @@ export async function GET(request: NextRequest) {
       pendingNotices: 0,
       pendingFinanceTeamApprovals: 0,
       pendingMDApprovals: 0,
+      pendingLeaveRequests: 0,
+      pendingFeedback: 0,
+      pendingIncrementRequests: 0,
+      pendingMDAppointments: 0,
+      pendingMentalHealth: 0,
+      hrPendingFeedback: 0,
+      hrPendingTickets: 0,
+      hrPendingMentalHealth: 0,
+      hrPendingNormalizations: 0,
+      hrPendingLeaves: 0,
+      hrPendingIncrements: 0,
+      taskApprovalCount: 0,
+      taskOverdueCount: 0,
     }
 
     const promises: Promise<unknown>[] = []
+
+    // Employee lookup for employee-level counts
+    const empPromise = prisma.employee.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    })
+
+    // Employee-level: own PENDING leave requests
+    promises.push(
+      empPromise.then(async (emp) => {
+        if (!emp) return
+        const c = await prisma.leaveRequest.count({
+          where: { employeeId: emp.id, status: LeaveRequestStatus.PENDING },
+        })
+        counts.pendingLeaveRequests = c
+      })
+    )
+
+    // Employee-level: own PENDING feedback
+    promises.push(
+      empPromise.then(async (emp) => {
+        if (!emp) return
+        const c = await prisma.feedback.count({
+          where: { employeeId: emp.id, status: 'PENDING' },
+        })
+        counts.pendingFeedback = c
+      })
+    )
+
+    // Employee-level: own PENDING increment requests
+    promises.push(
+      empPromise.then(async (emp) => {
+        if (!emp) return
+        const c = await prisma.incrementRequest.count({
+          where: { employeeId: emp.id, status: 'PENDING' },
+        })
+        counts.pendingIncrementRequests = c
+      })
+    )
+
+    // Employee-level: own PENDING MD appointments
+    promises.push(
+      empPromise.then(async (emp) => {
+        if (!emp) return
+        const c = await prisma.mDAppointment.count({
+          where: { employeeId: emp.id, status: 'PENDING' },
+        })
+        counts.pendingMDAppointments = c
+      })
+    )
+
+    // Employee-level: own PENDING mental health requests
+    promises.push(
+      empPromise.then(async (emp) => {
+        if (!emp) return
+        const c = await prisma.mentalHealthRequest.count({
+          where: { employeeId: emp.id, status: 'PENDING' },
+        })
+        counts.pendingMentalHealth = c
+      })
+    )
+
+    // HR-level: all PENDING feedback (for HR Engagement tab)
+    if (hasPermission(user, 'hrms:employees:read')) {
+      promises.push(
+        prisma.feedback.count({ where: { status: 'PENDING' } }).then((c) => {
+          counts.hrPendingFeedback = c
+        })
+      )
+      promises.push(
+        prisma.supportTicket.count({ where: { status: 'OPEN' } }).then((c) => {
+          counts.hrPendingTickets = c
+        })
+      )
+      promises.push(
+        prisma.mentalHealthRequest.count({ where: { status: 'PENDING' } }).then((c) => {
+          counts.hrPendingMentalHealth = c
+        })
+      )
+    }
+
+    // HR-level: PENDING manager normalizations (for HR Attendance tab)
+    if (hasPermission(user, 'hrms:attendance:write')) {
+      promises.push(
+        prisma.attendanceNormalization.count({
+          where: { type: 'MANAGER', status: 'PENDING' },
+        }).then((c) => {
+          counts.hrPendingNormalizations = c
+        })
+      )
+    }
+
+    // HR-level: all PENDING leave requests (for HR Attendance tab)
+    if (hasPermission(user, 'hrms:leaves:write') || hasPermission(user, 'hrms:leaves:read')) {
+      promises.push(
+        prisma.leaveRequest.count({ where: { status: LeaveRequestStatus.PENDING } }).then((c) => {
+          counts.hrPendingLeaves = c
+        })
+      )
+    }
+
+    // HR-level: all PENDING increment requests (for HR Compensation tab)
+    if (hasPermission(user, 'hrms:employees:read')) {
+      promises.push(
+        prisma.incrementRequest.count({ where: { status: 'PENDING' } }).then((c) => {
+          counts.hrPendingIncrements = c
+        })
+      )
+    }
 
     // Finance approvals: only for users with finance:approve
     if (hasPermission(user, 'finance:approve')) {
@@ -254,6 +390,10 @@ export async function GET(request: NextRequest) {
     }
 
     await Promise.all(promises)
+
+    // Derived: task tab badges (from existing counts)
+    counts.taskApprovalCount = counts.pendingTaskReviews + counts.pendingDueDateApprovals
+    counts.taskOverdueCount = counts.myOverdueTasks
 
     return successResponse(counts)
   } catch (error) {

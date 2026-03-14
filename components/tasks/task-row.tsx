@@ -7,7 +7,8 @@ import { format, differenceInDays } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
-import { Star, AlertTriangle, CalendarClock, Clock } from "lucide-react"
+import { isSelfAssigned } from "@/lib/task-utils"
+import { Star, AlertTriangle, CalendarClock, Clock, UserCircle } from "lucide-react"
 
 const DING_SOUND = "/ding-sound-effect_1.mp3"
 
@@ -246,6 +247,15 @@ export function TaskRow({
           {showAssignee && task.assignee && task.assigneeId !== task.createdById && (
             <span className="text-xs text-blue-600 dark:text-blue-400 truncate max-w-[100px]">
               → {task.assignee.name}
+            </span>
+          )}
+          {showAssignee && isSelfAssigned(task) && (
+            <span
+              className="flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400"
+              title="You assigned this task to yourself"
+            >
+              <UserCircle className="h-3 w-3 shrink-0" />
+              Self-assigned
             </span>
           )}
         </div>

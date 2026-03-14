@@ -13,18 +13,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
 import { useQuery as usePermissionQuery } from '@tanstack/react-query'
-import { Check, X, ChevronLeft, ChevronRight, Plus, CheckCircle, Clock } from 'lucide-react'
+import { Check, X, ChevronLeft, ChevronRight, Plus, CheckCircle, Clock, Paperclip } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useSwipeable } from 'react-swipeable'
 import confetti from 'canvas-confetti'
+import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
+
+interface Attachment {
+  name: string
+  url: string
+  type: string
+}
 
 interface MDApprovalRequest {
   id: string
   title: string
   description: string | null
   amount: number | null
+  attachments?: Attachment[] | null
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
   requestedById: string
   requestedBy: { id: string; name: string; email: string }
@@ -106,6 +114,9 @@ function SwipeCard({
             {request.amount != null && (
               <div className="text-xl font-bold text-indigo-600">{formatCurrency(request.amount)}</div>
             )}
+            {request.attachments && request.attachments.length > 0 && (
+              <AttachmentCarousel attachments={request.attachments} />
+            )}
             <div className="text-sm text-muted-foreground">Requested by {request.requestedBy.name}</div>
 
             <div className="flex gap-2 mt-4">
@@ -164,6 +175,9 @@ function HistoryCard({ request }: { request: MDApprovalRequest }) {
         <h3 className="font-semibold">{request.title}</h3>
         {request.description && <p className="text-sm text-muted-foreground">{request.description}</p>}
         {request.amount != null && <div className="font-medium text-indigo-600">{formatCurrency(request.amount)}</div>}
+        {request.attachments && request.attachments.length > 0 && (
+          <AttachmentCarousel attachments={request.attachments} />
+        )}
         <p className="text-xs text-muted-foreground">Requested by {request.requestedBy.name}</p>
       </CardContent>
     </Card>
@@ -178,6 +192,8 @@ export default function MDApprovalsPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
+  const [attachments, setAttachments] = useState<Attachment[]>([])
+  const [uploadingFiles, setUploadingFiles] = useState(false)
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<MDApprovalRequest | null>(null)
@@ -226,7 +242,7 @@ export default function MDApprovalsPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: { title: string; description?: string; amount?: number }) =>
+    mutationFn: (data: { title: string; description?: string; amount?: number; attachments?: Attachment[] }) =>
       apiPost('/api/md-approvals', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['md-approvals', 'badge-counts'] })
@@ -234,6 +250,7 @@ export default function MDApprovalsPage() {
       setTitle('')
       setDescription('')
       setAmount('')
+      setAttachments([])
       toast.success('Request submitted')
     },
     onError: (err: Error) => toast.error(err.message),
@@ -251,6 +268,42 @@ export default function MDApprovalsPage() {
     }
   }
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploadingFiles(true)
+    try {
+      const newAttachments: Attachment[] = []
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const formData = new FormData()
+        formData.append('file', file)
+        const res = await fetch('/api/md-approvals/upload', {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Upload failed')
+        newAttachments.push({
+          name: file.name,
+          url: data.data.url,
+          type: file.type,
+        })
+      }
+      setAttachments((prev) => [...prev, ...newAttachments])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploadingFiles(false)
+      e.target.value = ''
+    }
+  }
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const handleCreate = () => {
     if (!title.trim()) {
       toast.error('Title is required')
@@ -260,6 +313,7 @@ export default function MDApprovalsPage() {
       title: title.trim(),
       description: description.trim() || undefined,
       amount: amount ? parseFloat(amount) : undefined,
+      attachments: attachments.length > 0 ? attachments : undefined,
     })
   }
 
@@ -291,6 +345,37 @@ export default function MDApprovalsPage() {
                 <div>
                   <Label>Amount (optional)</Label>
                   <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
+                </div>
+                <div>
+                  <Label>Attachments (optional)</Label>
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf"
+                    onChange={handleFileSelect}
+                    disabled={uploadingFiles}
+                    className="cursor-pointer"
+                  />
+                  {uploadingFiles && <p className="text-xs text-muted-foreground mt-1">Uploading...</p>}
+                  {attachments.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      {attachments.map((a, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm">
+                          <Paperclip className="h-4 w-4" />
+                          <span className="truncate flex-1">{a.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-destructive"
+                            onClick={() => removeAttachment(i)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <Button onClick={handleCreate} disabled={createMutation.isPending}>
                   {createMutation.isPending ? 'Submitting...' : 'Submit'}

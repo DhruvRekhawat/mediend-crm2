@@ -73,6 +73,7 @@ export type MDApprovalRequestCountAggregateOutputType = {
   title: number
   description: number
   amount: number
+  attachments: number
   status: number
   requestedById: number
   respondedById: number
@@ -134,6 +135,7 @@ export type MDApprovalRequestCountAggregateInputType = {
   title?: true
   description?: true
   amount?: true
+  attachments?: true
   status?: true
   requestedById?: true
   respondedById?: true
@@ -238,6 +240,7 @@ export type MDApprovalRequestGroupByOutputType = {
   title: string
   description: string | null
   amount: number | null
+  attachments: runtime.JsonValue | null
   status: $Enums.MDApprovalStatus
   requestedById: string
   respondedById: string | null
@@ -278,6 +281,7 @@ export type MDApprovalRequestWhereInput = {
   title?: Prisma.StringFilter<"MDApprovalRequest"> | string
   description?: Prisma.StringNullableFilter<"MDApprovalRequest"> | string | null
   amount?: Prisma.FloatNullableFilter<"MDApprovalRequest"> | number | null
+  attachments?: Prisma.JsonNullableFilter<"MDApprovalRequest">
   status?: Prisma.EnumMDApprovalStatusFilter<"MDApprovalRequest"> | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFilter<"MDApprovalRequest"> | string
   respondedById?: Prisma.StringNullableFilter<"MDApprovalRequest"> | string | null
@@ -298,6 +302,7 @@ export type MDApprovalRequestOrderByWithRelationInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   amount?: Prisma.SortOrderInput | Prisma.SortOrder
+  attachments?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   respondedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -321,6 +326,7 @@ export type MDApprovalRequestWhereUniqueInput = Prisma.AtLeast<{
   title?: Prisma.StringFilter<"MDApprovalRequest"> | string
   description?: Prisma.StringNullableFilter<"MDApprovalRequest"> | string | null
   amount?: Prisma.FloatNullableFilter<"MDApprovalRequest"> | number | null
+  attachments?: Prisma.JsonNullableFilter<"MDApprovalRequest">
   status?: Prisma.EnumMDApprovalStatusFilter<"MDApprovalRequest"> | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFilter<"MDApprovalRequest"> | string
   respondedById?: Prisma.StringNullableFilter<"MDApprovalRequest"> | string | null
@@ -341,6 +347,7 @@ export type MDApprovalRequestOrderByWithAggregationInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   amount?: Prisma.SortOrderInput | Prisma.SortOrder
+  attachments?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   respondedById?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -366,6 +373,7 @@ export type MDApprovalRequestScalarWhereWithAggregatesInput = {
   title?: Prisma.StringWithAggregatesFilter<"MDApprovalRequest"> | string
   description?: Prisma.StringNullableWithAggregatesFilter<"MDApprovalRequest"> | string | null
   amount?: Prisma.FloatNullableWithAggregatesFilter<"MDApprovalRequest"> | number | null
+  attachments?: Prisma.JsonNullableWithAggregatesFilter<"MDApprovalRequest">
   status?: Prisma.EnumMDApprovalStatusWithAggregatesFilter<"MDApprovalRequest"> | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringWithAggregatesFilter<"MDApprovalRequest"> | string
   respondedById?: Prisma.StringNullableWithAggregatesFilter<"MDApprovalRequest"> | string | null
@@ -383,6 +391,7 @@ export type MDApprovalRequestCreateInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   responseNote?: string | null
   respondedAt?: Date | string | null
@@ -400,6 +409,7 @@ export type MDApprovalRequestUncheckedCreateInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   requestedById: string
   respondedById?: string | null
@@ -417,6 +427,7 @@ export type MDApprovalRequestUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -434,6 +445,7 @@ export type MDApprovalRequestUncheckedUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   respondedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -451,6 +463,7 @@ export type MDApprovalRequestCreateManyInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   requestedById: string
   respondedById?: string | null
@@ -468,6 +481,7 @@ export type MDApprovalRequestUpdateManyMutationInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -482,6 +496,7 @@ export type MDApprovalRequestUncheckedUpdateManyInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   respondedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -509,6 +524,7 @@ export type MDApprovalRequestCountOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   amount?: Prisma.SortOrder
+  attachments?: Prisma.SortOrder
   status?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   respondedById?: Prisma.SortOrder
@@ -698,6 +714,7 @@ export type MDApprovalRequestCreateWithoutRequestedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   responseNote?: string | null
   respondedAt?: Date | string | null
@@ -714,6 +731,7 @@ export type MDApprovalRequestUncheckedCreateWithoutRequestedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   respondedById?: string | null
   responseNote?: string | null
@@ -740,6 +758,7 @@ export type MDApprovalRequestCreateWithoutRespondedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   responseNote?: string | null
   respondedAt?: Date | string | null
@@ -756,6 +775,7 @@ export type MDApprovalRequestUncheckedCreateWithoutRespondedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   requestedById: string
   responseNote?: string | null
@@ -782,6 +802,7 @@ export type MDApprovalRequestCreateWithoutFinanceAcknowledgedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   responseNote?: string | null
   respondedAt?: Date | string | null
@@ -798,6 +819,7 @@ export type MDApprovalRequestUncheckedCreateWithoutFinanceAcknowledgedByInput = 
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   requestedById: string
   respondedById?: string | null
@@ -843,6 +865,7 @@ export type MDApprovalRequestScalarWhereInput = {
   title?: Prisma.StringFilter<"MDApprovalRequest"> | string
   description?: Prisma.StringNullableFilter<"MDApprovalRequest"> | string | null
   amount?: Prisma.FloatNullableFilter<"MDApprovalRequest"> | number | null
+  attachments?: Prisma.JsonNullableFilter<"MDApprovalRequest">
   status?: Prisma.EnumMDApprovalStatusFilter<"MDApprovalRequest"> | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFilter<"MDApprovalRequest"> | string
   respondedById?: Prisma.StringNullableFilter<"MDApprovalRequest"> | string | null
@@ -892,6 +915,7 @@ export type MDApprovalRequestCreateManyRequestedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   respondedById?: string | null
   responseNote?: string | null
@@ -908,6 +932,7 @@ export type MDApprovalRequestCreateManyRespondedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   requestedById: string
   responseNote?: string | null
@@ -924,6 +949,7 @@ export type MDApprovalRequestCreateManyFinanceAcknowledgedByInput = {
   title: string
   description?: string | null
   amount?: number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: $Enums.MDApprovalStatus
   requestedById: string
   respondedById?: string | null
@@ -940,6 +966,7 @@ export type MDApprovalRequestUpdateWithoutRequestedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -956,6 +983,7 @@ export type MDApprovalRequestUncheckedUpdateWithoutRequestedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   respondedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -972,6 +1000,7 @@ export type MDApprovalRequestUncheckedUpdateManyWithoutRequestedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   respondedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -988,6 +1017,7 @@ export type MDApprovalRequestUpdateWithoutRespondedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1004,6 +1034,7 @@ export type MDApprovalRequestUncheckedUpdateWithoutRespondedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1020,6 +1051,7 @@ export type MDApprovalRequestUncheckedUpdateManyWithoutRespondedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1036,6 +1068,7 @@ export type MDApprovalRequestUpdateWithoutFinanceAcknowledgedByInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   responseNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1052,6 +1085,7 @@ export type MDApprovalRequestUncheckedUpdateWithoutFinanceAcknowledgedByInput = 
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   respondedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1068,6 +1102,7 @@ export type MDApprovalRequestUncheckedUpdateManyWithoutFinanceAcknowledgedByInpu
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   amount?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  attachments?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   status?: Prisma.EnumMDApprovalStatusFieldUpdateOperationsInput | $Enums.MDApprovalStatus
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   respondedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1086,6 +1121,7 @@ export type MDApprovalRequestSelect<ExtArgs extends runtime.Types.Extensions.Int
   title?: boolean
   description?: boolean
   amount?: boolean
+  attachments?: boolean
   status?: boolean
   requestedById?: boolean
   respondedById?: boolean
@@ -1106,6 +1142,7 @@ export type MDApprovalRequestSelectCreateManyAndReturn<ExtArgs extends runtime.T
   title?: boolean
   description?: boolean
   amount?: boolean
+  attachments?: boolean
   status?: boolean
   requestedById?: boolean
   respondedById?: boolean
@@ -1126,6 +1163,7 @@ export type MDApprovalRequestSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   title?: boolean
   description?: boolean
   amount?: boolean
+  attachments?: boolean
   status?: boolean
   requestedById?: boolean
   respondedById?: boolean
@@ -1146,6 +1184,7 @@ export type MDApprovalRequestSelectScalar = {
   title?: boolean
   description?: boolean
   amount?: boolean
+  attachments?: boolean
   status?: boolean
   requestedById?: boolean
   respondedById?: boolean
@@ -1158,7 +1197,7 @@ export type MDApprovalRequestSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MDApprovalRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "amount" | "status" | "requestedById" | "respondedById" | "responseNote" | "respondedAt" | "financeAcknowledged" | "financeAcknowledgedById" | "financeAcknowledgedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["mDApprovalRequest"]>
+export type MDApprovalRequestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "amount" | "attachments" | "status" | "requestedById" | "respondedById" | "responseNote" | "respondedAt" | "financeAcknowledged" | "financeAcknowledgedById" | "financeAcknowledgedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["mDApprovalRequest"]>
 export type MDApprovalRequestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   requestedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   respondedBy?: boolean | Prisma.MDApprovalRequest$respondedByArgs<ExtArgs>
@@ -1187,6 +1226,7 @@ export type $MDApprovalRequestPayload<ExtArgs extends runtime.Types.Extensions.I
     title: string
     description: string | null
     amount: number | null
+    attachments: runtime.JsonValue | null
     status: $Enums.MDApprovalStatus
     requestedById: string
     respondedById: string | null
@@ -1627,6 +1667,7 @@ export interface MDApprovalRequestFieldRefs {
   readonly title: Prisma.FieldRef<"MDApprovalRequest", 'String'>
   readonly description: Prisma.FieldRef<"MDApprovalRequest", 'String'>
   readonly amount: Prisma.FieldRef<"MDApprovalRequest", 'Float'>
+  readonly attachments: Prisma.FieldRef<"MDApprovalRequest", 'Json'>
   readonly status: Prisma.FieldRef<"MDApprovalRequest", 'MDApprovalStatus'>
   readonly requestedById: Prisma.FieldRef<"MDApprovalRequest", 'String'>
   readonly respondedById: Prisma.FieldRef<"MDApprovalRequest", 'String'>

@@ -153,7 +153,7 @@ export const navItems: NavItem[] = [
     title: 'My Support & Services',
     url: '/employee/dashboard/support-services',
     icon: MessageSquare,
-    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN', 'USER'],
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD', 'ADMIN', 'USER'],
   },
   {
     title: 'My Team',

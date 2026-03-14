@@ -2,11 +2,14 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { apiGet } from '@/lib/api-client'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { IncrementsTab } from '@/components/hr/increments-tab'
 import { DocumentsTab } from '@/components/hr/documents-tab'
 import { useAuth } from '@/hooks/use-auth'
 import { hasPermission } from '@/lib/rbac'
+import type { BadgeCounts } from '@/app/api/badge-counts/route'
 
 const ALL_TABS: (TabItem & { permission?: string })[] = [
   { value: 'increments', label: 'Increments', permission: 'hrms:employees:read' },
@@ -18,10 +21,19 @@ export default function HRCompensationPage() {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
 
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ['badge-counts'],
+    queryFn: () => apiGet<BadgeCounts>('/api/badge-counts'),
+    refetchInterval: 60_000,
+  })
+
   const tabs = useMemo(() => {
     if (!user) return []
-    return ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission as any)).map(({ value, label }) => ({ value, label }))
-  }, [user])
+    return ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission as any)).map(({ value, label }) => {
+      const badge = value === 'increments' ? badges?.hrPendingIncrements : undefined
+      return { value, label, badge }
+    })
+  }, [user, badges])
 
   const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'increments')
 

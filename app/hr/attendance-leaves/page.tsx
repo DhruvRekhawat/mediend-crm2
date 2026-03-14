@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { apiGet } from '@/lib/api-client'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { AttendanceTab } from '@/components/hr/attendance-tab'
 import { LeavesTab } from '@/components/hr/leaves-tab'
@@ -10,6 +12,7 @@ import { LeaveTypesTab } from '@/components/hr/leave-types-tab'
 import { LeaveBalancesTab } from '@/components/hr/leave-balances-tab'
 import { useAuth } from '@/hooks/use-auth'
 import { hasPermission } from '@/lib/rbac'
+import type { BadgeCounts } from '@/app/api/badge-counts/route'
 
 const ALL_TABS: (TabItem & { permission?: string })[] = [
   { value: 'attendance', label: 'Attendance', permission: 'hrms:attendance:read' },
@@ -24,10 +27,21 @@ export default function HRAttendanceLeavesPage() {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
 
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ['badge-counts'],
+    queryFn: () => apiGet<BadgeCounts>('/api/badge-counts'),
+    refetchInterval: 60_000,
+  })
+
   const tabs = useMemo(() => {
     if (!user) return []
-    return ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission as any)).map(({ value, label }) => ({ value, label }))
-  }, [user])
+    return ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission as any)).map(({ value, label }) => {
+      let badge: number | undefined
+      if (value === 'leaves') badge = badges?.hrPendingLeaves
+      else if (value === 'normalizations') badge = badges?.hrPendingNormalizations
+      return { value, label, badge }
+    })
+  }, [user, badges])
 
   const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'attendance')
 

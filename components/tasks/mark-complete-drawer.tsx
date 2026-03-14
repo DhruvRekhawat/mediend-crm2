@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { useAuth } from "@/hooks/use-auth"
+import { isSelfAssigned } from "@/lib/task-utils"
 import {
   Sheet,
   SheetContent,
@@ -64,10 +66,14 @@ export function MarkCompleteDrawer({
   onOpenChange,
   onSuccess,
 }: MarkCompleteDrawerProps) {
+  const { user } = useAuth()
   const [rating, setRating] = useState<number | null>(null)
   const [hoverRating, setHoverRating] = useState<number | null>(null)
   const [comments, setComments] = useState("")
   const updateTask = useUpdateTask()
+
+  const isAssignee = !!user && !!task && task.assigneeId === user.id
+  const selfAssignedAssigneeCannotRate = !!task && isSelfAssigned(task) && isAssignee
 
   const handlePresetSelect = (value: string) => {
     const preset = PRESET_COMMENTS.find((p) => p === value)
@@ -135,8 +141,8 @@ export function MarkCompleteDrawer({
   }
 
   const activeRating = hoverRating ?? rating
-  const canApprove = task && rating
-  const canReject = task && rating
+  const canApprove = task && rating && !selfAssignedAssigneeCannotRate
+  const canReject = task && rating && !selfAssignedAssigneeCannotRate
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -151,6 +157,20 @@ export function MarkCompleteDrawer({
         </SheetHeader>
         {task && (
           <div className="flex flex-col gap-6 flex-1 min-h-0 overflow-auto py-5 px-1 sm:px-2">
+            {selfAssignedAssigneeCannotRate ? (
+              <>
+                <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 text-sm text-amber-800 dark:text-amber-200">
+                  <p className="font-medium mb-1">Self-assigned task</p>
+                  <p className="text-muted-foreground">
+                    For self-assigned tasks, ratings must be given by your manager. Only MD or your manager can approve and rate this task.
+                  </p>
+                </div>
+                <Button variant="outline" onClick={() => handleOpenChange(false)} className="w-full">
+                  Close
+                </Button>
+              </>
+            ) : (
+            <>
             <div>
               <p className="text-sm font-medium mb-3">Rating (required)</p>
               <div className="flex items-center gap-1" role="group" aria-label="Select rating">
@@ -231,6 +251,8 @@ export function MarkCompleteDrawer({
                 Cancel
               </Button>
             </div>
+            </>
+            )}
           </div>
         )}
       </SheetContent>

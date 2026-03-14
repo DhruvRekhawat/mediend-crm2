@@ -5,13 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
-import { useState } from 'react'
-import { FileText, Plus, ExternalLink } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { FileText, Plus, ExternalLink, Mail, Upload, Search, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -20,15 +21,22 @@ interface Employee {
   id: string
   employeeCode: string
   user: {
+    id: string
     name: string
     email: string
   }
+  department?: {
+    id: string
+    name: string
+  } | null
 }
 
 interface EmployeeDocument {
   id: string
   employeeId: string
-  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER'
+  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+  documentUrl?: string | null
+  title?: string | null
   generatedAt: string
   metadata: Record<string, unknown>
   employee: {
@@ -40,27 +48,62 @@ interface EmployeeDocument {
   }
 }
 
-const DOCUMENT_TYPES = {
+const DOCUMENT_TYPES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
   APPRAISAL_LETTER: 'Appraisal Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
+  CUSTOM: 'Custom',
+}
+
+function getDocumentLabel(doc: EmployeeDocument): string {
+  if (doc.documentType === 'CUSTOM' && doc.title) return doc.title
+  return DOCUMENT_TYPES[doc.documentType] ?? doc.documentType
 }
 
 export default function HRDocumentsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [sheetEmployee, setSheetEmployee] = useState<Employee | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const queryClient = useQueryClient()
   const router = useRouter()
 
-  const { data: employees } = useQuery<Employee[]>({
+  const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ['employees'],
     queryFn: () => apiGet<Employee[]>('/api/employees'),
   })
 
-  const { data: documents, isLoading } = useQuery<EmployeeDocument[]>({
+  const { data: documents = [], isLoading } = useQuery<EmployeeDocument[]>({
     queryKey: ['hr-documents'],
     queryFn: () => apiGet<EmployeeDocument[]>('/api/hr/documents'),
   })
+
+  const { data: employeeDocs = [], isLoading: docsLoading } = useQuery<EmployeeDocument[]>({
+    queryKey: ['hr-documents', sheetEmployee?.id],
+    queryFn: () => apiGet<EmployeeDocument[]>(`/api/hr/documents?employeeId=${sheetEmployee!.id}`),
+    enabled: !!sheetEmployee?.id,
+  })
+
+  const documentsByEmployee = useMemo(() => {
+    const map = new Map<string, EmployeeDocument[]>()
+    for (const doc of documents) {
+      const list = map.get(doc.employeeId) ?? []
+      list.push(doc)
+      map.set(doc.employeeId, list)
+    }
+    return map
+  }, [documents])
+
+  const filteredEmployees = useMemo(() => {
+    if (!searchQuery.trim()) return employees
+    const q = searchQuery.toLowerCase()
+    return employees.filter(
+      (e) =>
+        e.user.name.toLowerCase().includes(q) ||
+        e.employeeCode.toLowerCase().includes(q) ||
+        e.department?.name?.toLowerCase().includes(q)
+    )
+  }, [employees, searchQuery])
 
   const generateMutation = useMutation({
     mutationFn: async (data: {
@@ -75,7 +118,6 @@ export default function HRDocumentsPage() {
       queryClient.invalidateQueries({ queryKey: ['hr-documents'] })
       setIsDialogOpen(false)
       toast.success('Document generated successfully')
-      // Navigate to view page to download/print
       router.push(`/hr/documents/${data.document.id}/view`)
     },
     onError: (error: Error) => {
@@ -85,6 +127,10 @@ export default function HRDocumentsPage() {
 
   const handleViewDocument = (docId: string) => {
     router.push(`/hr/documents/${docId}/view`)
+  }
+
+  const invalidateDocuments = () => {
+    queryClient.invalidateQueries({ queryKey: ['hr-documents'] })
   }
 
   return (
@@ -107,7 +153,8 @@ export default function HRDocumentsPage() {
               <DialogDescription>Select an employee and document type to generate</DialogDescription>
             </DialogHeader>
             <GenerateDocumentForm
-              employees={employees || []}
+              employees={employees}
+              preselectedEmployeeId={sheetEmployee?.id}
               onSubmit={(data) => generateMutation.mutate(data)}
               isLoading={generateMutation.isPending}
             />
@@ -116,7 +163,7 @@ export default function HRDocumentsPage() {
       </div>
 
       {/* Document Types Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         {Object.entries(DOCUMENT_TYPES).map(([key, label]) => (
           <Card key={key}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -125,19 +172,28 @@ export default function HRDocumentsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {documents?.filter((d) => d.documentType === key).length || 0}
+                {documents.filter((d) => d.documentType === key).length}
               </div>
-              <p className="text-xs text-muted-foreground">Generated documents</p>
+              <p className="text-xs text-muted-foreground">Documents</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Documents Table */}
+      {/* Employee List */}
       <Card>
         <CardHeader>
-          <CardTitle>Generated Documents</CardTitle>
-          <CardDescription>All employee documents generated - click View & Download to preview and save as PDF</CardDescription>
+          <CardTitle>Employees</CardTitle>
+          <CardDescription>Click an employee to view and manage their documents</CardDescription>
+          <div className="relative mt-2 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, code, or department..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -147,42 +203,38 @@ export default function HRDocumentsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
-                  <TableHead>Document Type</TableHead>
-                  <TableHead>Generated On</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Documents</TableHead>
+                  <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {documents?.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell>
-                      <div className="font-medium">{doc.employee.user.name}</div>
-                      <div className="text-sm text-muted-foreground">{doc.employee.employeeCode}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {DOCUMENT_TYPES[doc.documentType]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(doc.generatedAt), 'PPp')}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleViewDocument(doc.id)}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        View & Download
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(!documents || documents.length === 0) && (
+                {filteredEmployees.map((emp) => {
+                  const docCount = documentsByEmployee.get(emp.id)?.length ?? 0
+                  return (
+                    <TableRow
+                      key={emp.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSheetEmployee(emp)}
+                    >
+                      <TableCell>
+                        <div className="font-medium">{emp.user.name}</div>
+                        <div className="text-sm text-muted-foreground">{emp.employeeCode}</div>
+                      </TableCell>
+                      <TableCell>{emp.department?.name ?? '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{docCount} document{docCount !== 1 ? 's' : ''}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                {filteredEmployees.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                      No documents generated yet
+                      {searchQuery ? 'No employees match your search' : 'No employees found'}
                     </TableCell>
                   </TableRow>
                 )}
@@ -191,21 +243,267 @@ export default function HRDocumentsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Employee Documents Sheet */}
+      <Sheet open={!!sheetEmployee} onOpenChange={(open) => !open && setSheetEmployee(null)}>
+        <SheetContent className="sm:max-w-xl overflow-y-auto">
+          {sheetEmployee && (
+            <>
+              <SheetHeader>
+                <SheetTitle>{sheetEmployee.user.name}</SheetTitle>
+                <SheetDescription>
+                  {sheetEmployee.employeeCode}
+                  {sheetEmployee.department?.name && ` • ${sheetEmployee.department.name}`}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="flex flex-col gap-4 mt-4">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsDialogOpen(true)
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Generate Document
+                  </Button>
+                  <UploadDocumentButton employeeId={sheetEmployee.id} onSuccess={invalidateDocuments} />
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Documents</h4>
+                  {docsLoading ? (
+                    <div className="text-sm text-muted-foreground py-4">Loading...</div>
+                  ) : employeeDocs.length === 0 ? (
+                    <div className="text-sm text-muted-foreground py-4 border rounded-lg border-dashed p-4 text-center">
+                      No documents yet. Generate or upload a document.
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {employeeDocs.map((doc) => (
+                          <TableRow key={doc.id}>
+                            <TableCell>
+                              <Badge variant="secondary">{getDocumentLabel(doc)}</Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {format(new Date(doc.generatedAt), 'PP')}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-1 flex-wrap">
+                                {doc.documentType === 'CUSTOM' ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                  >
+                                    <a href={doc.documentUrl!} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-4 w-4 mr-1" />
+                                      Open
+                                    </a>
+                                  </Button>
+                                ) : (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleViewDocument(doc.id)}
+                                    >
+                                      <ExternalLink className="h-4 w-4 mr-1" />
+                                      View
+                                    </Button>
+                                    <EmailDocumentButton
+                                      documentId={doc.id}
+                                      defaultEmail={doc.employee.user.email}
+                                      documentType={doc.documentType}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
+  )
+}
+
+function UploadDocumentButton({ employeeId, onSuccess }: { employeeId: string; onSuccess: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [title, setTitle] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const queryClient = useQueryClient()
+
+  const handleUpload = async () => {
+    if (!file) {
+      toast.error('Please select a file')
+      return
+    }
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('employeeId', employeeId)
+      if (title.trim()) formData.append('title', title.trim())
+
+      const res = await fetch('/api/hr/documents/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      toast.success('Document uploaded')
+      setOpen(false)
+      setTitle('')
+      setFile(null)
+      queryClient.invalidateQueries({ queryKey: ['hr-documents'] })
+      onSuccess()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Upload className="h-4 w-4 mr-1" />
+          Upload Document
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Upload Document</DialogTitle>
+          <DialogDescription>Upload a PDF or image for this employee</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Title (optional)</Label>
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Certificate, ID Proof"
+            />
+          </div>
+          <div>
+            <Label>File (PDF or image)</Label>
+            <Input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
+          <Button onClick={handleUpload} disabled={uploading || !file}>
+            {uploading ? 'Uploading...' : 'Upload'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EmailDocumentButton({
+  documentId,
+  defaultEmail,
+  documentType,
+}: {
+  documentId: string
+  defaultEmail: string
+  documentType: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState(defaultEmail)
+  const [sending, setSending] = useState(false)
+
+  const handleSend = async () => {
+    if (!email.trim()) {
+      toast.error('Please enter an email address')
+      return
+    }
+    setSending(true)
+    try {
+      const res = await fetch(`/api/hr/documents/${documentId}/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send')
+      toast.success('Email sent')
+      setOpen(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send email')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const subjectLabel = DOCUMENT_TYPES[documentType] ?? documentType
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => (setOpen(o), o && setEmail(defaultEmail))}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Mail className="h-4 w-4 mr-1" />
+          Email
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Email {subjectLabel}</DialogTitle>
+          <DialogDescription>Send this document to the recipient</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Recipient email</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+            />
+          </div>
+          <Button onClick={handleSend} disabled={sending}>
+            {sending ? 'Sending...' : 'Send Email'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
 function GenerateDocumentForm({
   employees,
+  preselectedEmployeeId,
   onSubmit,
   isLoading,
 }: {
   employees: Employee[]
+  preselectedEmployeeId?: string
   onSubmit: (data: { employeeId: string; documentType: string; metadata?: Record<string, unknown> }) => void
   isLoading: boolean
 }) {
   const [formData, setFormData] = useState({
-    employeeId: '',
+    employeeId: preselectedEmployeeId ?? '',
     documentType: '',
     designation: '',
     ctc: '',
@@ -217,11 +515,17 @@ function GenerateDocumentForm({
     remarks: '',
   })
 
+  useEffect(() => {
+    if (preselectedEmployeeId) {
+      setFormData((prev) => ({ ...prev, employeeId: preselectedEmployeeId }))
+    }
+  }, [preselectedEmployeeId])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     const metadata: Record<string, unknown> = {}
-    
+
     if (formData.designation) metadata.designation = formData.designation
     if (formData.ctc) metadata.ctc = parseFloat(formData.ctc)
     if (formData.previousSalary) metadata.previousSalary = parseFloat(formData.previousSalary)
@@ -230,7 +534,7 @@ function GenerateDocumentForm({
     if (formData.lastWorkingDate) metadata.lastWorkingDate = formData.lastWorkingDate
     if (formData.resignationDate) metadata.resignationDate = formData.resignationDate
     if (formData.remarks) metadata.remarks = formData.remarks
-    
+
     onSubmit({
       employeeId: formData.employeeId,
       documentType: formData.documentType,
@@ -394,11 +698,13 @@ function GenerateDocumentForm({
             <SelectValue placeholder="Select document type" />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(DOCUMENT_TYPES).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
-              </SelectItem>
-            ))}
+            {Object.entries(DOCUMENT_TYPES)
+              .filter(([k]) => k !== 'CUSTOM')
+              .map(([key, label]) => (
+                <SelectItem key={key} value={key}>
+                  {label}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>
@@ -418,4 +724,3 @@ function GenerateDocumentForm({
     </form>
   )
 }
-

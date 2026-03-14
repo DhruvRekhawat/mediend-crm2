@@ -1,11 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Printer, ArrowLeft, Download } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Printer, ArrowLeft, Download, Mail } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 
 interface DocumentData {
   document: {
@@ -96,6 +101,11 @@ export default function DocumentViewPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            <EmailDocumentButton
+              documentId={documentId}
+              defaultEmail={data.document.employee.user.email}
+              documentType={data.document.documentType}
+            />
             <Button onClick={handleDownload} variant="outline">
               <Download className="h-4 w-4 mr-2" />
               Download PDF
@@ -170,6 +180,83 @@ export default function DocumentViewPage() {
         }
       `}</style>
     </>
+  )
+}
+
+function EmailDocumentButton({
+  documentId,
+  defaultEmail,
+  documentType,
+}: {
+  documentId: string
+  defaultEmail: string
+  documentType: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [email, setEmail] = useState(defaultEmail)
+  const [sending, setSending] = useState(false)
+
+  const DOCUMENT_TITLES: Record<string, string> = {
+    OFFER_LETTER: 'Offer Letter',
+    APPRAISAL_LETTER: 'Appraisal Letter',
+    EXPERIENCE_LETTER: 'Experience Letter',
+    RELIEVING_LETTER: 'Relieving Letter',
+  }
+  const subjectLabel = DOCUMENT_TITLES[documentType] ?? documentType
+
+  const handleSend = async () => {
+    if (!email.trim()) {
+      toast.error('Please enter an email address')
+      return
+    }
+    setSending(true)
+    try {
+      const res = await fetch(`/api/hr/documents/${documentId}/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send')
+      toast.success('Email sent')
+      setOpen(false)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send email')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => (setOpen(o), o && setEmail(defaultEmail))}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          <Mail className="h-4 w-4 mr-2" />
+          Email
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Email {subjectLabel}</DialogTitle>
+          <DialogDescription>Send this document to the recipient</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Recipient email</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+            />
+          </div>
+          <Button onClick={handleSend} disabled={sending}>
+            {sending ? 'Sending...' : 'Send Email'}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

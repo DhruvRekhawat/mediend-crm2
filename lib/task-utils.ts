@@ -1,6 +1,11 @@
 import { isBefore, isEqual, startOfDay, differenceInDays } from "date-fns"
 import type { Task } from "@/hooks/use-tasks"
 
+/** Returns true when the task creator assigned it to themselves. */
+export function isSelfAssigned(task: Task): boolean {
+  return !!task.assigneeId && task.assigneeId === task.createdById
+}
+
 export type TaskStatusType = 'expired' | 'due-today' | 'expiring-soon' | 'normal'
 
 export function getTaskStatus(task: Task): TaskStatusType {

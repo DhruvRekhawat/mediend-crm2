@@ -89,10 +89,15 @@ export async function PATCH(
   if (parsed.data.status === "COMPLETED" && !canReviewTask) {
     return errorResponse("Only the person who assigned the task can approve it as complete", 403)
   }
+  const isSelfAssigned = task.assigneeId === task.createdById
+  const isAssigneeRatingSelf = isSelfAssigned && isAssignee
   if (parsed.data.status === "COMPLETED") {
     const grade = parsed.data.grade
     if (!grade || !["1", "2", "3", "4", "5"].includes(grade)) {
       return errorResponse("Rating (1-5) is required when approving a task", 400)
+    }
+    if (isAssigneeRatingSelf) {
+      return errorResponse("For self-assigned tasks, ratings must be given by your manager", 403)
     }
   }
   if (parsed.data.status === "IN_PROGRESS" && task.status === "EMPLOYEE_DONE") {
@@ -102,6 +107,9 @@ export async function PATCH(
     const grade = parsed.data.grade
     if (!grade || !["1", "2", "3", "4", "5"].includes(grade)) {
       return errorResponse("Rating (1-5) is required when rejecting a task", 400)
+    }
+    if (isAssigneeRatingSelf) {
+      return errorResponse("For self-assigned tasks, ratings must be given by your manager", 403)
     }
   }
 

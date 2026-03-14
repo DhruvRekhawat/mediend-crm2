@@ -1,15 +1,29 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
+import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { 
-  generateOfferLetterHTML, 
-  generateAppraisalLetterHTML, 
-  generateExperienceLetterHTML, 
-  generateRelievingLetterHTML 
+import {
+  generateOfferLetterHTML,
+  generateAppraisalLetterHTML,
+  generateExperienceLetterHTML,
+  generateRelievingLetterHTML,
 } from '@/lib/hrms/document-templates'
+import { sendDocumentEmail } from '@/lib/resend'
+import { z } from 'zod'
 
-export async function GET(
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  OFFER_LETTER: 'Offer Letter',
+  APPRAISAL_LETTER: 'Appraisal Letter',
+  EXPERIENCE_LETTER: 'Experience Letter',
+  RELIEVING_LETTER: 'Relieving Letter',
+}
+
+const emailSchema = z.object({
+  email: z.string().email('Valid email is required'),
+})
+
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -19,18 +33,15 @@ export async function GET(
       return unauthorizedResponse()
     }
 
-    const { id } = await params
-
-    // Get employee record for user
-    const employee = await prisma.employee.findUnique({
-      where: { userId: user.id },
-    })
-
-    if (!employee) {
-      return errorResponse('Employee record not found', 404)
+    if (!hasPermission(user, 'hrms:employees:write')) {
+      return errorResponse('Forbidden', 403)
     }
 
-    // Fetch the document and verify it belongs to the employee
+    const { id } = await params
+
+    const body = await request.json()
+    const { email } = emailSchema.parse(body)
+
     const document = await prisma.employeeDocument.findUnique({
       where: { id },
       include: {
@@ -56,9 +67,8 @@ export async function GET(
       return errorResponse('Document not found', 404)
     }
 
-    // Verify the document belongs to the requesting user's employee record
-    if (document.employeeId !== employee.id) {
-      return errorResponse('Forbidden', 403)
+    if (document.documentType === 'CUSTOM') {
+      return errorResponse('Custom uploaded documents cannot be emailed as HTML', 400)
     }
 
     const employeeData = {
@@ -68,18 +78,6 @@ export async function GET(
       department: document.employee.department?.name,
       joinDate: document.employee.joinDate,
       salary: document.employee.salary,
-    }
-
-    if (document.documentType === 'CUSTOM') {
-      if (!document.documentUrl) {
-        return errorResponse('Document file not available', 404)
-      }
-      return successResponse({
-        document,
-        htmlContent: null,
-        documentUrl: document.documentUrl,
-        isCustom: true,
-      })
     }
 
     const metadata = document.metadata as Record<string, unknown> | null
@@ -103,13 +101,21 @@ export async function GET(
         return errorResponse('Invalid document type', 400)
     }
 
-    return successResponse({
-      document,
-      htmlContent,
-    })
+    const subjectLabel = DOCUMENT_TYPE_LABELS[document.documentType] ?? document.documentType
+    const subject = `Your ${subjectLabel} - Kundkund Healthcare Private Limited`
+
+    const result = await sendDocumentEmail(email, subject, htmlContent)
+
+    if (!result.success) {
+      return errorResponse(result.error ?? 'Failed to send email', 500)
+    }
+
+    return successResponse({ sent: true }, 'Email sent successfully')
   } catch (error) {
-    console.error('Error fetching document:', error)
-    return errorResponse('Failed to fetch document', 500)
+    if (error instanceof z.ZodError) {
+      return errorResponse(error.errors[0]?.message ?? 'Invalid request', 400)
+    }
+    console.error('Error sending document email:', error)
+    return errorResponse('Failed to send email', 500)
   }
 }
-

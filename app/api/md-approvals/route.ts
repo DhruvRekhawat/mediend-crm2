@@ -6,10 +6,17 @@ import { hasFeaturePermission } from '@/lib/permissions'
 import { z } from 'zod'
 import { MDApprovalStatus, type Prisma } from '@/generated/prisma/client'
 
+const attachmentSchema = z.object({
+  name: z.string(),
+  url: z.string(),
+  type: z.string(),
+})
+
 const createSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   amount: z.number().optional().nullable(),
+  attachments: z.array(attachmentSchema).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -23,13 +30,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, amount } = createSchema.parse(body)
+    const { title, description, amount, attachments } = createSchema.parse(body)
 
     const approval = await prisma.mDApprovalRequest.create({
       data: {
         title,
         description: description ?? undefined,
         amount: amount ?? undefined,
+        attachments: attachments ?? undefined,
         requestedById: user.id,
       },
       include: {

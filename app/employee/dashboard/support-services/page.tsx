@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/use-auth'
+import type { BadgeCounts } from '@/app/api/badge-counts/route'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { format } from 'date-fns'
 import {
@@ -52,13 +53,13 @@ import { SectionContainer } from '@/components/employee/section-container'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { toast } from 'sonner'
 
-const SUPPORT_TABS: TabItem[] = [
+const SUPPORT_TAB_VALUES = [
   { value: 'feedback', label: 'Feedback' },
   { value: 'tickets', label: 'Tickets' },
   { value: 'md-services', label: 'MD Services' },
   { value: 'mental-health', label: 'Mental Health' },
   { value: 'job-postings', label: 'Job Postings' },
-]
+] as const
 
 const HEAD_ROLE_OPTIONS = [
   { value: 'HR_HEAD', label: 'HR Head' },
@@ -178,8 +179,32 @@ const IJP_STATUS = {
   HIRED: { label: 'Hired', variant: 'default' as const, icon: CheckCircle },
 }
 
+const HEAD_ROLES = ['HR_HEAD', 'FINANCE_HEAD', 'SALES_HEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']
+
 export default function SupportServicesPage() {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('feedback')
+
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ['badge-counts'],
+    queryFn: () => apiGet<BadgeCounts>('/api/badge-counts'),
+    refetchInterval: 60_000,
+  })
+
+  const isHead = user && HEAD_ROLES.includes(user.role)
+
+  const tabs: TabItem[] = useMemo(
+    () =>
+      SUPPORT_TAB_VALUES.map((t) => {
+        let badge: number | undefined
+        if (t.value === 'feedback') badge = badges?.pendingFeedback
+        else if (t.value === 'tickets' && isHead) badge = badges?.pendingTickets
+        else if (t.value === 'md-services') badge = badges?.pendingMDAppointments
+        else if (t.value === 'mental-health') badge = badges?.pendingMentalHealth
+        return { ...t, badge }
+      }),
+    [badges, isHead]
+  )
 
   // Determine variant based on active tab
   const tabVariant: 'support' | 'mental-health' = activeTab === 'mental-health' ? 'mental-health' : 'support'
@@ -187,7 +212,7 @@ export default function SupportServicesPage() {
   return (
     <div className="space-y-6">
       <TabNavigation
-        tabs={SUPPORT_TABS}
+        tabs={tabs}
         value={activeTab}
         onValueChange={setActiveTab}
         variant={tabVariant}

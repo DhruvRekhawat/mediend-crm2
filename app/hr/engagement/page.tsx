@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
+import { apiGet } from '@/lib/api-client'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { FeedbackTab } from '@/components/hr/feedback-tab'
 import { TicketsTab } from '@/components/hr/tickets-tab'
@@ -9,6 +11,7 @@ import { MentalHealthTab } from '@/components/hr/mental-health-tab'
 import { IJPTab } from '@/components/hr/ijp-tab'
 import { useAuth } from '@/hooks/use-auth'
 import { hasPermission } from '@/lib/rbac'
+import type { BadgeCounts } from '@/app/api/badge-counts/route'
 
 const ALL_TABS: (TabItem & { permission?: string })[] = [
   { value: 'feedback', label: 'Feedback', permission: 'hrms:employees:read' },
@@ -22,10 +25,22 @@ export default function HREngagementPage() {
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab')
 
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ['badge-counts'],
+    queryFn: () => apiGet<BadgeCounts>('/api/badge-counts'),
+    refetchInterval: 60_000,
+  })
+
   const tabs = useMemo(() => {
     if (!user) return []
-    return ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission as any)).map(({ value, label }) => ({ value, label }))
-  }, [user])
+    return ALL_TABS.filter((t) => !t.permission || hasPermission(user, t.permission as any)).map(({ value, label }) => {
+      let badge: number | undefined
+      if (value === 'feedback') badge = badges?.hrPendingFeedback
+      else if (value === 'tickets') badge = badges?.hrPendingTickets
+      else if (value === 'mental-health') badge = badges?.hrPendingMentalHealth
+      return { value, label, badge }
+    })
+  }, [user, badges])
 
   const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'feedback')
 

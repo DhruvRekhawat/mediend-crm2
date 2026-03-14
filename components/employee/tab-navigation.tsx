@@ -67,6 +67,7 @@ const variantStyles: Record<
 export interface TabItem {
   value: string
   label: string
+  badge?: number
 }
 
 interface TabNavigationProps {
@@ -111,6 +112,11 @@ export function TabNavigation({
               )}
             >
               {tab.label}
+              {tab.badge != null && tab.badge > 0 && (
+                <span className="ml-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold leading-none px-1">
+                  {tab.badge > 99 ? '99+' : tab.badge}
+                </span>
+              )}
             </button>
           )
         })}

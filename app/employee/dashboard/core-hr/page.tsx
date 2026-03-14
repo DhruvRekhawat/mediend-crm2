@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
+import type { BadgeCounts } from '@/app/api/badge-counts/route'
 import { format } from 'date-fns'
 import { Calendar, FileText, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -35,11 +36,11 @@ import { LeaveBalanceCard } from '@/components/hrms/LeaveBalanceCard'
 import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
 import { useRouter } from 'next/navigation'
 
-const CORE_HR_TABS: TabItem[] = [
+const CORE_HR_TAB_VALUES = [
   { value: 'attendance', label: 'Attendance' },
   { value: 'leaves', label: 'Leaves' },
   { value: 'documents', label: 'Documents' },
-]
+] as const
 
 interface AttendanceDay {
   date: Date
@@ -108,7 +109,9 @@ interface LeaveData {
 
 interface EmployeeDocument {
   id: string
-  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER'
+  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+  documentUrl?: string | null
+  title?: string | null
   generatedAt: string
 }
 
@@ -117,6 +120,12 @@ const DOCUMENT_TYPES: Record<string, string> = {
   APPRAISAL_LETTER: 'Appraisal Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
+  CUSTOM: 'Custom',
+}
+
+function getDocumentLabel(doc: EmployeeDocument): string {
+  if (doc.documentType === 'CUSTOM' && doc.title) return doc.title
+  return DOCUMENT_TYPES[doc.documentType] ?? doc.documentType
 }
 
 function formatTime(date: Date | string | null) {
@@ -135,11 +144,26 @@ export default function CoreHRPage() {
   const [activeTab, setActiveTab] = useState('attendance')
   const router = useRouter()
 
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ['badge-counts'],
+    queryFn: () => apiGet<BadgeCounts>('/api/badge-counts'),
+    refetchInterval: 60_000,
+  })
+
+  const tabs: TabItem[] = useMemo(
+    () =>
+      CORE_HR_TAB_VALUES.map((t) => ({
+        ...t,
+        badge: t.value === 'leaves' ? badges?.pendingLeaveRequests : undefined,
+      })),
+    [badges]
+  )
+
   return (
     <div className="space-y-6">
 
       <TabNavigation
-        tabs={CORE_HR_TABS}
+        tabs={tabs}
         value={activeTab}
         onValueChange={setActiveTab}
         variant="core-hr"
@@ -540,8 +564,12 @@ function DocumentsTab({ router }: { router: ReturnType<typeof useRouter> }) {
     queryFn: () => apiGet<EmployeeDocument[]>('/api/employee/documents'),
   })
 
-  const handleView = (id: string) => {
-    router.push(`/employee/documents/${id}/view`)
+  const handleView = (doc: EmployeeDocument) => {
+    if (doc.documentType === 'CUSTOM' && doc.documentUrl) {
+      window.open(doc.documentUrl, '_blank')
+    } else {
+      router.push(`/employee/documents/${doc.id}/view`)
+    }
   }
 
   return (
@@ -563,14 +591,14 @@ function DocumentsTab({ router }: { router: ReturnType<typeof useRouter> }) {
                 <TableRow key={doc.id}>
                   <TableCell>
                     <Badge variant="secondary">
-                      {DOCUMENT_TYPES[doc.documentType] ?? doc.documentType}
+                      {getDocumentLabel(doc)}
                     </Badge>
                   </TableCell>
                   <TableCell>{format(new Date(doc.generatedAt), 'PPP')}</TableCell>
                   <TableCell>
-                    <Button size="sm" onClick={() => handleView(doc.id)}>
+                    <Button size="sm" onClick={() => handleView(doc)}>
                       <ExternalLink className="h-4 w-4 mr-1" />
-                      View & Download
+                      {doc.documentType === 'CUSTOM' ? 'Open' : 'View & Download'}
                     </Button>
                   </TableCell>
                 </TableRow>

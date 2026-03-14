@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Plus } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/hooks/use-auth"
 import { TabNavigation, type TabItem } from "@/components/employee/tab-navigation"
 import { TaskInput } from "@/components/tasks/task-input"
@@ -15,6 +16,7 @@ import { PerformanceTab } from "@/components/tasks/performance-tab"
 import { Button } from "@/components/ui/button"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { apiGet } from "@/lib/api-client"
+import type { BadgeCounts } from "@/app/api/badge-counts/route"
 
 export default function MDTasksPage() {
   const { user } = useAuth()
@@ -22,6 +24,12 @@ export default function MDTasksPage() {
   const [activeTab, setActiveTab] = useState("overview")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useIsMobile()
+
+  const { data: badges } = useQuery<BadgeCounts>({
+    queryKey: ["badge-counts"],
+    queryFn: () => apiGet<BadgeCounts>("/api/badge-counts"),
+    refetchInterval: 60_000,
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -55,14 +63,22 @@ export default function MDTasksPage() {
 
   const tabs: TabItem[] = useMemo(
     () => [
-      { value: "overview", label: "Overview" },
+      {
+        value: "overview",
+        label: "Overview",
+        badge: badges?.taskOverdueCount,
+      },
       ...(isManager !== false ? [{ value: "team", label: "Team" as const }] : []),
-      { value: "approval", label: "Approval" },
+      {
+        value: "approval",
+        label: "Approval",
+        badge: badges?.taskApprovalCount,
+      },
       { value: "all", label: "All tasks" },
       { value: "calendar", label: "Calendar" },
       ...(user?.role === "MD" ? [{ value: "performance", label: "Performance" as const }] : []),
     ],
-    [isManager, user?.role]
+    [isManager, user?.role, badges]
   )
 
   const validTabValues = useMemo(() => new Set(tabs.map((t) => t.value)), [tabs])

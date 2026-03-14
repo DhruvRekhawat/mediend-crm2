@@ -93,6 +93,7 @@ enum DocumentType {
   APPRAISAL_LETTER
   EXPERIENCE_LETTER
   RELIEVING_LETTER
+  CUSTOM
 }
 
 enum FeedbackStatus {
@@ -1027,6 +1028,7 @@ model EmployeeDocument {
   employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   documentType DocumentType
   documentUrl  String?
+  title        String?
   metadata     Json?
   generatedAt  DateTime     @default(now())
   createdAt    DateTime     @default(now())
@@ -1821,6 +1823,7 @@ model MDApprovalRequest {
   title                 String
   description           String?           @db.Text
   amount                Float?
+  attachments           Json?
   status                MDApprovalStatus   @default(PENDING)
   requestedById         String
   requestedBy           User               @relation("MDApprovalRequester", fields: [requestedById], references: [id], onDelete: Cascade)

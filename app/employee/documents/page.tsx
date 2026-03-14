@@ -12,15 +12,23 @@ import { useRouter } from 'next/navigation'
 
 interface EmployeeDocument {
   id: string
-  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER'
+  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+  documentUrl?: string | null
+  title?: string | null
   generatedAt: string
 }
 
-const DOCUMENT_TYPES = {
+const DOCUMENT_TYPES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
   APPRAISAL_LETTER: 'Appraisal Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
+  CUSTOM: 'Custom',
+}
+
+function getDocumentLabel(doc: EmployeeDocument): string {
+  if (doc.documentType === 'CUSTOM' && doc.title) return doc.title
+  return DOCUMENT_TYPES[doc.documentType] ?? doc.documentType
 }
 
 export default function EmployeeDocumentsPage() {
@@ -31,8 +39,12 @@ export default function EmployeeDocumentsPage() {
     queryFn: () => apiGet<EmployeeDocument[]>('/api/employee/documents'),
   })
 
-  const handleViewDocument = (docId: string) => {
-    router.push(`/employee/documents/${docId}/view`)
+  const handleViewDocument = (doc: EmployeeDocument) => {
+    if (doc.documentType === 'CUSTOM' && doc.documentUrl) {
+      window.open(doc.documentUrl, '_blank')
+    } else {
+      router.push(`/employee/documents/${doc.id}/view`)
+    }
   }
 
   return (
@@ -69,7 +81,7 @@ export default function EmployeeDocumentsPage() {
                   <TableRow key={doc.id}>
                     <TableCell>
                       <Badge variant="secondary">
-                        {DOCUMENT_TYPES[doc.documentType]}
+                        {getDocumentLabel(doc)}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -79,10 +91,10 @@ export default function EmployeeDocumentsPage() {
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => handleViewDocument(doc.id)}
+                        onClick={() => handleViewDocument(doc)}
                       >
                         <ExternalLink className="h-4 w-4 mr-1" />
-                        View & Download
+                        {doc.documentType === 'CUSTOM' ? 'Open' : 'View & Download'}
                       </Button>
                     </TableCell>
                   </TableRow>

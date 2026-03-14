@@ -16,17 +16,15 @@ interface CompanyData {
   city: string
   state: string
   pincode: string
-  phone: string
   email: string
 }
 
 const COMPANY_DATA: CompanyData = {
-  name: 'Mediend Healthcare Pvt. Ltd.',
-  address: '123 Business Park, Sector 18',
+  name: 'Kundkund Healthcare Private Limited',
+  address: 'H-166, Sector 63 Rd, H Block, Sector 63, Noida, Uttar Pradesh 201309',
   city: 'Noida',
   state: 'Uttar Pradesh',
-  pincode: '201301',
-  phone: '+91 120 4567890',
+  pincode: '201309',
   email: 'hr@mediend.in',
 }
 
@@ -80,13 +78,13 @@ export function generateOfferLetterHTML(employee: EmployeeData, metadata?: { des
 <body>
   <div class="header">
     <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}, ${COMPANY_DATA.city}, ${COMPANY_DATA.state} - ${COMPANY_DATA.pincode}</p>
-    <p>Phone: ${COMPANY_DATA.phone} | Email: ${COMPANY_DATA.email}</p>
+    <p>${COMPANY_DATA.address}</p>
+    <p>Email: ${COMPANY_DATA.email}</p>
   </div>
   
   <div class="date">
     <p>Date: ${today}</p>
-    <p>Ref: MEDIEND/HR/OFFER/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
+    <p>Ref: KUNDKUND/HR/OFFER/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
   
   <div class="salutation">
@@ -182,12 +180,13 @@ export function generateAppraisalLetterHTML(employee: EmployeeData, metadata?: {
   
   <div class="header">
     <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}, ${COMPANY_DATA.city}, ${COMPANY_DATA.state} - ${COMPANY_DATA.pincode}</p>
+    <p>${COMPANY_DATA.address}</p>
+    <p>Email: ${COMPANY_DATA.email}</p>
   </div>
   
   <div class="date">
     <p>Date: ${today}</p>
-    <p>Ref: MEDIEND/HR/APPRAISAL/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
+    <p>Ref: KUNDKUND/HR/APPRAISAL/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
   
   <div>
@@ -271,13 +270,13 @@ export function generateExperienceLetterHTML(employee: EmployeeData, metadata?: 
 <body>
   <div class="header">
     <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}, ${COMPANY_DATA.city}, ${COMPANY_DATA.state} - ${COMPANY_DATA.pincode}</p>
-    <p>Phone: ${COMPANY_DATA.phone} | Email: ${COMPANY_DATA.email}</p>
+    <p>${COMPANY_DATA.address}</p>
+    <p>Email: ${COMPANY_DATA.email}</p>
   </div>
   
   <div class="date">
     <p>Date: ${today}</p>
-    <p>Ref: MEDIEND/HR/EXP/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
+    <p>Ref: KUNDKUND/HR/EXP/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
   
   <div class="subject">
@@ -335,13 +334,13 @@ export function generateRelievingLetterHTML(employee: EmployeeData, metadata?: {
 <body>
   <div class="header">
     <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}, ${COMPANY_DATA.city}, ${COMPANY_DATA.state} - ${COMPANY_DATA.pincode}</p>
-    <p>Phone: ${COMPANY_DATA.phone} | Email: ${COMPANY_DATA.email}</p>
+    <p>${COMPANY_DATA.address}</p>
+    <p>Email: ${COMPANY_DATA.email}</p>
   </div>
   
   <div class="date">
     <p>Date: ${today}</p>
-    <p>Ref: MEDIEND/HR/REL/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
+    <p>Ref: KUNDKUND/HR/REL/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
   
   <div class="subject">

@@ -124,7 +124,8 @@ export const DocumentType = {
   OFFER_LETTER: 'OFFER_LETTER',
   APPRAISAL_LETTER: 'APPRAISAL_LETTER',
   EXPERIENCE_LETTER: 'EXPERIENCE_LETTER',
-  RELIEVING_LETTER: 'RELIEVING_LETTER'
+  RELIEVING_LETTER: 'RELIEVING_LETTER',
+  CUSTOM: 'CUSTOM'
 } as const
 
 export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType]

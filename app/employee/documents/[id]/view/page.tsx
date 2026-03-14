@@ -4,14 +4,16 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Printer, ArrowLeft, Download } from 'lucide-react'
+import { Printer, ArrowLeft, Download, ExternalLink } from 'lucide-react'
 import { format } from 'date-fns'
 
 interface DocumentData {
   document: {
     id: string
     employeeId: string
-    documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER'
+    documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+    documentUrl?: string | null
+    title?: string | null
     generatedAt: string
     metadata: Record<string, unknown>
     employee: {
@@ -22,14 +24,17 @@ interface DocumentData {
       }
     }
   }
-  htmlContent: string
+  htmlContent: string | null
+  documentUrl?: string
+  isCustom?: boolean
 }
 
-const DOCUMENT_TITLES = {
+const DOCUMENT_TITLES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
   APPRAISAL_LETTER: 'Appraisal Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
+  CUSTOM: 'Document',
 }
 
 export default function EmployeeDocumentViewPage() {
@@ -76,7 +81,42 @@ export default function EmployeeDocumentViewPage() {
     )
   }
 
-  const documentTitle = DOCUMENT_TITLES[data.document.documentType]
+  const documentTitle = data.document.title || DOCUMENT_TITLES[data.document.documentType]
+  const isCustom = data.isCustom || data.document.documentType === 'CUSTOM'
+  const documentUrl = data.documentUrl || data.document.documentUrl
+
+  if (isCustom && documentUrl) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="p-4 bg-background border-b">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <Button variant="outline" onClick={() => router.back()}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <h1 className="text-lg font-semibold">{documentTitle}</h1>
+            <Button asChild>
+              <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Document
+              </a>
+            </Button>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center space-y-4">
+            <p className="text-muted-foreground">This is an uploaded document. Click below to open it.</p>
+            <Button asChild size="lg">
+              <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open in New Tab
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -113,10 +153,12 @@ export default function EmployeeDocumentViewPage() {
         <div className="max-w-4xl mx-auto">
           {/* Document Container */}
           <div className="bg-white shadow-lg rounded-lg overflow-hidden print:shadow-none print:rounded-none">
-            <div 
-              className="p-8 print:p-0"
-              dangerouslySetInnerHTML={{ __html: data.htmlContent }} 
-            />
+            {data.htmlContent && (
+              <div 
+                className="p-8 print:p-0"
+                dangerouslySetInnerHTML={{ __html: data.htmlContent }} 
+              />
+            )}
           </div>
         </div>
       </div>
