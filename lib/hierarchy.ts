@@ -235,3 +235,28 @@ export async function isUserInMDManagedCohort(userId: string): Promise<boolean> 
   })
   return !!inWatchlist
 }
+
+/**
+ * Get user IDs of employees in an MD's task teams and watchlist.
+ * Used to restrict MD tasks/stats to only their team + watchlist (not all subordinates).
+ */
+export async function getMDTeamAndWatchlistUserIds(ownerId: string): Promise<string[]> {
+  const [teamMembers, watchlistEntries] = await Promise.all([
+    prisma.mDTaskTeamMember.findMany({
+      where: { team: { ownerId } },
+      include: { employee: { select: { userId: true } } },
+    }),
+    prisma.mDWatchlistEmployee.findMany({
+      where: { ownerId },
+      include: { employee: { select: { userId: true } } },
+    }),
+  ])
+  const userIds = new Set<string>()
+  for (const m of teamMembers) {
+    if (m.employee.userId) userIds.add(m.employee.userId)
+  }
+  for (const w of watchlistEntries) {
+    if (w.employee.userId) userIds.add(w.employee.userId)
+  }
+  return Array.from(userIds)
+}

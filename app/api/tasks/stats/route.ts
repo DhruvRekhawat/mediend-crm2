@@ -2,15 +2,24 @@ import { NextRequest } from "next/server"
 import { getSessionFromRequest } from "@/lib/session"
 import { successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
-import { getEmployeeByUserId, getSubordinates } from "@/lib/hierarchy"
+import { getEmployeeByUserId, getSubordinates, getMDTeamAndWatchlistUserIds } from "@/lib/hierarchy"
 
 export async function GET(_request: NextRequest) {
   const user = getSessionFromRequest(_request)
   if (!user) return unauthorizedResponse()
 
-  const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
+  const isAdmin = user.role === "ADMIN"
+  const isMD = user.role === "MD"
   let assigneeWhere: { assigneeId: { in: string[] } } | undefined
-  if (!isMDOrAdmin) {
+  if (isAdmin) {
+    // Admin sees all
+  } else if (isMD) {
+    // MD sees only their team + watchlist
+    const ids = await getMDTeamAndWatchlistUserIds(user.id)
+    if (ids.length > 0) {
+      assigneeWhere = { assigneeId: { in: ids } }
+    }
+  } else {
     const employee = await getEmployeeByUserId(user.id)
     if (!employee) {
       assigneeWhere = { assigneeId: { in: [user.id] } }
@@ -53,9 +62,15 @@ export async function GET(_request: NextRequest) {
       where: baseWhere,
       _count: { id: true },
     }),
-    isMDOrAdmin
+    isAdmin
       ? prisma.warning.groupBy({ by: ["employeeId"], _count: { id: true } }).then((r) => r.length)
-      : Promise.resolve(0),
+      : assigneeWhere
+        ? prisma.warning.groupBy({
+            by: ["employeeId"],
+            where: { employee: { userId: { in: assigneeWhere.assigneeId.in } } },
+            _count: { id: true },
+          }).then((r) => r.length)
+        : Promise.resolve(0),
   ])
 
   const projectIds = [...new Set(byProject.map((p) => p.projectId).filter(Boolean))] as string[]

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { getSessionFromRequest } from "@/lib/session"
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
-import { getEmployeeByUserId, getSubordinates, isUserInMDManagedCohort } from "@/lib/hierarchy"
+import { getEmployeeByUserId, getSubordinates, isUserInMDManagedCohort, getMDTeamAndWatchlistUserIds } from "@/lib/hierarchy"
 import { z } from "zod"
 
 const createTaskSchema = z.object({
@@ -18,11 +18,16 @@ const createTaskSchema = z.object({
 })
 
 async function getAllowedAssigneeIds(userId: string): Promise<string[]> {
-  const isMDOrAdmin = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { role: true },
-  }).then((u) => u?.role === "MD" || u?.role === "ADMIN")
-  if (isMDOrAdmin) return [] // empty means no filter: can see all
+  })
+  if (user?.role === "ADMIN") return [] // Admin sees all
+  if (user?.role === "MD") {
+    // MD sees only their team + watchlist, not everyone under them
+    const ids = await getMDTeamAndWatchlistUserIds(userId)
+    return ids.length > 0 ? ids : [userId] // include self if empty
+  }
   const employee = await getEmployeeByUserId(userId)
   if (!employee) return [userId]
   const subordinates = await getSubordinates(employee.id, true)
@@ -41,18 +46,18 @@ export async function GET(request: NextRequest) {
   const startDate = searchParams.get("startDate")
   const endDate = searchParams.get("endDate")
 
-  const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
+  const isAdmin = user.role === "ADMIN"
   const allowedAssigneeIds = await getAllowedAssigneeIds(user.id)
 
   const where: Record<string, unknown> = {}
 
   if (assigneeId) {
-    if (isMDOrAdmin || allowedAssigneeIds.includes(assigneeId)) {
+    if (isAdmin || allowedAssigneeIds.includes(assigneeId)) {
       where.assigneeId = assigneeId
     } else {
       return errorResponse("Forbidden", 403)
     }
-  } else if (!isMDOrAdmin && allowedAssigneeIds.length > 0) {
+  } else if (!isAdmin && allowedAssigneeIds.length > 0) {
     where.assigneeId = { in: allowedAssigneeIds }
   }
 

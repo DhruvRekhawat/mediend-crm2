@@ -49,11 +49,11 @@ export async function GET(request: NextRequest) {
     const todayStart = startOfDay(today)
     const todayEnd = endOfDay(today)
 
-    // 1. Direct subordinates
+    // 1. Direct subordinates (only for non-MD managers; MD sees only team + watchlist)
+    const isMD = user.role === "MD"
     const mdEmployee = await getEmployeeByUserId(user.id)
-    const subordinateEmployees = mdEmployee
-      ? await getSubordinates(mdEmployee.id, false)
-      : []
+    const subordinateEmployees =
+      !isMD && mdEmployee ? await getSubordinates(mdEmployee.id, false) : []
 
     // 2. MD task team members (all teams owned by this user)
     const taskTeams = await prisma.mDTaskTeam.findMany({
@@ -104,9 +104,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Merge and deduplicate by employee id; track source (subordinate > team > watchlist)
+    // MD: only team + watchlist. Other managers: subordinates + team + watchlist
     const byEmployeeId = new Map<string, { employee: EmployeeRow; source: TeamMemberSource }>()
-    for (const emp of subordinateEmployees) {
-      byEmployeeId.set(emp.id, { employee: emp as EmployeeRow, source: "subordinate" })
+    if (!isMD) {
+      for (const emp of subordinateEmployees) {
+        byEmployeeId.set(emp.id, { employee: emp as EmployeeRow, source: "subordinate" })
+      }
     }
     for (const team of taskTeams) {
       for (const m of team.members) {

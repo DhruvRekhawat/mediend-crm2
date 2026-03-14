@@ -149,7 +149,7 @@ export function TaskRow({
     : null
 
   const givenLabel = task.createdAt
-    ? format(new Date(task.createdAt), "MMM d")
+    ? format(new Date(task.createdAt), "MMM d, h:mm a")
     : null
 
   const daysGiven =

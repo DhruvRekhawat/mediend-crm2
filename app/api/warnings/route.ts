@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { getSessionFromRequest } from "@/lib/session"
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
+import { getMDTeamAndWatchlistUserIds } from "@/lib/hierarchy"
 import { z } from "zod"
 
 const createWarningSchema = z.object({
@@ -15,10 +16,20 @@ export async function GET(request: NextRequest) {
   const user = getSessionFromRequest(request)
   if (!user) return unauthorizedResponse()
 
-  const isMDOrAdmin = user.role === "MD" || user.role === "ADMIN"
+  const isAdmin = user.role === "ADMIN"
+  const isMD = user.role === "MD"
+  let warningWhere: { employee?: { userId: { in: string[] } } } | { employeeId: string } = {}
+  if (!isAdmin && !isMD) {
+    warningWhere = { employeeId: user.id }
+  } else if (isMD) {
+    const ids = await getMDTeamAndWatchlistUserIds(user.id)
+    if (ids.length > 0) {
+      warningWhere = { employee: { userId: { in: ids } } }
+    }
+  }
 
   const warnings = await prisma.warning.findMany({
-    where: isMDOrAdmin ? {} : { employeeId: user.id },
+    where: warningWhere,
     include: {
       employee: { select: { id: true, name: true, email: true } },
       task: { select: { id: true, title: true } },
