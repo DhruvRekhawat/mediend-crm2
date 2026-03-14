@@ -28,6 +28,15 @@ interface LoginResponse {
   Token: string
 }
 
+function unwrapLogsArray(data: unknown): BiometricAttendanceLog[] {
+  if (Array.isArray(data)) return data
+  const obj = data as Record<string, unknown>
+  const wrapped = obj?.['Data'] ?? obj?.['data'] ?? obj?.['Items'] ?? obj?.['Results'] ?? obj?.['Logs']
+  if (Array.isArray(wrapped)) return wrapped as BiometricAttendanceLog[]
+  console.warn('Unexpected API response format:', data)
+  return []
+}
+
 /**
  * Authenticates with the attendance API and returns a Bearer token
  * @returns Authentication token
@@ -123,22 +132,14 @@ export async function fetchAttendanceLogs(
         }
         
         const retryData = await retryResponse.json()
-        return Array.isArray(retryData) ? retryData : []
+        return unwrapLogsArray(retryData)
       }
       
       throw new Error(`Failed to fetch attendance logs: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
-    
-    // API returns an array directly
-    if (Array.isArray(data)) {
-      return data
-    }
-    
-    // Return empty array if no valid data structure found
-    console.warn('Unexpected API response format:', data)
-    return []
+    return unwrapLogsArray(data)
   } catch (error) {
     console.error('Error fetching attendance logs from biometric API:', error)
     throw error

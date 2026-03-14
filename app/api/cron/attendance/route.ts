@@ -19,8 +19,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Call the actual sync endpoint
-    const syncUrl = new URL("/api/attendance/sync/daily", request.url);
+    // Call the actual sync endpoint - use reliable base URL for serverless
+    let baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_APP_URL
+    if (!baseUrl && request.url) {
+      try {
+        baseUrl = new URL(request.url).origin
+      } catch {
+        baseUrl = 'http://localhost:3000'
+      }
+    }
+    baseUrl = baseUrl || 'http://localhost:3000'
+    const syncUrl = new URL('/api/attendance/sync/daily', baseUrl)
     const syncRequest = new Request(syncUrl.toString(), {
       method: "POST",
       headers: {

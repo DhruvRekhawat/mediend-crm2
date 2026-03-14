@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, FileText, Loader2 } from 'lucide-react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 
 interface AckSummary {
   documentType: string
@@ -16,6 +16,7 @@ interface AckSummary {
   generatedAtFormatted: string
   acknowledgedAt: string | null
   acknowledgedAtFormatted: string | null
+  htmlContent: string
 }
 
 async function fetchAckSummary(token: string): Promise<AckSummary> {
@@ -124,41 +125,24 @@ function DocumentAcknowledgeContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
-      <Card className="max-w-md w-full">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <FileText className="h-8 w-8 text-primary" />
-            <CardTitle>Document Acknowledgement</CardTitle>
+    <div className="min-h-screen flex flex-col bg-muted/30">
+      <div className="flex-1 overflow-auto p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div
+              className="p-6 md:p-8"
+              dangerouslySetInnerHTML={{ __html: data?.htmlContent ?? '' }}
+            />
           </div>
-          <CardDescription>
-            Please review the document summary below and confirm your acceptance.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Document</span>
-              <span className="font-medium">{data?.documentTypeLabel}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Employee</span>
-              <span className="font-medium">{data?.employeeName}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Company</span>
-              <span className="font-medium">{data?.companyName}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Date</span>
-              <span className="font-medium">{data?.generatedAtFormatted}</span>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
+        </div>
+      </div>
+      <div className="shrink-0 border-t bg-background p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <p className="text-sm text-muted-foreground text-center">
             By clicking below, you acknowledge that you have received and accept the terms of this document.
           </p>
           <Button
-            className="w-full"
+            className="w-full max-w-md mx-auto block"
             size="lg"
             onClick={() => ackMutation.mutate()}
             disabled={ackMutation.isPending}
@@ -176,10 +160,10 @@ function DocumentAcknowledgeContent() {
             )}
           </Button>
           {ackMutation.isError && (
-            <p className="text-sm text-destructive">{ackMutation.error?.message}</p>
+            <p className="text-sm text-destructive text-center">{ackMutation.error?.message}</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

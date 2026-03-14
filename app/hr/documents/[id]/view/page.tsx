@@ -20,6 +20,7 @@ interface DocumentData {
     documentUrl?: string | null
     title?: string | null
     generatedAt: string
+    acknowledgedAt?: string | null
     metadata: Record<string, unknown>
     employee: {
       employeeCode: string
@@ -122,6 +123,11 @@ export default function DocumentViewPage() {
             </Button>
           </div>
         </div>
+        {data.document.acknowledgedAt && (
+          <div className="no-print p-4 border-t bg-muted/50 text-center text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+            Acknowledged on {format(new Date(data.document.acknowledgedAt), 'PPP')} at {format(new Date(data.document.acknowledgedAt), 'p')}
+          </div>
+        )}
       </div>
     )
   }
@@ -176,8 +182,13 @@ export default function DocumentViewPage() {
 
       {/* Footer - hidden when printing */}
       <div className="no-print p-4 border-t bg-muted/50">
-        <div className="max-w-4xl mx-auto text-center text-sm text-muted-foreground">
+        <div className="max-w-4xl mx-auto text-center text-sm text-muted-foreground space-y-1">
           <p>Generated on {format(new Date(data.document.generatedAt), 'PPP')} at {format(new Date(data.document.generatedAt), 'p')}</p>
+          {data.document.acknowledgedAt && (
+            <p className="text-emerald-600 dark:text-emerald-400 font-medium">
+              Acknowledged on {format(new Date(data.document.acknowledgedAt), 'PPP')} at {format(new Date(data.document.acknowledgedAt), 'p')}
+            </p>
+          )}
         </div>
       </div>
 

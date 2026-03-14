@@ -44,7 +44,7 @@ interface SupportTicket {
   department: {
     id: string
     name: string
-  }
+  } | null
 }
 
 const PRIORITY_CONFIG = {
@@ -214,7 +214,7 @@ export default function HRTicketsPage() {
                           </div>
                           <div className="flex items-center gap-1">
                             <Building className="h-3 w-3" />
-                            To: {ticket.department.name}
+                            To: {ticket.department?.name ?? '—'}
                           </div>
                         </div>
                       </div>

@@ -1,6 +1,12 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { errorResponse, successResponse } from '@/lib/api-utils'
+import {
+  generateOfferLetterHTML,
+  generateAppraisalLetterHTML,
+  generateExperienceLetterHTML,
+  generateRelievingLetterHTML,
+} from '@/lib/hrms/document-templates'
 import { z } from 'zod'
 import { format } from 'date-fns'
 
@@ -27,7 +33,8 @@ export async function GET(request: NextRequest) {
       include: {
         employee: {
           include: {
-            user: { select: { name: true } },
+            user: { select: { name: true, email: true } },
+            department: { select: { name: true } },
           },
         },
       },
@@ -35,6 +42,43 @@ export async function GET(request: NextRequest) {
 
     if (!document) {
       return errorResponse('Invalid or expired token', 404)
+    }
+
+    const employeeData = {
+      name: document.employee.user.name,
+      employeeCode: document.employee.employeeCode,
+      email: document.employee.user.email,
+      department: document.employee.department?.name,
+      joinDate: document.employee.joinDate,
+      salary: document.employee.salary,
+    }
+    const metadata = document.metadata as Record<string, unknown> | null
+
+    let htmlContent: string
+    switch (document.documentType) {
+      case 'OFFER_LETTER':
+        htmlContent = generateOfferLetterHTML(employeeData, metadata || undefined)
+        htmlContent = htmlContent.replace(
+          '<!-- ACK_PLACEHOLDER -->',
+          '<br><br><p>Signature: _________________ &nbsp;&nbsp;&nbsp;&nbsp; Date: _________________</p>'
+        )
+        break
+      case 'APPRAISAL_LETTER':
+        htmlContent = generateAppraisalLetterHTML(employeeData, metadata || undefined)
+        break
+      case 'EXPERIENCE_LETTER':
+        htmlContent = generateExperienceLetterHTML(employeeData, metadata || undefined)
+        break
+      case 'RELIEVING_LETTER':
+        htmlContent = generateRelievingLetterHTML(employeeData, metadata || undefined)
+        break
+      case 'CUSTOM':
+        htmlContent = document.documentUrl
+          ? `<div style="padding:2rem;text-align:center;"><p>Uploaded document.</p><p><a href="${document.documentUrl}" target="_blank" rel="noopener noreferrer">Open document</a></p></div>`
+          : '<div style="padding:2rem;text-align:center;"><p>No file linked.</p></div>'
+        break
+      default:
+        htmlContent = '<p>Document content unavailable.</p>'
     }
 
     return successResponse({
@@ -48,6 +92,7 @@ export async function GET(request: NextRequest) {
       acknowledgedAtFormatted: document.acknowledgedAt
         ? format(new Date(document.acknowledgedAt), 'PPp')
         : null,
+      htmlContent,
     })
   } catch (error) {
     console.error('Error fetching document for acknowledgement:', error)

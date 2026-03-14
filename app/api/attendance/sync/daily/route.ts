@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 Daily sync: Fetching attendance from ${fromDate} to ${toDate}`)
 
-    // Get all employees with their codes
+    // Get all employees with their codes - build multi-key map for flexible matching
     const employees = await prisma.employee.findMany({
       select: {
         id: true,
@@ -65,7 +65,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const employeeCodeMap = new Map(employees.map((e) => [e.employeeCode, e.id]))
+    const employeeCodeMap = new Map<string, string>()
+    for (const e of employees) {
+      const code = e.employeeCode
+      if (!code) continue
+      employeeCodeMap.set(code, e.id)
+      const trimmed = code.trim()
+      if (trimmed !== code) employeeCodeMap.set(trimmed, e.id)
+      const lower = code.toLowerCase()
+      if (lower !== code) employeeCodeMap.set(lower, e.id)
+      // Numeric normalization: "01330" -> "1330" for matching
+      const num = String(Number(code))
+      if (num !== 'NaN' && num !== code) employeeCodeMap.set(num, e.id)
+    }
 
     // Fetch attendance logs from API
     const logs = await fetchAttendanceLogs(fromDate, toDate)
@@ -84,17 +96,22 @@ export async function POST(request: NextRequest) {
     for (const log of logs) {
       try {
         // Skip invalid employee codes
-        if (!log.EmpCode || log.EmpCode === '0' || log.EmpCode.trim() === '') {
+        const rawEmpCode = log.EmpCode?.trim() ?? ''
+        if (!rawEmpCode || rawEmpCode === '0') {
           skipped++
           skipReasons.invalidEmpCode++
           continue
         }
 
-        const employeeId = employeeCodeMap.get(log.EmpCode)
+        // Try multiple lookup strategies (exact, case-insensitive, numeric)
+        const employeeId =
+          employeeCodeMap.get(rawEmpCode) ??
+          employeeCodeMap.get(rawEmpCode.toLowerCase()) ??
+          (rawEmpCode && !isNaN(Number(rawEmpCode)) ? employeeCodeMap.get(String(Number(rawEmpCode))) : undefined)
         if (!employeeId) {
           skipped++
           skipReasons.employeeNotFound++
-          missingEmployeeCodes.add(log.EmpCode)
+          missingEmployeeCodes.add(rawEmpCode)
           continue
         }
 

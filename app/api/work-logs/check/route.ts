@@ -169,7 +169,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const isWeekend = dayOfWeek === 6
+  // Only Sunday is exempt as weekend; Saturday is a working day for work-log enforcement
+  const isWeekend = false
   const isOutsideWorkHours =
     currentTimeDecimal < 9 || currentTimeDecimal >= 19.5
   const isExempt = isWeekend || isOutsideWorkHours
