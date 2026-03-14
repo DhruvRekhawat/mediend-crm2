@@ -4,6 +4,7 @@ import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-
 import { prisma } from "@/lib/prisma"
 import { getMDTeamAndWatchlistUserIds } from "@/lib/hierarchy"
 import { z } from "zod"
+import type { Prisma } from "@/generated/prisma/client"
 
 const createWarningSchema = z.object({
   employeeId: z.string().min(1),
@@ -18,13 +19,13 @@ export async function GET(request: NextRequest) {
 
   const isAdmin = user.role === "ADMIN"
   const isMD = user.role === "MD"
-  let warningWhere: { employee?: { userId: { in: string[] } } } | { employeeId: string } = {}
+  let warningWhere: Prisma.WarningWhereInput = {}
   if (!isAdmin && !isMD) {
     warningWhere = { employeeId: user.id }
   } else if (isMD) {
     const ids = await getMDTeamAndWatchlistUserIds(user.id)
     if (ids.length > 0) {
-      warningWhere = { employee: { userId: { in: ids } } }
+      warningWhere = { employee: { id: { in: ids } } }
     }
   }
 

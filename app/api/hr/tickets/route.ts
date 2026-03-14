@@ -105,6 +105,11 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { status, response } = updateTicketSchema.parse(body)
 
+    const existingTicket = await prisma.supportTicket.findUnique({
+      where: { id: ticketId },
+      include: { employee: { select: { userId: true } } },
+    })
+
     const ticket = await prisma.supportTicket.update({
       where: { id: ticketId },
       data: {
@@ -130,6 +135,20 @@ export async function PATCH(request: NextRequest) {
         },
       },
     })
+
+    // Notify the employee when ticket is responded to
+    if (status !== 'OPEN' && existingTicket?.employee.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: existingTicket.employee.userId,
+          type: 'TICKET_RESPONDED',
+          title: 'Ticket Response',
+          message: `Your support ticket "${ticket.subject}" has been ${status.toLowerCase()}`,
+          link: '/employee/dashboard/support-services',
+          relatedId: ticketId,
+        },
+      })
+    }
 
     return successResponse(ticket, 'Ticket updated successfully')
   } catch (error) {

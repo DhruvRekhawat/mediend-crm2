@@ -258,10 +258,34 @@ export const navItems: NavItem[] = [
     permission: 'finance:approve',
   },
   {
+    title: 'Fin Team Approvals',
+    url: '/finance/team-approvals',
+    icon: CheckCircle,
+    roles: ['FINANCE_HEAD'],
+  },
+  {
+    title: 'MD Team Approvals',
+    url: '/md/md-approvals',
+    icon: CheckCircle,
+    roles: ['MD', 'ADMIN'],
+  },
+  {
+    title: 'Ask MD Approval',
+    url: '/md/md-approvals',
+    icon: CheckCircle,
+    roles: ['SALES_HEAD', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'EXECUTIVE_ASSISTANT', 'USER', 'DIGITAL_MARKETING_HEAD', 'OUTSTANDING_HEAD', 'IT_HEAD'],
+  },
+  {
     title: 'Fin Reports',
     url: '/finance/reports',
     icon: BarChart3,
     permission: 'finance:read',
+  },
+  {
+    title: 'IT Permissions',
+    url: '/it/permissions',
+    icon: ShieldCheck,
+    permission: 'it:permissions',
   },
 ]
 

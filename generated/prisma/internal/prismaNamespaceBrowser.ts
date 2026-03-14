@@ -100,6 +100,10 @@ export const ModelName = {
   PreAuthorization: 'PreAuthorization',
   HospitalSuggestion: 'HospitalSuggestion',
   Notification: 'Notification',
+  Notice: 'Notice',
+  NoticeRecipient: 'NoticeRecipient',
+  MDApprovalRequest: 'MDApprovalRequest',
+  UserFeaturePermission: 'UserFeaturePermission',
   InsuranceQuery: 'InsuranceQuery',
   PreAuthPDF: 'PreAuthPDF',
   AdmissionRecord: 'AdmissionRecord',
@@ -706,6 +710,7 @@ export const SupportTicketScalarFieldEnum = {
   id: 'id',
   employeeId: 'employeeId',
   departmentId: 'departmentId',
+  targetHeadRole: 'targetHeadRole',
   subject: 'subject',
   description: 'description',
   priority: 'priority',
@@ -1136,6 +1141,62 @@ export const NotificationScalarFieldEnum = {
 } as const
 
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const NoticeScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  body: 'body',
+  createdById: 'createdById',
+  targetType: 'targetType',
+  targetDepartmentId: 'targetDepartmentId',
+  createdAt: 'createdAt'
+} as const
+
+export type NoticeScalarFieldEnum = (typeof NoticeScalarFieldEnum)[keyof typeof NoticeScalarFieldEnum]
+
+
+export const NoticeRecipientScalarFieldEnum = {
+  id: 'id',
+  noticeId: 'noticeId',
+  userId: 'userId',
+  acknowledgedAt: 'acknowledgedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NoticeRecipientScalarFieldEnum = (typeof NoticeRecipientScalarFieldEnum)[keyof typeof NoticeRecipientScalarFieldEnum]
+
+
+export const MDApprovalRequestScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  amount: 'amount',
+  status: 'status',
+  requestedById: 'requestedById',
+  respondedById: 'respondedById',
+  responseNote: 'responseNote',
+  respondedAt: 'respondedAt',
+  financeAcknowledged: 'financeAcknowledged',
+  financeAcknowledgedById: 'financeAcknowledgedById',
+  financeAcknowledgedAt: 'financeAcknowledgedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MDApprovalRequestScalarFieldEnum = (typeof MDApprovalRequestScalarFieldEnum)[keyof typeof MDApprovalRequestScalarFieldEnum]
+
+
+export const UserFeaturePermissionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  featureKey: 'featureKey',
+  enabled: 'enabled',
+  grantedById: 'grantedById',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserFeaturePermissionScalarFieldEnum = (typeof UserFeaturePermissionScalarFieldEnum)[keyof typeof UserFeaturePermissionScalarFieldEnum]
 
 
 export const InsuranceQueryScalarFieldEnum = {

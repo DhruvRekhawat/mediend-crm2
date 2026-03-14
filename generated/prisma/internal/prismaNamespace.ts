@@ -433,6 +433,10 @@ export const ModelName = {
   PreAuthorization: 'PreAuthorization',
   HospitalSuggestion: 'HospitalSuggestion',
   Notification: 'Notification',
+  Notice: 'Notice',
+  NoticeRecipient: 'NoticeRecipient',
+  MDApprovalRequest: 'MDApprovalRequest',
+  UserFeaturePermission: 'UserFeaturePermission',
   InsuranceQuery: 'InsuranceQuery',
   PreAuthPDF: 'PreAuthPDF',
   AdmissionRecord: 'AdmissionRecord',
@@ -472,7 +476,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "userTaskSeen" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "appSetting" | "requestLog"
+    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "notice" | "noticeRecipient" | "mDApprovalRequest" | "userFeaturePermission" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "userTaskSeen" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "appSetting" | "requestLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4102,6 +4106,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Notice: {
+      payload: Prisma.$NoticePayload<ExtArgs>
+      fields: Prisma.NoticeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NoticeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NoticeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        findFirst: {
+          args: Prisma.NoticeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NoticeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        findMany: {
+          args: Prisma.NoticeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>[]
+        }
+        create: {
+          args: Prisma.NoticeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        createMany: {
+          args: Prisma.NoticeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NoticeCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>[]
+        }
+        delete: {
+          args: Prisma.NoticeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        update: {
+          args: Prisma.NoticeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        deleteMany: {
+          args: Prisma.NoticeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NoticeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NoticeUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>[]
+        }
+        upsert: {
+          args: Prisma.NoticeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        aggregate: {
+          args: Prisma.NoticeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotice>
+        }
+        groupBy: {
+          args: Prisma.NoticeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoticeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NoticeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoticeCountAggregateOutputType> | number
+        }
+      }
+    }
+    NoticeRecipient: {
+      payload: Prisma.$NoticeRecipientPayload<ExtArgs>
+      fields: Prisma.NoticeRecipientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NoticeRecipientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NoticeRecipientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>
+        }
+        findFirst: {
+          args: Prisma.NoticeRecipientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NoticeRecipientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>
+        }
+        findMany: {
+          args: Prisma.NoticeRecipientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>[]
+        }
+        create: {
+          args: Prisma.NoticeRecipientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>
+        }
+        createMany: {
+          args: Prisma.NoticeRecipientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NoticeRecipientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>[]
+        }
+        delete: {
+          args: Prisma.NoticeRecipientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>
+        }
+        update: {
+          args: Prisma.NoticeRecipientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>
+        }
+        deleteMany: {
+          args: Prisma.NoticeRecipientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NoticeRecipientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NoticeRecipientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>[]
+        }
+        upsert: {
+          args: Prisma.NoticeRecipientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticeRecipientPayload>
+        }
+        aggregate: {
+          args: Prisma.NoticeRecipientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNoticeRecipient>
+        }
+        groupBy: {
+          args: Prisma.NoticeRecipientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoticeRecipientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NoticeRecipientCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoticeRecipientCountAggregateOutputType> | number
+        }
+      }
+    }
+    MDApprovalRequest: {
+      payload: Prisma.$MDApprovalRequestPayload<ExtArgs>
+      fields: Prisma.MDApprovalRequestFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MDApprovalRequestFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MDApprovalRequestFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>
+        }
+        findFirst: {
+          args: Prisma.MDApprovalRequestFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MDApprovalRequestFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>
+        }
+        findMany: {
+          args: Prisma.MDApprovalRequestFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>[]
+        }
+        create: {
+          args: Prisma.MDApprovalRequestCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>
+        }
+        createMany: {
+          args: Prisma.MDApprovalRequestCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MDApprovalRequestCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>[]
+        }
+        delete: {
+          args: Prisma.MDApprovalRequestDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>
+        }
+        update: {
+          args: Prisma.MDApprovalRequestUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>
+        }
+        deleteMany: {
+          args: Prisma.MDApprovalRequestDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MDApprovalRequestUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MDApprovalRequestUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>[]
+        }
+        upsert: {
+          args: Prisma.MDApprovalRequestUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MDApprovalRequestPayload>
+        }
+        aggregate: {
+          args: Prisma.MDApprovalRequestAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMDApprovalRequest>
+        }
+        groupBy: {
+          args: Prisma.MDApprovalRequestGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MDApprovalRequestGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MDApprovalRequestCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MDApprovalRequestCountAggregateOutputType> | number
+        }
+      }
+    }
+    UserFeaturePermission: {
+      payload: Prisma.$UserFeaturePermissionPayload<ExtArgs>
+      fields: Prisma.UserFeaturePermissionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserFeaturePermissionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserFeaturePermissionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>
+        }
+        findFirst: {
+          args: Prisma.UserFeaturePermissionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserFeaturePermissionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>
+        }
+        findMany: {
+          args: Prisma.UserFeaturePermissionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>[]
+        }
+        create: {
+          args: Prisma.UserFeaturePermissionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>
+        }
+        createMany: {
+          args: Prisma.UserFeaturePermissionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UserFeaturePermissionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>[]
+        }
+        delete: {
+          args: Prisma.UserFeaturePermissionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>
+        }
+        update: {
+          args: Prisma.UserFeaturePermissionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserFeaturePermissionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserFeaturePermissionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UserFeaturePermissionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>[]
+        }
+        upsert: {
+          args: Prisma.UserFeaturePermissionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserFeaturePermissionPayload>
+        }
+        aggregate: {
+          args: Prisma.UserFeaturePermissionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserFeaturePermission>
+        }
+        groupBy: {
+          args: Prisma.UserFeaturePermissionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserFeaturePermissionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserFeaturePermissionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserFeaturePermissionCountAggregateOutputType> | number
+        }
+      }
+    }
     InsuranceQuery: {
       payload: Prisma.$InsuranceQueryPayload<ExtArgs>
       fields: Prisma.InsuranceQueryFieldRefs
@@ -6481,6 +6781,7 @@ export const SupportTicketScalarFieldEnum = {
   id: 'id',
   employeeId: 'employeeId',
   departmentId: 'departmentId',
+  targetHeadRole: 'targetHeadRole',
   subject: 'subject',
   description: 'description',
   priority: 'priority',
@@ -6911,6 +7212,62 @@ export const NotificationScalarFieldEnum = {
 } as const
 
 export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+export const NoticeScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  body: 'body',
+  createdById: 'createdById',
+  targetType: 'targetType',
+  targetDepartmentId: 'targetDepartmentId',
+  createdAt: 'createdAt'
+} as const
+
+export type NoticeScalarFieldEnum = (typeof NoticeScalarFieldEnum)[keyof typeof NoticeScalarFieldEnum]
+
+
+export const NoticeRecipientScalarFieldEnum = {
+  id: 'id',
+  noticeId: 'noticeId',
+  userId: 'userId',
+  acknowledgedAt: 'acknowledgedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type NoticeRecipientScalarFieldEnum = (typeof NoticeRecipientScalarFieldEnum)[keyof typeof NoticeRecipientScalarFieldEnum]
+
+
+export const MDApprovalRequestScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  amount: 'amount',
+  status: 'status',
+  requestedById: 'requestedById',
+  respondedById: 'respondedById',
+  responseNote: 'responseNote',
+  respondedAt: 'respondedAt',
+  financeAcknowledged: 'financeAcknowledged',
+  financeAcknowledgedById: 'financeAcknowledgedById',
+  financeAcknowledgedAt: 'financeAcknowledgedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MDApprovalRequestScalarFieldEnum = (typeof MDApprovalRequestScalarFieldEnum)[keyof typeof MDApprovalRequestScalarFieldEnum]
+
+
+export const UserFeaturePermissionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  featureKey: 'featureKey',
+  enabled: 'enabled',
+  grantedById: 'grantedById',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserFeaturePermissionScalarFieldEnum = (typeof UserFeaturePermissionScalarFieldEnum)[keyof typeof UserFeaturePermissionScalarFieldEnum]
 
 
 export const InsuranceQueryScalarFieldEnum = {
@@ -7949,6 +8306,34 @@ export type ListEnumNotificationTypeFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
+ * Reference to a field of type 'NoticeTargetType'
+ */
+export type EnumNoticeTargetTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NoticeTargetType'>
+    
+
+
+/**
+ * Reference to a field of type 'NoticeTargetType[]'
+ */
+export type ListEnumNoticeTargetTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'NoticeTargetType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MDApprovalStatus'
+ */
+export type EnumMDApprovalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MDApprovalStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'MDApprovalStatus[]'
+ */
+export type ListEnumMDApprovalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MDApprovalStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'QueryStatus'
  */
 export type EnumQueryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryStatus'>
@@ -8189,6 +8574,10 @@ export type GlobalOmitConfig = {
   preAuthorization?: Prisma.PreAuthorizationOmit
   hospitalSuggestion?: Prisma.HospitalSuggestionOmit
   notification?: Prisma.NotificationOmit
+  notice?: Prisma.NoticeOmit
+  noticeRecipient?: Prisma.NoticeRecipientOmit
+  mDApprovalRequest?: Prisma.MDApprovalRequestOmit
+  userFeaturePermission?: Prisma.UserFeaturePermissionOmit
   insuranceQuery?: Prisma.InsuranceQueryOmit
   preAuthPDF?: Prisma.PreAuthPDFOmit
   admissionRecord?: Prisma.AdmissionRecordOmit

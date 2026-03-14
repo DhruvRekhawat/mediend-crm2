@@ -70,7 +70,29 @@ export async function PATCH(
         approvedAt: new Date(),
         remarks: remarks || null,
       },
+      include: {
+        employee: { select: { userId: true } },
+        leaveType: { select: { name: true } },
+      },
     })
+
+    // Notify the employee
+    const employeeUserId = updated.employee.userId
+    if (employeeUserId) {
+      await prisma.notification.create({
+        data: {
+          userId: employeeUserId,
+          type: status === 'APPROVED' ? 'LEAVE_APPROVED' : 'LEAVE_REJECTED',
+          title: status === 'APPROVED' ? 'Leave Approved' : 'Leave Rejected',
+          message:
+            status === 'APPROVED'
+              ? `Your ${updated.leaveType.name} request has been approved.`
+              : `Your ${updated.leaveType.name} request has been rejected.${remarks ? ` Reason: ${remarks}` : ''}`,
+          link: '/employee/dashboard/core-hr',
+          relatedId: leaveId,
+        },
+      })
+    }
 
     // LeaveBalance rows are treated as imported baseline snapshots.
     // Current balances are derived from that snapshot + later accruals + approved leave history.

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
 
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
+      include: { user: { select: { name: true } } },
     })
 
     if (!employee) {
@@ -55,6 +56,25 @@ export async function POST(request: NextRequest) {
         documents: documents ?? undefined,
       },
     })
+
+    // Notify all HR_HEAD users
+    const hrHeads = await prisma.user.findMany({
+      where: { role: 'HR_HEAD' },
+      select: { id: true },
+    })
+    const empName = employee.user?.name ?? user.name ?? 'An employee'
+    if (hrHeads.length > 0) {
+      await prisma.notification.createMany({
+        data: hrHeads.map((h) => ({
+          userId: h.id,
+          type: 'INCREMENT_REQUESTED',
+          title: 'New Increment Request',
+          message: `${empName} has submitted an increment request`,
+          link: '/hr/increments',
+          relatedId: incrementRequest.id,
+        })),
+      })
+    }
 
     return successResponse(incrementRequest, 'Increment request submitted successfully')
   } catch (error) {

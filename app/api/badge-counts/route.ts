@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
-import { LedgerStatus } from '@/generated/prisma/client'
+import { LedgerStatus, LeaveRequestStatus } from '@/generated/prisma/client'
 
 export interface BadgeCounts {
   pendingFinanceApprovals: number
@@ -13,6 +13,13 @@ export interface BadgeCounts {
   pendingDueDateApprovals: number
   myOverdueTasks: number
   myPendingTasks: number
+  pendingLeaveApprovals: number
+  pendingTickets: number
+  unreadChatMessages: number
+  pendingHRActions: number
+  pendingNotices: number
+  pendingFinanceTeamApprovals: number
+  pendingMDApprovals: number
 }
 
 export async function GET(request: NextRequest) {
@@ -33,6 +40,13 @@ export async function GET(request: NextRequest) {
       pendingDueDateApprovals: 0,
       myOverdueTasks: 0,
       myPendingTasks: 0,
+      pendingLeaveApprovals: 0,
+      pendingTickets: 0,
+      unreadChatMessages: 0,
+      pendingHRActions: 0,
+      pendingNotices: 0,
+      pendingFinanceTeamApprovals: 0,
+      pendingMDApprovals: 0,
     }
 
     const promises: Promise<unknown>[] = []
@@ -141,6 +155,103 @@ export async function GET(request: NextRequest) {
         counts.myPendingTasks = c
       })
     )
+
+    // Pending leave approvals: user is target approver or has HR leave permissions
+    if (hasPermission(user, 'hrms:leaves:write') || hasPermission(user, 'hierarchy:leave:approve')) {
+      const empPromise = prisma.employee.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      })
+      const hrOverride = hasPermission(user, 'hrms:leaves:write')
+      promises.push(
+        empPromise.then(async (employee) => {
+          const leaveWhere: { status: (typeof LeaveRequestStatus)[keyof typeof LeaveRequestStatus]; targetApproverId?: string } = { status: LeaveRequestStatus.PENDING }
+          if (!hrOverride && employee) {
+            leaveWhere.targetApproverId = employee.id
+          } else if (!hrOverride) {
+            return
+          }
+          const c = await prisma.leaveRequest.count({ where: leaveWhere })
+          counts.pendingLeaveApprovals = c
+        })
+      )
+    }
+
+    // Pending tickets: for department heads, tickets targeted at their role
+    const headRoles = ['HR_HEAD', 'FINANCE_HEAD', 'SALES_HEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']
+    if (headRoles.includes(user.role)) {
+      promises.push(
+        prisma.supportTicket.count({
+          where: { status: 'OPEN', targetHeadRole: user.role },
+        }).then((c) => {
+          counts.pendingTickets = c
+        })
+      )
+    }
+
+    // Unread chat messages: CASE_CHAT_MESSAGE notifications for BD/Insurance/PL
+    const chatRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS']
+    if (chatRoles.includes(user.role) || user.role === 'ADMIN') {
+      promises.push(
+        prisma.notification.count({
+          where: {
+            userId: user.id,
+            type: 'CASE_CHAT_MESSAGE',
+            isRead: false,
+          },
+        }).then((c) => {
+          counts.unreadChatMessages = c
+        })
+      )
+    }
+
+    // Pending HR actions: feedback + increment + normalization (for HR_HEAD)
+    if (user.role === 'HR_HEAD') {
+      promises.push(
+        Promise.all([
+          prisma.feedback.count({ where: { status: 'PENDING' } }),
+          prisma.incrementRequest.count({ where: { status: 'PENDING' } }),
+          prisma.attendanceNormalization.count({
+            where: { type: 'MANAGER', status: 'PENDING' },
+          }),
+        ]).then(([f, i, n]) => {
+          counts.pendingHRActions = f + i + n
+        })
+      )
+    }
+
+    // Pending notices: unacknowledged notices for user
+    promises.push(
+      prisma.noticeRecipient.count({
+        where: { userId: user.id, acknowledgedAt: null },
+      }).then((c) => {
+        counts.pendingNotices = c
+      })
+    )
+
+    // Pending finance team approvals: MD-approved requests with amount needing finance ack
+    if (user.role === 'FINANCE_HEAD') {
+      promises.push(
+        prisma.mDApprovalRequest.count({
+          where: {
+            status: 'APPROVED',
+            amount: { not: null },
+            financeAcknowledged: false,
+          },
+        }).then((c) => {
+          counts.pendingFinanceTeamApprovals = c
+        })
+      )
+    }
+
+    // Pending MD approvals
+    if (user.role === 'MD' || user.role === 'ADMIN') {
+      promises.push(
+        prisma.mDApprovalRequest.count({ where: { status: 'PENDING' } }).then((c) => {
+          counts.pendingMDApprovals = c
+        })
+      )
+    }
 
     await Promise.all(promises)
 

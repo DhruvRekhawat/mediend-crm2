@@ -127,8 +127,14 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
       u.role === 'MD' || u.role === 'ADMIN'
         ? (badgeCounts?.pendingTaskReviews ?? 0) + (badgeCounts?.pendingDueDateApprovals ?? 0)
         : (badgeCounts?.myPendingTasks ?? 0)
-    const approvalsBadge = badgeCounts?.pendingFinanceApprovals ?? 0
-    const messagesBadge = badgeCounts?.unreadMessages ?? 0
+    const approvalsBadge =
+      (badgeCounts?.pendingFinanceApprovals ?? 0) +
+      (u.role === 'MD' || u.role === 'ADMIN' ? (badgeCounts?.pendingMDApprovals ?? 0) : 0) +
+      (u.role === 'FINANCE_HEAD' ? (badgeCounts?.pendingFinanceTeamApprovals ?? 0) : 0)
+    const messagesBadge =
+      u.role === 'MD' || u.role === 'ADMIN'
+        ? (badgeCounts?.unreadMessages ?? 0)
+        : (badgeCounts?.unreadChatMessages ?? 0) || (badgeCounts?.unreadMessages ?? 0)
 
     const hasApprovals = u.role === 'MD' || u.role === 'ADMIN' || hasPermission(u, 'finance:approve')
     const hasDashboard = ['SALES_HEAD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'ADMIN'].includes(u.role)
@@ -206,6 +212,7 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
       href: '/home',
       label: 'Home',
       icon: Home,
+      badge: badgeCounts?.pendingNotices ?? 0,
       matchPrefixes: ['/home'],
     }
 

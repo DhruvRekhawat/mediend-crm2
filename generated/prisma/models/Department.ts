@@ -296,6 +296,7 @@ export type DepartmentWhereInput = {
   employees?: Prisma.EmployeeListRelationFilter
   teams?: Prisma.DepartmentTeamListRelationFilter
   supportTickets?: Prisma.SupportTicketListRelationFilter
+  notices?: Prisma.NoticeListRelationFilter
 }
 
 export type DepartmentOrderByWithRelationInput = {
@@ -315,6 +316,7 @@ export type DepartmentOrderByWithRelationInput = {
   employees?: Prisma.EmployeeOrderByRelationAggregateInput
   teams?: Prisma.DepartmentTeamOrderByRelationAggregateInput
   supportTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
+  notices?: Prisma.NoticeOrderByRelationAggregateInput
 }
 
 export type DepartmentWhereUniqueInput = Prisma.AtLeast<{
@@ -337,6 +339,7 @@ export type DepartmentWhereUniqueInput = Prisma.AtLeast<{
   employees?: Prisma.EmployeeListRelationFilter
   teams?: Prisma.DepartmentTeamListRelationFilter
   supportTickets?: Prisma.SupportTicketListRelationFilter
+  notices?: Prisma.NoticeListRelationFilter
 }, "id">
 
 export type DepartmentOrderByWithAggregationInput = {
@@ -393,6 +396,7 @@ export type DepartmentCreateInput = {
   employees?: Prisma.EmployeeCreateNestedManyWithoutDepartmentInput
   teams?: Prisma.DepartmentTeamCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentUncheckedCreateInput = {
@@ -411,6 +415,7 @@ export type DepartmentUncheckedCreateInput = {
   employees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutDepartmentInput
   teams?: Prisma.DepartmentTeamUncheckedCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeUncheckedCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentUpdateInput = {
@@ -429,6 +434,7 @@ export type DepartmentUpdateInput = {
   employees?: Prisma.EmployeeUpdateManyWithoutDepartmentNestedInput
   teams?: Prisma.DepartmentTeamUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentUncheckedUpdateInput = {
@@ -447,6 +453,7 @@ export type DepartmentUncheckedUpdateInput = {
   employees?: Prisma.EmployeeUncheckedUpdateManyWithoutDepartmentNestedInput
   teams?: Prisma.DepartmentTeamUncheckedUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUncheckedUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentCreateManyInput = {
@@ -654,12 +661,30 @@ export type DepartmentCreateNestedOneWithoutSupportTicketsInput = {
   connect?: Prisma.DepartmentWhereUniqueInput
 }
 
-export type DepartmentUpdateOneRequiredWithoutSupportTicketsNestedInput = {
+export type DepartmentUpdateOneWithoutSupportTicketsNestedInput = {
   create?: Prisma.XOR<Prisma.DepartmentCreateWithoutSupportTicketsInput, Prisma.DepartmentUncheckedCreateWithoutSupportTicketsInput>
   connectOrCreate?: Prisma.DepartmentCreateOrConnectWithoutSupportTicketsInput
   upsert?: Prisma.DepartmentUpsertWithoutSupportTicketsInput
+  disconnect?: Prisma.DepartmentWhereInput | boolean
+  delete?: Prisma.DepartmentWhereInput | boolean
   connect?: Prisma.DepartmentWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.DepartmentUpdateToOneWithWhereWithoutSupportTicketsInput, Prisma.DepartmentUpdateWithoutSupportTicketsInput>, Prisma.DepartmentUncheckedUpdateWithoutSupportTicketsInput>
+}
+
+export type DepartmentCreateNestedOneWithoutNoticesInput = {
+  create?: Prisma.XOR<Prisma.DepartmentCreateWithoutNoticesInput, Prisma.DepartmentUncheckedCreateWithoutNoticesInput>
+  connectOrCreate?: Prisma.DepartmentCreateOrConnectWithoutNoticesInput
+  connect?: Prisma.DepartmentWhereUniqueInput
+}
+
+export type DepartmentUpdateOneWithoutNoticesNestedInput = {
+  create?: Prisma.XOR<Prisma.DepartmentCreateWithoutNoticesInput, Prisma.DepartmentUncheckedCreateWithoutNoticesInput>
+  connectOrCreate?: Prisma.DepartmentCreateOrConnectWithoutNoticesInput
+  upsert?: Prisma.DepartmentUpsertWithoutNoticesInput
+  disconnect?: Prisma.DepartmentWhereInput | boolean
+  delete?: Prisma.DepartmentWhereInput | boolean
+  connect?: Prisma.DepartmentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DepartmentUpdateToOneWithWhereWithoutNoticesInput, Prisma.DepartmentUpdateWithoutNoticesInput>, Prisma.DepartmentUncheckedUpdateWithoutNoticesInput>
 }
 
 export type DepartmentCreateWithoutHeadInput = {
@@ -677,6 +702,7 @@ export type DepartmentCreateWithoutHeadInput = {
   employees?: Prisma.EmployeeCreateNestedManyWithoutDepartmentInput
   teams?: Prisma.DepartmentTeamCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentUncheckedCreateWithoutHeadInput = {
@@ -694,6 +720,7 @@ export type DepartmentUncheckedCreateWithoutHeadInput = {
   employees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutDepartmentInput
   teams?: Prisma.DepartmentTeamUncheckedCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeUncheckedCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentCreateOrConnectWithoutHeadInput = {
@@ -755,6 +782,7 @@ export type DepartmentCreateWithoutTeamsInput = {
   head?: Prisma.UserCreateNestedOneWithoutDepartmentHeadOfInput
   employees?: Prisma.EmployeeCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentUncheckedCreateWithoutTeamsInput = {
@@ -772,6 +800,7 @@ export type DepartmentUncheckedCreateWithoutTeamsInput = {
   updatedAt?: Date | string
   employees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeUncheckedCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentCreateOrConnectWithoutTeamsInput = {
@@ -805,6 +834,7 @@ export type DepartmentUpdateWithoutTeamsInput = {
   head?: Prisma.UserUpdateOneWithoutDepartmentHeadOfNestedInput
   employees?: Prisma.EmployeeUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentUncheckedUpdateWithoutTeamsInput = {
@@ -822,6 +852,7 @@ export type DepartmentUncheckedUpdateWithoutTeamsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employees?: Prisma.EmployeeUncheckedUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUncheckedUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentCreateWithoutEmployeesInput = {
@@ -839,6 +870,7 @@ export type DepartmentCreateWithoutEmployeesInput = {
   head?: Prisma.UserCreateNestedOneWithoutDepartmentHeadOfInput
   teams?: Prisma.DepartmentTeamCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentUncheckedCreateWithoutEmployeesInput = {
@@ -856,6 +888,7 @@ export type DepartmentUncheckedCreateWithoutEmployeesInput = {
   updatedAt?: Date | string
   teams?: Prisma.DepartmentTeamUncheckedCreateNestedManyWithoutDepartmentInput
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeUncheckedCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentCreateOrConnectWithoutEmployeesInput = {
@@ -889,6 +922,7 @@ export type DepartmentUpdateWithoutEmployeesInput = {
   head?: Prisma.UserUpdateOneWithoutDepartmentHeadOfNestedInput
   teams?: Prisma.DepartmentTeamUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentUncheckedUpdateWithoutEmployeesInput = {
@@ -906,6 +940,7 @@ export type DepartmentUncheckedUpdateWithoutEmployeesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.DepartmentTeamUncheckedUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUncheckedUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentCreateWithoutSupportTicketsInput = {
@@ -923,6 +958,7 @@ export type DepartmentCreateWithoutSupportTicketsInput = {
   head?: Prisma.UserCreateNestedOneWithoutDepartmentHeadOfInput
   employees?: Prisma.EmployeeCreateNestedManyWithoutDepartmentInput
   teams?: Prisma.DepartmentTeamCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentUncheckedCreateWithoutSupportTicketsInput = {
@@ -940,6 +976,7 @@ export type DepartmentUncheckedCreateWithoutSupportTicketsInput = {
   updatedAt?: Date | string
   employees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutDepartmentInput
   teams?: Prisma.DepartmentTeamUncheckedCreateNestedManyWithoutDepartmentInput
+  notices?: Prisma.NoticeUncheckedCreateNestedManyWithoutTargetDepartmentInput
 }
 
 export type DepartmentCreateOrConnectWithoutSupportTicketsInput = {
@@ -973,6 +1010,7 @@ export type DepartmentUpdateWithoutSupportTicketsInput = {
   head?: Prisma.UserUpdateOneWithoutDepartmentHeadOfNestedInput
   employees?: Prisma.EmployeeUpdateManyWithoutDepartmentNestedInput
   teams?: Prisma.DepartmentTeamUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentUncheckedUpdateWithoutSupportTicketsInput = {
@@ -990,6 +1028,95 @@ export type DepartmentUncheckedUpdateWithoutSupportTicketsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employees?: Prisma.EmployeeUncheckedUpdateManyWithoutDepartmentNestedInput
   teams?: Prisma.DepartmentTeamUncheckedUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUncheckedUpdateManyWithoutTargetDepartmentNestedInput
+}
+
+export type DepartmentCreateWithoutNoticesInput = {
+  id?: string
+  name: string
+  description?: string | null
+  shiftStartHour?: number
+  shiftStartMinute?: number
+  grace1Minutes?: number
+  grace2Minutes?: number
+  penaltyMinutes?: number
+  penaltyAmount?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  head?: Prisma.UserCreateNestedOneWithoutDepartmentHeadOfInput
+  employees?: Prisma.EmployeeCreateNestedManyWithoutDepartmentInput
+  teams?: Prisma.DepartmentTeamCreateNestedManyWithoutDepartmentInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutDepartmentInput
+}
+
+export type DepartmentUncheckedCreateWithoutNoticesInput = {
+  id?: string
+  name: string
+  description?: string | null
+  headId?: string | null
+  shiftStartHour?: number
+  shiftStartMinute?: number
+  grace1Minutes?: number
+  grace2Minutes?: number
+  penaltyMinutes?: number
+  penaltyAmount?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  employees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutDepartmentInput
+  teams?: Prisma.DepartmentTeamUncheckedCreateNestedManyWithoutDepartmentInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutDepartmentInput
+}
+
+export type DepartmentCreateOrConnectWithoutNoticesInput = {
+  where: Prisma.DepartmentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DepartmentCreateWithoutNoticesInput, Prisma.DepartmentUncheckedCreateWithoutNoticesInput>
+}
+
+export type DepartmentUpsertWithoutNoticesInput = {
+  update: Prisma.XOR<Prisma.DepartmentUpdateWithoutNoticesInput, Prisma.DepartmentUncheckedUpdateWithoutNoticesInput>
+  create: Prisma.XOR<Prisma.DepartmentCreateWithoutNoticesInput, Prisma.DepartmentUncheckedCreateWithoutNoticesInput>
+  where?: Prisma.DepartmentWhereInput
+}
+
+export type DepartmentUpdateToOneWithWhereWithoutNoticesInput = {
+  where?: Prisma.DepartmentWhereInput
+  data: Prisma.XOR<Prisma.DepartmentUpdateWithoutNoticesInput, Prisma.DepartmentUncheckedUpdateWithoutNoticesInput>
+}
+
+export type DepartmentUpdateWithoutNoticesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shiftStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  shiftStartMinute?: Prisma.IntFieldUpdateOperationsInput | number
+  grace1Minutes?: Prisma.IntFieldUpdateOperationsInput | number
+  grace2Minutes?: Prisma.IntFieldUpdateOperationsInput | number
+  penaltyMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  penaltyAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  head?: Prisma.UserUpdateOneWithoutDepartmentHeadOfNestedInput
+  employees?: Prisma.EmployeeUpdateManyWithoutDepartmentNestedInput
+  teams?: Prisma.DepartmentTeamUpdateManyWithoutDepartmentNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutDepartmentNestedInput
+}
+
+export type DepartmentUncheckedUpdateWithoutNoticesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  shiftStartHour?: Prisma.IntFieldUpdateOperationsInput | number
+  shiftStartMinute?: Prisma.IntFieldUpdateOperationsInput | number
+  grace1Minutes?: Prisma.IntFieldUpdateOperationsInput | number
+  grace2Minutes?: Prisma.IntFieldUpdateOperationsInput | number
+  penaltyMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  penaltyAmount?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  employees?: Prisma.EmployeeUncheckedUpdateManyWithoutDepartmentNestedInput
+  teams?: Prisma.DepartmentTeamUncheckedUpdateManyWithoutDepartmentNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutDepartmentNestedInput
 }
 
 export type DepartmentCreateManyHeadInput = {
@@ -1021,6 +1148,7 @@ export type DepartmentUpdateWithoutHeadInput = {
   employees?: Prisma.EmployeeUpdateManyWithoutDepartmentNestedInput
   teams?: Prisma.DepartmentTeamUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentUncheckedUpdateWithoutHeadInput = {
@@ -1038,6 +1166,7 @@ export type DepartmentUncheckedUpdateWithoutHeadInput = {
   employees?: Prisma.EmployeeUncheckedUpdateManyWithoutDepartmentNestedInput
   teams?: Prisma.DepartmentTeamUncheckedUpdateManyWithoutDepartmentNestedInput
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutDepartmentNestedInput
+  notices?: Prisma.NoticeUncheckedUpdateManyWithoutTargetDepartmentNestedInput
 }
 
 export type DepartmentUncheckedUpdateManyWithoutHeadInput = {
@@ -1063,12 +1192,14 @@ export type DepartmentCountOutputType = {
   employees: number
   teams: number
   supportTickets: number
+  notices: number
 }
 
 export type DepartmentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employees?: boolean | DepartmentCountOutputTypeCountEmployeesArgs
   teams?: boolean | DepartmentCountOutputTypeCountTeamsArgs
   supportTickets?: boolean | DepartmentCountOutputTypeCountSupportTicketsArgs
+  notices?: boolean | DepartmentCountOutputTypeCountNoticesArgs
 }
 
 /**
@@ -1102,6 +1233,13 @@ export type DepartmentCountOutputTypeCountSupportTicketsArgs<ExtArgs extends run
   where?: Prisma.SupportTicketWhereInput
 }
 
+/**
+ * DepartmentCountOutputType without action
+ */
+export type DepartmentCountOutputTypeCountNoticesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NoticeWhereInput
+}
+
 
 export type DepartmentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1120,6 +1258,7 @@ export type DepartmentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   employees?: boolean | Prisma.Department$employeesArgs<ExtArgs>
   teams?: boolean | Prisma.Department$teamsArgs<ExtArgs>
   supportTickets?: boolean | Prisma.Department$supportTicketsArgs<ExtArgs>
+  notices?: boolean | Prisma.Department$noticesArgs<ExtArgs>
   _count?: boolean | Prisma.DepartmentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["department"]>
 
@@ -1176,6 +1315,7 @@ export type DepartmentInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   employees?: boolean | Prisma.Department$employeesArgs<ExtArgs>
   teams?: boolean | Prisma.Department$teamsArgs<ExtArgs>
   supportTickets?: boolean | Prisma.Department$supportTicketsArgs<ExtArgs>
+  notices?: boolean | Prisma.Department$noticesArgs<ExtArgs>
   _count?: boolean | Prisma.DepartmentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DepartmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1192,6 +1332,7 @@ export type $DepartmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     employees: Prisma.$EmployeePayload<ExtArgs>[]
     teams: Prisma.$DepartmentTeamPayload<ExtArgs>[]
     supportTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
+    notices: Prisma.$NoticePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1604,6 +1745,7 @@ export interface Prisma__DepartmentClient<T, Null = never, ExtArgs extends runti
   employees<T extends Prisma.Department$employeesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Department$employeesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   teams<T extends Prisma.Department$teamsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Department$teamsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DepartmentTeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   supportTickets<T extends Prisma.Department$supportTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Department$supportTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notices<T extends Prisma.Department$noticesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Department$noticesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NoticePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2134,6 +2276,30 @@ export type Department$supportTicketsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.SupportTicketScalarFieldEnum | Prisma.SupportTicketScalarFieldEnum[]
+}
+
+/**
+ * Department.notices
+ */
+export type Department$noticesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notice
+   */
+  select?: Prisma.NoticeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notice
+   */
+  omit?: Prisma.NoticeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NoticeInclude<ExtArgs> | null
+  where?: Prisma.NoticeWhereInput
+  orderBy?: Prisma.NoticeOrderByWithRelationInput | Prisma.NoticeOrderByWithRelationInput[]
+  cursor?: Prisma.NoticeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NoticeScalarFieldEnum | Prisma.NoticeScalarFieldEnum[]
 }
 
 /**

@@ -53,25 +53,39 @@ import { UserRole } from '@/generated/prisma/enums'
 function getBadgeCount(
   itemTitle: string,
   counts: {
-    pendingFinanceApprovals: number
-    unreadMessages: number
-    pendingAppointments: number
-    pendingTaskReviews: number
-    pendingDueDateApprovals: number
-    myOverdueTasks: number
-    myPendingTasks: number
+    pendingFinanceApprovals?: number
+    unreadMessages?: number
+    pendingAppointments?: number
+    pendingTaskReviews?: number
+    pendingDueDateApprovals?: number
+    myOverdueTasks?: number
+    myPendingTasks?: number
+    pendingLeaveApprovals?: number
+    pendingTickets?: number
+    unreadChatMessages?: number
+    pendingHRActions?: number
+    pendingNotices?: number
+    pendingFinanceTeamApprovals?: number
+    pendingMDApprovals?: number
   } | undefined,
   isMdOrAdmin: boolean
 ): number {
   if (!counts) return 0
   if (itemTitle === 'Tasks') {
     return isMdOrAdmin
-      ? counts.pendingTaskReviews + counts.pendingDueDateApprovals
-      : counts.myPendingTasks
+      ? (counts.pendingTaskReviews ?? 0) + (counts.pendingDueDateApprovals ?? 0)
+      : (counts.myPendingTasks ?? 0)
   }
-  if (itemTitle === 'Fin Approvals') return counts.pendingFinanceApprovals
-  if (itemTitle === 'MD Messages') return counts.unreadMessages
-  if (itemTitle === 'MD Appointments') return counts.pendingAppointments
+  if (itemTitle === 'Fin Approvals') return counts.pendingFinanceApprovals ?? 0
+  if (itemTitle === 'MD Messages') return counts.unreadMessages ?? 0
+  if (itemTitle === 'MD Appointments') return counts.pendingAppointments ?? 0
+  if (itemTitle === 'Home') return counts.pendingNotices ?? 0
+  if (itemTitle === 'Chat') return counts.unreadChatMessages ?? 0
+  if (itemTitle === 'Attendance & Leaves') return counts.pendingLeaveApprovals ?? 0
+  if (itemTitle === 'Engagement') return counts.pendingHRActions ?? 0
+  if (itemTitle === 'My Support & Services') return counts.pendingTickets ?? 0
+  if (itemTitle === 'Fin Team Approvals') return counts.pendingFinanceTeamApprovals ?? 0
+  if (itemTitle === 'MD Team Approvals') return counts.pendingMDApprovals ?? 0
   return 0
 }
 
@@ -311,6 +325,7 @@ export function AppSidebar() {
                   <option value="OUTSTANDING_HEAD">OUTSTANDING_HEAD</option>
                   <option value="HR_HEAD">HR_HEAD</option>
                   <option value="FINANCE_HEAD">FINANCE_HEAD</option>
+                  <option value="IT_HEAD">IT_HEAD</option>
                   <option value="ADMIN">ADMIN</option>
                   <option value="USER">USER</option>
                 </select>

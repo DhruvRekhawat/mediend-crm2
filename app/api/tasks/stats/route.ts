@@ -67,7 +67,7 @@ export async function GET(_request: NextRequest) {
       : assigneeWhere
         ? prisma.warning.groupBy({
             by: ["employeeId"],
-            where: { employee: { userId: { in: assigneeWhere.assigneeId.in } } },
+            where: { employeeId: { in: assigneeWhere.assigneeId.in } },
             _count: { id: true },
           }).then((r) => r.length)
         : Promise.resolve(0),

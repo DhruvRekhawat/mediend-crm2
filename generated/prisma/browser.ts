@@ -263,6 +263,26 @@ export type HospitalSuggestion = Prisma.HospitalSuggestionModel
  */
 export type Notification = Prisma.NotificationModel
 /**
+ * Model Notice
+ * 
+ */
+export type Notice = Prisma.NoticeModel
+/**
+ * Model NoticeRecipient
+ * 
+ */
+export type NoticeRecipient = Prisma.NoticeRecipientModel
+/**
+ * Model MDApprovalRequest
+ * 
+ */
+export type MDApprovalRequest = Prisma.MDApprovalRequestModel
+/**
+ * Model UserFeaturePermission
+ * 
+ */
+export type UserFeaturePermission = Prisma.UserFeaturePermissionModel
+/**
  * Model InsuranceQuery
  * 
  */

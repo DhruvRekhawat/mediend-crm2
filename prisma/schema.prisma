@@ -24,6 +24,7 @@ enum UserRole {
   HR_HEAD
   FINANCE_HEAD
   DIGITAL_MARKETING_HEAD
+  IT_HEAD
   ADMIN
   USER
   TESTER
@@ -160,6 +161,31 @@ enum NotificationType {
   DUE_DATE_CHANGE_APPROVED
   DUE_DATE_CHANGE_REJECTED
   HOSPITAL_SUGGESTION_REQUESTED
+  LEAVE_REQUESTED
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  FEEDBACK_SUBMITTED
+  INCREMENT_REQUESTED
+  NORMALIZATION_REQUESTED
+  TICKET_CREATED
+  TICKET_RESPONDED
+  NOTICE_PUBLISHED
+  MD_APPROVAL_REQUESTED
+  MD_APPROVAL_RESPONDED
+  MD_APPROVAL_FINANCE_ACK
+}
+
+enum NoticeTargetType {
+  EVERYONE
+  EVERYONE_EXCEPT_MD
+  DEPARTMENT
+  SPECIFIC
+}
+
+enum MDApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum TaskPriority {
@@ -337,6 +363,19 @@ model User {
   warningsReceived    Warning[]            @relation("EmployeeWarnings")
   warningsIssued      Warning[]            @relation("IssuedWarnings")
   userTaskSeen        UserTaskSeen[]
+
+  // Notice Board
+  noticesCreated      Notice[]             @relation("NoticeCreator")
+  noticeRecipients    NoticeRecipient[]
+
+  // MD Approval Requests
+  mdApprovalRequests  MDApprovalRequest[]  @relation("MDApprovalRequester")
+  mdApprovalsResponded MDApprovalRequest[] @relation("MDApprovalResponder")
+  mdApprovalsFinanceAcked MDApprovalRequest[] @relation("MDApprovalFinanceAck")
+
+  // Feature Permissions
+  featurePermissions  UserFeaturePermission[]
+  featurePermissionsGranted UserFeaturePermission[] @relation("PermissionGranter")
 
   @@index([email])
   @@index([role])
@@ -679,6 +718,7 @@ model Department {
   employees      Employee[]
   teams          DepartmentTeam[]
   supportTickets SupportTicket[]
+  notices        Notice[]
 
   @@index([headId])
   @@index([name])
@@ -1058,22 +1098,24 @@ model MentalHealthRequest {
 
 // Help Support Tickets (48hr SLA)
 model SupportTicket {
-  id           String         @id @default(cuid())
-  employeeId   String
-  employee     Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  departmentId String
-  department   Department     @relation(fields: [departmentId], references: [id])
-  subject      String
-  description  String
-  priority     TicketPriority @default(MEDIUM)
-  status       TicketStatus   @default(OPEN)
-  response     String?
-  respondedAt  DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id              String          @id @default(cuid())
+  employeeId      String
+  employee        Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  departmentId    String?
+  department      Department?     @relation(fields: [departmentId], references: [id])
+  targetHeadRole  String?         // UserRole value e.g. HR_HEAD, FINANCE_HEAD
+  subject         String
+  description     String
+  priority        TicketPriority  @default(MEDIUM)
+  status          TicketStatus    @default(OPEN)
+  response        String?
+  respondedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@index([employeeId])
   @@index([departmentId])
+  @@index([targetHeadRole])
   @@index([status])
   @@index([priority])
   @@index([createdAt])
@@ -1732,6 +1774,89 @@ model Notification {
   @@index([userId])
   @@index([isRead])
   @@index([createdAt])
+}
+
+// ==========================================
+// Notice Board
+// ==========================================
+
+model Notice {
+  id                 String          @id @default(cuid())
+  title              String
+  body               String          @db.Text
+  createdById        String
+  createdBy          User            @relation("NoticeCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  targetType         NoticeTargetType
+  targetDepartmentId String?
+  targetDepartment   Department?     @relation(fields: [targetDepartmentId], references: [id])
+  createdAt          DateTime        @default(now())
+
+  recipients NoticeRecipient[]
+
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model NoticeRecipient {
+  id             String    @id @default(cuid())
+  noticeId       String
+  notice         Notice     @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgedAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@unique([noticeId, userId])
+  @@index([noticeId])
+  @@index([userId])
+  @@index([acknowledgedAt])
+}
+
+// ==========================================
+// MD Approval Requests
+// ==========================================
+
+model MDApprovalRequest {
+  id                    String            @id @default(cuid())
+  title                 String
+  description           String?           @db.Text
+  amount                Float?
+  status                MDApprovalStatus   @default(PENDING)
+  requestedById         String
+  requestedBy           User               @relation("MDApprovalRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  respondedById         String?
+  respondedBy           User?              @relation("MDApprovalResponder", fields: [respondedById], references: [id])
+  responseNote          String?           @db.Text
+  respondedAt           DateTime?
+  financeAcknowledged   Boolean            @default(false)
+  financeAcknowledgedById String?
+  financeAcknowledgedBy User?             @relation("MDApprovalFinanceAck", fields: [financeAcknowledgedById], references: [id])
+  financeAcknowledgedAt DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  @@index([requestedById])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ==========================================
+// User Feature Permissions (IT Permissions)
+// ==========================================
+
+model UserFeaturePermission {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  featureKey String
+  enabled    Boolean  @default(false)
+  grantedById String?
+  grantedBy   User?    @relation("PermissionGranter", fields: [grantedById], references: [id])
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, featureKey])
+  @@index([userId])
+  @@index([featureKey])
 }
 
 // ==========================================

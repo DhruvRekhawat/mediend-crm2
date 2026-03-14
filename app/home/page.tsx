@@ -4,6 +4,8 @@ import { useRef, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/hooks/use-auth'
+import { useQuery } from '@tanstack/react-query'
+import { apiGet } from '@/lib/api-client'
 import { useBadgeCounts } from '@/hooks/use-badge-counts'
 import { useNotifications } from '@/hooks/use-notifications'
 import { useUserBanner, useUpdateUserBanner } from '@/hooks/use-settings'
@@ -41,6 +43,10 @@ import { formatDistanceToNow } from 'date-fns'
 import { usePushSubscription } from '@/hooks/use-push-subscription'
 import { useWorkLogCheck } from '@/hooks/use-work-logs'
 import { AddWorkLogButton } from '@/components/calendar/add-work-log-button'
+import { NoticeBlockerModal } from '@/components/notices/notice-blocker-modal'
+import { ViewNoticesSheet } from '@/components/notices/view-notices-sheet'
+import { CreateNoticeModal } from '@/components/notices/create-notice-modal'
+import { Megaphone } from 'lucide-react'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -414,6 +420,45 @@ function PushReminderBanner() {
   )
 }
 
+// ─── Notice actions (View + Create) ────────────────────────────────────────────
+
+function NoticeActions() {
+  const [viewOpen, setViewOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const { data: canCreate } = useQuery<{ allowed: boolean }>({
+    queryKey: ['permission-create-notice'],
+    queryFn: () => apiGet<{ allowed: boolean }>('/api/permissions/check?feature=create_notice'),
+  })
+
+  return (
+    <>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setViewOpen(true)}
+          className="gap-2"
+        >
+          <FileText className="h-4 w-4" />
+          View Notices
+        </Button>
+        {canCreate?.allowed && (
+          <Button
+            size="sm"
+            onClick={() => setCreateOpen(true)}
+            className="gap-2"
+          >
+            <Megaphone className="h-4 w-4" />
+            Create Notice
+          </Button>
+        )}
+      </div>
+      <ViewNoticesSheet open={viewOpen} onOpenChange={setViewOpen} />
+      <CreateNoticeModal open={createOpen} onOpenChange={setCreateOpen} />
+    </>
+  )
+}
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -446,6 +491,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto w-full">
+      <NoticeBlockerModal />
       {/* Banner + Greeting */}
       {uploading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -476,6 +522,14 @@ export default function HomePage() {
 
       {/* Push reminder banner */}
       <PushReminderBanner />
+
+      {/* Notice actions */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Notices
+        </h2>
+        <NoticeActions />
+      </div>
 
       {/* KPIs */}
       <div>

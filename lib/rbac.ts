@@ -39,6 +39,7 @@ export type Permission =
   | 'hierarchy:write'
   | 'hierarchy:team:read'
   | 'hierarchy:leave:approve'
+  | 'it:permissions'
 
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
@@ -63,6 +64,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hierarchy:write',
     'hierarchy:team:read',
     'hierarchy:leave:approve',
+    'it:permissions',
   ],
   EXECUTIVE_ASSISTANT: [
     'hrms:read',
@@ -196,6 +198,13 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hierarchy:team:read',
     'hierarchy:leave:approve',
   ],
+  IT_HEAD: [
+    'users:read',
+    'users:write',
+    'it:permissions',
+    'hierarchy:read',
+    'hierarchy:team:read',
+  ],
   OUTSTANDING_HEAD: [
     'leads:read',
     'pl:read',
@@ -218,6 +227,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'analytics:read',
     'users:read',
     'users:write',
+    'it:permissions',
     'insurance:read',
     'insurance:write',
     'pl:read',
@@ -348,7 +358,7 @@ export function canManageTeam(user: SessionUser | null, teamSalesHeadId?: string
 
 // Hierarchy validation functions
 
-const DEPT_HEAD_ROLES: UserRole[] = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD']
+const DEPT_HEAD_ROLES: UserRole[] = ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']
 
 export function isDepartmentHead(role: UserRole): boolean {
   return DEPT_HEAD_ROLES.includes(role)
@@ -382,6 +392,11 @@ export function canCreateRole(user: SessionUser | null, targetRole: UserRole): b
     return isDepartmentHead(targetRole) || targetRole === 'EXECUTIVE_ASSISTANT' || targetRole === 'CATEGORY_MANAGER' || targetRole === 'ASSISTANT_CATEGORY_MANAGER' || targetRole === 'TEAM_LEAD' || targetRole === 'USER' || targetRole === 'BD'
   }
 
+  // IT_HEAD can create IT_HEAD (for succession)
+  if (user.role === 'IT_HEAD' && targetRole === 'IT_HEAD') {
+    return true
+  }
+
   // Department heads can create TL and USER/BD
   if (isDepartmentHead(user.role)) {
     return targetRole === 'TEAM_LEAD' || targetRole === 'USER' || targetRole === 'BD'
@@ -394,7 +409,7 @@ export function getAvailableRolesForCreator(user: SessionUser | null): UserRole[
   if (!user) return []
 
   // MD cannot be created
-  const allRolesExceptMD: UserRole[] = ['EXECUTIVE_ASSISTANT', 'SALES_HEAD', 'CATEGORY_MANAGER', 'ASSISTANT_CATEGORY_MANAGER', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'DIGITAL_MARKETING_HEAD', 'ADMIN', 'USER', 'TESTER']
+  const allRolesExceptMD: UserRole[] = ['EXECUTIVE_ASSISTANT', 'SALES_HEAD', 'CATEGORY_MANAGER', 'ASSISTANT_CATEGORY_MANAGER', 'TEAM_LEAD', 'BD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD', 'ADMIN', 'USER', 'TESTER']
 
   if (user.role === 'MD' || user.role === 'ADMIN' || user.role === 'TESTER') {
     return allRolesExceptMD
@@ -402,7 +417,7 @@ export function getAvailableRolesForCreator(user: SessionUser | null): UserRole[
 
   // HR_HEAD can create department head roles
   if (user.role === 'HR_HEAD') {
-    return ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'EXECUTIVE_ASSISTANT', 'CATEGORY_MANAGER', 'ASSISTANT_CATEGORY_MANAGER', 'TEAM_LEAD', 'USER', 'BD']
+    return ['INSURANCE_HEAD', 'PL_HEAD', 'SALES_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD', 'EXECUTIVE_ASSISTANT', 'CATEGORY_MANAGER', 'ASSISTANT_CATEGORY_MANAGER', 'TEAM_LEAD', 'USER', 'BD']
   }
 
   if (isDepartmentHead(user.role)) {

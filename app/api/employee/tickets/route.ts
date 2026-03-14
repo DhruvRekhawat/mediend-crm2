@@ -4,8 +4,10 @@ import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { z } from 'zod'
 
+const HEAD_ROLES = ['HR_HEAD', 'FINANCE_HEAD', 'SALES_HEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD'] as const
+
 const createTicketSchema = z.object({
-  departmentId: z.string(),
+  targetHeadRole: z.enum(HEAD_ROLES),
   subject: z.string().min(5, 'Subject must be at least 5 characters'),
   description: z.string().min(20, 'Description must be at least 20 characters'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).default('MEDIUM'),
@@ -20,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
+      include: { user: { select: { name: true } } },
     })
 
     if (!employee) {
@@ -27,21 +30,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { departmentId, subject, description, priority } = createTicketSchema.parse(body)
-
-    // Verify department exists
-    const department = await prisma.department.findUnique({
-      where: { id: departmentId },
-    })
-
-    if (!department) {
-      return errorResponse('Department not found', 404)
-    }
+    const { targetHeadRole, subject, description, priority } = createTicketSchema.parse(body)
 
     const ticket = await prisma.supportTicket.create({
       data: {
         employeeId: employee.id,
-        departmentId,
+        targetHeadRole,
         subject,
         description,
         priority,
@@ -54,6 +48,25 @@ export async function POST(request: NextRequest) {
         },
       },
     })
+
+    // Notify all users with the target head role
+    const headUsers = await prisma.user.findMany({
+      where: { role: targetHeadRole },
+      select: { id: true },
+    })
+    const empName = employee.user?.name ?? user.name ?? 'An employee'
+    if (headUsers.length > 0) {
+      await prisma.notification.createMany({
+        data: headUsers.map((h) => ({
+          userId: h.id,
+          type: 'TICKET_CREATED',
+          title: 'New Support Ticket',
+          message: `${empName}: ${subject}`,
+          link: '/employee/dashboard/support-services',
+          relatedId: ticket.id,
+        })),
+      })
+    }
 
     return successResponse(ticket, 'Ticket raised successfully')
   } catch (error) {

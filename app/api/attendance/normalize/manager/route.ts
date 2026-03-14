@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
 
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
+      include: { user: { select: { name: true } } },
     })
 
     if (!employee) {
@@ -110,6 +111,25 @@ export async function POST(request: NextRequest) {
         reason: reason ?? null,
       })),
     })
+
+    // Notify all HR_HEAD users
+    const hrHeads = await prisma.user.findMany({
+      where: { role: 'HR_HEAD' },
+      select: { id: true },
+    })
+    const empName = employee.user?.name ?? 'An employee'
+    if (hrHeads.length > 0) {
+      await prisma.notification.createMany({
+        data: hrHeads.map((h) => ({
+          userId: h.id,
+          type: 'NORMALIZATION_REQUESTED',
+          title: 'Normalization Request',
+          message: `${empName} has requested attendance normalization`,
+          link: '/hr/normalizations',
+          relatedId: employee.id,
+        })),
+      })
+    }
 
     return successResponse(
       { created: toCreate.length, skipped: dayStarts.length - toCreate.length },

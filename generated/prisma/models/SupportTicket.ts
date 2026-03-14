@@ -28,6 +28,7 @@ export type SupportTicketMinAggregateOutputType = {
   id: string | null
   employeeId: string | null
   departmentId: string | null
+  targetHeadRole: string | null
   subject: string | null
   description: string | null
   priority: $Enums.TicketPriority | null
@@ -42,6 +43,7 @@ export type SupportTicketMaxAggregateOutputType = {
   id: string | null
   employeeId: string | null
   departmentId: string | null
+  targetHeadRole: string | null
   subject: string | null
   description: string | null
   priority: $Enums.TicketPriority | null
@@ -56,6 +58,7 @@ export type SupportTicketCountAggregateOutputType = {
   id: number
   employeeId: number
   departmentId: number
+  targetHeadRole: number
   subject: number
   description: number
   priority: number
@@ -72,6 +75,7 @@ export type SupportTicketMinAggregateInputType = {
   id?: true
   employeeId?: true
   departmentId?: true
+  targetHeadRole?: true
   subject?: true
   description?: true
   priority?: true
@@ -86,6 +90,7 @@ export type SupportTicketMaxAggregateInputType = {
   id?: true
   employeeId?: true
   departmentId?: true
+  targetHeadRole?: true
   subject?: true
   description?: true
   priority?: true
@@ -100,6 +105,7 @@ export type SupportTicketCountAggregateInputType = {
   id?: true
   employeeId?: true
   departmentId?: true
+  targetHeadRole?: true
   subject?: true
   description?: true
   priority?: true
@@ -186,7 +192,8 @@ export type SupportTicketGroupByArgs<ExtArgs extends runtime.Types.Extensions.In
 export type SupportTicketGroupByOutputType = {
   id: string
   employeeId: string
-  departmentId: string
+  departmentId: string | null
+  targetHeadRole: string | null
   subject: string
   description: string
   priority: $Enums.TicketPriority
@@ -221,7 +228,8 @@ export type SupportTicketWhereInput = {
   NOT?: Prisma.SupportTicketWhereInput | Prisma.SupportTicketWhereInput[]
   id?: Prisma.StringFilter<"SupportTicket"> | string
   employeeId?: Prisma.StringFilter<"SupportTicket"> | string
-  departmentId?: Prisma.StringFilter<"SupportTicket"> | string
+  departmentId?: Prisma.StringNullableFilter<"SupportTicket"> | string | null
+  targetHeadRole?: Prisma.StringNullableFilter<"SupportTicket"> | string | null
   subject?: Prisma.StringFilter<"SupportTicket"> | string
   description?: Prisma.StringFilter<"SupportTicket"> | string
   priority?: Prisma.EnumTicketPriorityFilter<"SupportTicket"> | $Enums.TicketPriority
@@ -231,13 +239,14 @@ export type SupportTicketWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"SupportTicket"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"SupportTicket"> | Date | string
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
-  department?: Prisma.XOR<Prisma.DepartmentScalarRelationFilter, Prisma.DepartmentWhereInput>
+  department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
 }
 
 export type SupportTicketOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   employeeId?: Prisma.SortOrder
-  departmentId?: Prisma.SortOrder
+  departmentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHeadRole?: Prisma.SortOrderInput | Prisma.SortOrder
   subject?: Prisma.SortOrder
   description?: Prisma.SortOrder
   priority?: Prisma.SortOrder
@@ -256,7 +265,8 @@ export type SupportTicketWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.SupportTicketWhereInput[]
   NOT?: Prisma.SupportTicketWhereInput | Prisma.SupportTicketWhereInput[]
   employeeId?: Prisma.StringFilter<"SupportTicket"> | string
-  departmentId?: Prisma.StringFilter<"SupportTicket"> | string
+  departmentId?: Prisma.StringNullableFilter<"SupportTicket"> | string | null
+  targetHeadRole?: Prisma.StringNullableFilter<"SupportTicket"> | string | null
   subject?: Prisma.StringFilter<"SupportTicket"> | string
   description?: Prisma.StringFilter<"SupportTicket"> | string
   priority?: Prisma.EnumTicketPriorityFilter<"SupportTicket"> | $Enums.TicketPriority
@@ -266,13 +276,14 @@ export type SupportTicketWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"SupportTicket"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"SupportTicket"> | Date | string
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
-  department?: Prisma.XOR<Prisma.DepartmentScalarRelationFilter, Prisma.DepartmentWhereInput>
+  department?: Prisma.XOR<Prisma.DepartmentNullableScalarRelationFilter, Prisma.DepartmentWhereInput> | null
 }, "id">
 
 export type SupportTicketOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   employeeId?: Prisma.SortOrder
-  departmentId?: Prisma.SortOrder
+  departmentId?: Prisma.SortOrderInput | Prisma.SortOrder
+  targetHeadRole?: Prisma.SortOrderInput | Prisma.SortOrder
   subject?: Prisma.SortOrder
   description?: Prisma.SortOrder
   priority?: Prisma.SortOrder
@@ -292,7 +303,8 @@ export type SupportTicketScalarWhereWithAggregatesInput = {
   NOT?: Prisma.SupportTicketScalarWhereWithAggregatesInput | Prisma.SupportTicketScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"SupportTicket"> | string
   employeeId?: Prisma.StringWithAggregatesFilter<"SupportTicket"> | string
-  departmentId?: Prisma.StringWithAggregatesFilter<"SupportTicket"> | string
+  departmentId?: Prisma.StringNullableWithAggregatesFilter<"SupportTicket"> | string | null
+  targetHeadRole?: Prisma.StringNullableWithAggregatesFilter<"SupportTicket"> | string | null
   subject?: Prisma.StringWithAggregatesFilter<"SupportTicket"> | string
   description?: Prisma.StringWithAggregatesFilter<"SupportTicket"> | string
   priority?: Prisma.EnumTicketPriorityWithAggregatesFilter<"SupportTicket"> | $Enums.TicketPriority
@@ -305,6 +317,7 @@ export type SupportTicketScalarWhereWithAggregatesInput = {
 
 export type SupportTicketCreateInput = {
   id?: string
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -314,13 +327,14 @@ export type SupportTicketCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   employee: Prisma.EmployeeCreateNestedOneWithoutSupportTicketsInput
-  department: Prisma.DepartmentCreateNestedOneWithoutSupportTicketsInput
+  department?: Prisma.DepartmentCreateNestedOneWithoutSupportTicketsInput
 }
 
 export type SupportTicketUncheckedCreateInput = {
   id?: string
   employeeId: string
-  departmentId: string
+  departmentId?: string | null
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -333,6 +347,7 @@ export type SupportTicketUncheckedCreateInput = {
 
 export type SupportTicketUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -342,13 +357,14 @@ export type SupportTicketUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employee?: Prisma.EmployeeUpdateOneRequiredWithoutSupportTicketsNestedInput
-  department?: Prisma.DepartmentUpdateOneRequiredWithoutSupportTicketsNestedInput
+  department?: Prisma.DepartmentUpdateOneWithoutSupportTicketsNestedInput
 }
 
 export type SupportTicketUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   employeeId?: Prisma.StringFieldUpdateOperationsInput | string
-  departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  departmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -362,7 +378,8 @@ export type SupportTicketUncheckedUpdateInput = {
 export type SupportTicketCreateManyInput = {
   id?: string
   employeeId: string
-  departmentId: string
+  departmentId?: string | null
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -375,6 +392,7 @@ export type SupportTicketCreateManyInput = {
 
 export type SupportTicketUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -388,7 +406,8 @@ export type SupportTicketUpdateManyMutationInput = {
 export type SupportTicketUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   employeeId?: Prisma.StringFieldUpdateOperationsInput | string
-  departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  departmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -413,6 +432,7 @@ export type SupportTicketCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   employeeId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  targetHeadRole?: Prisma.SortOrder
   subject?: Prisma.SortOrder
   description?: Prisma.SortOrder
   priority?: Prisma.SortOrder
@@ -427,6 +447,7 @@ export type SupportTicketMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   employeeId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  targetHeadRole?: Prisma.SortOrder
   subject?: Prisma.SortOrder
   description?: Prisma.SortOrder
   priority?: Prisma.SortOrder
@@ -441,6 +462,7 @@ export type SupportTicketMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   employeeId?: Prisma.SortOrder
   departmentId?: Prisma.SortOrder
+  targetHeadRole?: Prisma.SortOrder
   subject?: Prisma.SortOrder
   description?: Prisma.SortOrder
   priority?: Prisma.SortOrder
@@ -545,6 +567,7 @@ export type EnumTicketStatusFieldUpdateOperationsInput = {
 
 export type SupportTicketCreateWithoutDepartmentInput = {
   id?: string
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -559,6 +582,7 @@ export type SupportTicketCreateWithoutDepartmentInput = {
 export type SupportTicketUncheckedCreateWithoutDepartmentInput = {
   id?: string
   employeeId: string
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -601,7 +625,8 @@ export type SupportTicketScalarWhereInput = {
   NOT?: Prisma.SupportTicketScalarWhereInput | Prisma.SupportTicketScalarWhereInput[]
   id?: Prisma.StringFilter<"SupportTicket"> | string
   employeeId?: Prisma.StringFilter<"SupportTicket"> | string
-  departmentId?: Prisma.StringFilter<"SupportTicket"> | string
+  departmentId?: Prisma.StringNullableFilter<"SupportTicket"> | string | null
+  targetHeadRole?: Prisma.StringNullableFilter<"SupportTicket"> | string | null
   subject?: Prisma.StringFilter<"SupportTicket"> | string
   description?: Prisma.StringFilter<"SupportTicket"> | string
   priority?: Prisma.EnumTicketPriorityFilter<"SupportTicket"> | $Enums.TicketPriority
@@ -614,6 +639,7 @@ export type SupportTicketScalarWhereInput = {
 
 export type SupportTicketCreateWithoutEmployeeInput = {
   id?: string
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -622,12 +648,13 @@ export type SupportTicketCreateWithoutEmployeeInput = {
   respondedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  department: Prisma.DepartmentCreateNestedOneWithoutSupportTicketsInput
+  department?: Prisma.DepartmentCreateNestedOneWithoutSupportTicketsInput
 }
 
 export type SupportTicketUncheckedCreateWithoutEmployeeInput = {
   id?: string
-  departmentId: string
+  departmentId?: string | null
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -667,6 +694,7 @@ export type SupportTicketUpdateManyWithWhereWithoutEmployeeInput = {
 export type SupportTicketCreateManyDepartmentInput = {
   id?: string
   employeeId: string
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -679,6 +707,7 @@ export type SupportTicketCreateManyDepartmentInput = {
 
 export type SupportTicketUpdateWithoutDepartmentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -693,6 +722,7 @@ export type SupportTicketUpdateWithoutDepartmentInput = {
 export type SupportTicketUncheckedUpdateWithoutDepartmentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   employeeId?: Prisma.StringFieldUpdateOperationsInput | string
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -706,6 +736,7 @@ export type SupportTicketUncheckedUpdateWithoutDepartmentInput = {
 export type SupportTicketUncheckedUpdateManyWithoutDepartmentInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   employeeId?: Prisma.StringFieldUpdateOperationsInput | string
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -718,7 +749,8 @@ export type SupportTicketUncheckedUpdateManyWithoutDepartmentInput = {
 
 export type SupportTicketCreateManyEmployeeInput = {
   id?: string
-  departmentId: string
+  departmentId?: string | null
+  targetHeadRole?: string | null
   subject: string
   description: string
   priority?: $Enums.TicketPriority
@@ -731,6 +763,7 @@ export type SupportTicketCreateManyEmployeeInput = {
 
 export type SupportTicketUpdateWithoutEmployeeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -739,12 +772,13 @@ export type SupportTicketUpdateWithoutEmployeeInput = {
   respondedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  department?: Prisma.DepartmentUpdateOneRequiredWithoutSupportTicketsNestedInput
+  department?: Prisma.DepartmentUpdateOneWithoutSupportTicketsNestedInput
 }
 
 export type SupportTicketUncheckedUpdateWithoutEmployeeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  departmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -757,7 +791,8 @@ export type SupportTicketUncheckedUpdateWithoutEmployeeInput = {
 
 export type SupportTicketUncheckedUpdateManyWithoutEmployeeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  departmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  departmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  targetHeadRole?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   subject?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   priority?: Prisma.EnumTicketPriorityFieldUpdateOperationsInput | $Enums.TicketPriority
@@ -774,6 +809,7 @@ export type SupportTicketSelect<ExtArgs extends runtime.Types.Extensions.Interna
   id?: boolean
   employeeId?: boolean
   departmentId?: boolean
+  targetHeadRole?: boolean
   subject?: boolean
   description?: boolean
   priority?: boolean
@@ -783,13 +819,14 @@ export type SupportTicketSelect<ExtArgs extends runtime.Types.Extensions.Interna
   createdAt?: boolean
   updatedAt?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
-  department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
+  department?: boolean | Prisma.SupportTicket$departmentArgs<ExtArgs>
 }, ExtArgs["result"]["supportTicket"]>
 
 export type SupportTicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   employeeId?: boolean
   departmentId?: boolean
+  targetHeadRole?: boolean
   subject?: boolean
   description?: boolean
   priority?: boolean
@@ -799,13 +836,14 @@ export type SupportTicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   createdAt?: boolean
   updatedAt?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
-  department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
+  department?: boolean | Prisma.SupportTicket$departmentArgs<ExtArgs>
 }, ExtArgs["result"]["supportTicket"]>
 
 export type SupportTicketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   employeeId?: boolean
   departmentId?: boolean
+  targetHeadRole?: boolean
   subject?: boolean
   description?: boolean
   priority?: boolean
@@ -815,13 +853,14 @@ export type SupportTicketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   createdAt?: boolean
   updatedAt?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
-  department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
+  department?: boolean | Prisma.SupportTicket$departmentArgs<ExtArgs>
 }, ExtArgs["result"]["supportTicket"]>
 
 export type SupportTicketSelectScalar = {
   id?: boolean
   employeeId?: boolean
   departmentId?: boolean
+  targetHeadRole?: boolean
   subject?: boolean
   description?: boolean
   priority?: boolean
@@ -832,30 +871,31 @@ export type SupportTicketSelectScalar = {
   updatedAt?: boolean
 }
 
-export type SupportTicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "departmentId" | "subject" | "description" | "priority" | "status" | "response" | "respondedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["supportTicket"]>
+export type SupportTicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "departmentId" | "targetHeadRole" | "subject" | "description" | "priority" | "status" | "response" | "respondedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["supportTicket"]>
 export type SupportTicketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
-  department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
+  department?: boolean | Prisma.SupportTicket$departmentArgs<ExtArgs>
 }
 export type SupportTicketIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
-  department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
+  department?: boolean | Prisma.SupportTicket$departmentArgs<ExtArgs>
 }
 export type SupportTicketIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
-  department?: boolean | Prisma.DepartmentDefaultArgs<ExtArgs>
+  department?: boolean | Prisma.SupportTicket$departmentArgs<ExtArgs>
 }
 
 export type $SupportTicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "SupportTicket"
   objects: {
     employee: Prisma.$EmployeePayload<ExtArgs>
-    department: Prisma.$DepartmentPayload<ExtArgs>
+    department: Prisma.$DepartmentPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     employeeId: string
-    departmentId: string
+    departmentId: string | null
+    targetHeadRole: string | null
     subject: string
     description: string
     priority: $Enums.TicketPriority
@@ -1259,7 +1299,7 @@ readonly fields: SupportTicketFieldRefs;
 export interface Prisma__SupportTicketClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   employee<T extends Prisma.EmployeeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmployeeDefaultArgs<ExtArgs>>): Prisma.Prisma__EmployeeClient<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  department<T extends Prisma.DepartmentDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DepartmentDefaultArgs<ExtArgs>>): Prisma.Prisma__DepartmentClient<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  department<T extends Prisma.SupportTicket$departmentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SupportTicket$departmentArgs<ExtArgs>>): Prisma.Prisma__DepartmentClient<runtime.Types.Result.GetResult<Prisma.$DepartmentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1292,6 +1332,7 @@ export interface SupportTicketFieldRefs {
   readonly id: Prisma.FieldRef<"SupportTicket", 'String'>
   readonly employeeId: Prisma.FieldRef<"SupportTicket", 'String'>
   readonly departmentId: Prisma.FieldRef<"SupportTicket", 'String'>
+  readonly targetHeadRole: Prisma.FieldRef<"SupportTicket", 'String'>
   readonly subject: Prisma.FieldRef<"SupportTicket", 'String'>
   readonly description: Prisma.FieldRef<"SupportTicket", 'String'>
   readonly priority: Prisma.FieldRef<"SupportTicket", 'TicketPriority'>
@@ -1698,6 +1739,25 @@ export type SupportTicketDeleteManyArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many SupportTickets to delete.
    */
   limit?: number
+}
+
+/**
+ * SupportTicket.department
+ */
+export type SupportTicket$departmentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Department
+   */
+  select?: Prisma.DepartmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Department
+   */
+  omit?: Prisma.DepartmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DepartmentInclude<ExtArgs> | null
+  where?: Prisma.DepartmentWhereInput
 }
 
 /**

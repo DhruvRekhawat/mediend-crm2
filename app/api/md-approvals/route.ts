@@ -1,0 +1,111 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/session'
+import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { hasFeaturePermission } from '@/lib/permissions'
+import { z } from 'zod'
+import { MDApprovalStatus, type Prisma } from '@/generated/prisma/client'
+
+const createSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  amount: z.number().optional().nullable(),
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) return unauthorizedResponse()
+
+    const canRequest = await hasFeaturePermission(user.id, 'md_approval_request')
+    if (!canRequest) {
+      return errorResponse('You do not have permission to request MD approval', 403)
+    }
+
+    const body = await request.json()
+    const { title, description, amount } = createSchema.parse(body)
+
+    const approval = await prisma.mDApprovalRequest.create({
+      data: {
+        title,
+        description: description ?? undefined,
+        amount: amount ?? undefined,
+        requestedById: user.id,
+      },
+      include: {
+        requestedBy: { select: { id: true, name: true } },
+      },
+    })
+
+    // Notify MD users
+    const mdUsers = await prisma.user.findMany({
+      where: { role: 'MD' },
+      select: { id: true },
+    })
+    if (mdUsers.length > 0) {
+      await prisma.notification.createMany({
+        data: mdUsers.map((m) => ({
+          userId: m.id,
+          type: 'MD_APPROVAL_REQUESTED',
+          title: 'MD Approval Requested',
+          message: `${user.name}: ${title}`,
+          link: '/md/md-approvals',
+          relatedId: approval.id,
+        })),
+      })
+    }
+
+    return successResponse(approval, 'Request submitted successfully')
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse(error.errors[0].message, 400)
+    }
+    console.error('Error creating MD approval request:', error)
+    return errorResponse('Failed to create request', 500)
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) return unauthorizedResponse()
+
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    const financePending = searchParams.get('financePending') === 'true'
+
+    const isMD = user.role === 'MD' || user.role === 'ADMIN'
+    const isFinance = user.role === 'FINANCE_HEAD'
+
+    if (isFinance && !financePending) {
+      return successResponse([])
+    }
+
+    const where: Prisma.MDApprovalRequestWhereInput = {}
+    if (financePending && isFinance) {
+      where.status = MDApprovalStatus.APPROVED
+      where.amount = { not: null }
+      where.financeAcknowledged = false
+    } else if (status && status in MDApprovalStatus) {
+      where.status = status as (typeof MDApprovalStatus)[keyof typeof MDApprovalStatus]
+    }
+    if (!isMD && !isFinance) {
+      where.requestedById = user.id
+    }
+
+    const requests = await prisma.mDApprovalRequest.findMany({
+      where,
+      include: {
+        requestedBy: { select: { id: true, name: true, email: true } },
+        respondedBy: { select: { id: true, name: true } },
+        financeAcknowledgedBy: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    return successResponse(requests)
+  } catch (error) {
+    console.error('Error fetching MD approvals:', error)
+    return errorResponse('Failed to fetch requests', 500)
+  }
+}

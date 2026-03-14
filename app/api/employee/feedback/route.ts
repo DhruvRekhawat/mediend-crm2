@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
+      include: { user: { select: { name: true } } },
     })
 
     if (!employee) {
@@ -32,6 +33,25 @@ export async function POST(request: NextRequest) {
         content,
       },
     })
+
+    // Notify all HR_HEAD users
+    const hrHeads = await prisma.user.findMany({
+      where: { role: 'HR_HEAD' },
+      select: { id: true },
+    })
+    const empName = employee.user?.name ?? user.name ?? 'An employee'
+    if (hrHeads.length > 0) {
+      await prisma.notification.createMany({
+        data: hrHeads.map((h) => ({
+          userId: h.id,
+          type: 'FEEDBACK_SUBMITTED',
+          title: 'New Feedback Submitted',
+          message: `${empName} has submitted feedback`,
+          link: '/hr/engagement',
+          relatedId: feedback.id,
+        })),
+      })
+    }
 
     return successResponse(feedback, 'Feedback submitted successfully')
   } catch (error) {

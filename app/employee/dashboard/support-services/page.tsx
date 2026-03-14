@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiGet, apiPost } from '@/lib/api-client'
+import { useAuth } from '@/hooks/use-auth'
+import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { format } from 'date-fns'
 import {
   MessageSquare,
@@ -59,16 +60,22 @@ const SUPPORT_TABS: TabItem[] = [
   { value: 'job-postings', label: 'Job Postings' },
 ]
 
+const HEAD_ROLE_OPTIONS = [
+  { value: 'HR_HEAD', label: 'HR Head' },
+  { value: 'FINANCE_HEAD', label: 'Finance Head' },
+  { value: 'SALES_HEAD', label: 'Sales Head' },
+  { value: 'INSURANCE_HEAD', label: 'Insurance Head' },
+  { value: 'PL_HEAD', label: 'PL Head' },
+  { value: 'OUTSTANDING_HEAD', label: 'Outstanding Head' },
+  { value: 'DIGITAL_MARKETING_HEAD', label: 'Digital Marketing Head' },
+  { value: 'IT_HEAD', label: 'IT Head' },
+]
+
 interface Feedback {
   id: string
   content: string
   status: 'PENDING' | 'REVIEWED' | 'ACKNOWLEDGED'
   createdAt: string
-}
-
-interface Department {
-  id: string
-  name: string
 }
 
 interface SupportTicket {
@@ -80,7 +87,14 @@ interface SupportTicket {
   response: string | null
   respondedAt: string | null
   createdAt: string
-  department: { name: string }
+  department?: { name: string } | null
+  targetHeadRole?: string | null
+  employee?: {
+    user: { name: string; email: string }
+    department?: { name: string } | null
+  }
+  isOverdue?: boolean
+  hoursRemaining?: number
 }
 
 interface Appointment {
@@ -281,17 +295,111 @@ function FeedbackTab() {
   )
 }
 
+function HeadTicketCard({
+  ticket,
+  onUpdate,
+}: {
+  ticket: SupportTicket
+  onUpdate: () => void
+}) {
+  const [response, setResponse] = useState('')
+  const [status, setStatus] = useState(ticket.status)
+  const queryClient = useQueryClient()
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { status: string; response?: string }) =>
+      apiPatch(`/api/head/tickets/${ticket.id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['head-tickets'] })
+      setResponse('')
+      onUpdate()
+      toast.success('Ticket updated')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const statusConfig = TICKET_STATUS[ticket.status]
+  const priorityConfig = TICKET_PRIORITY[ticket.priority]
+  const StatusIcon = statusConfig.icon
+
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div>
+          <h3 className="font-medium">{ticket.subject}</h3>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+            {ticket.employee?.user?.name} ({ticket.employee?.user?.email})
+            <span>·</span>
+            {format(new Date(ticket.createdAt), 'PPP')}
+            {ticket.isOverdue && (
+              <Badge variant="destructive" className="text-xs">Overdue</Badge>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant={priorityConfig.variant}>{priorityConfig.label}</Badge>
+          <Badge variant={statusConfig.variant} className="flex items-center gap-1">
+            <StatusIcon className="h-3 w-3" />
+            {statusConfig.label}
+          </Badge>
+        </div>
+      </div>
+      <p className="text-sm bg-muted/50 p-3 rounded mb-3">{ticket.description}</p>
+      {ticket.status === 'OPEN' || ticket.status === 'IN_PROGRESS' ? (
+        <div className="space-y-2">
+          <Label>Response</Label>
+          <Textarea
+            value={response}
+            onChange={(e) => setResponse(e.target.value)}
+            placeholder="Your response..."
+            rows={3}
+          />
+          <div className="flex gap-2">
+            <Select value={status} onValueChange={(value) => setStatus(value as SupportTicket['status'])}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                <SelectItem value="RESOLVED">Resolved</SelectItem>
+                <SelectItem value="CLOSED">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              onClick={() => updateMutation.mutate({ status, response: response || undefined })}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? 'Updating...' : 'Update'}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        ticket.response && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-sm font-medium text-green-700">Your response:</p>
+            <p className="text-sm text-green-600">{ticket.response}</p>
+            {ticket.respondedAt && (
+              <p className="text-xs text-green-500 mt-2">
+                Responded {format(new Date(ticket.respondedAt), 'PPP')}
+              </p>
+            )}
+          </div>
+        )
+      )}
+    </div>
+  )
+}
+
 function CreateTicketForm({
-  departments,
   onSubmit,
   isLoading,
 }: {
-  departments: Department[]
-  onSubmit: (data: { departmentId: string; subject: string; description: string; priority: string }) => void
+  onSubmit: (data: { targetHeadRole: string; subject: string; description: string; priority: string }) => void
   isLoading: boolean
 }) {
   const [formData, setFormData] = useState({
-    departmentId: '',
+    targetHeadRole: '',
     subject: '',
     description: '',
     priority: 'MEDIUM',
@@ -306,18 +414,18 @@ function CreateTicketForm({
       className="space-y-4"
     >
       <div>
-        <Label>Department *</Label>
+        <Label>Raise to *</Label>
         <Select
-          value={formData.departmentId}
-          onValueChange={(v) => setFormData({ ...formData, departmentId: v })}
+          value={formData.targetHeadRole}
+          onValueChange={(v) => setFormData({ ...formData, targetHeadRole: v })}
           required
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select department" />
+            <SelectValue placeholder="Select head" />
           </SelectTrigger>
           <SelectContent>
-            {departments.map((d) => (
-              <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+            {HEAD_ROLE_OPTIONS.map((h) => (
+              <SelectItem key={h.value} value={h.value}>{h.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -370,19 +478,24 @@ function CreateTicketForm({
 function TicketsTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const queryClient = useQueryClient()
-
-  const { data: departments } = useQuery<Department[]>({
-    queryKey: ['departments'],
-    queryFn: () => apiGet<Department[]>('/api/departments'),
-  })
+  const { user } = useAuth()
 
   const { data: tickets, isLoading } = useQuery<SupportTicket[]>({
     queryKey: ['my-tickets'],
     queryFn: () => apiGet<SupportTicket[]>('/api/employee/tickets'),
   })
 
+  const HEAD_ROLES = ['HR_HEAD', 'FINANCE_HEAD', 'SALES_HEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'OUTSTANDING_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD']
+  const isHead = user && HEAD_ROLES.includes(user.role)
+
+  const { data: incomingTickets, isLoading: loadingIncoming } = useQuery<SupportTicket[]>({
+    queryKey: ['head-tickets'],
+    queryFn: () => apiGet<SupportTicket[]>('/api/head/tickets'),
+    enabled: !!isHead,
+  })
+
   const createMutation = useMutation({
-    mutationFn: (data: { departmentId: string; subject: string; description: string; priority: string }) =>
+    mutationFn: (data: { targetHeadRole: string; subject: string; description: string; priority: string }) =>
       apiPost<SupportTicket>('/api/employee/tickets', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tickets'] })
@@ -406,16 +519,34 @@ function TicketsTab() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Raise support ticket</DialogTitle>
-              <DialogDescription>Describe your issue and select department</DialogDescription>
+              <DialogDescription>Describe your issue and choose which head to raise to</DialogDescription>
             </DialogHeader>
             <CreateTicketForm
-              departments={departments || []}
               onSubmit={(data) => createMutation.mutate(data)}
               isLoading={createMutation.isPending}
             />
           </DialogContent>
         </Dialog>
       </div>
+
+      {isHead && (
+        <SectionContainer title="Incoming tickets (for you)">
+          {loadingIncoming ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : incomingTickets && incomingTickets.length > 0 ? (
+            <div className="space-y-4">
+              {incomingTickets.map((t) => (
+                <HeadTicketCard key={t.id} ticket={t} onUpdate={() => queryClient.invalidateQueries({ queryKey: ['head-tickets', 'my-tickets'] })} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No tickets targeted at you</p>
+            </div>
+          )}
+        </SectionContainer>
+      )}
 
       <SectionContainer title="My tickets">
         {isLoading ? (
@@ -432,8 +563,10 @@ function TicketsTab() {
                     <div>
                       <h3 className="font-medium">{t.subject}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <Building className="h-3 w-3" />
-                        {t.department.name}
+                        <ShieldCheck className="h-3 w-3" />
+                        {t.targetHeadRole
+                          ? HEAD_ROLE_OPTIONS.find((h) => h.value === t.targetHeadRole)?.label ?? t.targetHeadRole
+                          : t.department?.name ?? '—'}
                         <span>·</span>
                         {format(new Date(t.createdAt), 'PPP')}
                       </div>

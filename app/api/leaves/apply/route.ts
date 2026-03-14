@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
 
     const employee = await prisma.employee.findUnique({
       where: { userId: user.id },
+      include: { user: { select: { name: true } } },
     })
 
     if (!employee) {
@@ -118,6 +119,27 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    })
+
+    // Notify target approver and all HR_HEAD users
+    const hrHeads = await prisma.user.findMany({
+      where: { role: 'HR_HEAD' },
+      select: { id: true },
+    })
+    const notifyUserIds = new Set<string>()
+    if (targetApprover?.user?.id) notifyUserIds.add(targetApprover.user.id)
+    hrHeads.forEach((h) => notifyUserIds.add(h.id))
+    const leaveTypeName = leaveType.name
+    const empName = employee.user?.name ?? user.name ?? 'An employee'
+    await prisma.notification.createMany({
+      data: Array.from(notifyUserIds).map((userId) => ({
+        userId,
+        type: 'LEAVE_REQUESTED',
+        title: 'Leave Request Submitted',
+        message: `${empName} has applied for ${leaveTypeName} (${days} day(s))`,
+        link: '/hr/attendance-leaves',
+        relatedId: leaveRequest.id,
+      })),
     })
 
     return successResponse(leaveRequest, 'Leave request submitted successfully')
