@@ -246,26 +246,31 @@ function AttendanceTab() {
       </div>
 
       {stats && (
-        <div className="rounded-lg border bg-card p-4 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm justify-between">
-          <div>
-            <span className="text-muted-foreground">Grace 1: </span>
-            <span className="font-semibold">{stats.grace1Count}</span>
-            <span className="ml-4 text-muted-foreground">Grace 2: </span>
-            <span className="font-semibold">{stats.grace2Count}</span>
-            <span className="ml-4 text-muted-foreground">Late Penalty: </span>
-            <span className="font-semibold">{stats.latePenaltyCount}</span>
-            <span className="ml-4 text-muted-foreground">Half-days: </span>
-            <span className="font-semibold">{stats.halfDayCount}</span>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-800 p-4">
+            <p className="text-xs font-medium text-blue-600 dark:text-blue-400">Grace 1</p>
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.grace1Count}</p>
           </div>
-          <div className="text-right">
-            <div>
-              <span className="text-muted-foreground">Total Penalties: </span>
-              <span className="font-semibold">₹{stats.totalPenalty}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Normalizations: </span>
-              <span className="font-semibold">{stats.normalizationsHoursUsed}/{stats.normalizationsLimitHours} hrs, {stats.normalizationsUsed}/{stats.normalizationsLimitDays} days</span>
-            </div>
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 dark:bg-indigo-950/40 dark:border-indigo-800 p-4">
+            <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Grace 2</p>
+            <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300 mt-1">{stats.grace2Count}</p>
+          </div>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 p-4">
+            <p className="text-xs font-medium text-amber-600 dark:text-amber-400">Late Penalty</p>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300 mt-1">{stats.latePenaltyCount}</p>
+          </div>
+          <div className="rounded-xl border border-purple-200 bg-purple-50 dark:bg-purple-950/40 dark:border-purple-800 p-4">
+            <p className="text-xs font-medium text-purple-600 dark:text-purple-400">Half-days</p>
+            <p className="text-2xl font-bold text-purple-700 dark:text-purple-300 mt-1">{stats.halfDayCount}</p>
+          </div>
+          <div className="rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:border-rose-800 p-4">
+            <p className="text-xs font-medium text-rose-600 dark:text-rose-400">Total Penalties</p>
+            <p className="text-2xl font-bold text-rose-700 dark:text-rose-300 mt-1">₹{stats.totalPenalty}</p>
+          </div>
+          <div className="rounded-xl border border-teal-200 bg-teal-50 dark:bg-teal-950/40 dark:border-teal-800 p-4">
+            <p className="text-xs font-medium text-teal-600 dark:text-teal-400">Normalizations</p>
+            <p className="text-2xl font-bold text-teal-700 dark:text-teal-300 mt-1">{stats.normalizationsHoursUsed}/{stats.normalizationsLimitHours}<span className="text-sm font-medium ml-1">hrs</span></p>
+            <p className="text-xs text-teal-600 dark:text-teal-400 mt-0.5">{stats.normalizationsUsed}/{stats.normalizationsLimitDays} days used</p>
           </div>
         </div>
       )}
@@ -410,25 +415,27 @@ function LeavesTab() {
       ) : leaveBalances.length > 0 ? (
         <div>
           <h2 className="text-lg font-semibold mb-3">Your leave balance</h2>
-          {/* Compact summary box */}
-          <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
-            <div className="flex flex-col md:flex-row md:items-center gap-4">
-              {leaveBalances.map((b) => (
-                <div key={b.leaveTypeId} className="flex flex-col items-start">
-                  <span className="font-medium">{b.leaveType.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    <span className="text-green-700 dark:text-green-400">{b.remaining}</span> left &middot; 
-                    <span className="ml-1">{b.used}</span> used &middot; 
-                    <span className="ml-1">{b.allocated}</span> allocated
-                  </span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {leaveBalances.map((b, i) => {
+              const colors = [
+                { border: 'border-blue-200 dark:border-blue-800', bg: 'bg-blue-50 dark:bg-blue-950/40', label: 'text-blue-600 dark:text-blue-400', value: 'text-blue-700 dark:text-blue-300' },
+                { border: 'border-emerald-200 dark:border-emerald-800', bg: 'bg-emerald-50 dark:bg-emerald-950/40', label: 'text-emerald-600 dark:text-emerald-400', value: 'text-emerald-700 dark:text-emerald-300' },
+                { border: 'border-amber-200 dark:border-amber-800', bg: 'bg-amber-50 dark:bg-amber-950/40', label: 'text-amber-600 dark:text-amber-400', value: 'text-amber-700 dark:text-amber-300' },
+                { border: 'border-purple-200 dark:border-purple-800', bg: 'bg-purple-50 dark:bg-purple-950/40', label: 'text-purple-600 dark:text-purple-400', value: 'text-purple-700 dark:text-purple-300' },
+              ]
+              const c = colors[i % colors.length]
+              return (
+                <div key={b.leaveTypeId} className={`rounded-xl border ${c.border} ${c.bg} p-4`}>
+                  <p className={`text-xs font-medium ${c.label}`}>{b.leaveType.name}</p>
+                  <p className={`text-2xl font-bold ${c.value} mt-1`}>{b.remaining}<span className="text-sm font-medium ml-1">left</span></p>
+                  <p className={`text-xs ${c.label} mt-0.5`}>{b.used} used · {b.allocated} allocated</p>
                 </div>
-              ))}
-            </div>
-            <div className="border-t md:border-l md:border-t-0 border-muted-foreground/10 mt-2 pt-2 md:mt-0 md:pt-0 md:pl-6">
-              <div className="font-semibold">
-                Total: <span className="text-green-700 dark:text-green-400">{totalRemaining}</span> left / {totalAllocated} allocated
-              </div>
-              <div className="text-xs text-muted-foreground">You have used {totalUsed} day{totalUsed === 1 ? '' : 's'} so far</div>
+              )
+            })}
+            <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/40 p-4">
+              <p className="text-xs font-medium text-green-600 dark:text-green-400">Total Balance</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300 mt-1">{totalRemaining}<span className="text-sm font-medium ml-1">left</span></p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">{totalUsed} used · {totalAllocated} allocated</p>
             </div>
           </div>
         </div>
