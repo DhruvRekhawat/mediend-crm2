@@ -32,7 +32,6 @@ import { toast } from 'sonner'
 import { SectionContainer } from '@/components/employee/section-container'
 import { TabNavigation, type TabItem } from '@/components/employee/tab-navigation'
 import { AttendanceHeatmap, type AttendanceDay as HeatmapAttendanceDay } from '@/components/employee/attendance-heatmap'
-import { LeaveBalanceCard } from '@/components/hrms/LeaveBalanceCard'
 import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
 import { useRouter } from 'next/navigation'
 
@@ -247,30 +246,26 @@ function AttendanceTab() {
       </div>
 
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Grace 1</p>
-            <p className="text-2xl font-semibold">{stats.grace1Count}</p>
+        <div className="rounded-lg border bg-card p-4 flex flex-wrap items-center gap-x-8 gap-y-2 text-sm justify-between">
+          <div>
+            <span className="text-muted-foreground">Grace 1: </span>
+            <span className="font-semibold">{stats.grace1Count}</span>
+            <span className="ml-4 text-muted-foreground">Grace 2: </span>
+            <span className="font-semibold">{stats.grace2Count}</span>
+            <span className="ml-4 text-muted-foreground">Late Penalty: </span>
+            <span className="font-semibold">{stats.latePenaltyCount}</span>
+            <span className="ml-4 text-muted-foreground">Half-days: </span>
+            <span className="font-semibold">{stats.halfDayCount}</span>
           </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Grace 2</p>
-            <p className="text-2xl font-semibold">{stats.grace2Count}</p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Late (penalty)</p>
-            <p className="text-2xl font-semibold">{stats.latePenaltyCount}</p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Half days</p>
-            <p className="text-2xl font-semibold">{stats.halfDayCount}</p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Total penalties</p>
-            <p className="text-2xl font-semibold">₹{stats.totalPenalty}</p>
-          </div>
-          <div className="rounded-lg border bg-card p-4">
-            <p className="text-xs text-muted-foreground">Normalizations</p>
-            <p className="text-2xl font-semibold">{stats.normalizationsHoursUsed}/{stats.normalizationsLimitHours} hrs, {stats.normalizationsUsed}/{stats.normalizationsLimitDays} days</p>
+          <div className="text-right">
+            <div>
+              <span className="text-muted-foreground">Total Penalties: </span>
+              <span className="font-semibold">₹{stats.totalPenalty}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Normalizations: </span>
+              <span className="font-semibold">{stats.normalizationsHoursUsed}/{stats.normalizationsLimitHours} hrs, {stats.normalizationsUsed}/{stats.normalizationsLimitDays} days</span>
+            </div>
           </div>
         </div>
       )}
@@ -400,22 +395,44 @@ function LeavesTab() {
     }
   }
 
+  // Compute total balance for compact summary
+  const leaveBalances = leaveData?.balances ?? [];
+  const totalRemaining = leaveBalances.reduce((acc, b) => acc + (b.remaining || 0), 0);
+  const totalUsed = leaveBalances.reduce((acc, b) => acc + (b.used || 0), 0);
+  const totalAllocated = leaveBalances.reduce((acc, b) => acc + (b.allocated || 0), 0);
+
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">
-        View your leave balance and history. Policy: 1 CL, 0.5 SL, 0.5 EL per month; EL carries to next year; CL & SL reset yearly.
-      </p>
-
       {isLoading ? (
         <div className="rounded-lg border bg-muted/30 p-6 text-center text-muted-foreground">
           Loading your leave balance…
         </div>
-      ) : leaveData?.balances && leaveData.balances.length > 0 ? (
+      ) : leaveBalances.length > 0 ? (
         <div>
           <h2 className="text-lg font-semibold mb-3">Your leave balance</h2>
-          <LeaveBalanceCard balances={leaveData.balances} />
+          {/* Compact summary box */}
+          <div className="rounded-lg border bg-card p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              {leaveBalances.map((b) => (
+                <div key={b.leaveTypeId} className="flex flex-col items-start">
+                  <span className="font-medium">{b.leaveType.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    <span className="text-green-700 dark:text-green-400">{b.remaining}</span> left &middot; 
+                    <span className="ml-1">{b.used}</span> used &middot; 
+                    <span className="ml-1">{b.allocated}</span> allocated
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t md:border-l md:border-t-0 border-muted-foreground/10 mt-2 pt-2 md:mt-0 md:pt-0 md:pl-6">
+              <div className="font-semibold">
+                Total: <span className="text-green-700 dark:text-green-400">{totalRemaining}</span> left / {totalAllocated} allocated
+              </div>
+              <div className="text-xs text-muted-foreground">You have used {totalUsed} day{totalUsed === 1 ? '' : 's'} so far</div>
+            </div>
+          </div>
         </div>
-      ) : leaveData && !leaveData.balances?.length ? (
+      ) : leaveData && !leaveBalances.length ? (
         <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
           No leave balance data available. Contact HR if this is unexpected.
         </div>
@@ -589,10 +606,8 @@ function DocumentsTab({ router }: { router: ReturnType<typeof useRouter> }) {
             <TableBody>
               {documents.map((doc) => (
                 <TableRow key={doc.id}>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {getDocumentLabel(doc)}
-                    </Badge>
+                  <TableCell className="font-medium">
+                    {getDocumentLabel(doc)}
                   </TableCell>
                   <TableCell>{format(new Date(doc.generatedAt), 'PPP')}</TableCell>
                   <TableCell>

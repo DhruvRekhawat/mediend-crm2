@@ -40,6 +40,7 @@ import {
   Ticket,
   TrendingUp,
   User,
+  UserCircle,
   Users,
   Wallet,
 } from 'lucide-react'
@@ -102,6 +103,8 @@ export function AppSidebar() {
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({
     services: false,
     finance: false,
+    hr: false,
+    myHrms: false,
   })
 
   const toggleSection = (section: string) => {
@@ -116,6 +119,9 @@ export function AppSidebar() {
   }
 
   const itemsWithUrls = getFilteredNavItemsWithUrls(user)
+
+  const HRM_TITLES = ['Attendance & Leaves', 'People & Org', 'Compensation & Docs', 'Engagement']
+
   const navigationItems =
     user.role === 'MD'
       ? itemsWithUrls.filter(
@@ -161,6 +167,28 @@ export function AppSidebar() {
                   !item.title.startsWith('Fin '))
             )
 
+  const mainItems = navigationItems.filter((item) => {
+    if (item.title.startsWith('My ')) return false
+    if (HRM_TITLES.includes(item.title)) return user.role !== 'HR_HEAD'
+    return true
+  })
+  const hrItems = navigationItems.filter((item) => HRM_TITLES.includes(item.title))
+  const myHrmsItems = navigationItems.filter((item) => item.title.startsWith('My '))
+
+  const showHrSection = user.role === 'HR_HEAD' && hrItems.length > 0
+  const showMyHrmsSection = myHrmsItems.length > 0
+
+  const hrSectionBadge = showHrSection
+    ? hrItems.reduce(
+        (sum, item) => sum + getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin),
+        0
+      )
+    : 0
+  const myHrmsSectionBadge = myHrmsItems.reduce(
+    (sum, item) => sum + getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin),
+    0
+  )
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
@@ -181,7 +209,7 @@ export function AppSidebar() {
         <SidebarGroup className="pb-1">
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => {
+              {mainItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
                 const label = item.title.startsWith('MD ') ? item.title.replace('MD ', '') : item.title
@@ -205,6 +233,116 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {showHrSection && (
+          <SidebarGroup className="pb-1">
+            <button
+              onClick={() => toggleSection('hr')}
+              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>HRM</span>
+                {hrSectionBadge > 0 && (
+                  <SidebarMenuBadge className="bg-destructive text-white">
+                    {hrSectionBadge > 99 ? '99+' : hrSectionBadge}
+                  </SidebarMenuBadge>
+                )}
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${
+                  openSections.hr ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                openSections.hr ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              {openSections.hr && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {hrItems.map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                      const badgeCount = getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin)
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                            <Link href={item.url} onClick={closeSidebarOnMobile}>
+                              <Icon />
+                              <span>{item.title}</span>
+                              {badgeCount > 0 && (
+                                <SidebarMenuBadge className="bg-destructive text-white">
+                                  {badgeCount > 99 ? '99+' : badgeCount}
+                                </SidebarMenuBadge>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </div>
+          </SidebarGroup>
+        )}
+        {showMyHrmsSection && (
+          <SidebarGroup className="pb-1">
+            <button
+              onClick={() => toggleSection('myHrms')}
+              className="text-sidebar-foreground ring-sidebar-ring flex h-9 w-full shrink-0 items-center justify-between rounded-md px-2.5 text-sm font-semibold outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-4 w-4" />
+                <span>MyHrms</span>
+                {myHrmsSectionBadge > 0 && (
+                  <SidebarMenuBadge className="bg-destructive text-white">
+                    {myHrmsSectionBadge > 99 ? '99+' : myHrmsSectionBadge}
+                  </SidebarMenuBadge>
+                )}
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-200 ${
+                  openSections.myHrms ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                openSections.myHrms ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              {openSections.myHrms && (
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {myHrmsItems.map((item) => {
+                      const Icon = item.icon
+                      const isActive = pathname === item.url || pathname.startsWith(item.url + '/')
+                      const badgeCount = getBadgeCount(item.title, badgeCounts, !!isMdOrAdmin)
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                            <Link href={item.url} onClick={closeSidebarOnMobile}>
+                              <Icon />
+                              <span>{item.title}</span>
+                              {badgeCount > 0 && (
+                                <SidebarMenuBadge className="bg-destructive text-white">
+                                  {badgeCount > 99 ? '99+' : badgeCount}
+                                </SidebarMenuBadge>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </div>
+          </SidebarGroup>
+        )}
         {user.role !== 'ADMIN' && user.role !== 'TESTER' && itemsWithUrls.some((item) => item.title.startsWith('Svc ')) && (
           <SidebarGroup className="pb-1">
             <button

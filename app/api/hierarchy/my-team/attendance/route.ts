@@ -45,13 +45,28 @@ export async function GET(request: NextRequest) {
       return errorResponse('Employee record not found', 404)
     }
 
-    const subordinates = await getSubordinates(employee.id, true)
-    const subordinateIds = subordinates.map((s) => s.id)
+    const { searchParams } = new URL(request.url)
+    const managerEmployeeIdParam = searchParams.get('managerEmployeeId')
+
+    let rootEmployeeId = employee.id
+    if (managerEmployeeIdParam && managerEmployeeIdParam !== employee.id) {
+      const { isManagerOf } = await import('@/lib/hierarchy')
+      const inChain = await isManagerOf(employee.id, managerEmployeeIdParam)
+      if (!inChain) {
+        return errorResponse('You can only view attendance of your direct or indirect reports', 403)
+      }
+      rootEmployeeId = managerEmployeeIdParam
+    }
+
+    const subordinates = await getSubordinates(rootEmployeeId, true)
+    let subordinateIds = subordinates.map((s) => s.id)
+    if (managerEmployeeIdParam && managerEmployeeIdParam !== employee.id) {
+      subordinateIds = [managerEmployeeIdParam, ...subordinateIds]
+    }
     if (subordinateIds.length === 0) {
       return successResponse({ entries: [], fromDate: null, toDate: null })
     }
 
-    const { searchParams } = new URL(request.url)
     const fromDate = searchParams.get('fromDate')
     const toDate = searchParams.get('toDate')
 

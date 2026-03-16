@@ -294,7 +294,7 @@ export default function HRDocumentsPage() {
 
       {/* Employee Documents Sheet */}
       <Sheet open={!!sheetEmployee} onOpenChange={(open) => !open && setSheetEmployee(null)}>
-        <SheetContent className="sm:max-w-xl overflow-y-auto">
+        <SheetContent className="sm:max-w-xl overflow-y-auto p-6">
           {sheetEmployee && (
             <>
               <SheetHeader>
@@ -317,8 +317,8 @@ export default function HRDocumentsPage() {
                   </Button>
                   <UploadDocumentButton employeeId={sheetEmployee.id} onSuccess={invalidateDocuments} />
                 </div>
-                <div>
-                  <h4 className="font-medium mb-2">Documents</h4>
+                <div className="pt-4 pb-2 px-1">
+                  <h4 className="font-medium mb-3">Documents</h4>
                   {docsLoading ? (
                     <div className="text-sm text-muted-foreground py-4">Loading...</div>
                   ) : employeeDocs.length === 0 ? (

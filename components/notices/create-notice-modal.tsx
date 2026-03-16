@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
 import {
@@ -30,6 +30,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { toast } from 'sonner'
 import { BADGE_COUNTS_QUERY_KEY } from '@/hooks/use-badge-counts'
+import { Search } from 'lucide-react'
 
 interface CreateNoticeModalProps {
   open: boolean
@@ -57,6 +58,7 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
   const [targetType, setTargetType] = useState<'EVERYONE' | 'EVERYONE_EXCEPT_MD' | 'DEPARTMENT' | 'SPECIFIC'>('EVERYONE')
   const [targetDepartmentId, setTargetDepartmentId] = useState<string>('')
   const [targetUserIds, setTargetUserIds] = useState<string[]>([])
+  const [peopleSearch, setPeopleSearch] = useState('')
 
   const { data: departments = [] } = useQuery<Department[]>({
     queryKey: ['departments'],
@@ -69,6 +71,16 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
     queryFn: () => apiGet<User[]>('/api/users'),
     enabled: open && targetType === 'SPECIFIC',
   })
+
+  const filteredUsers = useMemo(() => {
+    if (!peopleSearch.trim()) return users
+    const q = peopleSearch.toLowerCase().trim()
+    return users.filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q)
+    )
+  }, [users, peopleSearch])
 
   const createMutation = useMutation({
     mutationFn: (data: {
@@ -87,6 +99,7 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
       setTargetType('EVERYONE')
       setTargetDepartmentId('')
       setTargetUserIds([])
+      setPeopleSearch('')
       queryClient.invalidateQueries({ queryKey: ['notices-list', 'notices-pending'] })
       queryClient.invalidateQueries({ queryKey: BADGE_COUNTS_QUERY_KEY })
     },
@@ -130,35 +143,6 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
       {step === 1 ? (
         <>
           <div>
-            <Label htmlFor="notice-title">Title *</Label>
-            <Input
-              id="notice-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Notice title"
-              className="mt-2"
-            />
-          </div>
-          <div>
-            <Label htmlFor="notice-body">Body *</Label>
-            <Textarea
-              id="notice-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Notice content..."
-              rows={5}
-              className="mt-2"
-            />
-          </div>
-          <div className="flex justify-end">
-            <Button onClick={() => setStep(2)} disabled={!title.trim() || !body.trim()}>
-              Next
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div>
             <Label className="mb-3 block">Select recipients</Label>
             <Select value={targetType} onValueChange={(v) => setTargetType(v as typeof targetType)}>
               <SelectTrigger>
@@ -186,10 +170,20 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
                   </SelectContent>
                 </Select>
               </div>
-              )}
+            )}
             {targetType === 'SPECIFIC' && (
-                <div className="mt-3 max-h-48 overflow-y-auto border rounded-lg p-2 space-y-2">
-                  {users.slice(0, 100).map((u) => (
+              <div className="mt-3 space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name or email..."
+                    value={peopleSearch}
+                    onChange={(e) => setPeopleSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-2">
+                  {filteredUsers.map((u) => (
                     <div key={u.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`user-${u.id}`}
@@ -198,19 +192,60 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
                       />
                       <Label
                         htmlFor={`user-${u.id}`}
-                        className="font-normal cursor-pointer text-sm"
+                        className="font-normal cursor-pointer text-sm flex-1"
                       >
                         {u.name} ({u.email})
                       </Label>
                     </div>
                   ))}
-                  {users.length > 100 && (
-                    <p className="text-xs text-muted-foreground">
-                      Showing first 100 users. Use search for more.
+                  {filteredUsers.length === 0 && (
+                    <p className="text-xs text-muted-foreground py-2">
+                      No matching people
                     </p>
                   )}
                 </div>
-              )}
+                {targetUserIds.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {targetUserIds.length} selected
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end">
+            <Button
+              onClick={() => setStep(2)}
+              disabled={
+                (targetType === 'DEPARTMENT' && !targetDepartmentId) ||
+                (targetType === 'SPECIFIC' && targetUserIds.length === 0)
+              }
+            >
+              Next
+            </Button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <Label htmlFor="notice-title">Title *</Label>
+            <Input
+              id="notice-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Notice title"
+              className="mt-2"
+            />
+          </div>
+          <div>
+            <Label htmlFor="notice-body">Body *</Label>
+            <Textarea
+              id="notice-body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Notice content..."
+              rows={5}
+              className="mt-2"
+            />
           </div>
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setStep(1)}>
@@ -218,11 +253,7 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={
-                createMutation.isPending ||
-                (targetType === 'DEPARTMENT' && !targetDepartmentId) ||
-                (targetType === 'SPECIFIC' && targetUserIds.length === 0)
-              }
+              disabled={createMutation.isPending || !title.trim() || !body.trim()}
             >
               {createMutation.isPending ? 'Creating...' : 'Create Notice'}
             </Button>
@@ -232,12 +263,15 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
     </div>
   )
 
+  const step1Title = 'Select Recipients'
+  const step2Title = 'Create Notice'
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[90vh] rounded-t-2xl">
           <DrawerHeader>
-            <DrawerTitle>{step === 1 ? 'Create Notice' : 'Select Recipients'}</DrawerTitle>
+            <DrawerTitle>{step === 1 ? step1Title : step2Title}</DrawerTitle>
           </DrawerHeader>
           <div className="px-4 pb-8 overflow-y-auto">{content}</div>
         </DrawerContent>
@@ -249,7 +283,7 @@ export function CreateNoticeModal({ open, onOpenChange }: CreateNoticeModalProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{step === 1 ? 'Create Notice' : 'Select Recipients'}</DialogTitle>
+          <DialogTitle>{step === 1 ? step1Title : step2Title}</DialogTitle>
         </DialogHeader>
         {content}
       </DialogContent>

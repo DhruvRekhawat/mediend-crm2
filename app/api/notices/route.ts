@@ -99,7 +99,8 @@ export async function GET(request: NextRequest) {
     const user = getSessionFromRequest(request)
     if (!user) return unauthorizedResponse()
 
-    const notices = await prisma.noticeRecipient.findMany({
+    // Notices shown to me (I am a recipient)
+    const recipientNotices = await prisma.noticeRecipient.findMany({
       where: { userId: user.id },
       include: {
         notice: {
@@ -111,14 +112,54 @@ export async function GET(request: NextRequest) {
       orderBy: { notice: { createdAt: 'desc' } },
     })
 
-    const result = notices.map((nr) => ({
-      id: nr.notice.id,
-      title: nr.notice.title,
-      body: nr.notice.body,
-      createdAt: nr.notice.createdAt,
-      createdBy: nr.notice.createdBy,
-      acknowledgedAt: nr.acknowledgedAt,
-    }))
+    // Notices I created (may or may not be a recipient)
+    const createdNotices = await prisma.notice.findMany({
+      where: { createdById: user.id },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    })
+
+    const recipientIds = new Set(recipientNotices.map((nr) => nr.notice.id))
+
+    const result: Array<{
+      id: string
+      title: string
+      body: string
+      createdAt: Date
+      createdBy: { id: string; name: string }
+      acknowledgedAt: Date | null
+      createdByMe: boolean
+    }> = []
+
+    for (const nr of recipientNotices) {
+      result.push({
+        id: nr.notice.id,
+        title: nr.notice.title,
+        body: nr.notice.body,
+        createdAt: nr.notice.createdAt,
+        createdBy: nr.notice.createdBy,
+        acknowledgedAt: nr.acknowledgedAt,
+        createdByMe: nr.notice.createdById === user.id,
+      })
+    }
+
+    for (const n of createdNotices) {
+      if (!recipientIds.has(n.id)) {
+        result.push({
+          id: n.id,
+          title: n.title,
+          body: n.body,
+          createdAt: n.createdAt,
+          createdBy: n.createdBy,
+          acknowledgedAt: null,
+          createdByMe: true,
+        })
+      }
+    }
+
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
     return successResponse(result)
   } catch (error) {

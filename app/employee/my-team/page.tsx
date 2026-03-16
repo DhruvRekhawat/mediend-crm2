@@ -19,11 +19,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { apiGet, apiPatch, apiPost } from '@/lib/api-client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, eachDayOfInterval } from 'date-fns'
-import { Calendar, Check, Clock, Users, X, UserCheck } from 'lucide-react'
+import { Calendar, Check, Clock, Users, X, UserCheck, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -39,6 +46,23 @@ interface TeamAttendanceResponse {
   entries: AttendanceEntry[]
   fromDate: string | null
   toDate: string | null
+}
+
+interface TeamMember {
+  id: string
+  userId: string
+  employeeCode: string
+  name: string
+  email: string
+  role: string
+  departmentName: string | null
+  subordinateCount: number
+  hasSubordinates: boolean
+}
+
+interface TeamTreeResponse {
+  managerEmployeeId: string
+  members: TeamMember[]
 }
 
 interface TeamLeave {
@@ -90,6 +114,12 @@ export default function MyTeamPage() {
   const [normEmployeeId, setNormEmployeeId] = useState('')
   const [normReason, setNormReason] = useState('')
   const [selectedNormDates, setSelectedNormDates] = useState<Set<string>>(new Set())
+  const [drillDownManager, setDrillDownManager] = useState<TeamMember | null>(null)
+
+  const { data: treeData } = useQuery<TeamTreeResponse>({
+    queryKey: ['hierarchy', 'my-team', 'tree'],
+    queryFn: () => apiGet<TeamTreeResponse>('/api/hierarchy/my-team/tree'),
+  })
 
   const { data: attendanceData, isLoading: attendanceLoading } = useQuery<TeamAttendanceResponse>({
     queryKey: ['hierarchy', 'my-team', 'attendance', fromDate, toDate],
@@ -182,12 +212,69 @@ export default function MyTeamPage() {
     return disabled
   }, [from, to])
 
+  const members = treeData?.members ?? []
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">My Team</h1>
         <p className="text-muted-foreground mt-1">Attendance and leave requests for employees you manage</p>
       </div>
+
+      {members.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Team hierarchy
+            </CardTitle>
+            <CardDescription>
+              Your direct reports. Click &quot;View team&quot; on team leads to see their team&apos;s attendance and leaves.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {members.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-2 rounded-lg border bg-card px-4 py-3"
+                >
+                  <div>
+                    <p className="font-medium">{m.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {m.employeeCode} · {m.role.replace('_', ' ')}
+                      {m.subordinateCount > 0 && ` · ${m.subordinateCount} report(s)`}
+                    </p>
+                  </div>
+                  {m.hasSubordinates && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDrillDownManager(m)}
+                      className="shrink-0"
+                    >
+                      <ChevronRight className="h-4 w-4 mr-1" />
+                      View team
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <TeamDrillDownSheet
+        manager={drillDownManager}
+        open={!!drillDownManager}
+        onOpenChange={(open) => !open && setDrillDownManager(null)}
+        fromDate={fromDate}
+        toDate={toDate}
+        onDateChange={(f, t) => {
+          setFromDate(f)
+          setToDate(t)
+        }}
+      />
 
       <Tabs defaultValue="attendance" className="space-y-4">
         <TabsList>
@@ -588,5 +675,318 @@ export default function MyTeamPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+function TeamDrillDownSheet({
+  manager,
+  open,
+  onOpenChange,
+  fromDate,
+  toDate,
+  onDateChange,
+}: {
+  manager: TeamMember | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  fromDate: string
+  toDate: string
+  onDateChange: (from: string, to: string) => void
+}) {
+  const queryClient = useQueryClient()
+  const [leaveStatusFilter, setLeaveStatusFilter] = useState<string>('PENDING')
+  const [selectedLeave, setSelectedLeave] = useState<TeamLeave | null>(null)
+  const [remarks, setRemarks] = useState('')
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false)
+
+  const { data: attendanceData, isLoading: attendanceLoading } = useQuery<TeamAttendanceResponse>({
+    queryKey: ['hierarchy', 'my-team', 'attendance', manager?.id, fromDate, toDate],
+    queryFn: () =>
+      apiGet<TeamAttendanceResponse>(
+        `/api/hierarchy/my-team/attendance?fromDate=${fromDate}&toDate=${toDate}&managerEmployeeId=${manager?.id}`
+      ),
+    enabled: open && !!manager?.id,
+  })
+
+  const { data: leavesData, isLoading: leavesLoading } = useQuery<TeamLeavesResponse>({
+    queryKey: ['hierarchy', 'my-team', 'leaves', manager?.id, leaveStatusFilter],
+    queryFn: () =>
+      apiGet<TeamLeavesResponse>(
+        `/api/hierarchy/my-team/leaves?status=${leaveStatusFilter}&managerEmployeeId=${manager?.id}`
+      ),
+    enabled: open && !!manager?.id,
+  })
+
+  const approveMutation = useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      remarks: r,
+    }: {
+      id: string
+      status: 'APPROVED' | 'REJECTED'
+      remarks?: string
+    }) => apiPatch(`/api/leaves/${id}/approve`, { status, remarks: r }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hierarchy', 'my-team', 'leaves'] })
+      setApproveDialogOpen(false)
+      setSelectedLeave(null)
+      setRemarks('')
+      toast.success('Leave request updated')
+    },
+    onError: (e: Error) => toast.error(e.message || 'Failed to update leave'),
+  })
+
+  const handleApproveSubmit = (status: 'APPROVED' | 'REJECTED') => {
+    if (!selectedLeave) return
+    approveMutation.mutate({ id: selectedLeave.id, status, remarks: remarks || undefined })
+  }
+
+  const entries = attendanceData?.entries ?? []
+  const leaves = leavesData?.leaves ?? []
+  const from = attendanceData?.fromDate ?? fromDate
+  const to = attendanceData?.toDate ?? toDate
+
+  if (!manager) return null
+
+  return (
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>{manager.name}&apos;s team</SheetTitle>
+            <SheetDescription>
+              {manager.employeeCode} · {manager.role.replace('_', ' ')} · {manager.subordinateCount} report(s)
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Date range</CardTitle>
+                <CardDescription>Select range for attendance heatmaps</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>From</Label>
+                    <Input
+                      type="date"
+                      value={fromDate}
+                      onChange={(e) => onDateChange(e.target.value, toDate)}
+                    />
+                  </div>
+                  <div>
+                    <Label>To</Label>
+                    <Input
+                      type="date"
+                      value={toDate}
+                      onChange={(e) => onDateChange(fromDate, e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div>
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Attendance
+              </h4>
+              {attendanceLoading ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">Loading...</div>
+              ) : entries.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground text-sm rounded-lg border border-dashed">
+                  No attendance in this range
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {entries.map((entry) => (
+                    <Card key={entry.employeeId}>
+                      <CardHeader className="py-3">
+                        <CardTitle className="text-base">{entry.name}</CardTitle>
+                        <CardDescription className="text-xs">
+                          {entry.email} · {entry.role.replace('_', ' ')}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <AttendanceHeatmap
+                          attendance={entry.attendance}
+                          fromDate={from}
+                          toDate={to}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Leaves
+              </h4>
+              <div className="flex gap-2 mb-3">
+                <Button
+                  variant={leaveStatusFilter === 'PENDING' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLeaveStatusFilter('PENDING')}
+                >
+                  Pending
+                </Button>
+                <Button
+                  variant={leaveStatusFilter === 'APPROVED' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLeaveStatusFilter('APPROVED')}
+                >
+                  Approved
+                </Button>
+                <Button
+                  variant={leaveStatusFilter === 'REJECTED' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setLeaveStatusFilter('REJECTED')}
+                >
+                  Rejected
+                </Button>
+              </div>
+              {leavesLoading ? (
+                <div className="text-center py-8 text-muted-foreground text-sm">Loading...</div>
+              ) : (
+                <div className="rounded-lg border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Employee</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Start</TableHead>
+                        <TableHead>End</TableHead>
+                        <TableHead>Days</TableHead>
+                        <TableHead>Status</TableHead>
+                        {leaveStatusFilter === 'PENDING' && <TableHead>Actions</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leaves.map((leave) => (
+                        <TableRow key={leave.id}>
+                          <TableCell className="font-medium text-sm">
+                            {leave.employeeName}
+                            <span className="block text-xs text-muted-foreground">{leave.employeeEmail}</span>
+                          </TableCell>
+                          <TableCell className="text-sm">{leave.leaveType}</TableCell>
+                          <TableCell className="text-sm">{format(new Date(leave.startDate), 'PP')}</TableCell>
+                          <TableCell className="text-sm">{format(new Date(leave.endDate), 'PP')}</TableCell>
+                          <TableCell className="text-sm">{leave.days}</TableCell>
+                          <TableCell>
+                            {leave.status === 'PENDING' && <Badge variant="secondary">Pending</Badge>}
+                            {leave.status === 'APPROVED' && <Badge variant="default">Approved</Badge>}
+                            {leave.status === 'REJECTED' && <Badge variant="destructive">Rejected</Badge>}
+                          </TableCell>
+                          {leaveStatusFilter === 'PENDING' && (
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={() => {
+                                    setSelectedLeave(leave)
+                                    setApproveDialogOpen(true)
+                                  }}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 text-destructive hover:bg-destructive/10"
+                                  onClick={() => {
+                                    setSelectedLeave(leave)
+                                    setApproveDialogOpen(true)
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                      {leaves.length === 0 && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={leaveStatusFilter === 'PENDING' ? 7 : 6}
+                            className="text-center text-muted-foreground py-8 text-sm"
+                          >
+                            No leave requests
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve / Reject leave</DialogTitle>
+            <DialogDescription>
+              {selectedLeave &&
+                `${selectedLeave.employeeName} · ${selectedLeave.leaveType} (${selectedLeave.days} days)`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedLeave && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Start:</span>
+                  <p className="font-medium">{format(new Date(selectedLeave.startDate), 'PPP')}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">End:</span>
+                  <p className="font-medium">{format(new Date(selectedLeave.endDate), 'PPP')}</p>
+                </div>
+                {selectedLeave.reason && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Reason:</span>
+                    <p className="font-medium">{selectedLeave.reason}</p>
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label>Remarks (optional)</Label>
+                <Textarea
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="Remarks..."
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="destructive"
+                  onClick={() => handleApproveSubmit('REJECTED')}
+                  disabled={approveMutation.isPending}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Reject
+                </Button>
+                <Button
+                  onClick={() => handleApproveSubmit('APPROVED')}
+                  disabled={approveMutation.isPending}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Approve
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
