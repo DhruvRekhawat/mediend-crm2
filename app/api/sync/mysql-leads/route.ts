@@ -222,11 +222,13 @@ export async function POST(request: NextRequest) {
 
             if (!lead) continue
 
+            const cleanRemarks = remark.Remarks?.replace(/\x00/g, '') ?? null
+
             const existingRemark = await prisma.leadRemark.findFirst({
               where: {
                 leadRef,
                 updateDate: new Date(remark.UpdateDate),
-                remarks: remark.Remarks,
+                remarks: cleanRemarks,
               },
             })
 
@@ -235,7 +237,7 @@ export async function POST(request: NextRequest) {
             await prisma.leadRemark.create({
               data: {
                 leadRef,
-                remarks: remark.Remarks,
+                remarks: cleanRemarks,
                 updateBy: remark.UpdateBy ?? null,
                 updateDate: new Date(remark.UpdateDate),
                 ip: remark.IP ?? null,

@@ -183,7 +183,7 @@ async function syncLeadRemarks(leadIds: number[]) {
       })
 
       existingRemarks.forEach((r) => {
-        const key = `${r.leadRef}|${r.updateDate.toISOString()}|${r.remarks}`
+        const key = `${r.leadRef}|${r.updateDate.toISOString()}|${r.remarks?.replace(/\x00/g, '') ?? null}`
         existingRemarkKeys.add(key)
       })
     }
@@ -193,7 +193,8 @@ async function syncLeadRemarks(leadIds: number[]) {
       .map((remark) => {
         const leadRef = String(remark.RefId)
         const updateDate = new Date(remark.UpdateDate)
-        const key = `${leadRef}|${updateDate.toISOString()}|${remark.Remarks}`
+        const cleanRemarks = remark.Remarks?.replace(/\x00/g, '') ?? null
+        const key = `${leadRef}|${updateDate.toISOString()}|${cleanRemarks}`
 
         if (existingRemarkKeys.has(key)) {
           return null // Skip duplicate
@@ -201,7 +202,7 @@ async function syncLeadRemarks(leadIds: number[]) {
 
         return {
           leadRef,
-          remarks: remark.Remarks,
+          remarks: cleanRemarks,
           updateBy: remark.UpdateBy ?? null,
           updateDate,
           ip: remark.IP ?? null,

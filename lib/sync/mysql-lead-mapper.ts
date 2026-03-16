@@ -236,8 +236,9 @@ function resolveStatus(
 export function inferPipelineStage(status: string | null | undefined): PipelineStage {
   if (!status) return PipelineStage.SALES
   const s = String(status).trim().toLowerCase()
-  if (s === 'ipd done' || s === 'closed') return PipelineStage.COMPLETED
+  if (s === 'ipd done') return PipelineStage.COMPLETED
   if (
+    s === 'closed' ||
     s === 'ipd lost' ||
     s === 'junk' ||
     s === 'not interested' ||

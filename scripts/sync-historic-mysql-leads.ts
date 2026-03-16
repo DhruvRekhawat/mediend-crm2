@@ -95,16 +95,17 @@ async function syncLeadRemarks(
         where: { leadRef: { in: chunk } },
         select: { leadRef: true, updateDate: true, remarks: true },
       })
-      existing.forEach((r) => existingRemarkKeys.add(`${r.leadRef}|${r.updateDate.toISOString()}|${r.remarks}`))
+      existing.forEach((r) => existingRemarkKeys.add(`${r.leadRef}|${r.updateDate.toISOString()}|${r.remarks?.replace(/\x00/g, '') ?? null}`))
     }
     const newRemarks = validRemarks
       .map((r) => {
         const leadRef = String(r.RefId)
         const updateDate = new Date(r.UpdateDate)
-        if (existingRemarkKeys.has(`${leadRef}|${updateDate.toISOString()}|${r.Remarks}`)) return null
+        const cleanRemarks = r.Remarks?.replace(/\x00/g, '') ?? null
+        if (existingRemarkKeys.has(`${leadRef}|${updateDate.toISOString()}|${cleanRemarks}`)) return null
         return {
           leadRef,
-          remarks: r.Remarks,
+          remarks: cleanRemarks,
           updateBy: r.UpdateBy ?? null,
           updateDate,
           ip: r.IP ?? null,

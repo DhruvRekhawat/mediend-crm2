@@ -23,6 +23,7 @@ import {
   Wallet,
   LayoutGrid,
   TrendingUp,
+  TableIcon,
 } from 'lucide-react'
 
 interface PipelineOverview {
@@ -85,6 +86,25 @@ interface TodayLeadAssignmentsResponse {
   assignments: Array<{ bdId: string; bdName: string; teamName: string | null; leadCount: number }>
 }
 
+interface BdMonthly {
+  months: string[]
+  bds: Array<{
+    bdId: string
+    bdName: string
+    teamName: string | null
+    leads: Record<string, number>
+    ipd: Record<string, number>
+    totalLeads: number
+    totalIpd: number
+  }>
+  totals: {
+    leads: Record<string, number>
+    ipd: Record<string, number>
+    totalLeads: number
+    totalIpd: number
+  }
+}
+
 function formatCurrency(n: number) {
   return `₹${Math.round(n).toLocaleString('en-IN')}`
 }
@@ -98,6 +118,7 @@ export default function SalesDashboardPage() {
     return d
   })
   const [endDate, setEndDate] = useState<Date | undefined>(() => new Date())
+  const [bdMonthlyMode, setBdMonthlyMode] = useState<'leads' | 'ipd'>('leads')
 
   const dateRange = {
     startDate: startDate ? format(startDate, 'yyyy-MM-dd') : '',
@@ -137,6 +158,12 @@ export default function SalesDashboardPage() {
     queryKey: ['analytics', 'today-leads-assignments'],
     queryFn: () => apiGet<TodayLeadAssignmentsResponse>('/api/analytics/today-leads-assignments'),
     refetchInterval: 60000,
+  })
+
+  const { data: bdMonthly } = useQuery<BdMonthly>({
+    queryKey: ['sales-dashboard', 'bd-monthly', dateRange],
+    queryFn: () => apiGet<BdMonthly>(`/api/analytics/sales-dashboard/bd-monthly${params()}`),
+    enabled: !!dateRange.startDate && !!dateRange.endDate,
   })
 
   return (
@@ -611,6 +638,92 @@ export default function SalesDashboardPage() {
                 {(!target?.bdSalaryTarget?.length) && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-4">No data</TableCell></TableRow>}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        {/* BD × Month pivot */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <TableIcon className="h-5 w-5" />
+                BD performance — month wise
+              </CardTitle>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant={bdMonthlyMode === 'leads' ? 'default' : 'outline'}
+                  onClick={() => setBdMonthlyMode('leads')}
+                >
+                  Leads
+                </Button>
+                <Button
+                  size="sm"
+                  variant={bdMonthlyMode === 'ipd' ? 'default' : 'outline'}
+                  onClick={() => setBdMonthlyMode('ipd')}
+                >
+                  IPD
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {bdMonthly && bdMonthly.months.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="sticky left-0 bg-background z-10 min-w-[140px]">BD</TableHead>
+                      <TableHead className="min-w-[100px]">Team</TableHead>
+                      {bdMonthly.months.map((m) => (
+                        <TableHead key={m} className="text-right min-w-[72px]">{m.slice(5)}/{m.slice(2, 4)}</TableHead>
+                      ))}
+                      <TableHead className="text-right font-bold min-w-[72px]">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bdMonthly.bds.map((bd) => {
+                      const monthData = bdMonthlyMode === 'leads' ? bd.leads : bd.ipd
+                      const total = bdMonthlyMode === 'leads' ? bd.totalLeads : bd.totalIpd
+                      return (
+                        <TableRow key={bd.bdId}>
+                          <TableCell className="sticky left-0 bg-background z-10 font-medium">{bd.bdName}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{bd.teamName ?? '–'}</TableCell>
+                          {bdMonthly.months.map((m) => (
+                            <TableCell key={m} className="text-right tabular-nums">
+                              {monthData[m] ? (
+                                <span className={monthData[m] >= 5 ? 'font-semibold' : ''}>{monthData[m]}</span>
+                              ) : (
+                                <span className="text-muted-foreground/40">–</span>
+                              )}
+                            </TableCell>
+                          ))}
+                          <TableCell className="text-right font-bold tabular-nums">{total}</TableCell>
+                        </TableRow>
+                      )
+                    })}
+                    {/* Totals row */}
+                    <TableRow className="border-t-2 bg-muted/30">
+                      <TableCell className="sticky left-0 bg-muted/30 z-10 font-bold">Total</TableCell>
+                      <TableCell />
+                      {bdMonthly.months.map((m) => {
+                        const v = bdMonthlyMode === 'leads'
+                          ? (bdMonthly.totals.leads[m] ?? 0)
+                          : (bdMonthly.totals.ipd[m] ?? 0)
+                        return (
+                          <TableCell key={m} className="text-right font-bold tabular-nums">{v || '–'}</TableCell>
+                        )
+                      })}
+                      <TableCell className="text-right font-bold tabular-nums">
+                        {bdMonthlyMode === 'leads' ? bdMonthly.totals.totalLeads : bdMonthly.totals.totalIpd}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-muted-foreground py-4 text-center">No data for selected period</p>
+            )}
           </CardContent>
         </Card>
 
