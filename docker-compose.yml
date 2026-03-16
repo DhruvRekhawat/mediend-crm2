@@ -173,6 +173,38 @@ services:
       - tools
     entrypoint: ["bun", "run", "scripts/fix-lead-categories-circles.ts"]
 
+  # One-off: backfill leadDate from createdDate for existing leads
+  # Usage: docker compose --profile tools run --rm backfill-lead-date
+  backfill-lead-date:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/backfill-lead-date.ts"]
+
+  # One-off: migrate lead pipeline stages and conversion dates from status
+  # Usage: docker compose --profile tools run --rm migrate-lead-pipeline
+  migrate-lead-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/migrate-lead-pipeline-stages.ts"]
+
 volumes:
   pgdata:
   uptime-kuma-data:
