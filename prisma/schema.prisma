@@ -414,7 +414,6 @@ model Lead {
   pipelineStage   PipelineStage @default(SALES)
   caseStage       CaseStage     @default(NEW_LEAD)
   circle          String        // From MySQL (e.g. "PUNE", "Mumbai")
-  city            String
   category        String?
   treatment       String?
   anesthesia      String?
@@ -493,8 +492,7 @@ model Lead {
   leadSource         Int?
   whatsappMessage    String?
   notification       Boolean   @default(false)
-  cityOption         String?
-  emailSent          Boolean   @default(false)
+  emailSent         Boolean   @default(false)
   smsSent            Boolean   @default(false)
   whatsappSent       Boolean   @default(false)
   website            String?
@@ -532,7 +530,6 @@ model Lead {
   @@index([pipelineStage])
   @@index([caseStage])
   @@index([circle])
-  @@index([city])
   @@index([hospitalName])
   @@index([treatment])
   @@index([source])

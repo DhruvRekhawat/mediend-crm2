@@ -46,8 +46,9 @@ interface IpdComparison {
 interface IpdBreakdown {
   byCircle: Array<{ circle: string; count: number; revenue: number; profit: number }>
   byDisease: Array<{ disease: string; count: number; revenue: number; profit: number }>
-  byHospital: Array<{ hospitalName: string; city: string; circle: string; count: number; revenue: number; profit: number }>
+  byHospital: Array<{ hospitalName: string; circle: string; count: number; revenue: number; profit: number }>
   bySource: Array<{ source: string; count: number; revenue: number; profit: number }>
+  byCampaign: Array<{ campaign: string; count: number; revenue: number; profit: number }>
   byMonth: Array<{ month: string; count: number; revenue: number; profit: number }>
   surgeonCrossAnalysis: Array<{ surgeonName: string; hospitalName: string; treatment: string; count: number; revenue: number; profit: number }>
 }
@@ -56,6 +57,7 @@ interface LeadsBreakdown {
   byCircle: Array<{ circle: string; totalLeads: number; converted: number; conversionRate: number }>
   byDisease: Array<{ disease: string; totalLeads: number; converted: number; conversionRate: number }>
   bySource: Array<{ source: string; totalLeads: number; converted: number; conversionRate: number }>
+  byCampaign: Array<{ campaign: string; totalLeads: number; converted: number; conversionRate: number }>
   byTeam: Array<{ teamName: string; totalLeads: number; converted: number; conversionRate: number }>
   leadAgeBreakdown: Array<{ bucket: string; totalLeads: number; converted: number; conversionRate: number }>
 }
@@ -297,11 +299,12 @@ export default function SalesDashboardPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="circle">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="circle">Circle</TabsTrigger>
                 <TabsTrigger value="disease">Disease</TabsTrigger>
                 <TabsTrigger value="hospital">Hospital</TabsTrigger>
                 <TabsTrigger value="source">Source</TabsTrigger>
+                <TabsTrigger value="campaign">Campaign</TabsTrigger>
                 <TabsTrigger value="month">Month</TabsTrigger>
               </TabsList>
               <TabsContent value="circle" className="mt-4">
@@ -338,13 +341,26 @@ export default function SalesDashboardPage() {
               <TabsContent value="hospital" className="mt-4">
                 <Table>
                   <TableHeader>
-                    <TableRow><TableHead>Hospital</TableHead><TableHead>City</TableHead><TableHead>Circle</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Revenue</TableHead></TableRow>
+                    <TableRow><TableHead>Hospital</TableHead><TableHead>Circle</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Profit</TableHead></TableRow>
                   </TableHeader>
                   <TableBody>
                     {ipd?.byHospital?.slice(0, 20).map((r) => (
-                      <TableRow key={`${r.hospitalName}-${r.city}`}><TableCell className="font-medium">{r.hospitalName}</TableCell><TableCell>{r.city}</TableCell><TableCell>{r.circle}</TableCell><TableCell className="text-right">{r.count}</TableCell><TableCell className="text-right">{formatCurrency(r.revenue)}</TableCell></TableRow>
+                      <TableRow key={`${r.hospitalName}-${r.circle}`}><TableCell className="font-medium">{r.hospitalName}</TableCell><TableCell>{r.circle}</TableCell><TableCell className="text-right">{r.count}</TableCell><TableCell className="text-right">{formatCurrency(r.revenue)}</TableCell><TableCell className="text-right">{formatCurrency(r.profit)}</TableCell></TableRow>
                     ))}
                     {(!ipd?.byHospital?.length) && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-4">No data</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              <TabsContent value="campaign" className="mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow><TableHead>Campaign</TableHead><TableHead className="text-right">Count</TableHead><TableHead className="text-right">Revenue</TableHead><TableHead className="text-right">Profit</TableHead></TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ipd?.byCampaign?.map((r) => (
+                      <TableRow key={r.campaign}><TableCell className="font-medium">{r.campaign}</TableCell><TableCell className="text-right">{r.count}</TableCell><TableCell className="text-right">{formatCurrency(r.revenue)}</TableCell><TableCell className="text-right">{formatCurrency(r.profit)}</TableCell></TableRow>
+                    ))}
+                    {(!ipd?.byCampaign?.length) && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-4">No data</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </TabsContent>
@@ -425,10 +441,11 @@ export default function SalesDashboardPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="circle">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="circle">Circle</TabsTrigger>
                 <TabsTrigger value="disease">Disease</TabsTrigger>
                 <TabsTrigger value="source">Source</TabsTrigger>
+                <TabsTrigger value="campaign">Campaign</TabsTrigger>
                 <TabsTrigger value="team">Team</TabsTrigger>
               </TabsList>
               <TabsContent value="circle" className="mt-4">
@@ -467,6 +484,19 @@ export default function SalesDashboardPage() {
                       <TableRow key={r.source}><TableCell className="font-medium">{r.source}</TableCell><TableCell className="text-right">{r.totalLeads}</TableCell><TableCell className="text-right">{r.converted}</TableCell><TableCell className="text-right">{r.conversionRate.toFixed(1)}%</TableCell></TableRow>
                     ))}
                     {(!leads?.bySource?.length) && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-4">No data</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              <TabsContent value="campaign" className="mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow><TableHead>Campaign</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">Converted</TableHead><TableHead className="text-right">Conv. %</TableHead></TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leads?.byCampaign?.map((r) => (
+                      <TableRow key={r.campaign}><TableCell className="font-medium">{r.campaign}</TableCell><TableCell className="text-right">{r.totalLeads}</TableCell><TableCell className="text-right">{r.converted}</TableCell><TableCell className="text-right">{r.conversionRate.toFixed(1)}%</TableCell></TableRow>
+                    ))}
+                    {(!leads?.byCampaign?.length) && <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-4">No data</TableCell></TableRow>}
                   </TableBody>
                 </Table>
               </TabsContent>

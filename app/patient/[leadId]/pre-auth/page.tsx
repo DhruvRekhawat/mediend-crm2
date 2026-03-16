@@ -179,7 +179,7 @@ export default function PreAuthPage() {
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">City</Label>
-                    <p className="text-sm font-medium">{(lead.kypSubmission?.location?.trim() || lead.city) ?? '-'}</p>
+                    <p className="text-sm font-medium">{(lead.kypSubmission?.location?.trim() || lead.circle) ?? '-'}</p>
                   </div>
                 </div>
                 {lead.kypSubmission?.area?.trim() && (

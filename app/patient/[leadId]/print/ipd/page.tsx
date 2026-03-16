@@ -17,7 +17,7 @@ interface Lead {
   age?: number | null
   sex?: string | null
   phoneNumber: string
-  city: string
+  circle?: string | null
   hospitalName: string
   treatment?: string | null
   ipdDrName?: string | null

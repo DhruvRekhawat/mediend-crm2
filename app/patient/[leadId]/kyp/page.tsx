@@ -30,7 +30,7 @@ interface KYPSubmission {
     leadRef: string
     patientName: string
     phoneNumber: string
-    city: string
+    circle?: string | null
     hospitalName: string
   }
   submittedBy: {

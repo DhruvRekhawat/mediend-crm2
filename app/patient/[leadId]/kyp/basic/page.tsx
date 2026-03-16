@@ -20,7 +20,6 @@ interface Lead {
   age?: number
   dateOfBirth?: string | null
   sex?: string
-  city?: string
 }
 
 export default function KYPBasicSubmitPage() {
@@ -99,7 +98,6 @@ export default function KYPBasicSubmitPage() {
               initialAge={lead.age}
               initialDob={lead.dateOfBirth ? format(new Date(lead.dateOfBirth), 'yyyy-MM-dd') : undefined}
               initialSex={lead.sex}
-              initialCity={lead.city}
               onSuccess={() => {
                 queryClient.invalidateQueries({ queryKey: ['lead', leadId] })
                 queryClient.invalidateQueries({ queryKey: ['kyp-submission', leadId] })

@@ -23,7 +23,6 @@ export interface IPDCashFormProps {
   attendantName?: string
   attendantContactNo?: string
   circle?: string
-  city?: string
   // Treatment & Procedure (auto-fetched from lead)
   category?: string
   treatment?: string
@@ -91,7 +90,6 @@ export function IPDCashForm({
   attendantName = '',
   attendantContactNo = '',
   circle = '',
-  city = '',
   category = '',
   treatment = '',
   quantityGrade = '',
@@ -112,7 +110,6 @@ export function IPDCashForm({
     age: age != null ? String(age) : '',
     sex: sex || '',
     circle: circle || '',
-    city: city || '',
     // Treatment (prefilled, editable)
     category: category || '',
     treatment: treatment || '',
@@ -369,27 +366,15 @@ export function IPDCashForm({
           </div>
 
           <div className="border-t pt-3">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <div>
-                <Label htmlFor="circle">Circle</Label>
-                <Input
-                  id="circle"
-                  value={formData.circle}
-                  onChange={(e) => set('circle', e.target.value)}
-                  placeholder="Circle"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="city">City</Label>
-                <Input
-                  id="city"
-                  value={formData.city}
-                  onChange={(e) => set('city', e.target.value)}
-                  placeholder="City"
-                  className="mt-1"
-                />
-              </div>
+            <div>
+              <Label htmlFor="circle">Circle</Label>
+              <Input
+                id="circle"
+                value={formData.circle}
+                onChange={(e) => set('circle', e.target.value)}
+                placeholder="Circle"
+                className="mt-1"
+              />
             </div>
           </div>
         </div>
@@ -486,27 +471,15 @@ export function IPDCashForm({
         color="border-orange-500"
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="hospitalName">Hospital / Clinic Name</Label>
-              <Input
-                id="hospitalName"
-                value={formData.hospitalName}
-                onChange={(e) => set('hospitalName', e.target.value)}
-                placeholder="Hospital or clinic name"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="hospitalCity">Location (City)</Label>
-              <Input
-                id="hospitalCity"
-                value={formData.city}
-                onChange={(e) => set('city', e.target.value)}
-                placeholder="City"
-                className="mt-1"
-              />
-            </div>
+          <div>
+            <Label htmlFor="hospitalName">Hospital / Clinic Name</Label>
+            <Input
+              id="hospitalName"
+              value={formData.hospitalName}
+              onChange={(e) => set('hospitalName', e.target.value)}
+              placeholder="Hospital or clinic name"
+              className="mt-1"
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

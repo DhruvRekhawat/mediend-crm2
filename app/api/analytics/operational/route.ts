@@ -24,8 +24,18 @@ export async function GET(request: NextRequest) {
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
     const baseWhere: Prisma.LeadWhereInput = {
-      createdDate: dateFilter,
+      ...leadDateFilter,
     }
 
     // Role-based filtering

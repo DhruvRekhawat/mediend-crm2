@@ -1,8 +1,7 @@
 import { PipelineStage, UserRole } from '@/generated/prisma/client'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
-import { mapCategoryCode, mapCircleCode, mapStatusCode, mapSourceCode, mapTreatmentCode } from '@/lib/mysql-code-mappings'
-import { getUserIdByBdNumber } from '@/lib/sync/bd-number-map'
+import type { LookupMaps } from './mysql-lookup-cache'
 
 /**
  * MySQL Lead row structure (based on DESCRIBE lead output)
@@ -10,8 +9,9 @@ import { getUserIdByBdNumber } from '@/lib/sync/bd-number-map'
 export interface MySQLLeadRow {
   id: number
   month?: string | null
-  Lead_Date: Date | string
+  Lead_Date?: Date | string | null
   LeadEntryDate?: Date | string | null
+  create_date?: Date | string | null
   Patient_Number: string
   AlternativePhone?: string | null
   Whatsapp?: string | null
@@ -19,19 +19,20 @@ export interface MySQLLeadRow {
   PatientEmail?: string | null
   Age?: number | null
   Sex?: string | null
-  Circle?: string | null
+  Circle?: number | string | null
+  city_option?: number | string | null
   address?: string | null
   doc_upload?: string | null
-  Category?: string | null
+  Category?: number | string | null
   Treatment?: number | string | null
   DiseaseDetails?: string | null
-  BDM?: string | null
+  BDM?: string | number | null
   TL?: number | null
   remarks_id?: string | null
   Remarks?: string | null
   LastRemarks?: string | null
   Follow_up_Date?: Date | string | null
-  Status?: string | null
+  Status?: number | string | null
   SubStatus?: number | null
   Surgery_Date?: Date | string | null
   OPD_Hospital?: string | null
@@ -56,12 +57,10 @@ export interface MySQLLeadRow {
   Lead_Source?: number | null
   WA_Message?: string | null
   Notification?: number | boolean | null
-  city_option?: string | null
   email?: number | boolean | null
   sms?: number | boolean | null
   whatsapp_msg?: number | boolean | null
   create_by?: number | null
-  create_date?: Date | string | null
   update_by?: number | null
   update_date?: Date | string | null
   ip?: string | null
@@ -78,8 +77,10 @@ export interface MySQLLeadRow {
   form_id?: string | null
 }
 
+export type BdMap = Map<string, { id: string; circle: string | null }>
+
 /**
- * Finds a BD user by name using multiple matching strategies
+ * Finds a BD user by name using multiple matching strategies (async fallback for rare cases)
  */
 async function findBDByName(name: string): Promise<{
   id: string
@@ -89,112 +90,46 @@ async function findBDByName(name: string): Promise<{
 
   const trimmedName = name.trim()
 
-  // Try multiple matching strategies
-  // 1. Exact match (case-insensitive)
   let user = await prisma.user.findFirst({
     where: {
       role: UserRole.BD,
-      name: {
-        equals: trimmedName,
-        mode: 'insensitive',
-      },
+      name: { equals: trimmedName, mode: 'insensitive' },
     },
-    include: {
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
+    include: { team: { select: { circle: true } } },
   })
+  if (user) return { id: user.id, circle: user.team?.circle ?? null }
 
-  if (user) {
-    return {
-      id: user.id,
-      circle: user.team?.circle || null,
-    }
-  }
-
-  // 2. Contains match (partial)
   user = await prisma.user.findFirst({
     where: {
       role: UserRole.BD,
-      name: {
-        contains: trimmedName,
-        mode: 'insensitive',
-      },
+      name: { contains: trimmedName, mode: 'insensitive' },
     },
-    include: {
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
+    include: { team: { select: { circle: true } } },
   })
+  if (user) return { id: user.id, circle: user.team?.circle ?? null }
 
-  if (user) {
-    return {
-      id: user.id,
-      circle: user.team?.circle || null,
-    }
-  }
-
-  // 3. Try matching first name only (split by space)
   const firstName = trimmedName.split(' ')[0]
   if (firstName && firstName.length > 2) {
     user = await prisma.user.findFirst({
       where: {
         role: UserRole.BD,
-        name: {
-          startsWith: firstName,
-          mode: 'insensitive',
-        },
+        name: { startsWith: firstName, mode: 'insensitive' },
       },
-      include: {
-        team: {
-          select: {
-            circle: true,
-          },
-        },
-      },
+      include: { team: { select: { circle: true } } },
     })
-
-    if (user) {
-      return {
-        id: user.id,
-        circle: user.team?.circle || null,
-      }
-    }
+    if (user) return { id: user.id, circle: user.team?.circle ?? null }
   }
 
   return null
 }
 
 /**
- * Gets a default system user for createdById/updatedById
- */
-async function getDefaultSystemUser(): Promise<string> {
-  const admin = await prisma.user.findFirst({
-    where: { role: UserRole.ADMIN },
-  })
-  if (admin) return admin.id
-
-  const anyUser = await prisma.user.findFirst()
-  if (anyUser) return anyUser.id
-
-  throw new Error('No users found in system. Cannot process leads.')
-}
-
-/**
- * Creates a new BD user with default settings.
- * Returns the user ID and circle (from the default team).
+ * Creates a new BD user (async fallback for rare cases)
  */
 async function createBDUser(
   name: string,
   systemUserId: string
 ): Promise<{ id: string; circle: string | null }> {
-  // Generate email from name (lowercase, replace spaces with dots, handle special chars)
   const emailBase = name
     .toLowerCase()
     .replace(/\s+/g, '.')
@@ -202,34 +137,23 @@ async function createBDUser(
   let email = `${emailBase}@mediend.local`
   let counter = 1
 
-  // Ensure unique email
   while (await prisma.user.findUnique({ where: { email } })) {
     email = `${emailBase}${counter}@mediend.local`
     counter++
   }
 
-  // Get default team (first team available, or create one if none exists)
   let team = await prisma.team.findFirst()
   if (!team) {
-    // Create a default team if none exists
     const salesHead = await prisma.user.findFirst({
       where: { role: UserRole.SALES_HEAD },
     })
-    if (!salesHead) {
-      throw new Error('No sales head found. Cannot create team for BD user.')
-    }
-
+    if (!salesHead) throw new Error('No sales head found. Cannot create team for BD user.')
     team = await prisma.team.create({
-      data: {
-        name: 'Default Team',
-        circle: 'Default',
-        salesHeadId: salesHead.id,
-      },
+      data: { name: 'Default Team', circle: 'Default', salesHeadId: salesHead.id },
     })
   }
 
-  // Create BD user
-  const defaultPassword = await hashPassword('Temp@123') // Temporary password
+  const defaultPassword = await hashPassword('Temp@123')
   const newUser = await prisma.user.create({
     data: {
       email,
@@ -238,24 +162,12 @@ async function createBDUser(
       role: UserRole.BD,
       teamId: team.id,
     },
-    include: {
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
+    include: { team: { select: { circle: true } } },
   })
 
-  return {
-    id: newUser.id,
-    circle: newUser.team?.circle || null,
-  }
+  return { id: newUser.id, circle: newUser.team?.circle ?? null }
 }
 
-/**
- * Parse date from MySQL format (handles both Date objects and strings)
- */
 function parseDate(value: Date | string | null | undefined): Date | null {
   if (!value) return null
   if (value instanceof Date) return value
@@ -265,7 +177,6 @@ function parseDate(value: Date | string | null | undefined): Date | null {
 
 /**
  * Get the canonical "lead received" date: Lead_Date (primary) → LeadEntryDate → create_date.
- * Used by sync routes for maxDate and by mapper for createdDate. No fallback to "now".
  */
 export function getLeadReceivedDate(row: {
   Lead_Date?: Date | string | null
@@ -280,75 +191,52 @@ export function getLeadReceivedDate(row: {
   )
 }
 
-/**
- * Parse boolean from MySQL (can be 0/1, true/false, etc.)
- */
 function parseBoolean(value: number | boolean | null | undefined): boolean {
   if (value === null || value === undefined) return false
   if (typeof value === 'boolean') return value
   return value === 1
 }
 
-/**
- * Normalize MySQL status to match expected status values
- * First checks if it's a numeric code and maps it, otherwise uses text-based normalization
- */
-function normalizeStatus(status: string | null | undefined): string {
-  if (!status) return 'New'
-  
-  const normalized = status.trim()
-  
-  // First, check if it's a numeric code and try to map it
+function toString(value: unknown): string | null {
+  if (value === null || value === undefined) return null
+  return String(value)
+}
+
+function toInt(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const parsed = parseInt(String(value), 10)
+  return isNaN(parsed) ? null : parsed
+}
+
+function resolveStatus(
+  status: number | string | null | undefined,
+  lookups: LookupMaps
+): string {
+  if (status === null || status === undefined) return 'New Lead'
+  const normalized = String(status).trim()
   if (/^\d+$/.test(normalized)) {
-    const mapped = mapStatusCode(normalized)
-    // If mapping found a different value, return it
-    if (mapped !== normalized) {
-      return mapped
-    }
+    const resolved = lookups.status.get(parseInt(normalized, 10))
+    if (resolved) return resolved
   }
-  
-  // Otherwise, use text-based normalization for existing text values
   const statusMap: Record<string, string> = {
-    'new lead': 'New',
-    'new': 'New',
-    'hot lead': 'Hot Lead',
-    'hot': 'Hot Lead',
-    'interested': 'Interested',
-    'follow-up (1-3)': 'Follow-up (1-3)',
-    'follow up (1-3)': 'Follow-up (1-3)',
-    'call back (sd)': 'Call Back (SD)',
-    'call back (t)': 'Call Back (T)',
-    'call back next week': 'Call Back Next Week',
-    'call back next month': 'Call Back Next Month',
-    'ipd schedule': 'IPD Schedule',
+    'new lead': 'New Lead',
+    'new': 'New Lead',
     'ipd done': 'IPD Done',
     'closed': 'Closed',
-    'call done': 'Call Done',
-    'c/w done': 'C/W Done',
-    'lost': 'Lost',
-    'dnp': 'DNP',
-    'dnp (1-5, exhausted)': 'DNP (1-5, Exhausted)',
-    'junk': 'Junk',
-    'invalid number': 'Invalid Number',
-    'fund issues': 'Fund Issues',
+    'follow-up 1': 'Follow-up 1',
+    'follow-up 2': 'Follow-up 2',
+    'follow-up 3': 'Follow-up 3',
   }
-  
-  const lowerStatus = normalized.toLowerCase()
-  return statusMap[lowerStatus] || normalized // Return mapped status or original if no mapping
+  return statusMap[normalized.toLowerCase()] ?? normalized
 }
 
 /**
  * Infer pipeline stage from MySQL status.
- * Used by sync mapper and migration script.
  */
 export function inferPipelineStage(status: string | null | undefined): PipelineStage {
   if (!status) return PipelineStage.SALES
-  const s = status.trim().toLowerCase()
-  // Completed: surgery done or case closed
-  if (s === 'ipd done' || s === 'closed') {
-    return PipelineStage.COMPLETED
-  }
-  // Lost: explicitly lost or junk
+  const s = String(status).trim().toLowerCase()
+  if (s === 'ipd done' || s === 'closed') return PipelineStage.COMPLETED
   if (
     s === 'ipd lost' ||
     s === 'junk' ||
@@ -361,36 +249,10 @@ export function inferPipelineStage(status: string | null | undefined): PipelineS
   ) {
     return PipelineStage.LOST
   }
-  // Active in progress - default to SALES
   return PipelineStage.SALES
 }
 
-/**
- * Convert value to string, handling null/undefined
- */
-function toString(value: any): string | null {
-  if (value === null || value === undefined) return null
-  return String(value)
-}
-
-/**
- * Convert value to integer, handling null/undefined
- */
-function toInt(value: any): number | null {
-  if (value === null || value === undefined) return null
-  const parsed = parseInt(String(value), 10)
-  return isNaN(parsed) ? null : parsed
-}
-
-/**
- * Maps MySQL lead row to Prisma Lead create/update data structure
- * @param autoCreateBD - If true, automatically create missing BD users
- */
-export async function mapMySQLLeadToPrisma(
-  mysqlRow: MySQLLeadRow,
-  systemUserId: string,
-  autoCreateBD: boolean = true
-): Promise<{
+export interface MapMySQLLeadResult {
   leadRef: string
   patientName: string
   age: number
@@ -402,7 +264,6 @@ export async function mapMySQLLeadToPrisma(
   status: string
   pipelineStage: PipelineStage
   circle: string
-  city: string
   category: string | null
   treatment: string | null
   hospitalName: string
@@ -410,85 +271,119 @@ export async function mapMySQLLeadToPrisma(
   updatedById: string
   createdDate: Date
   updatedDate: Date | null
-  [key: string]: any
-}> {
-  // Find BD user by name (BDM field might be a name or numeric ID)
-  const bdmValue = mysqlRow.BDM ? String(mysqlRow.BDM).trim() : null
-  if (!bdmValue) {
-    throw new Error(`Lead ${mysqlRow.id} has no BDM specified`)
-  }
+  source: string | null
+  campaignName: string | null
+  [key: string]: unknown
+}
 
-  // Determine BDM name - if it's numeric, try BD number map first (from seed-employees-from-json)
-  const isNumeric = /^\d+$/.test(bdmValue)
-  let bdmName = bdmValue // Default to original value
+/**
+ * Maps MySQL lead row to Prisma Lead create/update data (synchronous when BD is in bdMap).
+ * Returns null if BD not found in bdMap — caller should use mapMySQLLeadToPrismaAsyncFallback.
+ */
+export function mapMySQLLeadToPrisma(
+  mysqlRow: MySQLLeadRow,
+  systemUserId: string,
+  lookups: LookupMaps,
+  bdMap: BdMap
+): MapMySQLLeadResult | null {
+  const bdmValue = mysqlRow.BDM ? String(mysqlRow.BDM).trim() : null
+  if (!bdmValue) return null
+
   let bdInfo: { id: string; circle: string | null } | null = null
 
+  const isNumeric = /^\d+$/.test(bdmValue)
   if (isNumeric) {
-    const userIdFromMap = await getUserIdByBdNumber(bdmValue)
-    if (userIdFromMap) {
-      const user = await prisma.user.findUnique({
-        where: { id: userIdFromMap },
-        include: {
-          team: { select: { circle: true } },
-        },
-      })
-      if (user) {
-        bdInfo = {
-          id: user.id,
-          circle: user.team?.circle ?? null,
-        }
-      }
+    bdInfo = bdMap.get(bdmValue) ?? bdMap.get(`bd-${bdmValue}`) ?? null
+  }
+  if (!bdInfo) {
+    bdInfo = bdMap.get(bdmValue.toLowerCase()) ?? null
+  }
+  if (!bdInfo) {
+    const firstName = bdmValue.split(' ')[0]
+    if (firstName && firstName.length > 2) {
+      bdInfo = bdMap.get(firstName.toLowerCase()) ?? null
     }
   }
 
-  if (!bdInfo) {
-    bdInfo = await findBDByName(bdmValue)
-  }
+  if (!bdInfo) return null
 
-  // If numeric and still not found, also try "BD-{number}" format
+  return buildLeadData(mysqlRow, systemUserId, lookups, bdInfo, bdmValue)
+}
+
+/**
+ * Async fallback for leads whose BD is not in bdMap (rare). Tries findBDByName and createBDUser.
+ */
+export async function mapMySQLLeadToPrismaAsyncFallback(
+  mysqlRow: MySQLLeadRow,
+  systemUserId: string,
+  lookups: LookupMaps,
+  autoCreateBD: boolean = true
+): Promise<MapMySQLLeadResult | null> {
+  const bdmValue = mysqlRow.BDM ? String(mysqlRow.BDM).trim() : null
+  if (!bdmValue) return null
+
+  let bdInfo: { id: string; circle: string | null } | null = null
+  const isNumeric = /^\d+$/.test(bdmValue)
+
+  bdInfo = await findBDByName(bdmValue)
   if (!bdInfo && isNumeric) {
-    bdmName = `BD-${bdmValue}`
-    bdInfo = await findBDByName(bdmName)
-    
-    // If still not found and auto-create is enabled, create with "BD-{number}" format
-    if (!bdInfo && autoCreateBD) {
-      try {
-        bdInfo = await createBDUser(bdmName, systemUserId)
-        console.log(`Created new BD user: ${bdmName} (${bdInfo.id}) for lead ${mysqlRow.id}`)
-      } catch (createError) {
-        throw new Error(
-          `Failed to create BD user ${bdmName} for lead ${mysqlRow.id}: ${
-            createError instanceof Error ? createError.message : 'Unknown error'
-          }`
-        )
-      }
-    }
-  } else if (!bdInfo && autoCreateBD) {
-    // For non-numeric BDM values, try creating with the value as-is
-    bdmName = bdmValue
+    bdInfo = await findBDByName(`BD-${bdmValue}`)
+  }
+  if (!bdInfo && autoCreateBD) {
     try {
-      bdInfo = await createBDUser(bdmName, systemUserId)
-      console.log(`Created new BD user: ${bdmName} (${bdInfo.id}) for lead ${mysqlRow.id}`)
-    } catch (createError) {
-      throw new Error(
-        `Failed to create BD user ${bdmName} for lead ${mysqlRow.id}: ${
-          createError instanceof Error ? createError.message : 'Unknown error'
-        }`
-      )
+      bdInfo = await createBDUser(isNumeric ? `BD-${bdmValue}` : bdmValue, systemUserId)
+      console.log(`Created new BD user for lead ${mysqlRow.id}`)
+    } catch {
+      return null
     }
   }
 
-  if (!bdInfo) {
-    throw new Error(
-      `BD user not found: ${bdmName} for lead ${mysqlRow.id}. ${autoCreateBD ? 'Auto-creation failed.' : 'Enable auto-create to automatically create missing BD users.'}`
-    )
-  }
+  if (!bdInfo) return null
 
-  const leadRef = String(mysqlRow.id)
+  return buildLeadData(mysqlRow, systemUserId, lookups, bdInfo, bdmValue)
+}
+
+function buildLeadData(
+  mysqlRow: MySQLLeadRow,
+  systemUserId: string,
+  lookups: LookupMaps,
+  bdInfo: { id: string; circle: string | null },
+  bdmValue: string
+): MapMySQLLeadResult {
+  const campaignInfo =
+    mysqlRow.Lead_Source != null
+      ? lookups.campaign.get(Number(mysqlRow.Lead_Source))
+      : null
+
+  const sourceName =
+    campaignInfo?.sourceName ??
+    (mysqlRow.Source != null ? lookups.source.get(Number(mysqlRow.Source)) : null) ??
+    null
+
+  const campaignName = campaignInfo?.campaignName ?? null
+
+  const treatmentName =
+    campaignInfo?.treatmentName ??
+    (mysqlRow.Treatment != null
+      ? lookups.treatment.get(Number(mysqlRow.Treatment))
+      : null) ??
+    null
+
+  const circleName =
+    mysqlRow.Circle != null
+      ? lookups.circle.get(Number(mysqlRow.Circle)) ?? null
+      : null
+
+  const categoryName =
+    mysqlRow.Category != null
+      ? lookups.category.get(Number(mysqlRow.Category)) ?? null
+      : null
+
+  const statusName = resolveStatus(mysqlRow.Status, lookups)
+
   const leadDate = getLeadReceivedDate(mysqlRow)
   const updateDate = parseDate(mysqlRow.update_date)
-  const normalizedStatus = normalizeStatus(mysqlRow.Status)
-  const pipelineStage = inferPipelineStage(normalizedStatus)
+  const pipelineStage = inferPipelineStage(statusName)
   const surgeryDate = parseDate(mysqlRow.Surgery_Date)
   const ipdAdmissionDate = parseDate(mysqlRow.IPD_AdmisisonDate)
   const conversionDate =
@@ -497,7 +392,7 @@ export async function mapMySQLLeadToPrisma(
       : null
 
   return {
-    leadRef,
+    leadRef: String(mysqlRow.id),
     patientName: mysqlRow.Patient_Name || 'Unknown',
     age: mysqlRow.Age ?? 0,
     sex: mysqlRow.Sex || 'Not Specified',
@@ -506,22 +401,20 @@ export async function mapMySQLLeadToPrisma(
     attendantName: toString(mysqlRow.AttendantName),
     bdId: bdInfo.id,
     bdeName: bdmValue,
-    status: normalizedStatus,
+    status: statusName,
     pipelineStage,
     conversionDate,
-    circle: mapCircleCode(mysqlRow.Circle) || bdInfo.circle || '',
-    city: mysqlRow.city_option || 'Not Specified',
-    category: mapCategoryCode(mysqlRow.Category),
-    treatment: mapTreatmentCode(mysqlRow.Treatment) ?? null,
+    circle: circleName ?? bdInfo.circle ?? 'Unknown',
+    category: categoryName,
+    treatment: treatmentName,
     hospitalName: mysqlRow.OPD_Hospital || mysqlRow.IPD_Hospital || 'Not Specified',
     createdById: systemUserId,
     updatedById: systemUserId,
     createdDate: leadDate,
-    updatedDate: updateDate || null,
+    updatedDate: updateDate ?? null,
 
-    // Additional MySQL fields
     month: toString(mysqlRow.month),
-    leadDate: leadDate, // MySQL Lead_Date - canonical lead received date for age/stats
+    leadDate,
     leadEntryDate: parseDate(mysqlRow.LeadEntryDate),
     patientEmail: toString(mysqlRow.PatientEmail),
     whatsapp: toString(mysqlRow.Whatsapp),
@@ -548,7 +441,6 @@ export async function mapMySQLLeadToPrisma(
     leadSource: toInt(mysqlRow.Lead_Source),
     whatsappMessage: toString(mysqlRow.WA_Message),
     notification: parseBoolean(mysqlRow.Notification),
-    cityOption: toString(mysqlRow.city_option),
     emailSent: parseBoolean(mysqlRow.email),
     smsSent: parseBoolean(mysqlRow.sms),
     whatsappSent: parseBoolean(mysqlRow.whatsapp_msg),
@@ -566,14 +458,9 @@ export async function mapMySQLLeadToPrisma(
     teamLeadId: toInt(mysqlRow.TL),
     remarksId: toString(mysqlRow.remarks_id),
     remarks: toString(mysqlRow.LastRemarks || mysqlRow.Remarks),
-    // Prefer Lead_Source over Source, as Lead_Source is more specific to leads
-    source: mysqlRow.Lead_Source 
-      ? mapSourceCode(String(mysqlRow.Lead_Source)) || (mysqlRow.Source ? mapSourceCode(String(mysqlRow.Source)) : null) || 'mysql_sync'
-      : mysqlRow.Source 
-        ? mapSourceCode(String(mysqlRow.Source)) || 'mysql_sync'
-        : 'mysql_sync',
+    source: sourceName,
+    campaignName,
     modeOfPayment: toString(mysqlRow.MOP),
     surgeryDate: parseDate(mysqlRow.Surgery_Date),
-    // Note: Other fields like arrivalDate, conversionDate, etc. are set in Lead model defaults
   }
 }

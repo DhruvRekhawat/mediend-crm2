@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
             leadRef: lead.leadRef,
             patientName: lead.patientName,
             phoneNumber: canViewPhone ? lead.phoneNumber : (lead.phoneNumber ? maskPhoneNumber(lead.phoneNumber) : null),
-            city: lead.city,
+            circle: lead.circle,
             caseStage: lead.caseStage,
             latestMessage: latestMessage
               ? {

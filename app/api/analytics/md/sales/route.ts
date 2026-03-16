@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
               { 
                 AND: [
                   { conversionDate: { equals: null } },
-                  { createdDate: dateFilter }
+                  { leadDate: dateFilter }
                 ]
               },
             ],
@@ -59,8 +59,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Base where clause for all leads (for conversion rate)
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
     const allLeadsWhere: Prisma.LeadWhereInput = {
-      ...(Object.keys(dateFilter).length > 0 ? { createdDate: dateFilter } : {}),
+      ...leadDateFilter,
     }
 
     // Overall KPIs
@@ -100,9 +109,9 @@ export async function GET(request: NextRequest) {
 
     const conversionRate = totalLeads > 0 ? (totalSurgeries / totalLeads) * 100 : 0
 
-    // City Performance
-    const cityStats = await prisma.lead.groupBy({
-      by: ['city'],
+    // Circle Performance
+    const circleStats = await prisma.lead.groupBy({
+      by: ['circle'],
       where: completedWhere,
       _count: { id: true },
       _sum: {
@@ -115,27 +124,27 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const cityLeads = await prisma.lead.groupBy({
-      by: ['city'],
+    const circleLeads = await prisma.lead.groupBy({
+      by: ['circle'],
       where: allLeadsWhere,
       _count: { id: true },
     })
 
-    const cityMap = new Map(cityLeads.map((c) => [c.city, c._count.id]))
-    const cityPerformance = cityStats.map((city) => {
-      const totalCityLeads = cityMap.get(city.city) || 0
-      const citySurgeries = city._count.id
+    const circleMap = new Map(circleLeads.map((c) => [c.circle, c._count.id]))
+    const circlePerformance = circleStats.map((circle) => {
+      const totalCircleLeads = circleMap.get(circle.circle) || 0
+      const circleSurgeries = circle._count.id
       return {
-        city: city.city,
-        revenue: city._sum.billAmount || 0,
-        profit: city._sum.netProfit || 0,
-        surgeries: citySurgeries,
-        leads: totalCityLeads,
-        conversionRate: totalCityLeads > 0 ? (citySurgeries / totalCityLeads) * 100 : 0,
-        avgTicketSize: city._avg.ticketSize || 0,
+        circle: circle.circle,
+        revenue: circle._sum.billAmount || 0,
+        profit: circle._sum.netProfit || 0,
+        surgeries: circleSurgeries,
+        leads: totalCircleLeads,
+        conversionRate: totalCircleLeads > 0 ? (circleSurgeries / totalCircleLeads) * 100 : 0,
+        avgTicketSize: circle._avg.ticketSize || 0,
       }
     })
-    cityPerformance.sort((a, b) => b.revenue - a.revenue)
+    circlePerformance.sort((a, b) => b.revenue - a.revenue)
 
     // Disease/Treatment Performance
     const treatmentStats = await prisma.lead.groupBy({
@@ -206,9 +215,9 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 20)
 
-    // Cross-Analysis: Disease by City
-    const diseaseByCity = await prisma.lead.groupBy({
-      by: ['city', 'treatment'],
+    // Cross-Analysis: Disease by Circle
+    const diseaseByCircle = await prisma.lead.groupBy({
+      by: ['circle', 'treatment'],
       where: {
         ...completedWhere,
         treatment: { not: null },
@@ -220,13 +229,13 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const diseaseByCityMap = new Map<string, Array<{ disease: string; count: number; revenue: number; profit: number }>>()
-    diseaseByCity.forEach((item) => {
-      const key = item.city
-      if (!diseaseByCityMap.has(key)) {
-        diseaseByCityMap.set(key, [])
+    const diseaseByCircleMap = new Map<string, Array<{ disease: string; count: number; revenue: number; profit: number }>>()
+    diseaseByCircle.forEach((item) => {
+      const key = item.circle
+      if (!diseaseByCircleMap.has(key)) {
+        diseaseByCircleMap.set(key, [])
       }
-      diseaseByCityMap.get(key)!.push({
+      diseaseByCircleMap.get(key)!.push({
         disease: item.treatment || 'Unknown',
         count: item._count.id,
         revenue: item._sum.billAmount || 0,
@@ -234,14 +243,14 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    const diseaseByCityData = Array.from(diseaseByCityMap.entries()).map(([city, diseases]) => ({
-      city,
+    const diseaseByCircleData = Array.from(diseaseByCircleMap.entries()).map(([circle, diseases]) => ({
+      circle,
       diseases: diseases.sort((a, b) => b.revenue - a.revenue),
     }))
 
-    // Cross-Analysis: Hospital by City
-    const hospitalByCity = await prisma.lead.groupBy({
-      by: ['city', 'hospitalName'],
+    // Cross-Analysis: Hospital by Circle
+    const hospitalByCircle = await prisma.lead.groupBy({
+      by: ['circle', 'hospitalName'],
       where: completedWhere,
       _count: { id: true },
       _sum: {
@@ -250,13 +259,13 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const hospitalByCityMap = new Map<string, Array<{ hospital: string; surgeries: number; revenue: number; profit: number }>>()
-    hospitalByCity.forEach((item) => {
-      const key = item.city
-      if (!hospitalByCityMap.has(key)) {
-        hospitalByCityMap.set(key, [])
+    const hospitalByCircleMap = new Map<string, Array<{ hospital: string; surgeries: number; revenue: number; profit: number }>>()
+    hospitalByCircle.forEach((item) => {
+      const key = item.circle
+      if (!hospitalByCircleMap.has(key)) {
+        hospitalByCircleMap.set(key, [])
       }
-      hospitalByCityMap.get(key)!.push({
+      hospitalByCircleMap.get(key)!.push({
         hospital: item.hospitalName,
         surgeries: item._count.id,
         revenue: item._sum.billAmount || 0,
@@ -264,8 +273,8 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    const hospitalByCityData = Array.from(hospitalByCityMap.entries()).map(([city, hospitals]) => ({
-      city,
+    const hospitalByCircleData = Array.from(hospitalByCircleMap.entries()).map(([circle, hospitals]) => ({
+      circle,
       hospitals: hospitals.sort((a, b) => b.revenue - a.revenue),
     }))
 
@@ -326,6 +335,7 @@ export async function GET(request: NextRequest) {
       where: completedWhere,
       select: {
         conversionDate: true,
+        leadDate: true,
         createdDate: true,
         billAmount: true,
         netProfit: true,
@@ -335,7 +345,7 @@ export async function GET(request: NextRequest) {
     // Group by date
     const trendsMap = new Map<string, { revenue: number; profit: number; surgeries: number }>()
     completedLeadsForTrends.forEach((lead) => {
-      const dateKey = (lead.conversionDate || lead.createdDate).toISOString().split('T')[0]
+      const dateKey = (lead.conversionDate || lead.leadDate || lead.createdDate).toISOString().split('T')[0]
       const existing = trendsMap.get(dateKey) || { revenue: 0, profit: 0, surgeries: 0 }
       existing.revenue += lead.billAmount || 0
       existing.profit += lead.netProfit || 0
@@ -424,24 +434,6 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.profit - a.profit)
 
-    // Circle Performance
-    const circleStats = await prisma.lead.groupBy({
-      by: ['circle'],
-      where: completedWhere,
-      _count: { id: true },
-      _sum: {
-        billAmount: true,
-        netProfit: true,
-      },
-    })
-
-    const circlePerformance = circleStats.map((c) => ({
-      circle: c.circle,
-      revenue: c._sum.billAmount || 0,
-      profit: c._sum.netProfit || 0,
-      surgeries: c._count.id,
-    }))
-
     // Conversion Funnel
     // Map statuses before filtering
     const mappedStatusDistribution = statusDistribution.map((s) => ({
@@ -475,19 +467,18 @@ export async function GET(request: NextRequest) {
         avgTicketSize: avgTicketSize._avg.ticketSize || 0,
         avgNetProfitPerSurgery: avgNetProfit._avg.netProfit || 0,
       },
-      cityPerformance: cityPerformance.slice(0, 20),
+      circlePerformance: circlePerformance.slice(0, 20),
       diseasePerformance,
       hospitalPerformance,
       crossAnalysis: {
-        diseaseByCity: diseaseByCityData,
-        hospitalByCity: hospitalByCityData,
+        diseaseByCircle: diseaseByCircleData,
+        hospitalByCircle: hospitalByCircleData,
         diseaseByHospital: diseaseByHospitalData,
       },
       paymentModeAnalysis,
       revenueProfitTrends,
       bdPerformance: bdPerformance.slice(0, 50),
       teamPerformance,
-      circlePerformance,
       statusDistribution: mappedStatusDistribution,
       conversionFunnel: funnelData,
     }
@@ -495,7 +486,7 @@ export async function GET(request: NextRequest) {
     console.log('MD Sales Analytics Response:', {
       totalSurgeries,
       totalLeads,
-      cityCount: cityPerformance.length,
+      circleCount: circlePerformance.length,
       revenueTrendsCount: revenueProfitTrends.length,
       paymentModeCount: paymentModeAnalysis.length,
     })

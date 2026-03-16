@@ -1,7 +1,9 @@
 import 'dotenv/config'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
-import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { mapMySQLLeadToPrisma, mapMySQLLeadToPrismaAsyncFallback, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { loadLookupMaps } from '@/lib/sync/mysql-lookup-cache'
+import { fetchBDUsersMap } from '@/lib/sync/mysql-bd-map'
 import { UserRole } from '@/generated/prisma/client'
 import pLimit from 'p-limit'
 
@@ -175,6 +177,12 @@ async function runHistoricSync() {
     if (approximateTotal != null) {
       log('info', `Approximate leads to sync: ${approximateTotal.toLocaleString()}`)
     }
+
+    log('info', 'Loading MySQL lookup tables...')
+    const lookups = await loadLookupMaps()
+    log('info', 'Loading BD users map...')
+    const bdMap = await fetchBDUsersMap()
+    log('info', `BD map loaded — ${bdMap.size} entries`)
     console.log(sep)
 
     let cursorDate: Date = fromDate
@@ -218,8 +226,11 @@ async function runHistoricSync() {
           const leadDate = getLeadReceivedDate(mysqlLead)
           leadDates.push(leadDate)
           leadIds.push(mysqlLead.id)
-          const leadData = await mapMySQLLeadToPrisma(mysqlLead, systemUser!.id)
-          if (!leadData.bdId) {
+          let leadData = mapMySQLLeadToPrisma(mysqlLead, systemUser!.id, lookups, bdMap)
+          if (!leadData) {
+            leadData = await mapMySQLLeadToPrismaAsyncFallback(mysqlLead, systemUser!.id, lookups)
+          }
+          if (!leadData?.bdId) {
             errorCount++
             if (errorLeadIds.length < 20) errorLeadIds.push(mysqlLead.id)
             return

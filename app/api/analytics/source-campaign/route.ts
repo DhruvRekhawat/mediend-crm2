@@ -25,8 +25,18 @@ export async function GET(request: NextRequest) {
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
     const baseWhere: Prisma.LeadWhereInput = {
-      createdDate: dateFilter,
+      ...leadDateFilter,
     }
 
     // Role-based filtering
@@ -41,7 +51,14 @@ export async function GET(request: NextRequest) {
     const completedWhere: Prisma.LeadWhereInput = {
       ...baseWhere,
       pipelineStage: 'COMPLETED',
-      conversionDate: dateFilter,
+      ...(Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { conversionDate: dateFilter },
+              { AND: [{ conversionDate: { equals: null } }, { leadDate: dateFilter }] },
+            ],
+          }
+        : {}),
     }
 
     // Lead Source Performance
@@ -171,7 +188,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Get campaign date ranges and cities
+    // Get campaign date ranges and circles
     const campaignLeads = await prisma.lead.findMany({
       where: {
         ...baseWhere,
@@ -180,7 +197,7 @@ export async function GET(request: NextRequest) {
       select: {
         campaignName: true,
         createdDate: true,
-        city: true,
+        circle: true,
         treatment: true,
       },
     })
@@ -192,7 +209,7 @@ export async function GET(request: NextRequest) {
         // Get campaign metadata
         const campaignLeadsData = campaignLeads.filter((l) => l.campaignName === campaignName)
         const dates = campaignLeadsData.map((l) => l.createdDate).sort((a, b) => a.getTime() - b.getTime())
-        const cities = [...new Set(campaignLeadsData.map((l) => l.city).filter(Boolean))]
+        const circles = [...new Set(campaignLeadsData.map((l) => l.circle).filter(Boolean))]
         const treatments = [...new Set(campaignLeadsData.map((l) => l.treatment).filter(Boolean))]
 
         return {
@@ -204,7 +221,7 @@ export async function GET(request: NextRequest) {
           profit: data.profit,
           startDate: dates[0]?.toISOString(),
           endDate: dates[dates.length - 1]?.toISOString(),
-          cities: cities.slice(0, 10), // Top 10 cities
+          circles: circles.slice(0, 10), // Top 10 circles
           topTreatments: treatments.slice(0, 10), // Top 10 treatments
         }
       })

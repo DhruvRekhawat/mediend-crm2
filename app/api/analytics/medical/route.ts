@@ -24,8 +24,18 @@ export async function GET(request: NextRequest) {
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
     const baseWhere: Prisma.LeadWhereInput = {
-      createdDate: dateFilter,
+      ...leadDateFilter,
     }
 
     // Role-based filtering
@@ -40,7 +50,14 @@ export async function GET(request: NextRequest) {
     const completedWhere: Prisma.LeadWhereInput = {
       ...baseWhere,
       pipelineStage: 'COMPLETED',
-      conversionDate: dateFilter,
+      ...(Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { conversionDate: dateFilter },
+              { AND: [{ conversionDate: { equals: null } }, { leadDate: dateFilter }] },
+            ],
+          }
+        : {}),
     }
 
     // Treatment Performance
@@ -112,13 +129,13 @@ export async function GET(request: NextRequest) {
 
     // Hospital Performance
     const hospitalStats = await prisma.lead.groupBy({
-      by: ['hospitalName', 'city', 'circle'],
+      by: ['hospitalName', 'circle'],
       where: baseWhere,
       _count: { id: true },
     })
 
     const hospitalCompleted = await prisma.lead.groupBy({
-      by: ['hospitalName', 'city', 'circle'],
+      by: ['hospitalName', 'circle'],
       where: completedWhere,
       _count: { id: true },
       _sum: {
@@ -136,7 +153,6 @@ export async function GET(request: NextRequest) {
     const hospitalMap = new Map<
       string,
       {
-        city: string
         circle: string
         totalSurgeries: number
         revenue: number
@@ -150,7 +166,6 @@ export async function GET(request: NextRequest) {
 
     hospitalStats.forEach((stat) => {
       hospitalMap.set(stat.hospitalName, {
-        city: stat.city,
         circle: stat.circle,
         totalSurgeries: 0,
         revenue: 0,
@@ -164,7 +179,6 @@ export async function GET(request: NextRequest) {
 
     hospitalCompleted.forEach((stat) => {
       const existing = hospitalMap.get(stat.hospitalName) || {
-        city: stat.city,
         circle: stat.circle,
         totalSurgeries: 0,
         revenue: 0,
@@ -190,7 +204,6 @@ export async function GET(request: NextRequest) {
 
         return {
           hospitalName,
-          city: data.city,
           circle: data.circle,
           totalSurgeries: data.totalSurgeries,
           revenue: data.revenue,

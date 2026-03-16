@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
     const bdId = searchParams.get('bdId')
     // const teamId = searchParams.get('teamId')
     const circle = searchParams.get('circle')
-    const city = searchParams.get('city')
     const hospitalName = searchParams.get('hospitalName')
     const treatment = searchParams.get('treatment')
     const source = searchParams.get('source')
@@ -67,7 +66,6 @@ export async function GET(request: NextRequest) {
     }
     if (status) where.status = status
     if (bdId) where.bdId = bdId
-    if (city) where.city = city
     if (hospitalName) where.hospitalName = { contains: hospitalName, mode: 'insensitive' }
     if (treatment) where.treatment = { contains: treatment, mode: 'insensitive' }
     if (source) where.source = source
@@ -229,7 +227,6 @@ export async function POST(request: NextRequest) {
       bdId,
       status,
       circle,
-      city,
       category,
       treatment,
       hospitalName,
@@ -255,8 +252,7 @@ export async function POST(request: NextRequest) {
         bdId: bdId || user.id,
         status: status || 'Hot Lead',
         pipelineStage: 'SALES',
-        circle,
-        city,
+        circle: circle || 'Unknown',
         category,
         treatment,
         hospitalName,

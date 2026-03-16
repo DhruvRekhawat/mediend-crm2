@@ -13,7 +13,7 @@ interface Conversation {
   leadRef: string
   patientName: string
   phoneNumber: string
-  city: string
+  circle: string
   caseStage: string
   latestMessage: {
     id: string
@@ -106,7 +106,7 @@ export function ChatList({ selectedLeadId }: ChatListProps) {
                   )}
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate mb-1">
-                  {conversation.leadRef} • {conversation.city}
+                  {conversation.leadRef} • {conversation.circle}
                 </p>
                 {conversation.latestMessage && (
                   <div className="flex items-center gap-2 mt-1">

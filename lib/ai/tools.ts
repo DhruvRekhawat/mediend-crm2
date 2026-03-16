@@ -20,13 +20,12 @@ export function createQueryLeadsTool(user: SessionUser) {
       pipelineStage: z.enum(['SALES', 'INSURANCE', 'PL', 'COMPLETED', 'LOST']).optional().describe('Pipeline stage'),
       caseStage: z.string().optional().describe('Case stage (NEW_LEAD, KYP_PENDING, etc.)'),
       circle: z.string().optional().describe('Circle filter (e.g. PUNE, Mumbai)'),
-      city: z.string().optional().describe('City filter'),
       bdId: z.string().optional().describe('BD user ID'),
       startDate: z.string().optional().describe('Start date (ISO format)'),
       endDate: z.string().optional().describe('End date (ISO format)'),
       limit: z.number().max(100).default(50).optional().describe('Max number of results'),
     }),
-    execute: async ({ status, pipelineStage, caseStage, circle, city, bdId, startDate, endDate, limit = 50 }) => {
+    execute: async ({ status, pipelineStage, caseStage, circle, bdId, startDate, endDate, limit = 50 }) => {
       const where: Prisma.LeadWhereInput = {}
 
       // Role-based filtering
@@ -40,7 +39,6 @@ export function createQueryLeadsTool(user: SessionUser) {
       if (pipelineStage) where.pipelineStage = pipelineStage as PipelineStage
       if (caseStage) where.caseStage = caseStage as any
       if (circle) where.circle = circle
-      if (city) where.city = city
       if (bdId) where.bdId = bdId
 
       if (startDate || endDate) {
@@ -61,7 +59,6 @@ export function createQueryLeadsTool(user: SessionUser) {
           pipelineStage: true,
           caseStage: true,
           circle: true,
-          city: true,
           hospitalName: true,
           treatment: true,
           billAmount: true,
@@ -103,10 +100,9 @@ export function createQueryAnalyticsTool(user: SessionUser) {
       startDate: z.string().optional().describe('Start date (ISO format)'),
       endDate: z.string().optional().describe('End date (ISO format)'),
       circle: z.string().optional().describe('Circle filter (e.g. PUNE, Mumbai)'),
-      city: z.string().optional().describe('City filter'),
       groupBy: z.enum(['day', 'week', 'month']).optional().describe('Grouping for trends'),
     }),
-    execute: async ({ metric, startDate, endDate, circle, city, groupBy }) => {
+    execute: async ({ metric, startDate, endDate, circle, groupBy }) => {
       const dateFilter: Prisma.DateTimeFilter = {}
       if (startDate) dateFilter.gte = new Date(startDate)
       if (endDate) dateFilter.lte = new Date(endDate)
@@ -117,7 +113,6 @@ export function createQueryAnalyticsTool(user: SessionUser) {
       }
 
       if (circle) where.circle = circle
-      if (city) where.city = city
 
       // Role-based filtering
       if (user.role === 'BD') {

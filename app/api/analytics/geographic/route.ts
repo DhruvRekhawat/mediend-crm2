@@ -24,8 +24,18 @@ export async function GET(request: NextRequest) {
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
     const baseWhere: Prisma.LeadWhereInput = {
-      createdDate: dateFilter,
+      ...leadDateFilter,
     }
 
     // Role-based filtering
@@ -38,10 +48,18 @@ export async function GET(request: NextRequest) {
     }
 
     const completedWhere: Prisma.LeadWhereInput = {
-      ...baseWhere,
       pipelineStage: 'COMPLETED',
-      conversionDate: dateFilter,
+      ...(Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { conversionDate: dateFilter },
+              { AND: [{ conversionDate: { equals: null } }, { leadDate: dateFilter }] },
+            ],
+          }
+        : {}),
     }
+    if (user.role === 'BD') completedWhere.bdId = user.id
+    else if (user.role === 'TEAM_LEAD' && user.teamId) completedWhere.bd = { teamId: user.teamId }
 
     // Circle Performance
     const circleStats = await prisma.lead.groupBy({
@@ -94,116 +112,8 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // City Performance
-    const cityStats = await prisma.lead.groupBy({
-      by: ['city', 'circle'],
-      where: baseWhere,
-      _count: { id: true },
-    })
-
-    const cityCompleted = await prisma.lead.groupBy({
-      by: ['city', 'circle'],
-      where: completedWhere,
-      _count: { id: true },
-      _sum: {
-        billAmount: true,
-        netProfit: true,
-      },
-    })
-
-    const cityMap = new Map<
-      string,
-      {
-        circle: string
-        totalLeads: number
-        completed: number
-        revenue: number
-        profit: number
-        topHospital: string
-        topTreatment: string
-      }
-    >()
-
-    cityStats.forEach((stat) => {
-      cityMap.set(stat.city, {
-        circle: stat.circle,
-        totalLeads: stat._count.id,
-        completed: 0,
-        revenue: 0,
-        profit: 0,
-        topHospital: '',
-        topTreatment: '',
-      })
-    })
-
-    cityCompleted.forEach((stat) => {
-      const existing = cityMap.get(stat.city) || {
-        circle: stat.circle,
-        totalLeads: 0,
-        completed: 0,
-        revenue: 0,
-        profit: 0,
-        topHospital: '',
-        topTreatment: '',
-      }
-      existing.completed = stat._count.id
-      existing.revenue = stat._sum.billAmount || 0
-      existing.profit = stat._sum.netProfit || 0
-      cityMap.set(stat.city, existing)
-    })
-
-    // Get top hospital and treatment for each city
-    for (const [city, data] of cityMap.entries()) {
-      const cityLeads = await prisma.lead.findMany({
-        where: { ...completedWhere, city },
-        select: { hospitalName: true, treatment: true },
-      })
-
-      const hospitalCounts = new Map<string, number>()
-      const treatmentCounts = new Map<string, number>()
-
-      cityLeads.forEach((lead) => {
-        if (lead.hospitalName) {
-          hospitalCounts.set(lead.hospitalName, (hospitalCounts.get(lead.hospitalName) || 0) + 1)
-        }
-        if (lead.treatment) {
-          treatmentCounts.set(lead.treatment, (treatmentCounts.get(lead.treatment) || 0) + 1)
-        }
-      })
-
-      const topHospital = Array.from(hospitalCounts.entries())
-        .sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-      const topTreatment = Array.from(treatmentCounts.entries())
-        .sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-
-      data.topHospital = topHospital
-      data.topTreatment = topTreatment
-    }
-
-    const cityPerformance = Array.from(cityMap.entries())
-      .map(([city, data]) => {
-        const conversionRate = data.totalLeads > 0 ? (data.completed / data.totalLeads) * 100 : 0
-        const avgTicketSize = data.completed > 0 ? data.revenue / data.completed : 0
-
-        return {
-          city,
-          circle: data.circle,
-          totalLeads: data.totalLeads,
-          completedSurgeries: data.completed,
-          conversionRate: Math.round(conversionRate * 100) / 100,
-          revenue: data.revenue,
-          profit: data.profit,
-          avgTicketSize: Math.round(avgTicketSize * 100) / 100,
-          topHospital: data.topHospital,
-          topTreatment: data.topTreatment,
-        }
-      })
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 20) // Top 20 cities
-
     return successResponse({
       circlePerformance,
-      cityPerformance,
     })
   } catch (error) {
     console.error('Error fetching geographic analytics:', error)

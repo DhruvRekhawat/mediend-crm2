@@ -14,7 +14,6 @@ interface LeadForCard {
   alternateNumber?: string | null
   attendantName?: string | null
   circle?: string | null
-  city?: string | null
   treatment?: string | null
   category?: string | null
   quantityGrade?: string | null
@@ -117,15 +116,9 @@ export function IPDDetailsCard({ admissionRecord, lead }: IPDDetailsCardProps) {
                   <Label className="text-[10px] uppercase text-gray-500 font-bold">Alternate Contact</Label>
                   <p className="text-sm font-semibold">{lead.attendantName || lead.alternateNumber ? `${lead.attendantName ?? '-'} / ${lead.alternateNumber ?? '-'}` : '-'}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-[10px] uppercase text-gray-500 font-bold">Circle</Label>
-                    <p className="text-sm font-semibold">{lead.circle ?? '-'}</p>
-                  </div>
-                  <div>
-                    <Label className="text-[10px] uppercase text-gray-500 font-bold">City</Label>
-                    <p className="text-sm font-semibold">{lead.city ?? '-'}</p>
-                  </div>
+                <div>
+                  <Label className="text-[10px] uppercase text-gray-500 font-bold">Circle</Label>
+                  <p className="text-sm font-semibold">{lead.circle ?? '-'}</p>
                 </div>
               </div>
             </div>

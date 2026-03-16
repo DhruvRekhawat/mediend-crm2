@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
-import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { mapMySQLLeadToPrisma, mapMySQLLeadToPrismaAsyncFallback, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { loadLookupMaps } from '@/lib/sync/mysql-lookup-cache'
+import { fetchBDUsersMap } from '@/lib/sync/mysql-bd-map'
 import { UserRole } from '@/generated/prisma/client'
 import { errorResponse, successResponse } from '@/lib/api-utils'
 import pLimit from 'p-limit'
@@ -156,35 +158,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Pre-fetch BD users map
-    const bdUsers = await prisma.user.findMany({
-      where: { role: UserRole.BD },
-      select: {
-        id: true,
-        name: true,
-        team: {
-          select: {
-            circle: true,
-          },
-        },
-      },
-    })
-
-    const bdMap = new Map<string, { id: string; circle: string | null }>()
-    for (const user of bdUsers) {
-      const name = user.name.trim()
-      const circle = user.team?.circle || null
-      bdMap.set(name.toLowerCase(), { id: user.id, circle })
-      const firstName = name.split(' ')[0]
-      if (firstName && firstName.length > 2) {
-        if (!bdMap.has(firstName.toLowerCase())) {
-          bdMap.set(firstName.toLowerCase(), { id: user.id, circle })
-        }
-      }
-      if (/^\d+$/.test(name)) {
-        bdMap.set(`bd-${name}`, { id: user.id, circle })
-      }
-    }
+    const lookups = await loadLookupMaps()
+    const bdMap = await fetchBDUsersMap()
 
     let syncedCount = 0
     let updatedCount = 0
@@ -207,9 +182,12 @@ export async function POST(request: NextRequest) {
         leadDates.push(leadDate)
         leadIds.push(mysqlLead.id)
 
-        const leadData = await mapMySQLLeadToPrisma(mysqlLead, systemUser.id)
+        let leadData = mapMySQLLeadToPrisma(mysqlLead, systemUser.id, lookups, bdMap)
+        if (!leadData) {
+          leadData = await mapMySQLLeadToPrismaAsyncFallback(mysqlLead, systemUser.id, lookups)
+        }
 
-        if (!leadData.bdId) {
+        if (!leadData?.bdId) {
           errorDetails.push({ leadId: mysqlLead.id, error: 'No bdId assigned' })
           errorCount++
           return

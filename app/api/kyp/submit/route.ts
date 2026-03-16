@@ -143,7 +143,6 @@ export async function POST(request: NextRequest) {
         caseStage: targetStage,
         ...(data.patientName?.trim() ? { patientName: data.patientName.trim() } : {}),
         ...(data.phone?.trim() ? { phoneNumber: data.phone.trim() } : {}),
-        ...(data.location?.trim() ? { city: data.location.trim() } : {}),
         ...(data.age ? { age: data.age } : {}),
         ...(data.sex?.trim() ? { sex: data.sex.trim() } : {}),
         ...(data.insuranceName?.trim() ? { insuranceName: data.insuranceName.trim() } : {}),

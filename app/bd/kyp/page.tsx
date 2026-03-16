@@ -33,7 +33,7 @@ interface KYPSubmission {
     leadRef: string
     patientName: string
     phoneNumber: string
-    city: string
+    circle?: string | null
     hospitalName: string
     caseStage: string
   }
@@ -128,7 +128,7 @@ export default function KYPPage() {
                         <TableRow key={kyp.id}>
                           <TableCell className="font-medium">{kyp.lead.leadRef}</TableCell>
                           <TableCell>{kyp.lead.patientName}</TableCell>
-                          <TableCell>{kyp.location || kyp.lead.city}</TableCell>
+                          <TableCell>{kyp.location || kyp.lead.circle}</TableCell>
                           <TableCell>{kyp.disease || '-'}</TableCell>
                           <TableCell>{getStageBadge(kyp.lead.caseStage)}</TableCell>
                           <TableCell>

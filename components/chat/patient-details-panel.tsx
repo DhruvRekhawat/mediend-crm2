@@ -17,7 +17,7 @@ interface PatientDetailsPanelProps {
     leadRef: string
     patientName: string
     phoneNumber: string
-    city: string
+    circle?: string | null
     hospitalName: string
     treatment: string | null
     category: string | null
@@ -82,8 +82,8 @@ export function PatientDetailsPanel({ lead }: PatientDetailsPanelProps) {
                 <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               </div>
               <div>
-                <Label className="text-xs text-gray-500 dark:text-gray-400">City</Label>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{lead.kypSubmission?.location?.trim() || lead.city || '-'}</p>
+                <Label className="text-xs text-gray-500 dark:text-gray-400">Location</Label>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{lead.kypSubmission?.location?.trim() || lead.circle || '-'}</p>
               </div>
             </div>
 

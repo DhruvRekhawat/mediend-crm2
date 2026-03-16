@@ -326,7 +326,6 @@ export async function processIncomingLead(
         status,
         pipelineStage: PipelineStage.SALES,
         circle: bdCircle, // Use BD's team circle if available
-        city: 'Not Specified', // Default city (should be updated later)
         category: category || null,
         treatment,
         hospitalName: 'Not Specified', // Default hospital (should be updated later)

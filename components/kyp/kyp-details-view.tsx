@@ -31,7 +31,7 @@ interface KYPSubmission {
     leadRef: string
     patientName: string
     phoneNumber: string
-    city: string
+    circle?: string | null
     hospitalName: string
   }
   submittedBy: {
@@ -110,8 +110,8 @@ export function KYPDetailsView({ kypSubmission }: KYPDetailsViewProps) {
                     <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   </div>
                   <div className="flex-1">
-                    <Label className="text-xs text-gray-500 dark:text-gray-400">City</Label>
-                    <p className="text-sm text-gray-900 dark:text-gray-100">{kypSubmission.lead.city}</p>
+                    <Label className="text-xs text-gray-500 dark:text-gray-400">Circle</Label>
+                    <p className="text-sm text-gray-900 dark:text-gray-100">{kypSubmission.lead.circle ?? '-'}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

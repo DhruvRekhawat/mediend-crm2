@@ -35,11 +35,21 @@ export async function GET(request: NextRequest) {
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
     if (type === 'bd') {
       // Get closed leads stats based on status codes (IPD Done, Closed, Call Done, etc.)
       const closedWhere: Prisma.LeadWhereInput = {
         status: { in: CLOSED_STATUS_CODES },
-        createdDate: dateFilter,
+        ...leadDateFilter,
       }
 
       // Role-based filtering for closed leads
@@ -53,7 +63,7 @@ export async function GET(request: NextRequest) {
 
       // Get all leads stats (for total leads calculation)
       const allLeadsWhere: Prisma.LeadWhereInput = {
-        createdDate: dateFilter,
+        ...leadDateFilter,
       }
 
       // Role-based filtering for all leads
@@ -68,7 +78,7 @@ export async function GET(request: NextRequest) {
       // Get IPD Done count separately for highlighting
       const ipdDoneWhere: Prisma.LeadWhereInput = {
         status: '13', // IPD Done
-        createdDate: dateFilter,
+        ...leadDateFilter,
       }
       if (user.role === 'BD') {
         ipdDoneWhere.bdId = user.id
@@ -140,7 +150,7 @@ export async function GET(request: NextRequest) {
       // Get closed leads stats based on status codes
       const closedWhere: Prisma.LeadWhereInput = {
         status: { in: CLOSED_STATUS_CODES },
-        createdDate: dateFilter,
+        ...leadDateFilter,
       }
 
       // Role-based filtering for closed leads
@@ -154,7 +164,7 @@ export async function GET(request: NextRequest) {
 
       // Get all leads stats (for total leads calculation)
       const allLeadsWhere: Prisma.LeadWhereInput = {
-        createdDate: dateFilter,
+        ...leadDateFilter,
       }
 
       // Role-based filtering for all leads
@@ -169,7 +179,7 @@ export async function GET(request: NextRequest) {
       // Get IPD Done count separately
       const ipdDoneWhere: Prisma.LeadWhereInput = {
         status: '13', // IPD Done
-        createdDate: dateFilter,
+        ...leadDateFilter,
       }
       if (user.role === 'BD') {
         ipdDoneWhere.bdId = user.id
@@ -319,12 +329,12 @@ export async function GET(request: NextRequest) {
       const teamIds = teamLeads.map((tl) => tl.teamId!).filter(Boolean)
       const closedWhere: Prisma.LeadWhereInput = {
         status: { in: CLOSED_STATUS_CODES },
-        createdDate: dateFilter,
+        ...leadDateFilter,
         bd: { teamId: { in: teamIds } },
       }
       const ipdDoneWhere: Prisma.LeadWhereInput = {
         status: '13',
-        createdDate: dateFilter,
+        ...leadDateFilter,
         bd: { teamId: { in: teamIds } },
       }
 

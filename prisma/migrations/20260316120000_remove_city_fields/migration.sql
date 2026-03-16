@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Lead" DROP COLUMN IF EXISTS "city";
+ALTER TABLE "Lead" DROP COLUMN IF EXISTS "cityOption";

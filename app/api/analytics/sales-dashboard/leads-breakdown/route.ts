@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
               {
                 AND: [
                   { conversionDate: { equals: null } },
-                  { createdDate: dateFilter },
+                  { leadDate: dateFilter },
                 ],
               },
             ],
@@ -80,6 +80,8 @@ export async function GET(request: NextRequest) {
       byTreatmentCompleted,
       bySourceAll,
       bySourceCompleted,
+      byCampaignAll,
+      byCampaignCompleted,
       allLeadsForTeamAndAge,
       bdsWithTeams,
     ] = await Promise.all([
@@ -111,6 +113,16 @@ export async function GET(request: NextRequest) {
       prisma.lead.groupBy({
         by: ['source'],
         where: { ...completedWhere, source: { not: null } },
+        _count: { id: true },
+      }),
+      prisma.lead.groupBy({
+        by: ['campaignName'],
+        where: { ...allLeadsWhere, campaignName: { not: null } },
+        _count: { id: true },
+      }),
+      prisma.lead.groupBy({
+        by: ['campaignName'],
+        where: { ...completedWhere, campaignName: { not: null } },
         _count: { id: true },
       }),
       prisma.lead.findMany({
@@ -165,6 +177,18 @@ export async function GET(request: NextRequest) {
       }
     }).sort((a, b) => b.totalLeads - a.totalLeads)
 
+    const completedCampaignMap = new Map(byCampaignCompleted.map((c) => [c.campaignName, c._count.id]))
+    const byCampaign = byCampaignAll.map((c) => {
+      const total = c._count.id
+      const converted = completedCampaignMap.get(c.campaignName) ?? 0
+      return {
+        campaign: c.campaignName ?? 'Unknown',
+        totalLeads: total,
+        converted,
+        conversionRate: total > 0 ? (converted / total) * 100 : 0,
+      }
+    }).sort((a, b) => b.totalLeads - a.totalLeads)
+
     const teamMap = new Map<string, { teamName: string; totalLeads: number; converted: number }>()
     const bdToTeam = new Map(bdsWithTeams.map((b) => [b.id, b.team!]))
     allLeadsForTeamAndAge.forEach((lead) => {
@@ -203,6 +227,7 @@ export async function GET(request: NextRequest) {
       byCircle,
       byDisease,
       bySource,
+      byCampaign,
       byTeam,
       leadAgeBreakdown,
     })

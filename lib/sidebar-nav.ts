@@ -78,6 +78,12 @@ export const navItems: NavItem[] = [
     roles: ['MD', 'ADMIN'],
   },
   {
+    title: 'HR Dashboard',
+    url: '/hr/dashboard',
+    icon: Users,
+    roles: ['HR_HEAD'],
+  },
+  {
     title: 'Pipeline',
     url: '/pipeline',
     icon: ClipboardList,

@@ -15,7 +15,7 @@ interface Lead {
   leadRef: string
   patientName: string
   phoneNumber: string
-  city: string
+  circle?: string | null
   hospitalName: string
   treatment: string | null
   category: string | null

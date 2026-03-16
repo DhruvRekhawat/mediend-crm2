@@ -101,7 +101,6 @@ export type LeadMinAggregateOutputType = {
   pipelineStage: $Enums.PipelineStage | null
   caseStage: $Enums.CaseStage | null
   circle: string | null
-  city: string | null
   category: string | null
   treatment: string | null
   anesthesia: string | null
@@ -175,7 +174,6 @@ export type LeadMinAggregateOutputType = {
   leadSource: number | null
   whatsappMessage: string | null
   notification: boolean | null
-  cityOption: string | null
   emailSent: boolean | null
   smsSent: boolean | null
   whatsappSent: boolean | null
@@ -211,7 +209,6 @@ export type LeadMaxAggregateOutputType = {
   pipelineStage: $Enums.PipelineStage | null
   caseStage: $Enums.CaseStage | null
   circle: string | null
-  city: string | null
   category: string | null
   treatment: string | null
   anesthesia: string | null
@@ -285,7 +282,6 @@ export type LeadMaxAggregateOutputType = {
   leadSource: number | null
   whatsappMessage: string | null
   notification: boolean | null
-  cityOption: string | null
   emailSent: boolean | null
   smsSent: boolean | null
   whatsappSent: boolean | null
@@ -321,7 +317,6 @@ export type LeadCountAggregateOutputType = {
   pipelineStage: number
   caseStage: number
   circle: number
-  city: number
   category: number
   treatment: number
   anesthesia: number
@@ -395,7 +390,6 @@ export type LeadCountAggregateOutputType = {
   leadSource: number
   whatsappMessage: number
   notification: number
-  cityOption: number
   emailSent: number
   smsSent: number
   whatsappSent: number
@@ -493,7 +487,6 @@ export type LeadMinAggregateInputType = {
   pipelineStage?: true
   caseStage?: true
   circle?: true
-  city?: true
   category?: true
   treatment?: true
   anesthesia?: true
@@ -567,7 +560,6 @@ export type LeadMinAggregateInputType = {
   leadSource?: true
   whatsappMessage?: true
   notification?: true
-  cityOption?: true
   emailSent?: true
   smsSent?: true
   whatsappSent?: true
@@ -603,7 +595,6 @@ export type LeadMaxAggregateInputType = {
   pipelineStage?: true
   caseStage?: true
   circle?: true
-  city?: true
   category?: true
   treatment?: true
   anesthesia?: true
@@ -677,7 +668,6 @@ export type LeadMaxAggregateInputType = {
   leadSource?: true
   whatsappMessage?: true
   notification?: true
-  cityOption?: true
   emailSent?: true
   smsSent?: true
   whatsappSent?: true
@@ -713,7 +703,6 @@ export type LeadCountAggregateInputType = {
   pipelineStage?: true
   caseStage?: true
   circle?: true
-  city?: true
   category?: true
   treatment?: true
   anesthesia?: true
@@ -787,7 +776,6 @@ export type LeadCountAggregateInputType = {
   leadSource?: true
   whatsappMessage?: true
   notification?: true
-  cityOption?: true
   emailSent?: true
   smsSent?: true
   whatsappSent?: true
@@ -910,7 +898,6 @@ export type LeadGroupByOutputType = {
   pipelineStage: $Enums.PipelineStage
   caseStage: $Enums.CaseStage
   circle: string
-  city: string
   category: string | null
   treatment: string | null
   anesthesia: string | null
@@ -984,7 +971,6 @@ export type LeadGroupByOutputType = {
   leadSource: number | null
   whatsappMessage: string | null
   notification: boolean
-  cityOption: string | null
   emailSent: boolean
   smsSent: boolean
   whatsappSent: boolean
@@ -1043,7 +1029,6 @@ export type LeadWhereInput = {
   pipelineStage?: Prisma.EnumPipelineStageFilter<"Lead"> | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFilter<"Lead"> | $Enums.CaseStage
   circle?: Prisma.StringFilter<"Lead"> | string
-  city?: Prisma.StringFilter<"Lead"> | string
   category?: Prisma.StringNullableFilter<"Lead"> | string | null
   treatment?: Prisma.StringNullableFilter<"Lead"> | string | null
   anesthesia?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -1117,7 +1102,6 @@ export type LeadWhereInput = {
   leadSource?: Prisma.IntNullableFilter<"Lead"> | number | null
   whatsappMessage?: Prisma.StringNullableFilter<"Lead"> | string | null
   notification?: Prisma.BoolFilter<"Lead"> | boolean
-  cityOption?: Prisma.StringNullableFilter<"Lead"> | string | null
   emailSent?: Prisma.BoolFilter<"Lead"> | boolean
   smsSent?: Prisma.BoolFilter<"Lead"> | boolean
   whatsappSent?: Prisma.BoolFilter<"Lead"> | boolean
@@ -1166,7 +1150,6 @@ export type LeadOrderByWithRelationInput = {
   pipelineStage?: Prisma.SortOrder
   caseStage?: Prisma.SortOrder
   circle?: Prisma.SortOrder
-  city?: Prisma.SortOrder
   category?: Prisma.SortOrderInput | Prisma.SortOrder
   treatment?: Prisma.SortOrderInput | Prisma.SortOrder
   anesthesia?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1240,7 +1223,6 @@ export type LeadOrderByWithRelationInput = {
   leadSource?: Prisma.SortOrderInput | Prisma.SortOrder
   whatsappMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   notification?: Prisma.SortOrder
-  cityOption?: Prisma.SortOrderInput | Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   smsSent?: Prisma.SortOrder
   whatsappSent?: Prisma.SortOrder
@@ -1292,7 +1274,6 @@ export type LeadWhereUniqueInput = Prisma.AtLeast<{
   pipelineStage?: Prisma.EnumPipelineStageFilter<"Lead"> | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFilter<"Lead"> | $Enums.CaseStage
   circle?: Prisma.StringFilter<"Lead"> | string
-  city?: Prisma.StringFilter<"Lead"> | string
   category?: Prisma.StringNullableFilter<"Lead"> | string | null
   treatment?: Prisma.StringNullableFilter<"Lead"> | string | null
   anesthesia?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -1366,7 +1347,6 @@ export type LeadWhereUniqueInput = Prisma.AtLeast<{
   leadSource?: Prisma.IntNullableFilter<"Lead"> | number | null
   whatsappMessage?: Prisma.StringNullableFilter<"Lead"> | string | null
   notification?: Prisma.BoolFilter<"Lead"> | boolean
-  cityOption?: Prisma.StringNullableFilter<"Lead"> | string | null
   emailSent?: Prisma.BoolFilter<"Lead"> | boolean
   smsSent?: Prisma.BoolFilter<"Lead"> | boolean
   whatsappSent?: Prisma.BoolFilter<"Lead"> | boolean
@@ -1415,7 +1395,6 @@ export type LeadOrderByWithAggregationInput = {
   pipelineStage?: Prisma.SortOrder
   caseStage?: Prisma.SortOrder
   circle?: Prisma.SortOrder
-  city?: Prisma.SortOrder
   category?: Prisma.SortOrderInput | Prisma.SortOrder
   treatment?: Prisma.SortOrderInput | Prisma.SortOrder
   anesthesia?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1489,7 +1468,6 @@ export type LeadOrderByWithAggregationInput = {
   leadSource?: Prisma.SortOrderInput | Prisma.SortOrder
   whatsappMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   notification?: Prisma.SortOrder
-  cityOption?: Prisma.SortOrderInput | Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   smsSent?: Prisma.SortOrder
   whatsappSent?: Prisma.SortOrder
@@ -1533,7 +1511,6 @@ export type LeadScalarWhereWithAggregatesInput = {
   pipelineStage?: Prisma.EnumPipelineStageWithAggregatesFilter<"Lead"> | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageWithAggregatesFilter<"Lead"> | $Enums.CaseStage
   circle?: Prisma.StringWithAggregatesFilter<"Lead"> | string
-  city?: Prisma.StringWithAggregatesFilter<"Lead"> | string
   category?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   treatment?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   anesthesia?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
@@ -1607,7 +1584,6 @@ export type LeadScalarWhereWithAggregatesInput = {
   leadSource?: Prisma.IntNullableWithAggregatesFilter<"Lead"> | number | null
   whatsappMessage?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   notification?: Prisma.BoolWithAggregatesFilter<"Lead"> | boolean
-  cityOption?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   emailSent?: Prisma.BoolWithAggregatesFilter<"Lead"> | boolean
   smsSent?: Prisma.BoolWithAggregatesFilter<"Lead"> | boolean
   whatsappSent?: Prisma.BoolWithAggregatesFilter<"Lead"> | boolean
@@ -1642,7 +1618,6 @@ export type LeadCreateInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -1714,7 +1689,6 @@ export type LeadCreateInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -1763,7 +1737,6 @@ export type LeadUncheckedCreateInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -1837,7 +1810,6 @@ export type LeadUncheckedCreateInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -1882,7 +1854,6 @@ export type LeadUpdateInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1954,7 +1925,6 @@ export type LeadUpdateInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2003,7 +1973,6 @@ export type LeadUncheckedUpdateInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2077,7 +2046,6 @@ export type LeadUncheckedUpdateInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2123,7 +2091,6 @@ export type LeadCreateManyInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -2197,7 +2164,6 @@ export type LeadCreateManyInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -2232,7 +2198,6 @@ export type LeadUpdateManyMutationInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2304,7 +2269,6 @@ export type LeadUpdateManyMutationInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2340,7 +2304,6 @@ export type LeadUncheckedUpdateManyInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2414,7 +2377,6 @@ export type LeadUncheckedUpdateManyInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2460,7 +2422,6 @@ export type LeadCountOrderByAggregateInput = {
   pipelineStage?: Prisma.SortOrder
   caseStage?: Prisma.SortOrder
   circle?: Prisma.SortOrder
-  city?: Prisma.SortOrder
   category?: Prisma.SortOrder
   treatment?: Prisma.SortOrder
   anesthesia?: Prisma.SortOrder
@@ -2534,7 +2495,6 @@ export type LeadCountOrderByAggregateInput = {
   leadSource?: Prisma.SortOrder
   whatsappMessage?: Prisma.SortOrder
   notification?: Prisma.SortOrder
-  cityOption?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   smsSent?: Prisma.SortOrder
   whatsappSent?: Prisma.SortOrder
@@ -2600,7 +2560,6 @@ export type LeadMaxOrderByAggregateInput = {
   pipelineStage?: Prisma.SortOrder
   caseStage?: Prisma.SortOrder
   circle?: Prisma.SortOrder
-  city?: Prisma.SortOrder
   category?: Prisma.SortOrder
   treatment?: Prisma.SortOrder
   anesthesia?: Prisma.SortOrder
@@ -2674,7 +2633,6 @@ export type LeadMaxOrderByAggregateInput = {
   leadSource?: Prisma.SortOrder
   whatsappMessage?: Prisma.SortOrder
   notification?: Prisma.SortOrder
-  cityOption?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   smsSent?: Prisma.SortOrder
   whatsappSent?: Prisma.SortOrder
@@ -2710,7 +2668,6 @@ export type LeadMinOrderByAggregateInput = {
   pipelineStage?: Prisma.SortOrder
   caseStage?: Prisma.SortOrder
   circle?: Prisma.SortOrder
-  city?: Prisma.SortOrder
   category?: Prisma.SortOrder
   treatment?: Prisma.SortOrder
   anesthesia?: Prisma.SortOrder
@@ -2784,7 +2741,6 @@ export type LeadMinOrderByAggregateInput = {
   leadSource?: Prisma.SortOrder
   whatsappMessage?: Prisma.SortOrder
   notification?: Prisma.SortOrder
-  cityOption?: Prisma.SortOrder
   emailSent?: Prisma.SortOrder
   smsSent?: Prisma.SortOrder
   whatsappSent?: Prisma.SortOrder
@@ -3172,7 +3128,6 @@ export type LeadCreateWithoutCreatedByInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -3244,7 +3199,6 @@ export type LeadCreateWithoutCreatedByInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -3292,7 +3246,6 @@ export type LeadUncheckedCreateWithoutCreatedByInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -3365,7 +3318,6 @@ export type LeadUncheckedCreateWithoutCreatedByInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -3420,7 +3372,6 @@ export type LeadCreateWithoutBdInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -3492,7 +3443,6 @@ export type LeadCreateWithoutBdInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -3539,7 +3489,6 @@ export type LeadUncheckedCreateWithoutBdInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -3613,7 +3562,6 @@ export type LeadUncheckedCreateWithoutBdInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -3668,7 +3616,6 @@ export type LeadCreateWithoutUpdatedByInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -3740,7 +3687,6 @@ export type LeadCreateWithoutUpdatedByInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -3788,7 +3734,6 @@ export type LeadUncheckedCreateWithoutUpdatedByInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -3861,7 +3806,6 @@ export type LeadUncheckedCreateWithoutUpdatedByInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -3936,7 +3880,6 @@ export type LeadScalarWhereInput = {
   pipelineStage?: Prisma.EnumPipelineStageFilter<"Lead"> | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFilter<"Lead"> | $Enums.CaseStage
   circle?: Prisma.StringFilter<"Lead"> | string
-  city?: Prisma.StringFilter<"Lead"> | string
   category?: Prisma.StringNullableFilter<"Lead"> | string | null
   treatment?: Prisma.StringNullableFilter<"Lead"> | string | null
   anesthesia?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -4010,7 +3953,6 @@ export type LeadScalarWhereInput = {
   leadSource?: Prisma.IntNullableFilter<"Lead"> | number | null
   whatsappMessage?: Prisma.StringNullableFilter<"Lead"> | string | null
   notification?: Prisma.BoolFilter<"Lead"> | boolean
-  cityOption?: Prisma.StringNullableFilter<"Lead"> | string | null
   emailSent?: Prisma.BoolFilter<"Lead"> | boolean
   smsSent?: Prisma.BoolFilter<"Lead"> | boolean
   whatsappSent?: Prisma.BoolFilter<"Lead"> | boolean
@@ -4077,7 +4019,6 @@ export type LeadCreateWithoutStageEventsInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -4149,7 +4090,6 @@ export type LeadCreateWithoutStageEventsInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -4197,7 +4137,6 @@ export type LeadUncheckedCreateWithoutStageEventsInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -4271,7 +4210,6 @@ export type LeadUncheckedCreateWithoutStageEventsInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -4331,7 +4269,6 @@ export type LeadUpdateWithoutStageEventsInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4403,7 +4340,6 @@ export type LeadUpdateWithoutStageEventsInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4451,7 +4387,6 @@ export type LeadUncheckedUpdateWithoutStageEventsInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4525,7 +4460,6 @@ export type LeadUncheckedUpdateWithoutStageEventsInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4569,7 +4503,6 @@ export type LeadCreateWithoutInsuranceCaseInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -4641,7 +4574,6 @@ export type LeadCreateWithoutInsuranceCaseInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -4689,7 +4621,6 @@ export type LeadUncheckedCreateWithoutInsuranceCaseInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -4763,7 +4694,6 @@ export type LeadUncheckedCreateWithoutInsuranceCaseInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -4823,7 +4753,6 @@ export type LeadUpdateWithoutInsuranceCaseInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4895,7 +4824,6 @@ export type LeadUpdateWithoutInsuranceCaseInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -4943,7 +4871,6 @@ export type LeadUncheckedUpdateWithoutInsuranceCaseInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5017,7 +4944,6 @@ export type LeadUncheckedUpdateWithoutInsuranceCaseInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5061,7 +4987,6 @@ export type LeadCreateWithoutPlRecordInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -5133,7 +5058,6 @@ export type LeadCreateWithoutPlRecordInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -5181,7 +5105,6 @@ export type LeadUncheckedCreateWithoutPlRecordInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -5255,7 +5178,6 @@ export type LeadUncheckedCreateWithoutPlRecordInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -5315,7 +5237,6 @@ export type LeadUpdateWithoutPlRecordInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5387,7 +5308,6 @@ export type LeadUpdateWithoutPlRecordInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5435,7 +5355,6 @@ export type LeadUncheckedUpdateWithoutPlRecordInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5509,7 +5428,6 @@ export type LeadUncheckedUpdateWithoutPlRecordInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5553,7 +5471,6 @@ export type LeadCreateWithoutKypSubmissionInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -5625,7 +5542,6 @@ export type LeadCreateWithoutKypSubmissionInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -5673,7 +5589,6 @@ export type LeadUncheckedCreateWithoutKypSubmissionInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -5747,7 +5662,6 @@ export type LeadUncheckedCreateWithoutKypSubmissionInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -5807,7 +5721,6 @@ export type LeadUpdateWithoutKypSubmissionInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5879,7 +5792,6 @@ export type LeadUpdateWithoutKypSubmissionInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -5927,7 +5839,6 @@ export type LeadUncheckedUpdateWithoutKypSubmissionInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6001,7 +5912,6 @@ export type LeadUncheckedUpdateWithoutKypSubmissionInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6045,7 +5955,6 @@ export type LeadCreateWithoutAdmissionRecordInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -6117,7 +6026,6 @@ export type LeadCreateWithoutAdmissionRecordInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -6165,7 +6073,6 @@ export type LeadUncheckedCreateWithoutAdmissionRecordInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -6239,7 +6146,6 @@ export type LeadUncheckedCreateWithoutAdmissionRecordInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -6299,7 +6205,6 @@ export type LeadUpdateWithoutAdmissionRecordInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6371,7 +6276,6 @@ export type LeadUpdateWithoutAdmissionRecordInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6419,7 +6323,6 @@ export type LeadUncheckedUpdateWithoutAdmissionRecordInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6493,7 +6396,6 @@ export type LeadUncheckedUpdateWithoutAdmissionRecordInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6537,7 +6439,6 @@ export type LeadCreateWithoutInsuranceInitiateFormInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -6609,7 +6510,6 @@ export type LeadCreateWithoutInsuranceInitiateFormInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -6657,7 +6557,6 @@ export type LeadUncheckedCreateWithoutInsuranceInitiateFormInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -6731,7 +6630,6 @@ export type LeadUncheckedCreateWithoutInsuranceInitiateFormInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -6791,7 +6689,6 @@ export type LeadUpdateWithoutInsuranceInitiateFormInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6863,7 +6760,6 @@ export type LeadUpdateWithoutInsuranceInitiateFormInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -6911,7 +6807,6 @@ export type LeadUncheckedUpdateWithoutInsuranceInitiateFormInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6985,7 +6880,6 @@ export type LeadUncheckedUpdateWithoutInsuranceInitiateFormInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7029,7 +6923,6 @@ export type LeadCreateWithoutCaseStageHistoryInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -7101,7 +6994,6 @@ export type LeadCreateWithoutCaseStageHistoryInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -7149,7 +7041,6 @@ export type LeadUncheckedCreateWithoutCaseStageHistoryInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -7223,7 +7114,6 @@ export type LeadUncheckedCreateWithoutCaseStageHistoryInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -7283,7 +7173,6 @@ export type LeadUpdateWithoutCaseStageHistoryInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7355,7 +7244,6 @@ export type LeadUpdateWithoutCaseStageHistoryInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7403,7 +7291,6 @@ export type LeadUncheckedUpdateWithoutCaseStageHistoryInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7477,7 +7364,6 @@ export type LeadUncheckedUpdateWithoutCaseStageHistoryInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7521,7 +7407,6 @@ export type LeadCreateWithoutCaseChatMessagesInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -7593,7 +7478,6 @@ export type LeadCreateWithoutCaseChatMessagesInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -7641,7 +7525,6 @@ export type LeadUncheckedCreateWithoutCaseChatMessagesInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -7715,7 +7598,6 @@ export type LeadUncheckedCreateWithoutCaseChatMessagesInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -7775,7 +7657,6 @@ export type LeadUpdateWithoutCaseChatMessagesInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7847,7 +7728,6 @@ export type LeadUpdateWithoutCaseChatMessagesInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -7895,7 +7775,6 @@ export type LeadUncheckedUpdateWithoutCaseChatMessagesInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7969,7 +7848,6 @@ export type LeadUncheckedUpdateWithoutCaseChatMessagesInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8013,7 +7891,6 @@ export type LeadCreateWithoutDischargeSheetInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -8085,7 +7962,6 @@ export type LeadCreateWithoutDischargeSheetInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -8133,7 +8009,6 @@ export type LeadUncheckedCreateWithoutDischargeSheetInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -8207,7 +8082,6 @@ export type LeadUncheckedCreateWithoutDischargeSheetInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -8267,7 +8141,6 @@ export type LeadUpdateWithoutDischargeSheetInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8339,7 +8212,6 @@ export type LeadUpdateWithoutDischargeSheetInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8387,7 +8259,6 @@ export type LeadUncheckedUpdateWithoutDischargeSheetInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8461,7 +8332,6 @@ export type LeadUncheckedUpdateWithoutDischargeSheetInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8505,7 +8375,6 @@ export type LeadCreateWithoutOutstandingCaseInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -8577,7 +8446,6 @@ export type LeadCreateWithoutOutstandingCaseInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -8625,7 +8493,6 @@ export type LeadUncheckedCreateWithoutOutstandingCaseInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -8699,7 +8566,6 @@ export type LeadUncheckedCreateWithoutOutstandingCaseInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -8759,7 +8625,6 @@ export type LeadUpdateWithoutOutstandingCaseInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8831,7 +8696,6 @@ export type LeadUpdateWithoutOutstandingCaseInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8879,7 +8743,6 @@ export type LeadUncheckedUpdateWithoutOutstandingCaseInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8953,7 +8816,6 @@ export type LeadUncheckedUpdateWithoutOutstandingCaseInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -8998,7 +8860,6 @@ export type LeadCreateManyCreatedByInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -9071,7 +8932,6 @@ export type LeadCreateManyCreatedByInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -9106,7 +8966,6 @@ export type LeadCreateManyBdInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -9180,7 +9039,6 @@ export type LeadCreateManyBdInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -9216,7 +9074,6 @@ export type LeadCreateManyUpdatedByInput = {
   pipelineStage?: $Enums.PipelineStage
   caseStage?: $Enums.CaseStage
   circle: string
-  city: string
   category?: string | null
   treatment?: string | null
   anesthesia?: string | null
@@ -9289,7 +9146,6 @@ export type LeadCreateManyUpdatedByInput = {
   leadSource?: number | null
   whatsappMessage?: string | null
   notification?: boolean
-  cityOption?: string | null
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -9324,7 +9180,6 @@ export type LeadUpdateWithoutCreatedByInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9396,7 +9251,6 @@ export type LeadUpdateWithoutCreatedByInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9444,7 +9298,6 @@ export type LeadUncheckedUpdateWithoutCreatedByInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9517,7 +9370,6 @@ export type LeadUncheckedUpdateWithoutCreatedByInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9563,7 +9415,6 @@ export type LeadUncheckedUpdateManyWithoutCreatedByInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9636,7 +9487,6 @@ export type LeadUncheckedUpdateManyWithoutCreatedByInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9671,7 +9521,6 @@ export type LeadUpdateWithoutBdInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9743,7 +9592,6 @@ export type LeadUpdateWithoutBdInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9790,7 +9638,6 @@ export type LeadUncheckedUpdateWithoutBdInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9864,7 +9711,6 @@ export type LeadUncheckedUpdateWithoutBdInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -9909,7 +9755,6 @@ export type LeadUncheckedUpdateManyWithoutBdInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9983,7 +9828,6 @@ export type LeadUncheckedUpdateManyWithoutBdInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10018,7 +9862,6 @@ export type LeadUpdateWithoutUpdatedByInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10090,7 +9933,6 @@ export type LeadUpdateWithoutUpdatedByInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10138,7 +9980,6 @@ export type LeadUncheckedUpdateWithoutUpdatedByInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10211,7 +10052,6 @@ export type LeadUncheckedUpdateWithoutUpdatedByInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10257,7 +10097,6 @@ export type LeadUncheckedUpdateManyWithoutUpdatedByInput = {
   pipelineStage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   caseStage?: Prisma.EnumCaseStageFieldUpdateOperationsInput | $Enums.CaseStage
   circle?: Prisma.StringFieldUpdateOperationsInput | string
-  city?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   treatment?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   anesthesia?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10330,7 +10169,6 @@ export type LeadUncheckedUpdateManyWithoutUpdatedByInput = {
   leadSource?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   whatsappMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   notification?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  cityOption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   emailSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   smsSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   whatsappSent?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -10415,7 +10253,6 @@ export type LeadSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   pipelineStage?: boolean
   caseStage?: boolean
   circle?: boolean
-  city?: boolean
   category?: boolean
   treatment?: boolean
   anesthesia?: boolean
@@ -10489,7 +10326,6 @@ export type LeadSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   leadSource?: boolean
   whatsappMessage?: boolean
   notification?: boolean
-  cityOption?: boolean
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -10539,7 +10375,6 @@ export type LeadSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   pipelineStage?: boolean
   caseStage?: boolean
   circle?: boolean
-  city?: boolean
   category?: boolean
   treatment?: boolean
   anesthesia?: boolean
@@ -10613,7 +10448,6 @@ export type LeadSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   leadSource?: boolean
   whatsappMessage?: boolean
   notification?: boolean
-  cityOption?: boolean
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -10652,7 +10486,6 @@ export type LeadSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   pipelineStage?: boolean
   caseStage?: boolean
   circle?: boolean
-  city?: boolean
   category?: boolean
   treatment?: boolean
   anesthesia?: boolean
@@ -10726,7 +10559,6 @@ export type LeadSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   leadSource?: boolean
   whatsappMessage?: boolean
   notification?: boolean
-  cityOption?: boolean
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -10765,7 +10597,6 @@ export type LeadSelectScalar = {
   pipelineStage?: boolean
   caseStage?: boolean
   circle?: boolean
-  city?: boolean
   category?: boolean
   treatment?: boolean
   anesthesia?: boolean
@@ -10839,7 +10670,6 @@ export type LeadSelectScalar = {
   leadSource?: boolean
   whatsappMessage?: boolean
   notification?: boolean
-  cityOption?: boolean
   emailSent?: boolean
   smsSent?: boolean
   whatsappSent?: boolean
@@ -10860,7 +10690,7 @@ export type LeadSelectScalar = {
   lostAt?: boolean
 }
 
-export type LeadOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "leadRef" | "patientName" | "age" | "dateOfBirth" | "sex" | "phoneNumber" | "alternateNumber" | "attendantName" | "bdId" | "status" | "pipelineStage" | "caseStage" | "circle" | "city" | "category" | "treatment" | "anesthesia" | "quantityGrade" | "surgeonName" | "surgeonType" | "hospitalName" | "flowType" | "modeOfPayment" | "discount" | "copay" | "deduction" | "settledTotal" | "billAmount" | "insuranceName" | "tpa" | "sumInsured" | "roomRent" | "icu" | "capping" | "arrivalDate" | "arrivalTime" | "surgeryDate" | "operationTime" | "implantType" | "implantAmount" | "instrument" | "consumables" | "createdById" | "createdDate" | "updatedById" | "updatedDate" | "remarks" | "source" | "campaignName" | "bdeName" | "conversionDate" | "mediendProfit" | "hospitalShare" | "doctorShare" | "othersShare" | "netProfit" | "ticketSize" | "collectedByMediend" | "collectedByHospital" | "month" | "leadDate" | "leadEntryDate" | "patientEmail" | "whatsapp" | "address" | "docUpload" | "diseaseDetails" | "followUpDate" | "subStatus" | "opdHospital" | "opdDrName" | "opdContactNo" | "opdCharges" | "opdScheduleDate" | "opdMeeting" | "ipdAdmissionDate" | "ipdHospital" | "ipdDrName" | "ipdContactNo" | "ipdTotalPayment" | "ipdDetails" | "paymentDetails" | "attendantContactNo" | "waFormat" | "leadSource" | "whatsappMessage" | "notification" | "cityOption" | "emailSent" | "smsSent" | "whatsappSent" | "website" | "description" | "refId" | "duplCount" | "aes" | "profession" | "qr" | "removeRemarks" | "adId" | "campaignId" | "formId" | "teamLeadId" | "remarksId" | "lostReason" | "lostAt", ExtArgs["result"]["lead"]>
+export type LeadOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "leadRef" | "patientName" | "age" | "dateOfBirth" | "sex" | "phoneNumber" | "alternateNumber" | "attendantName" | "bdId" | "status" | "pipelineStage" | "caseStage" | "circle" | "category" | "treatment" | "anesthesia" | "quantityGrade" | "surgeonName" | "surgeonType" | "hospitalName" | "flowType" | "modeOfPayment" | "discount" | "copay" | "deduction" | "settledTotal" | "billAmount" | "insuranceName" | "tpa" | "sumInsured" | "roomRent" | "icu" | "capping" | "arrivalDate" | "arrivalTime" | "surgeryDate" | "operationTime" | "implantType" | "implantAmount" | "instrument" | "consumables" | "createdById" | "createdDate" | "updatedById" | "updatedDate" | "remarks" | "source" | "campaignName" | "bdeName" | "conversionDate" | "mediendProfit" | "hospitalShare" | "doctorShare" | "othersShare" | "netProfit" | "ticketSize" | "collectedByMediend" | "collectedByHospital" | "month" | "leadDate" | "leadEntryDate" | "patientEmail" | "whatsapp" | "address" | "docUpload" | "diseaseDetails" | "followUpDate" | "subStatus" | "opdHospital" | "opdDrName" | "opdContactNo" | "opdCharges" | "opdScheduleDate" | "opdMeeting" | "ipdAdmissionDate" | "ipdHospital" | "ipdDrName" | "ipdContactNo" | "ipdTotalPayment" | "ipdDetails" | "paymentDetails" | "attendantContactNo" | "waFormat" | "leadSource" | "whatsappMessage" | "notification" | "emailSent" | "smsSent" | "whatsappSent" | "website" | "description" | "refId" | "duplCount" | "aes" | "profession" | "qr" | "removeRemarks" | "adId" | "campaignId" | "formId" | "teamLeadId" | "remarksId" | "lostReason" | "lostAt", ExtArgs["result"]["lead"]>
 export type LeadInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   bd?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -10920,7 +10750,6 @@ export type $LeadPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     pipelineStage: $Enums.PipelineStage
     caseStage: $Enums.CaseStage
     circle: string
-    city: string
     category: string | null
     treatment: string | null
     anesthesia: string | null
@@ -10994,7 +10823,6 @@ export type $LeadPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     leadSource: number | null
     whatsappMessage: string | null
     notification: boolean
-    cityOption: string | null
     emailSent: boolean
     smsSent: boolean
     whatsappSent: boolean
@@ -11463,7 +11291,6 @@ export interface LeadFieldRefs {
   readonly pipelineStage: Prisma.FieldRef<"Lead", 'PipelineStage'>
   readonly caseStage: Prisma.FieldRef<"Lead", 'CaseStage'>
   readonly circle: Prisma.FieldRef<"Lead", 'String'>
-  readonly city: Prisma.FieldRef<"Lead", 'String'>
   readonly category: Prisma.FieldRef<"Lead", 'String'>
   readonly treatment: Prisma.FieldRef<"Lead", 'String'>
   readonly anesthesia: Prisma.FieldRef<"Lead", 'String'>
@@ -11537,7 +11364,6 @@ export interface LeadFieldRefs {
   readonly leadSource: Prisma.FieldRef<"Lead", 'Int'>
   readonly whatsappMessage: Prisma.FieldRef<"Lead", 'String'>
   readonly notification: Prisma.FieldRef<"Lead", 'Boolean'>
-  readonly cityOption: Prisma.FieldRef<"Lead", 'String'>
   readonly emailSent: Prisma.FieldRef<"Lead", 'Boolean'>
   readonly smsSent: Prisma.FieldRef<"Lead", 'Boolean'>
   readonly whatsappSent: Prisma.FieldRef<"Lead", 'Boolean'>

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
-import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { mapMySQLLeadToPrisma, mapMySQLLeadToPrismaAsyncFallback, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
+import { loadLookupMaps } from '@/lib/sync/mysql-lookup-cache'
+import { fetchBDUsersMap } from '@/lib/sync/mysql-bd-map'
 import { UserRole } from '@/generated/prisma/client'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 
@@ -105,6 +107,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const lookups = await loadLookupMaps()
+    const bdMap = await fetchBDUsersMap()
+
     let syncedCount = 0
     let updatedCount = 0
     let errorCount = 0
@@ -137,7 +142,15 @@ export async function POST(request: NextRequest) {
           maxId = mysqlLead.id
         }
 
-        const leadData = await mapMySQLLeadToPrisma(mysqlLead, systemUser.id)
+        let leadData = mapMySQLLeadToPrisma(mysqlLead, systemUser.id, lookups, bdMap)
+        if (!leadData) {
+          leadData = await mapMySQLLeadToPrismaAsyncFallback(mysqlLead, systemUser.id, lookups)
+        }
+        if (!leadData) {
+          console.warn(`Could not map lead ${leadRef}, skipping`)
+          errorCount++
+          continue
+        }
 
         // Verify BD user exists
         if (leadData.bdId) {

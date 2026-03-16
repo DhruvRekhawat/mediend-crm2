@@ -22,7 +22,6 @@ export interface IPDDetailsFormProps {
   attendantName?: string
   attendantContactNo?: string
   circle?: string
-  city?: string
   // Treatment & Procedure (auto-fetched from lead)
   category?: string
   treatment?: string
@@ -96,7 +95,6 @@ export function IPDDetailsForm({
   attendantName = '',
   attendantContactNo = '',
   circle = '',
-  city = '',
   category = '',
   treatment = '',
   quantityGrade = '',
@@ -263,10 +261,7 @@ export function IPDDetailsForm({
           </div>
 
           <div className="border-t pt-3">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-              <ReadOnlyField label="Circle" value={circle} />
-              <ReadOnlyField label="City" value={city} />
-            </div>
+            <ReadOnlyField label="Circle" value={circle} />
           </div>
         </div>
       </Section>
@@ -338,9 +333,8 @@ export function IPDDetailsForm({
         color="border-orange-500"
       >
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div>
             <ReadOnlyField label="Hospital / Clinic Name" value={hospitalName} />
-            <ReadOnlyField label="Location (City)" value={city} />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

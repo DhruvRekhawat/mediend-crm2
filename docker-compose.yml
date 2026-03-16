@@ -67,7 +67,7 @@ services:
       context: .
       dockerfile: Dockerfile.migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,7 +82,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -98,7 +98,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -109,13 +109,14 @@ services:
 
   # One-off: sync leads from MySQL
   # Usage: docker compose --profile tools run --rm sync-leads -- --from 2025-01-01
+  # Full re-sync (server): docker compose --profile tools run --rm sync-leads -- --from 2020-01-01
   sync-leads:
     build:
       context: .
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,7 +132,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -148,7 +149,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -165,7 +166,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -181,7 +182,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -197,7 +198,7 @@ services:
       dockerfile: Dockerfile
       target: migrate
     env_file:
-      - .env
+      - /opt/mediend-crm/mediend-crm2/.env
     depends_on:
       postgres:
         condition: service_healthy

@@ -55,7 +55,6 @@ interface KYPSubmission {
     surgeonName?: string | null
     ipdDrName?: string | null
     insuranceName?: string | null
-    city?: string | null
   }
   preAuthData?: {
     id: string

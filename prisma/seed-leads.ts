@@ -108,7 +108,6 @@ async function main() {
         age: 20 + Math.floor(Math.random() * 50),
         sex: Math.random() > 0.5 ? 'Male' : 'Female',
         phoneNumber: randomPhone(),
-        city,
         circle,
         hospitalName: hospital,
         treatment,

@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
             leadRef: true,
             patientName: true,
             phoneNumber: true,
-            city: true,
+            circle: true,
             hospitalName: true,
             caseStage: true,
             surgeonName: true,

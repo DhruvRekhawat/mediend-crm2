@@ -1,9 +1,15 @@
 import 'dotenv/config'
 import { queryMySQL, closeMySQLPool, testMySQLConnection } from '@/lib/mysql-source-client'
 import { prisma } from '@/lib/prisma'
-import { mapMySQLLeadToPrisma, getLeadReceivedDate, type MySQLLeadRow } from '@/lib/sync/mysql-lead-mapper'
-import { UserRole } from '@/generated/prisma/client'
-import pLimit from 'p-limit'
+import {
+  mapMySQLLeadToPrisma,
+  mapMySQLLeadToPrismaAsyncFallback,
+  getLeadReceivedDate,
+  type MySQLLeadRow,
+} from '@/lib/sync/mysql-lead-mapper'
+import { loadLookupMaps } from '@/lib/sync/mysql-lookup-cache'
+import { fetchBDUsersMap } from '@/lib/sync/mysql-bd-map'
+import { Prisma, UserRole } from '@/generated/prisma/client'
 
 interface MySQLRemarkRow {
   id: number
@@ -15,9 +21,10 @@ interface MySQLRemarkRow {
   LeadStatus: number | null
 }
 
-const BATCH_SIZE = 2500
+const BATCH_SIZE = 5000
 const SYNC_SOURCE_TYPE = 'mysql_leads'
-const CONCURRENCY_LIMIT = 15
+const CREATE_CHUNK_SIZE = 2000
+const UPDATE_CHUNK_SIZE = 100
 
 /** Parse --from YYYY-MM-DD from argv; returns null if absent. */
 function parseFromArg(): Date | null {
@@ -124,50 +131,6 @@ async function fetchExistingLeads(
 }
 
 /**
- * Batch fetch all BD users and create a lookup map
- */
-async function fetchBDUsersMap(): Promise<Map<string, { id: string; circle: string | null }>> {
-  const bdUsers = await prisma.user.findMany({
-    where: { role: UserRole.BD },
-    select: {
-      id: true,
-      name: true,
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
-  })
-
-  const bdMap = new Map<string, { id: string; circle: string | null }>()
-
-  // Create multiple lookup keys for each BD user
-  for (const user of bdUsers) {
-    const name = user.name.trim()
-    const circle = user.team?.circle || null
-
-    // Add exact match (case-insensitive key)
-    bdMap.set(name.toLowerCase(), { id: user.id, circle })
-
-    // Add first name match
-    const firstName = name.split(' ')[0]
-    if (firstName && firstName.length > 2) {
-      if (!bdMap.has(firstName.toLowerCase())) {
-        bdMap.set(firstName.toLowerCase(), { id: user.id, circle })
-      }
-    }
-
-    // Add "BD-{number}" format if name is numeric
-    if (/^\d+$/.test(name)) {
-      bdMap.set(`bd-${name}`, { id: user.id, circle })
-    }
-  }
-
-  return bdMap
-}
-
-/**
  * Optimized sync lead remarks using batch operations
  */
 async function syncLeadRemarks(leadIds: number[]) {
@@ -271,7 +234,9 @@ async function syncLeadRemarks(leadIds: number[]) {
 async function syncOneBatch(
   lastSyncedDate: Date,
   systemUserId: string,
-  totalSyncedSoFar: number
+  totalSyncedSoFar: number,
+  lookups: Awaited<ReturnType<typeof loadLookupMaps>>,
+  bdMap: Map<string, { id: string; circle: string | null }>
 ): Promise<{ fetched: number; maxDate: Date; maxId: number | null; synced: number; updated: number; errors: number }> {
   console.log(`\n📥 Fetching leads from MySQL (batch size: ${BATCH_SIZE})...`)
   const leads = await queryMySQL<MySQLLeadRow>(
@@ -287,8 +252,12 @@ async function syncOneBatch(
 
   console.log(`✅ Found ${leads.length} leads to sync`)
   const dateRange = {
-    earliest: leads[0].Lead_Date ? new Date(leads[0].Lead_Date).toISOString() : 'N/A',
-    latest: leads[leads.length - 1].Lead_Date ? new Date(leads[leads.length - 1].Lead_Date).toISOString() : 'N/A',
+    earliest:
+      leads[0].Lead_Date != null ? new Date(leads[0].Lead_Date as string | Date).toISOString() : 'N/A',
+    latest:
+      leads[leads.length - 1].Lead_Date != null
+        ? new Date(leads[leads.length - 1].Lead_Date as string | Date).toISOString()
+        : 'N/A',
   }
   console.log(`   Date range: ${dateRange.earliest} to ${dateRange.latest}`)
 
@@ -296,18 +265,17 @@ async function syncOneBatch(
   const existingLeadsMap = await fetchExistingLeads(leadRefs)
   console.log(`   Existing: ${existingLeadsMap.size}, New: ${leads.length - existingLeadsMap.size}`)
 
-  const limit = pLimit(CONCURRENCY_LIMIT)
   let syncedCount = 0
   let updatedCount = 0
   let errorCount = 0
   const syncedLeadIds: number[] = []
-  const leadsToCreate: any[] = []
-  const leadsToUpdate: Array<{ leadRef: string; data: any }> = []
+  const leadsToCreate: Record<string, unknown>[] = []
+  const leadsToUpdate: Array<{ leadRef: string; data: Record<string, unknown> }> = []
   const leadDates: Date[] = []
   const leadIds: number[] = []
   const updateDates: Date[] = []
 
-  const processLead = async (mysqlLead: MySQLLeadRow) => {
+  for (const mysqlLead of leads) {
     try {
       const leadRef = String(mysqlLead.id)
       const leadDate = getLeadReceivedDate(mysqlLead)
@@ -318,8 +286,14 @@ async function syncOneBatch(
         if (!isNaN(ud.getTime())) updateDates.push(ud)
       }
 
-      const leadData = await mapMySQLLeadToPrisma(mysqlLead, systemUserId)
-      if (!leadData.bdId) { errorCount++; return }
+      let leadData = mapMySQLLeadToPrisma(mysqlLead, systemUserId, lookups, bdMap)
+      if (!leadData) {
+        leadData = await mapMySQLLeadToPrismaAsyncFallback(mysqlLead, systemUserId, lookups)
+      }
+      if (!leadData?.bdId) {
+        errorCount++
+        continue
+      }
 
       const { updatedDate, ...leadDataForPrisma } = leadData
       const existingLead = existingLeadsMap.get(leadRef)
@@ -348,8 +322,6 @@ async function syncOneBatch(
     }
   }
 
-  await Promise.allSettled(leads.map((lead) => limit(() => processLead(lead))))
-
   const allDates = [...leadDates.map((d) => d.getTime()), ...updateDates.map((d) => d.getTime())]
   const maxDate =
     allDates.length > 0
@@ -359,17 +331,18 @@ async function syncOneBatch(
 
   // Batch create
   if (leadsToCreate.length > 0) {
-    const CREATE_CHUNK_SIZE = 1000
     for (let i = 0; i < leadsToCreate.length; i += CREATE_CHUNK_SIZE) {
       const chunk = leadsToCreate.slice(i, i + CREATE_CHUNK_SIZE)
-      await prisma.lead.createMany({ data: chunk, skipDuplicates: true })
+      await prisma.lead.createMany({
+        data: chunk as Prisma.LeadCreateManyInput[],
+        skipDuplicates: true,
+      })
     }
     console.log(`   ✅ Created ${leadsToCreate.length} new leads`)
   }
 
   // Batch update
   if (leadsToUpdate.length > 0) {
-    const UPDATE_CHUNK_SIZE = 25
     let updated = 0
     for (let i = 0; i < leadsToUpdate.length; i += UPDATE_CHUNK_SIZE) {
       const chunk = leadsToUpdate.slice(i, i + UPDATE_CHUNK_SIZE)
@@ -437,6 +410,17 @@ async function syncLeads() {
     if (!systemUser) systemUser = await prisma.user.findFirst()
     if (!systemUser) throw new Error('No users found in system. Cannot process leads.')
 
+    console.log('📋 Loading MySQL lookup tables...')
+    const lookups = await loadLookupMaps()
+    console.log(
+      `✅ Lookups loaded — sources: ${lookups.source.size}, campaigns: ${lookups.campaign.size}, ` +
+        `treatments: ${lookups.treatment.size}, circles: ${lookups.circle.size}, statuses: ${lookups.status.size}`
+    )
+
+    console.log('📋 Loading BD users map...')
+    const bdMap = await fetchBDUsersMap()
+    console.log(`✅ BD map loaded — ${bdMap.size} entries`)
+
     let totalSynced = 0
     let totalUpdated = 0
     let totalErrors = 0
@@ -448,7 +432,13 @@ async function syncLeads() {
       const syncState = await getSyncState()
       console.log(`\n--- Batch ${batchNum} (from ${syncState.lastSyncedDate.toISOString().slice(0, 10)}) ---`)
 
-      const result = await syncOneBatch(syncState.lastSyncedDate, systemUser.id, totalSynced + totalUpdated)
+      const result = await syncOneBatch(
+        syncState.lastSyncedDate,
+        systemUser.id,
+        totalSynced + totalUpdated,
+        lookups,
+        bdMap
+      )
       totalSynced += result.synced
       totalUpdated += result.updated
       totalErrors += result.errors

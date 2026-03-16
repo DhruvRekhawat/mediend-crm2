@@ -20,19 +20,35 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
     const circle = searchParams.get('circle')
-    const city = searchParams.get('city')
 
     const dateFilter: Prisma.DateTimeFilter = {}
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
-    const where: Prisma.LeadWhereInput = {
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
+    const completedWhere: Prisma.LeadWhereInput = {
       pipelineStage: 'COMPLETED',
-      conversionDate: dateFilter,
+      ...(Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { conversionDate: dateFilter },
+              { AND: [{ conversionDate: { equals: null } }, { leadDate: dateFilter }] },
+            ],
+          }
+        : {}),
     }
 
+    const where: Prisma.LeadWhereInput = { ...completedWhere }
     if (circle) where.circle = circle
-    if (city) where.city = city
 
     // Role-based filtering
     if (user.role === 'BD') {
@@ -42,6 +58,11 @@ export async function GET(request: NextRequest) {
         teamId: user.teamId,
       }
     }
+
+    const allLeadsWhere: Prisma.LeadWhereInput = { ...leadDateFilter }
+    if (circle) allLeadsWhere.circle = circle
+    if (user.role === 'BD') allLeadsWhere.bdId = user.id
+    else if (user.role === 'TEAM_LEAD' && user.teamId) allLeadsWhere.bd = { teamId: user.teamId }
 
     const [totalSurgeries, totalProfit, avgTicketSize, totalLeads] = await Promise.all([
       prisma.lead.count({ where }),
@@ -58,12 +79,7 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.lead.count({
-        where: {
-          ...where,
-          pipelineStage: undefined,
-          conversionDate: undefined,
-          createdDate: dateFilter,
-        },
+        where: allLeadsWhere,
       }),
     ])
 

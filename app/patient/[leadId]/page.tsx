@@ -67,7 +67,6 @@ interface Lead {
   attendantName?: string | null
   attendantContactNo?: string | null
   circle?: string
-  city: string
   hospitalName: string
   insuranceName: string | null
   insuranceType?: string | null
@@ -212,7 +211,7 @@ interface KYPSubmission {
     leadRef: string
     patientName: string
     phoneNumber: string
-    city: string
+    circle?: string | null
     hospitalName: string
   }
   submittedBy: {
@@ -689,7 +688,7 @@ export default function PatientDetailsPage() {
 
               {/* Patient Info Grid */}
               {(() => {
-                const city = lead.kypSubmission?.location?.trim() || lead.city
+                const location = lead.kypSubmission?.location?.trim() || lead.circle
                 const area = lead.kypSubmission?.area?.trim() || null
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
@@ -698,8 +697,8 @@ export default function PatientDetailsPage() {
                         <MapPin className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                       </div>
                       <div>
-                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">City</p>
-                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{city || '-'}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Location</p>
+                        <p className="text-gray-900 dark:text-gray-100 font-semibold text-sm">{location || '-'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -1242,7 +1241,7 @@ export default function PatientDetailsPage() {
                     <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
                       <Label className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Location (City/Area)</Label>
                       <p className="text-sm font-semibold mt-1">
-                        {kypSubmission.location || lead.city}{kypSubmission.area ? `, ${kypSubmission.area}` : ''}
+                        {kypSubmission.location || lead.circle}{kypSubmission.area ? `, ${kypSubmission.area}` : ''}
                       </p>
                     </div>
                     <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
@@ -1554,7 +1553,6 @@ export default function PatientDetailsPage() {
                 attendantName={lead.attendantName ?? undefined}
                 attendantContactNo={lead.attendantContactNo ?? undefined}
                 circle={lead.circle}
-                city={lead.city}
                 category={lead.category ?? undefined}
                 treatment={lead.treatment ?? undefined}
                 quantityGrade={lead.quantityGrade ?? undefined}
@@ -1604,7 +1602,6 @@ export default function PatientDetailsPage() {
                 attendantName={lead.attendantName ?? undefined}
                 attendantContactNo={lead.attendantContactNo ?? undefined}
                 circle={lead.circle}
-                city={lead.city}
                 category={lead.category ?? undefined}
                 treatment={lead.treatment ?? undefined}
                 quantityGrade={lead.quantityGrade ?? undefined}

@@ -34,7 +34,7 @@ export async function GET(_request: NextRequest) {
             {
               AND: [
                 { conversionDate: { equals: null } },
-                { createdDate: { gte: thisMonthStart, lte: thisMonthEnd } },
+                { leadDate: { gte: thisMonthStart, lte: thisMonthEnd } },
               ],
             },
           ],
@@ -48,7 +48,7 @@ export async function GET(_request: NextRequest) {
             {
               AND: [
                 { conversionDate: { equals: null } },
-                { createdDate: { gte: lastMonthStart, lte: lastMonthEndThisDay } },
+                { leadDate: { gte: lastMonthStart, lte: lastMonthEndThisDay } },
               ],
             },
           ],
@@ -62,12 +62,12 @@ export async function GET(_request: NextRequest) {
             {
               AND: [
                 { conversionDate: { equals: null } },
-                { createdDate: { gte: new Date(currentYear, 0, 1), lte: today } },
+                { leadDate: { gte: new Date(currentYear, 0, 1), lte: today } },
               ],
             },
           ],
         },
-        select: { conversionDate: true, createdDate: true },
+        select: { conversionDate: true, leadDate: true, createdDate: true },
       }),
     ])
 
@@ -82,7 +82,7 @@ export async function GET(_request: NextRequest) {
       monthCountsUpToThisDay.set(String(m), 0)
     }
     allCompletedThisYear.forEach((lead) => {
-      const d = lead.conversionDate ?? lead.createdDate
+      const d = lead.conversionDate ?? lead.leadDate ?? lead.createdDate
       if (d.getFullYear() !== currentYear) return
       const m = d.getMonth() + 1
       const key = String(m)

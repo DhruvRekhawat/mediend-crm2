@@ -132,14 +132,13 @@ export default function BDPipelinePage() {
       const query = searchQuery.toLowerCase()
       result = result.filter(
         (lead) =>
-          lead.patientName?.toLowerCase().includes(query) ||
-          lead.leadRef?.toLowerCase().includes(query) ||
-          lead.phoneNumber?.includes(query) ||
-          lead.city?.toLowerCase().includes(query) ||
-          lead.hospitalName?.toLowerCase().includes(query) ||
-          lead.treatment?.toLowerCase().includes(query) ||
-          String(lead.category ?? '').toLowerCase().includes(query) ||
-          String(lead.circle ?? '').toLowerCase().includes(query)
+          String(lead.patientName ?? '').toLowerCase().includes(query) ||
+          String(lead.leadRef ?? '').toLowerCase().includes(query) ||
+          String(lead.phoneNumber ?? '').includes(query) ||
+          String(lead.circle ?? '').toLowerCase().includes(query) ||
+          String(lead.hospitalName ?? '').toLowerCase().includes(query) ||
+          String(lead.treatment ?? '').toLowerCase().includes(query) ||
+          String(lead.category ?? '').toLowerCase().includes(query)
       )
     }
 
@@ -536,7 +535,7 @@ export default function BDPipelinePage() {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search leads by name, ref, phone, city, hospital, or treatment..."
+                    placeholder="Search leads by name, ref, phone, circle, hospital, or treatment..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"

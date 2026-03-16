@@ -62,7 +62,7 @@ function getSelectedHospitalRoomRent(
 }
 
 function buildPreAuthHtml(params: {
-  lead: { patientName: string; leadRef: string; city: string; treatment: string | null; category: string | null }
+  lead: { patientName: string; leadRef: string; circle: string; treatment: string | null; category: string | null }
   kyp: { aadhar: string | null; pan: string | null; insuranceCard: string | null; insuranceCardFileUrl: string | null; insuranceName: string | null; location: string | null; area: string | null; disease: string | null; patientConsent: boolean; remark: string | null }
   preAuth: {
     insurance: string | null
@@ -80,7 +80,7 @@ function buildPreAuthHtml(params: {
 }): string {
   const { lead, kyp, preAuth, imageDataUrls } = params
   const v = (s: string | null | undefined) => (s && String(s).trim()) || '—'
-  const cityDisplay = v(kyp.location) !== '—' ? v(kyp.location) : v(lead.city)
+  const cityDisplay = v(kyp.location) !== '—' ? v(kyp.location) : v(lead.circle)
   const diseaseDisplay = v(preAuth.diseaseDescription) !== '—' ? preAuth.diseaseDescription! : v(kyp.disease)
 
   const patientRows = [
@@ -260,7 +260,7 @@ export async function GET(
       lead: {
         patientName: lead.patientName || '—',
         leadRef: lead.leadRef || '—',
-        city: lead.city || '—',
+        circle: lead.circle || '—',
         treatment: lead.treatment ?? null,
         category: lead.category ?? null,
       },

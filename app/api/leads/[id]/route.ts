@@ -330,7 +330,6 @@ export async function PATCH(
       'attendantName',
       'bdId',
       'circle',
-      'city',
       'category',
       'treatment',
       'anesthesia',

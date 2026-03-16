@@ -24,8 +24,18 @@ export async function GET(request: NextRequest) {
     if (startDate) dateFilter.gte = new Date(startDate)
     if (endDate) dateFilter.lte = new Date(endDate)
 
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+
     const baseWhere: Prisma.LeadWhereInput = {
-      createdDate: dateFilter,
+      ...leadDateFilter,
     }
 
     // Role-based filtering
@@ -49,7 +59,10 @@ export async function GET(request: NextRequest) {
       where: {
         ...baseWhere,
         pipelineStage: 'SALES',
-        createdDate: { lt: thirtyDaysAgo },
+        OR: [
+          { leadDate: { lt: thirtyDaysAgo } },
+          { AND: [{ leadDate: { equals: null } }, { createdDate: { lt: thirtyDaysAgo } }] },
+        ],
       },
       select: {
         id: true,
@@ -71,7 +84,10 @@ export async function GET(request: NextRequest) {
       where: {
         ...baseWhere,
         pipelineStage: 'INSURANCE',
-        createdDate: { lt: fourteenDaysAgo },
+        OR: [
+          { leadDate: { lt: fourteenDaysAgo } },
+          { AND: [{ leadDate: { equals: null } }, { createdDate: { lt: fourteenDaysAgo } }] },
+        ],
       },
       select: {
         id: true,

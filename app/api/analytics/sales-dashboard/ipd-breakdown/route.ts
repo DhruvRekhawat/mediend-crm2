@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
               {
                 AND: [
                   { conversionDate: { equals: null } },
-                  { createdDate: dateFilter },
+                  { leadDate: dateFilter },
                 ],
               },
             ],
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       byTreatment,
       byHospital,
       bySource,
+      byCampaign,
       surgeonHospitalDisease,
       completedForMonth,
     ] = await Promise.all([
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
         _sum: { billAmount: true, netProfit: true },
       }),
       prisma.lead.groupBy({
-        by: ['hospitalName', 'city', 'circle'],
+        by: ['hospitalName', 'circle'],
         where: completedWhere,
         _count: { id: true },
         _sum: { billAmount: true, netProfit: true },
@@ -75,6 +76,12 @@ export async function GET(request: NextRequest) {
       prisma.lead.groupBy({
         by: ['source'],
         where: { ...completedWhere, source: { not: null } },
+        _count: { id: true },
+        _sum: { billAmount: true, netProfit: true },
+      }),
+      prisma.lead.groupBy({
+        by: ['campaignName'],
+        where: { ...completedWhere, campaignName: { not: null } },
         _count: { id: true },
         _sum: { billAmount: true, netProfit: true },
       }),
@@ -109,11 +116,17 @@ export async function GET(request: NextRequest) {
 
     const hospitalBreakdown = byHospital.map((h) => ({
       hospitalName: h.hospitalName,
-      city: h.city,
       circle: h.circle,
       count: h._count.id,
       revenue: h._sum.billAmount ?? 0,
       profit: h._sum.netProfit ?? 0,
+    })).sort((a, b) => b.revenue - a.revenue)
+
+    const campaignBreakdown = byCampaign.map((c) => ({
+      campaign: c.campaignName ?? 'Unknown',
+      count: c._count.id,
+      revenue: c._sum.billAmount ?? 0,
+      profit: c._sum.netProfit ?? 0,
     })).sort((a, b) => b.revenue - a.revenue)
 
     const sourceBreakdown = bySource.map((s) => ({
@@ -151,6 +164,7 @@ export async function GET(request: NextRequest) {
       byDisease: diseaseBreakdown,
       byHospital: hospitalBreakdown,
       bySource: sourceBreakdown,
+      byCampaign: campaignBreakdown,
       byMonth: monthBreakdown,
       surgeonCrossAnalysis,
     })

@@ -3,7 +3,7 @@
 import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { HRDashboard } from '@/components/hr/hr-dashboard'
 
-export default function MDHRDashboardPage() {
+export default function HRDashboardPage() {
   return (
     <AuthenticatedLayout>
       <HRDashboard
