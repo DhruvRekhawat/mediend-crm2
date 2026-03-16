@@ -1,5 +1,12 @@
 import { queryMySQL } from '@/lib/mysql-source-client'
 
+/** Resolve source name: avoid storing numeric IDs (campaign IDs wrongly used as source). */
+function resolveSourceName(sourceName: string | null | undefined): string {
+  const trimmed = sourceName?.trim()
+  if (trimmed && trimmed !== '' && !/^\d+$/.test(trimmed)) return trimmed
+  return 'Unknown'
+}
+
 export interface CampaignInfo {
   campaignName: string
   sourceName: string
@@ -27,12 +34,12 @@ export async function loadLookupMaps(): Promise<LookupMaps> {
       queryMySQL<{
         id: number
         campaign: string
-        SourceName: string
+        SourceName: string | null
         TreatmentName: string | null
         SourceCampaignGroupName: string | null
         CampaignLocation: number | null
       }>(
-        `SELECT id, campaign, SourceName, TreatmentName, 
+        `SELECT id, campaign, SourceName, TreatmentName,
                 SourceCampaignGroupName, CampaignLocation
          FROM source_campaign_all_name`
       ),
@@ -50,7 +57,7 @@ export async function loadLookupMaps(): Promise<LookupMaps> {
         r.id,
         {
           campaignName: r.campaign.trim(),
-          sourceName: r.SourceName?.trim() ?? String(r.id),
+          sourceName: resolveSourceName(r.SourceName),
           treatmentName: r.TreatmentName?.trim() ?? null,
           groupName: r.SourceCampaignGroupName?.trim() ?? null,
           locationId: r.CampaignLocation ?? null,
