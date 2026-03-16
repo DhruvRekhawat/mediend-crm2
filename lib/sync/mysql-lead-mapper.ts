@@ -521,6 +521,7 @@ export async function mapMySQLLeadToPrisma(
 
     // Additional MySQL fields
     month: toString(mysqlRow.month),
+    leadDate: leadDate, // MySQL Lead_Date - canonical lead received date for age/stats
     leadEntryDate: parseDate(mysqlRow.LeadEntryDate),
     patientEmail: toString(mysqlRow.PatientEmail),
     whatsapp: toString(mysqlRow.Whatsapp),

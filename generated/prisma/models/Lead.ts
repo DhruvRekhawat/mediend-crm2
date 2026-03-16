@@ -148,6 +148,7 @@ export type LeadMinAggregateOutputType = {
   collectedByMediend: number | null
   collectedByHospital: number | null
   month: string | null
+  leadDate: Date | null
   leadEntryDate: Date | null
   patientEmail: string | null
   whatsapp: string | null
@@ -257,6 +258,7 @@ export type LeadMaxAggregateOutputType = {
   collectedByMediend: number | null
   collectedByHospital: number | null
   month: string | null
+  leadDate: Date | null
   leadEntryDate: Date | null
   patientEmail: string | null
   whatsapp: string | null
@@ -366,6 +368,7 @@ export type LeadCountAggregateOutputType = {
   collectedByMediend: number
   collectedByHospital: number
   month: number
+  leadDate: number
   leadEntryDate: number
   patientEmail: number
   whatsapp: number
@@ -537,6 +540,7 @@ export type LeadMinAggregateInputType = {
   collectedByMediend?: true
   collectedByHospital?: true
   month?: true
+  leadDate?: true
   leadEntryDate?: true
   patientEmail?: true
   whatsapp?: true
@@ -646,6 +650,7 @@ export type LeadMaxAggregateInputType = {
   collectedByMediend?: true
   collectedByHospital?: true
   month?: true
+  leadDate?: true
   leadEntryDate?: true
   patientEmail?: true
   whatsapp?: true
@@ -755,6 +760,7 @@ export type LeadCountAggregateInputType = {
   collectedByMediend?: true
   collectedByHospital?: true
   month?: true
+  leadDate?: true
   leadEntryDate?: true
   patientEmail?: true
   whatsapp?: true
@@ -951,6 +957,7 @@ export type LeadGroupByOutputType = {
   collectedByMediend: number
   collectedByHospital: number
   month: string | null
+  leadDate: Date | null
   leadEntryDate: Date | null
   patientEmail: string | null
   whatsapp: string | null
@@ -1083,6 +1090,7 @@ export type LeadWhereInput = {
   collectedByMediend?: Prisma.FloatFilter<"Lead"> | number
   collectedByHospital?: Prisma.FloatFilter<"Lead"> | number
   month?: Prisma.StringNullableFilter<"Lead"> | string | null
+  leadDate?: Prisma.DateTimeNullableFilter<"Lead"> | Date | string | null
   leadEntryDate?: Prisma.DateTimeNullableFilter<"Lead"> | Date | string | null
   patientEmail?: Prisma.StringNullableFilter<"Lead"> | string | null
   whatsapp?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -1205,6 +1213,7 @@ export type LeadOrderByWithRelationInput = {
   collectedByMediend?: Prisma.SortOrder
   collectedByHospital?: Prisma.SortOrder
   month?: Prisma.SortOrderInput | Prisma.SortOrder
+  leadDate?: Prisma.SortOrderInput | Prisma.SortOrder
   leadEntryDate?: Prisma.SortOrderInput | Prisma.SortOrder
   patientEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   whatsapp?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1330,6 +1339,7 @@ export type LeadWhereUniqueInput = Prisma.AtLeast<{
   collectedByMediend?: Prisma.FloatFilter<"Lead"> | number
   collectedByHospital?: Prisma.FloatFilter<"Lead"> | number
   month?: Prisma.StringNullableFilter<"Lead"> | string | null
+  leadDate?: Prisma.DateTimeNullableFilter<"Lead"> | Date | string | null
   leadEntryDate?: Prisma.DateTimeNullableFilter<"Lead"> | Date | string | null
   patientEmail?: Prisma.StringNullableFilter<"Lead"> | string | null
   whatsapp?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -1452,6 +1462,7 @@ export type LeadOrderByWithAggregationInput = {
   collectedByMediend?: Prisma.SortOrder
   collectedByHospital?: Prisma.SortOrder
   month?: Prisma.SortOrderInput | Prisma.SortOrder
+  leadDate?: Prisma.SortOrderInput | Prisma.SortOrder
   leadEntryDate?: Prisma.SortOrderInput | Prisma.SortOrder
   patientEmail?: Prisma.SortOrderInput | Prisma.SortOrder
   whatsapp?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -1569,6 +1580,7 @@ export type LeadScalarWhereWithAggregatesInput = {
   collectedByMediend?: Prisma.FloatWithAggregatesFilter<"Lead"> | number
   collectedByHospital?: Prisma.FloatWithAggregatesFilter<"Lead"> | number
   month?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
+  leadDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Lead"> | Date | string | null
   leadEntryDate?: Prisma.DateTimeNullableWithAggregatesFilter<"Lead"> | Date | string | null
   patientEmail?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   whatsapp?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
@@ -1675,6 +1687,7 @@ export type LeadCreateInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -1797,6 +1810,7 @@ export type LeadUncheckedCreateInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -1913,6 +1927,7 @@ export type LeadUpdateInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2035,6 +2050,7 @@ export type LeadUncheckedUpdateInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2154,6 +2170,7 @@ export type LeadCreateManyInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -2260,6 +2277,7 @@ export type LeadUpdateManyMutationInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2369,6 +2387,7 @@ export type LeadUncheckedUpdateManyInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2488,6 +2507,7 @@ export type LeadCountOrderByAggregateInput = {
   collectedByMediend?: Prisma.SortOrder
   collectedByHospital?: Prisma.SortOrder
   month?: Prisma.SortOrder
+  leadDate?: Prisma.SortOrder
   leadEntryDate?: Prisma.SortOrder
   patientEmail?: Prisma.SortOrder
   whatsapp?: Prisma.SortOrder
@@ -2627,6 +2647,7 @@ export type LeadMaxOrderByAggregateInput = {
   collectedByMediend?: Prisma.SortOrder
   collectedByHospital?: Prisma.SortOrder
   month?: Prisma.SortOrder
+  leadDate?: Prisma.SortOrder
   leadEntryDate?: Prisma.SortOrder
   patientEmail?: Prisma.SortOrder
   whatsapp?: Prisma.SortOrder
@@ -2736,6 +2757,7 @@ export type LeadMinOrderByAggregateInput = {
   collectedByMediend?: Prisma.SortOrder
   collectedByHospital?: Prisma.SortOrder
   month?: Prisma.SortOrder
+  leadDate?: Prisma.SortOrder
   leadEntryDate?: Prisma.SortOrder
   patientEmail?: Prisma.SortOrder
   whatsapp?: Prisma.SortOrder
@@ -3195,6 +3217,7 @@ export type LeadCreateWithoutCreatedByInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -3315,6 +3338,7 @@ export type LeadUncheckedCreateWithoutCreatedByInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -3441,6 +3465,7 @@ export type LeadCreateWithoutBdInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -3561,6 +3586,7 @@ export type LeadUncheckedCreateWithoutBdInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -3687,6 +3713,7 @@ export type LeadCreateWithoutUpdatedByInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -3807,6 +3834,7 @@ export type LeadUncheckedCreateWithoutUpdatedByInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -3955,6 +3983,7 @@ export type LeadScalarWhereInput = {
   collectedByMediend?: Prisma.FloatFilter<"Lead"> | number
   collectedByHospital?: Prisma.FloatFilter<"Lead"> | number
   month?: Prisma.StringNullableFilter<"Lead"> | string | null
+  leadDate?: Prisma.DateTimeNullableFilter<"Lead"> | Date | string | null
   leadEntryDate?: Prisma.DateTimeNullableFilter<"Lead"> | Date | string | null
   patientEmail?: Prisma.StringNullableFilter<"Lead"> | string | null
   whatsapp?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -4093,6 +4122,7 @@ export type LeadCreateWithoutStageEventsInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -4214,6 +4244,7 @@ export type LeadUncheckedCreateWithoutStageEventsInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -4345,6 +4376,7 @@ export type LeadUpdateWithoutStageEventsInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4466,6 +4498,7 @@ export type LeadUncheckedUpdateWithoutStageEventsInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4581,6 +4614,7 @@ export type LeadCreateWithoutInsuranceCaseInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -4702,6 +4736,7 @@ export type LeadUncheckedCreateWithoutInsuranceCaseInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -4833,6 +4868,7 @@ export type LeadUpdateWithoutInsuranceCaseInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4954,6 +4990,7 @@ export type LeadUncheckedUpdateWithoutInsuranceCaseInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5069,6 +5106,7 @@ export type LeadCreateWithoutPlRecordInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -5190,6 +5228,7 @@ export type LeadUncheckedCreateWithoutPlRecordInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -5321,6 +5360,7 @@ export type LeadUpdateWithoutPlRecordInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5442,6 +5482,7 @@ export type LeadUncheckedUpdateWithoutPlRecordInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5557,6 +5598,7 @@ export type LeadCreateWithoutKypSubmissionInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -5678,6 +5720,7 @@ export type LeadUncheckedCreateWithoutKypSubmissionInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -5809,6 +5852,7 @@ export type LeadUpdateWithoutKypSubmissionInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5930,6 +5974,7 @@ export type LeadUncheckedUpdateWithoutKypSubmissionInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6045,6 +6090,7 @@ export type LeadCreateWithoutAdmissionRecordInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -6166,6 +6212,7 @@ export type LeadUncheckedCreateWithoutAdmissionRecordInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -6297,6 +6344,7 @@ export type LeadUpdateWithoutAdmissionRecordInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6418,6 +6466,7 @@ export type LeadUncheckedUpdateWithoutAdmissionRecordInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6533,6 +6582,7 @@ export type LeadCreateWithoutInsuranceInitiateFormInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -6654,6 +6704,7 @@ export type LeadUncheckedCreateWithoutInsuranceInitiateFormInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -6785,6 +6836,7 @@ export type LeadUpdateWithoutInsuranceInitiateFormInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6906,6 +6958,7 @@ export type LeadUncheckedUpdateWithoutInsuranceInitiateFormInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7021,6 +7074,7 @@ export type LeadCreateWithoutCaseStageHistoryInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -7142,6 +7196,7 @@ export type LeadUncheckedCreateWithoutCaseStageHistoryInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -7273,6 +7328,7 @@ export type LeadUpdateWithoutCaseStageHistoryInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7394,6 +7450,7 @@ export type LeadUncheckedUpdateWithoutCaseStageHistoryInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7509,6 +7566,7 @@ export type LeadCreateWithoutCaseChatMessagesInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -7630,6 +7688,7 @@ export type LeadUncheckedCreateWithoutCaseChatMessagesInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -7761,6 +7820,7 @@ export type LeadUpdateWithoutCaseChatMessagesInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7882,6 +7942,7 @@ export type LeadUncheckedUpdateWithoutCaseChatMessagesInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7997,6 +8058,7 @@ export type LeadCreateWithoutDischargeSheetInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -8118,6 +8180,7 @@ export type LeadUncheckedCreateWithoutDischargeSheetInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -8249,6 +8312,7 @@ export type LeadUpdateWithoutDischargeSheetInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8370,6 +8434,7 @@ export type LeadUncheckedUpdateWithoutDischargeSheetInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8485,6 +8550,7 @@ export type LeadCreateWithoutOutstandingCaseInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -8606,6 +8672,7 @@ export type LeadUncheckedCreateWithoutOutstandingCaseInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -8737,6 +8804,7 @@ export type LeadUpdateWithoutOutstandingCaseInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8858,6 +8926,7 @@ export type LeadUncheckedUpdateWithoutOutstandingCaseInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8975,6 +9044,7 @@ export type LeadCreateManyCreatedByInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -9083,6 +9153,7 @@ export type LeadCreateManyBdInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -9191,6 +9262,7 @@ export type LeadCreateManyUpdatedByInput = {
   collectedByMediend?: number
   collectedByHospital?: number
   month?: string | null
+  leadDate?: Date | string | null
   leadEntryDate?: Date | string | null
   patientEmail?: string | null
   whatsapp?: string | null
@@ -9297,6 +9369,7 @@ export type LeadUpdateWithoutCreatedByInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9417,6 +9490,7 @@ export type LeadUncheckedUpdateWithoutCreatedByInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9535,6 +9609,7 @@ export type LeadUncheckedUpdateManyWithoutCreatedByInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9641,6 +9716,7 @@ export type LeadUpdateWithoutBdInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9761,6 +9837,7 @@ export type LeadUncheckedUpdateWithoutBdInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9879,6 +9956,7 @@ export type LeadUncheckedUpdateManyWithoutBdInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9985,6 +10063,7 @@ export type LeadUpdateWithoutUpdatedByInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10105,6 +10184,7 @@ export type LeadUncheckedUpdateWithoutUpdatedByInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10223,6 +10303,7 @@ export type LeadUncheckedUpdateManyWithoutUpdatedByInput = {
   collectedByMediend?: Prisma.FloatFieldUpdateOperationsInput | number
   collectedByHospital?: Prisma.FloatFieldUpdateOperationsInput | number
   month?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  leadDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   leadEntryDate?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   patientEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -10381,6 +10462,7 @@ export type LeadSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   collectedByMediend?: boolean
   collectedByHospital?: boolean
   month?: boolean
+  leadDate?: boolean
   leadEntryDate?: boolean
   patientEmail?: boolean
   whatsapp?: boolean
@@ -10504,6 +10586,7 @@ export type LeadSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   collectedByMediend?: boolean
   collectedByHospital?: boolean
   month?: boolean
+  leadDate?: boolean
   leadEntryDate?: boolean
   patientEmail?: boolean
   whatsapp?: boolean
@@ -10616,6 +10699,7 @@ export type LeadSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   collectedByMediend?: boolean
   collectedByHospital?: boolean
   month?: boolean
+  leadDate?: boolean
   leadEntryDate?: boolean
   patientEmail?: boolean
   whatsapp?: boolean
@@ -10728,6 +10812,7 @@ export type LeadSelectScalar = {
   collectedByMediend?: boolean
   collectedByHospital?: boolean
   month?: boolean
+  leadDate?: boolean
   leadEntryDate?: boolean
   patientEmail?: boolean
   whatsapp?: boolean
@@ -10775,7 +10860,7 @@ export type LeadSelectScalar = {
   lostAt?: boolean
 }
 
-export type LeadOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "leadRef" | "patientName" | "age" | "dateOfBirth" | "sex" | "phoneNumber" | "alternateNumber" | "attendantName" | "bdId" | "status" | "pipelineStage" | "caseStage" | "circle" | "city" | "category" | "treatment" | "anesthesia" | "quantityGrade" | "surgeonName" | "surgeonType" | "hospitalName" | "flowType" | "modeOfPayment" | "discount" | "copay" | "deduction" | "settledTotal" | "billAmount" | "insuranceName" | "tpa" | "sumInsured" | "roomRent" | "icu" | "capping" | "arrivalDate" | "arrivalTime" | "surgeryDate" | "operationTime" | "implantType" | "implantAmount" | "instrument" | "consumables" | "createdById" | "createdDate" | "updatedById" | "updatedDate" | "remarks" | "source" | "campaignName" | "bdeName" | "conversionDate" | "mediendProfit" | "hospitalShare" | "doctorShare" | "othersShare" | "netProfit" | "ticketSize" | "collectedByMediend" | "collectedByHospital" | "month" | "leadEntryDate" | "patientEmail" | "whatsapp" | "address" | "docUpload" | "diseaseDetails" | "followUpDate" | "subStatus" | "opdHospital" | "opdDrName" | "opdContactNo" | "opdCharges" | "opdScheduleDate" | "opdMeeting" | "ipdAdmissionDate" | "ipdHospital" | "ipdDrName" | "ipdContactNo" | "ipdTotalPayment" | "ipdDetails" | "paymentDetails" | "attendantContactNo" | "waFormat" | "leadSource" | "whatsappMessage" | "notification" | "cityOption" | "emailSent" | "smsSent" | "whatsappSent" | "website" | "description" | "refId" | "duplCount" | "aes" | "profession" | "qr" | "removeRemarks" | "adId" | "campaignId" | "formId" | "teamLeadId" | "remarksId" | "lostReason" | "lostAt", ExtArgs["result"]["lead"]>
+export type LeadOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "leadRef" | "patientName" | "age" | "dateOfBirth" | "sex" | "phoneNumber" | "alternateNumber" | "attendantName" | "bdId" | "status" | "pipelineStage" | "caseStage" | "circle" | "city" | "category" | "treatment" | "anesthesia" | "quantityGrade" | "surgeonName" | "surgeonType" | "hospitalName" | "flowType" | "modeOfPayment" | "discount" | "copay" | "deduction" | "settledTotal" | "billAmount" | "insuranceName" | "tpa" | "sumInsured" | "roomRent" | "icu" | "capping" | "arrivalDate" | "arrivalTime" | "surgeryDate" | "operationTime" | "implantType" | "implantAmount" | "instrument" | "consumables" | "createdById" | "createdDate" | "updatedById" | "updatedDate" | "remarks" | "source" | "campaignName" | "bdeName" | "conversionDate" | "mediendProfit" | "hospitalShare" | "doctorShare" | "othersShare" | "netProfit" | "ticketSize" | "collectedByMediend" | "collectedByHospital" | "month" | "leadDate" | "leadEntryDate" | "patientEmail" | "whatsapp" | "address" | "docUpload" | "diseaseDetails" | "followUpDate" | "subStatus" | "opdHospital" | "opdDrName" | "opdContactNo" | "opdCharges" | "opdScheduleDate" | "opdMeeting" | "ipdAdmissionDate" | "ipdHospital" | "ipdDrName" | "ipdContactNo" | "ipdTotalPayment" | "ipdDetails" | "paymentDetails" | "attendantContactNo" | "waFormat" | "leadSource" | "whatsappMessage" | "notification" | "cityOption" | "emailSent" | "smsSent" | "whatsappSent" | "website" | "description" | "refId" | "duplCount" | "aes" | "profession" | "qr" | "removeRemarks" | "adId" | "campaignId" | "formId" | "teamLeadId" | "remarksId" | "lostReason" | "lostAt", ExtArgs["result"]["lead"]>
 export type LeadInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   bd?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -10882,6 +10967,7 @@ export type $LeadPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     collectedByMediend: number
     collectedByHospital: number
     month: string | null
+    leadDate: Date | null
     leadEntryDate: Date | null
     patientEmail: string | null
     whatsapp: string | null
@@ -11424,6 +11510,7 @@ export interface LeadFieldRefs {
   readonly collectedByMediend: Prisma.FieldRef<"Lead", 'Float'>
   readonly collectedByHospital: Prisma.FieldRef<"Lead", 'Float'>
   readonly month: Prisma.FieldRef<"Lead", 'String'>
+  readonly leadDate: Prisma.FieldRef<"Lead", 'DateTime'>
   readonly leadEntryDate: Prisma.FieldRef<"Lead", 'DateTime'>
   readonly patientEmail: Prisma.FieldRef<"Lead", 'String'>
   readonly whatsapp: Prisma.FieldRef<"Lead", 'String'>

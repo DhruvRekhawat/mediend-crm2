@@ -34,27 +34,30 @@ export async function GET(_request: NextRequest) {
       }),
       prisma.lead.groupBy({
         by: ['status'],
-        where: { status: { not: null } },
         _count: { id: true },
       }),
       prisma.lead.count({
         where: {
-          createdDate: { gte: sevenDaysAgo, lte: nowEnd },
+          OR: [
+            { leadDate: { gte: sevenDaysAgo, lte: nowEnd } },
+            { AND: [{ leadDate: { equals: null } }, { createdDate: { gte: sevenDaysAgo, lte: nowEnd } }] },
+          ],
         },
       }),
       prisma.lead.count({
         where: {
-          createdDate: { gte: thirtyDaysAgo, lte: nowEnd },
+          OR: [
+            { leadDate: { gte: thirtyDaysAgo, lte: nowEnd } },
+            { AND: [{ leadDate: { equals: null } }, { createdDate: { gte: thirtyDaysAgo, lte: nowEnd } }] },
+          ],
         },
       }),
       prisma.lead.groupBy({
         by: ['circle'],
-        where: { circle: { not: null } },
         _count: { id: true },
       }),
       prisma.lead.groupBy({
         by: ['source'],
-        where: { source: { not: null } },
         _count: { id: true },
       }),
     ])

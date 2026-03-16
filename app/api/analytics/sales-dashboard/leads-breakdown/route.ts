@@ -44,8 +44,17 @@ export async function GET(request: NextRequest) {
       dateFilter.lte = end
     }
 
-    const allLeadsWhere: Prisma.LeadWhereInput =
-      Object.keys(dateFilter).length > 0 ? { createdDate: dateFilter } : {}
+    // Use leadDate (MySQL Lead_Date) for filtering - canonical "when lead was received"
+    const leadDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { leadDate: dateFilter },
+              { AND: [{ leadDate: { equals: null } }, { createdDate: dateFilter }] },
+            ],
+          }
+        : {}
+    const allLeadsWhere: Prisma.LeadWhereInput = leadDateFilter
 
     const completedWhere: Prisma.LeadWhereInput = {
       pipelineStage: 'COMPLETED',
@@ -110,6 +119,7 @@ export async function GET(request: NextRequest) {
           id: true,
           bdId: true,
           pipelineStage: true,
+          leadDate: true,
           createdDate: true,
         },
       }),
@@ -176,7 +186,9 @@ export async function GET(request: NextRequest) {
     const asOf = endDate ? new Date(endDate) : new Date()
     const ageBuckets = { new: { total: 0, converted: 0 }, oneMonth: { total: 0, converted: 0 }, twoMonths: { total: 0, converted: 0 }, old: { total: 0, converted: 0 } }
     allLeadsForTeamAndAge.forEach((lead) => {
-      const bucket = getLeadAgeBucket(lead.createdDate, asOf)
+      // Use leadDate (MySQL Lead_Date) for age - canonical "when lead was received"
+      const effectiveLeadDate = lead.leadDate ?? lead.createdDate
+      const bucket = getLeadAgeBucket(effectiveLeadDate, asOf)
       ageBuckets[bucket].total += 1
       if (lead.pipelineStage === 'COMPLETED') ageBuckets[bucket].converted += 1
     })

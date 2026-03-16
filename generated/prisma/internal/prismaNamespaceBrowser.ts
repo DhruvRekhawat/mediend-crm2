@@ -237,6 +237,7 @@ export const LeadScalarFieldEnum = {
   collectedByMediend: 'collectedByMediend',
   collectedByHospital: 'collectedByHospital',
   month: 'month',
+  leadDate: 'leadDate',
   leadEntryDate: 'leadEntryDate',
   patientEmail: 'patientEmail',
   whatsapp: 'whatsapp',

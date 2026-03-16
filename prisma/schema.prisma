@@ -466,6 +466,7 @@ model Lead {
 
   // Additional MySQL fields
   month              String?
+  leadDate           DateTime?  // MySQL Lead_Date - canonical "when lead was received" for age/stats
   leadEntryDate      DateTime?
   patientEmail       String?
   whatsapp           String?
@@ -539,6 +540,7 @@ model Lead {
   @@index([conversionDate])
   @@index([surgeryDate])
   @@index([leadEntryDate])
+  @@index([leadDate])
   @@index([followUpDate])
 }
 

@@ -31,7 +31,15 @@ async function migrateLeadPipelineStages() {
     let cursor: string | undefined = undefined
 
     while (true) {
-      const leads = await prisma.lead.findMany({
+      const leads: Array<{
+        id: string
+        status: string
+        pipelineStage: PipelineStage
+        conversionDate: Date | null
+        surgeryDate: Date | null
+        ipdAdmissionDate: Date | null
+        createdDate: Date
+      }> = await prisma.lead.findMany({
         take: BATCH_SIZE,
         ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
         select: {
