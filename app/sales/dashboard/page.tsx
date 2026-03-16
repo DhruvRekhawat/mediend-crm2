@@ -21,7 +21,18 @@ import {
   Stethoscope,
   BarChart3,
   Wallet,
+  LayoutGrid,
+  TrendingUp,
 } from 'lucide-react'
+
+interface PipelineOverview {
+  totalLeads: number
+  byStage: Array<{ stage: string; count: number }>
+  byStatus: Array<{ status: string; count: number }>
+  recentLeads: { last7Days: number; last30Days: number }
+  topCircles: Array<{ circle: string; count: number }>
+  topSources: Array<{ source: string; count: number }>
+}
 
 interface IpdComparison {
   ipdThisMonth: number
@@ -92,6 +103,11 @@ export default function SalesDashboardPage() {
   }
   const params = () => (dateRange.startDate && dateRange.endDate ? `?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}` : '')
 
+  const { data: pipelineOverview } = useQuery<PipelineOverview>({
+    queryKey: ['sales-dashboard', 'pipeline-overview'],
+    queryFn: () => apiGet<PipelineOverview>('/api/analytics/sales-dashboard/pipeline-overview'),
+  })
+
   const { data: comparison } = useQuery<IpdComparison>({
     queryKey: ['sales-dashboard', 'ipd-comparison'],
     queryFn: () => apiGet<IpdComparison>('/api/analytics/sales-dashboard/ipd-comparison'),
@@ -159,6 +175,76 @@ export default function SalesDashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Pipeline Overview */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LayoutGrid className="h-5 w-5" />
+              Lead pipeline overview
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">All leads in the CRM (synced from workspace + MySQL)</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-muted-foreground">Total leads</p>
+                <p className="text-xl font-bold">{pipelineOverview?.totalLeads ?? '–'}</p>
+              </div>
+              <div className="rounded-lg border bg-blue-500/5 dark:bg-blue-950/20 p-3">
+                <p className="text-xs font-medium text-blue-700 dark:text-blue-400">Active (Sales)</p>
+                <p className="text-xl font-bold text-blue-800 dark:text-blue-300">
+                  {pipelineOverview?.byStage?.find((s) => s.stage === 'SALES')?.count ?? '–'}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-emerald-500/5 dark:bg-emerald-950/20 p-3">
+                <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">Completed</p>
+                <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">
+                  {pipelineOverview?.byStage?.find((s) => s.stage === 'COMPLETED')?.count ?? '–'}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-rose-500/5 dark:bg-rose-950/20 p-3">
+                <p className="text-xs font-medium text-rose-700 dark:text-rose-400">Lost</p>
+                <p className="text-xl font-bold text-rose-800 dark:text-rose-300">
+                  {pipelineOverview?.byStage?.find((s) => s.stage === 'LOST')?.count ?? '–'}
+                </p>
+              </div>
+              <div className="rounded-lg border bg-slate-500/5 dark:bg-slate-950/20 p-3">
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-400">Last 7 days</p>
+                <p className="text-xl font-bold">{pipelineOverview?.recentLeads?.last7Days ?? '–'}</p>
+              </div>
+              <div className="rounded-lg border bg-slate-500/5 dark:bg-slate-950/20 p-3">
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-400">Last 30 days</p>
+                <p className="text-xl font-bold">{pipelineOverview?.recentLeads?.last30Days ?? '–'}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Top circles:</span>
+                <div className="flex flex-wrap gap-1">
+                  {pipelineOverview?.topCircles?.map((c) => (
+                    <Badge key={c.circle} variant="secondary" className="font-normal">
+                      {c.circle} ({c.count})
+                    </Badge>
+                  ))}
+                  {(!pipelineOverview?.topCircles?.length) && <span className="text-muted-foreground text-sm">–</span>}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Top sources:</span>
+                <div className="flex flex-wrap gap-1">
+                  {pipelineOverview?.topSources?.map((s) => (
+                    <Badge key={s.source} variant="outline" className="font-normal">
+                      {s.source} ({s.count})
+                    </Badge>
+                  ))}
+                  {(!pipelineOverview?.topSources?.length) && <span className="text-muted-foreground text-sm">–</span>}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* IPD Comparison Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

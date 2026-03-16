@@ -21,6 +21,7 @@
     "verify:mysql": "tsx scripts/verify-mysql-connection.ts",
     "migrate:case-stages": "bunx prisma generate && bun scripts/migrate-case-stages.ts",
     "migrate:case-stages-v2": "bunx prisma generate && bun scripts/migrate-case-stages-v2.ts",
+    "migrate:lead-pipeline-stages": "tsx scripts/migrate-lead-pipeline-stages.ts",
     "fix:lead-mappings": "tsx scripts/fix-existing-lead-mappings.ts",
     "fix:lead-categories-circles": "bun run scripts/fix-lead-categories-circles.ts",
     "seed:employees": "bun scripts/seed-employees-from-json.ts",

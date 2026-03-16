@@ -338,6 +338,34 @@ function normalizeStatus(status: string | null | undefined): string {
 }
 
 /**
+ * Infer pipeline stage from MySQL status.
+ * Used by sync mapper and migration script.
+ */
+export function inferPipelineStage(status: string | null | undefined): PipelineStage {
+  if (!status) return PipelineStage.SALES
+  const s = status.trim().toLowerCase()
+  // Completed: surgery done or case closed
+  if (s === 'ipd done' || s === 'closed') {
+    return PipelineStage.COMPLETED
+  }
+  // Lost: explicitly lost or junk
+  if (
+    s === 'ipd lost' ||
+    s === 'junk' ||
+    s === 'not interested' ||
+    s === 'invalid number' ||
+    s === 'duplicate lead' ||
+    s === 'lost' ||
+    s === 'already insured' ||
+    s.startsWith('dnp')
+  ) {
+    return PipelineStage.LOST
+  }
+  // Active in progress - default to SALES
+  return PipelineStage.SALES
+}
+
+/**
  * Convert value to string, handling null/undefined
  */
 function toString(value: any): string | null {
@@ -459,6 +487,14 @@ export async function mapMySQLLeadToPrisma(
   const leadRef = String(mysqlRow.id)
   const leadDate = getLeadReceivedDate(mysqlRow)
   const updateDate = parseDate(mysqlRow.update_date)
+  const normalizedStatus = normalizeStatus(mysqlRow.Status)
+  const pipelineStage = inferPipelineStage(normalizedStatus)
+  const surgeryDate = parseDate(mysqlRow.Surgery_Date)
+  const ipdAdmissionDate = parseDate(mysqlRow.IPD_AdmisisonDate)
+  const conversionDate =
+    pipelineStage === PipelineStage.COMPLETED
+      ? surgeryDate ?? ipdAdmissionDate ?? leadDate
+      : null
 
   return {
     leadRef,
@@ -470,8 +506,9 @@ export async function mapMySQLLeadToPrisma(
     attendantName: toString(mysqlRow.AttendantName),
     bdId: bdInfo.id,
     bdeName: bdmValue,
-    status: normalizeStatus(mysqlRow.Status),
-    pipelineStage: PipelineStage.SALES,
+    status: normalizedStatus,
+    pipelineStage,
+    conversionDate,
     circle: mapCircleCode(mysqlRow.Circle) || bdInfo.circle || '',
     city: mysqlRow.city_option || 'Not Specified',
     category: mapCategoryCode(mysqlRow.Category),
