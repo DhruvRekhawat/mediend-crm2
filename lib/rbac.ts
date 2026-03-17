@@ -72,6 +72,7 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:leaves:read',
     'hrms:employees:read',
     'hierarchy:read',
+    'hierarchy:team:read',
   ],
   SALES_HEAD: [
     'leads:read',
