@@ -206,6 +206,22 @@ services:
       - tools
     entrypoint: ["bun", "run", "scripts/backfill-lead-date.ts"]
 
+  # One-off: backfill conversionDate for IPD Done leads that have no surgery/admission date
+  # Usage: docker compose --profile tools run --rm backfill-conversion-dates
+  backfill-conversion-dates:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - /opt/mediend-crm/mediend-crm2/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/backfill-conversion-dates.ts"]
+
   # One-off: migrate lead pipeline stages and conversion dates from status
   # Usage: docker compose --profile tools run --rm migrate-lead-pipeline
   migrate-lead-pipeline:

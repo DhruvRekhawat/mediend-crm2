@@ -45,6 +45,32 @@ export async function GET(request: NextRequest) {
           }
         : {}
 
+    // IPD Done: filter by when conversion happened, not when lead was received
+    const conversionDateFilter: Prisma.LeadWhereInput =
+      Object.keys(dateFilter).length > 0
+        ? {
+            OR: [
+              { conversionDate: dateFilter },
+              { AND: [{ conversionDate: { equals: null } }, { surgeryDate: dateFilter }] },
+              {
+                AND: [
+                  { conversionDate: { equals: null } },
+                  { surgeryDate: { equals: null } },
+                  { leadDate: dateFilter },
+                ],
+              },
+              {
+                AND: [
+                  { conversionDate: { equals: null } },
+                  { surgeryDate: { equals: null } },
+                  { leadDate: { equals: null } },
+                  { createdDate: dateFilter },
+                ],
+              },
+            ],
+          }
+        : {}
+
     if (type === 'bd') {
       // Get closed leads stats based on status codes (IPD Done, Closed, Call Done, etc.)
       const closedWhere: Prisma.LeadWhereInput = {
@@ -75,10 +101,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Get IPD Done count separately for highlighting
+      // Get IPD Done count separately for highlighting (by conversion date, not lead date)
       const ipdDoneWhere: Prisma.LeadWhereInput = {
-        status: '13', // IPD Done
-        ...leadDateFilter,
+        pipelineStage: 'COMPLETED',
+        ...conversionDateFilter,
       }
       if (user.role === 'BD') {
         ipdDoneWhere.bdId = user.id
@@ -176,10 +202,10 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Get IPD Done count separately
+      // Get IPD Done count separately (by conversion date, not lead date)
       const ipdDoneWhere: Prisma.LeadWhereInput = {
-        status: '13', // IPD Done
-        ...leadDateFilter,
+        pipelineStage: 'COMPLETED',
+        ...conversionDateFilter,
       }
       if (user.role === 'BD') {
         ipdDoneWhere.bdId = user.id
@@ -333,8 +359,8 @@ export async function GET(request: NextRequest) {
         bd: { teamId: { in: teamIds } },
       }
       const ipdDoneWhere: Prisma.LeadWhereInput = {
-        status: '13',
-        ...leadDateFilter,
+        pipelineStage: 'COMPLETED',
+        ...conversionDateFilter,
         bd: { teamId: { in: teamIds } },
       }
 

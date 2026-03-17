@@ -386,7 +386,7 @@ function buildLeadData(
   const ipdAdmissionDate = parseDate(mysqlRow.IPD_AdmisisonDate)
   const conversionDate =
     pipelineStage === PipelineStage.COMPLETED
-      ? surgeryDate ?? ipdAdmissionDate ?? leadDate
+      ? surgeryDate ?? ipdAdmissionDate ?? updateDate ?? leadDate
       : null
 
   return {

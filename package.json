@@ -23,6 +23,7 @@
     "migrate:case-stages-v2": "bunx prisma generate && bun scripts/migrate-case-stages-v2.ts",
     "migrate:lead-pipeline-stages": "tsx scripts/migrate-lead-pipeline-stages.ts",
     "backfill:lead-date": "tsx scripts/backfill-lead-date.ts",
+    "backfill:conversion-dates": "bun run scripts/backfill-conversion-dates.ts",
     "fix:lead-mappings": "tsx scripts/fix-existing-lead-mappings.ts",
     "fix:lead-categories-circles": "bun run scripts/fix-lead-categories-circles.ts",
     "seed:employees": "bun scripts/seed-employees-from-json.ts",
