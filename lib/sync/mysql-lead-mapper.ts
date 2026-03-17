@@ -77,15 +77,12 @@ export interface MySQLLeadRow {
   form_id?: string | null
 }
 
-export type BdMap = Map<string, { id: string; circle: string | null }>
+export type BdMap = Map<string, { id: string }>
 
 /**
  * Finds a BD user by name using multiple matching strategies (async fallback for rare cases)
  */
-async function findBDByName(name: string): Promise<{
-  id: string
-  circle: string | null
-} | null> {
+async function findBDByName(name: string): Promise<{ id: string } | null> {
   if (!name) return null
 
   const trimmedName = name.trim()
@@ -95,18 +92,18 @@ async function findBDByName(name: string): Promise<{
       role: UserRole.BD,
       name: { equals: trimmedName, mode: 'insensitive' },
     },
-    include: { team: { select: { circle: true } } },
+    select: { id: true },
   })
-  if (user) return { id: user.id, circle: user.team?.circle ?? null }
+  if (user) return { id: user.id }
 
   user = await prisma.user.findFirst({
     where: {
       role: UserRole.BD,
       name: { contains: trimmedName, mode: 'insensitive' },
     },
-    include: { team: { select: { circle: true } } },
+    select: { id: true },
   })
-  if (user) return { id: user.id, circle: user.team?.circle ?? null }
+  if (user) return { id: user.id }
 
   const firstName = trimmedName.split(' ')[0]
   if (firstName && firstName.length > 2) {
@@ -115,9 +112,9 @@ async function findBDByName(name: string): Promise<{
         role: UserRole.BD,
         name: { startsWith: firstName, mode: 'insensitive' },
       },
-      include: { team: { select: { circle: true } } },
+      select: { id: true },
     })
-    if (user) return { id: user.id, circle: user.team?.circle ?? null }
+    if (user) return { id: user.id }
   }
 
   return null
@@ -129,7 +126,7 @@ async function findBDByName(name: string): Promise<{
 async function createBDUser(
   name: string,
   systemUserId: string
-): Promise<{ id: string; circle: string | null }> {
+): Promise<{ id: string }> {
   const emailBase = name
     .toLowerCase()
     .replace(/\s+/g, '.')
@@ -149,7 +146,7 @@ async function createBDUser(
     })
     if (!salesHead) throw new Error('No sales head found. Cannot create team for BD user.')
     team = await prisma.team.create({
-      data: { name: 'Default Team', circle: 'Default', salesHeadId: salesHead.id },
+      data: { name: 'Default Team', salesHeadId: salesHead.id },
     })
   }
 
@@ -162,10 +159,10 @@ async function createBDUser(
       role: UserRole.BD,
       teamId: team.id,
     },
-    include: { team: { select: { circle: true } } },
+    select: { id: true },
   })
 
-  return { id: newUser.id, circle: newUser.team?.circle ?? null }
+  return { id: newUser.id }
 }
 
 function parseDate(value: Date | string | null | undefined): Date | null {
@@ -405,7 +402,7 @@ function buildLeadData(
     status: statusName,
     pipelineStage,
     conversionDate,
-    circle: circleName ?? bdInfo.circle ?? 'Unknown',
+    circle: circleName ?? 'Unknown',
     category: categoryName,
     treatment: treatmentName,
     hospitalName: mysqlRow.OPD_Hospital || mysqlRow.IPD_Hospital || 'Not Specified',

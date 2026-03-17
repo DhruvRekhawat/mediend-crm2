@@ -88,7 +88,7 @@ interface BdMonthly {
 }
 
 interface BdDetail {
-  bd: { id: string; name: string; profilePicture: string | null; team: { id: string; name: string; circle: string } | null }
+  bd: { id: string; name: string; profilePicture: string | null; team: { id: string; name: string; teamLead?: { name: string } | null } | null }
   kpis: { totalLeads: number; ipdDone: number; conversionRate: number; netProfit: number; billAmount: number; avgTicketSize: number }
   surgeries: Array<{ id: string; patientName: string; treatment: string; hospitalName: string; surgeonName: string | null; date: string; billAmount: number; netProfit: number; circle: string }>
   monthWise: Array<{ month: string; leadCount: number; ipdCount: number }>
@@ -98,13 +98,13 @@ interface BdDetail {
 interface TeamSummary {
   id: string
   name: string
-  circle: string
+  teamLead?: { id: string; name: string } | null
   members: Array<{ id: string; name: string; role: string }>
   salesHead: { id: string; name: string } | null
 }
 
 interface TeamDetail {
-  team: { id: string; name: string; circle: string; salesHead: { id: string; name: string; profilePicture: string | null } | null }
+  team: { id: string; name: string; salesHead: { id: string; name: string; profilePicture: string | null } | null; teamLead: { id: string; name: string; profilePicture: string | null } | null }
   kpis: { totalLeads: number; totalIpd: number; totalProfit: number; totalBill: number; conversionRate: number }
   members: Array<{ id: string; name: string; profilePicture: string | null; leads: number; ipdDone: number; conversionRate: number; netProfit: number; billAmount: number }>
   monthWise: { months: string[]; rows: Array<{ month: string; bdId: string; bdName: string; leadCount: number; ipdCount: number }> }
@@ -252,7 +252,7 @@ function BdDetailSheet({ bdId, open, onClose, dateParams }: { bdId: string | nul
                       {data.bd.team && (
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="secondary">{data.bd.team.name}</Badge>
-                          <Badge variant="outline">{data.bd.team.circle}</Badge>
+                          {data.bd.team.teamLead && <Badge variant="outline">Lead: {data.bd.team.teamLead.name}</Badge>}
                         </div>
                       )}
                     </div>
@@ -361,7 +361,7 @@ function TeamDetailSheet({ teamId, open, onClose, dateParams }: { teamId: string
                   <div>
                     <SheetTitle className="text-xl">{data.team.name}</SheetTitle>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline">{data.team.circle}</Badge>
+                      {data.team.teamLead && <Badge variant="secondary">Lead: {data.team.teamLead.name}</Badge>}
                       {data.team.salesHead && <span className="text-sm text-muted-foreground">Head: {data.team.salesHead.name}</span>}
                     </div>
                   </div>
@@ -654,15 +654,6 @@ function TeamPerformanceTab({ dateParams, onSelectTeam }: { dateParams: string; 
     }
   }
 
-  const CIRCLE_COLORS: Record<string, string> = {
-    Delhi: 'border-blue-500',
-    Mumbai: 'border-emerald-500',
-    Pune: 'border-violet-500',
-    Gurugram: 'border-amber-500',
-    Hyderabad: 'border-rose-500',
-    Bangalore: 'border-cyan-500',
-  }
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -670,17 +661,18 @@ function TeamPerformanceTab({ dateParams, onSelectTeam }: { dateParams: string; 
           const ipd = teamIpdMap.get(team.name) ?? 0
           const leads = teamLeadsMap.get(team.name) ?? 0
           const conv = leads > 0 ? ((ipd / leads) * 100).toFixed(1) : '0.0'
-          const borderColor = CIRCLE_COLORS[team.circle] ?? 'border-slate-400'
           return (
             <button
               key={team.id}
               onClick={() => onSelectTeam(team.id)}
-              className={`text-left rounded-xl border-l-4 ${borderColor} bg-card shadow-sm hover:shadow-md transition-shadow p-4 w-full`}
+              className="text-left rounded-xl border-l-4 border-blue-500 bg-card shadow-sm hover:shadow-md transition-shadow p-4 w-full"
             >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-sm">{team.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{team.circle} · {team.members?.filter(m => m.role === 'BD').length ?? 0} BDs</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {team.teamLead?.name ?? 'No lead'} · {team.members?.filter(m => m.role === 'BD').length ?? 0} BDs
+                  </p>
                   {team.salesHead && <p className="text-xs text-muted-foreground">Head: {team.salesHead.name}</p>}
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground mt-1" />

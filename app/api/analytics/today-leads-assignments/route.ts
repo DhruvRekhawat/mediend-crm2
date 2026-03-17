@@ -55,7 +55,9 @@ export async function GET(request: NextRequest) {
               select: {
                 id: true,
                 name: true,
-                circle: true,
+                teamLead: {
+                  select: { name: true },
+                },
               },
             },
           },
@@ -74,7 +76,7 @@ export async function GET(request: NextRequest) {
         bdName: string
         bdEmail: string
         teamName: string | null
-        teamCircle: string | null
+        teamLeadName: string | null
         leadCount: number
         leads: Array<{
           id: string
@@ -93,7 +95,7 @@ export async function GET(request: NextRequest) {
           bdName: lead.bd.name,
           bdEmail: lead.bd.email,
           teamName: lead.bd.team?.name || null,
-          teamCircle: lead.bd.team?.circle || null,
+          teamLeadName: lead.bd.team?.teamLead?.name || null,
           leadCount: 0,
           leads: [],
         })

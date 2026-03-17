@@ -6,8 +6,8 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { z } from 'zod'
 
 const createTeamSchema = z.object({
-  name: z.string().min(1),
-  circle: z.enum(['North', 'South', 'East', 'West', 'Central']),
+  name: z.string().min(1).optional(),
+  teamLeadId: z.string().optional(),
   salesHeadId: z.string(),
 })
 
@@ -42,6 +42,13 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         salesHead: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        teamLead: {
           select: {
             id: true,
             name: true,
@@ -93,14 +100,33 @@ export async function POST(request: NextRequest) {
       return errorResponse('Forbidden', 403)
     }
 
+    let name = data.name
+    if (!name && data.teamLeadId) {
+      const teamLead = await prisma.user.findUnique({
+        where: { id: data.teamLeadId },
+        select: { name: true },
+      })
+      name = teamLead ? `Team ${teamLead.name}` : 'New Team'
+    }
+    if (!name) {
+      name = 'New Team'
+    }
+
     const team = await prisma.team.create({
       data: {
-        name: data.name,
-        circle: data.circle,
+        name,
         salesHeadId: data.salesHeadId,
+        teamLeadId: data.teamLeadId ?? undefined,
       },
       include: {
         salesHead: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        teamLead: {
           select: {
             id: true,
             name: true,

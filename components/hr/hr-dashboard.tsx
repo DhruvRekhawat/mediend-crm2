@@ -89,6 +89,45 @@ export interface HRAnalytics {
 
 const CHART_PALETTE = ['#3b82f6', '#8b5cf6', '#6366f1', '#4f46e5', '#7c3aed', '#a855f7', '#ec4899', '#06b6d4']
 
+const LATE_THRESHOLD_MINUTES = 11 * 60 // 11:00 AM
+
+interface AttendanceRecord {
+  employee: { id: string; employeeCode: string; user: { name: string }; department: { name: string } | null }
+  date: string
+  inTime: Date | string | null
+  outTime: Date | string | null
+  workHours: number | null
+  isLate: boolean
+}
+
+interface AttendanceData {
+  data: AttendanceRecord[]
+  pagination: { total: number }
+}
+
+interface EmployeeItem {
+  id: string
+  employeeCode: string
+  user: { name: string }
+  department: { name: string } | null
+}
+
+function formatPunchTime(d: Date | string | null): string {
+  if (!d) return '—'
+  const date = typeof d === 'string' ? new Date(d) : d
+  if (isNaN(date.getTime())) return '—'
+  const h = String(date.getUTCHours()).padStart(2, '0')
+  const m = String(date.getUTCMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+}
+
+function getMinutesLate(inTime: Date | string | null): number {
+  if (!inTime) return 0
+  const d = typeof inTime === 'string' ? new Date(inTime) : inTime
+  const total = d.getUTCHours() * 60 + d.getUTCMinutes()
+  return Math.max(0, total - LATE_THRESHOLD_MINUTES)
+}
+
 function formatCurrency(n: number) {
   if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`
   if (n >= 1000) return `₹${(n / 1000).toFixed(0)}k`
@@ -150,7 +189,23 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
     return { month: selectedMonth, year: selectedYear }
   }, [period, selectedMonth, selectedYear, now])
 
-  const { data: analytics, isLoading } = useQuery<HRAnalytics>({
+  const todayStr = useMemo(() => {
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const d = String(now.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }, [now])
+
+  const monthStartStr = useMemo(() => {
+    return `${year}-${String(month).padStart(2, '0')}-01`
+  }, [year, month])
+
+  const monthEndStr = useMemo(() => {
+    const lastDay = new Date(year, month, 0).getDate()
+    return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  }, [year, month])
+
+  const { data: analytics, isLoading: analyticsLoading } = useQuery<HRAnalytics>({
     queryKey: ['analytics', 'md', 'hr', month, year],
     queryFn: async () => {
       const params = new URLSearchParams()
@@ -160,6 +215,98 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
     },
     enabled: true,
   })
+
+  const { data: todayAttendance } = useQuery<AttendanceData>({
+    queryKey: ['attendance-today', todayStr],
+    queryFn: () =>
+      apiGet<AttendanceData>(`/api/attendance?fromDate=${todayStr}&toDate=${todayStr}&page=1&limit=10000`),
+    enabled: true,
+  })
+
+  const { data: monthAttendance } = useQuery<AttendanceData>({
+    queryKey: ['attendance-month', monthStartStr, monthEndStr],
+    queryFn: () =>
+      apiGet<AttendanceData>(`/api/attendance?fromDate=${monthStartStr}&toDate=${monthEndStr}&page=1&limit=10000`),
+    enabled: true,
+  })
+
+  const { data: employees } = useQuery<EmployeeItem[]>({
+    queryKey: ['employees-all'],
+    queryFn: () => apiGet<EmployeeItem[]>('/api/employees'),
+    enabled: true,
+  })
+
+  const mergedAnalytics = useMemo((): HRAnalytics | null => {
+    if (!analytics) return null
+    const today = todayAttendance?.data ?? []
+    const monthData = monthAttendance?.data ?? []
+    const allEmployees = employees ?? []
+
+    const todayStrength = today.length
+    const lateToday = today.filter((r) => r.isLate)
+    const presentIds = new Set(today.map((r) => r.employee.id))
+    const absentToday = allEmployees
+      .filter((e) => !presentIds.has(e.id))
+      .map((e) => ({
+        employeeName: e.user.name,
+        employeeCode: e.employeeCode,
+        departmentName: e.department?.name ?? 'No Department',
+      }))
+      .sort((a, b) => a.departmentName.localeCompare(b.departmentName))
+
+    const latecomersToday = lateToday.map((r) => ({
+      employeeId: r.employee.id,
+      employeeName: r.employee.user.name,
+      employeeCode: r.employee.employeeCode,
+      departmentName: r.employee.department?.name ?? 'No Department',
+      punchTime: formatPunchTime(r.inTime),
+      minutesLate: getMinutesLate(r.inTime),
+    }))
+
+    const lateByEmployee = new Map<string, { name: string; code: string; dept: string; count: number }>()
+    for (const r of monthData) {
+      if (!r.isLate) continue
+      const id = r.employee.id
+      const existing = lateByEmployee.get(id)
+      if (existing) {
+        existing.count += 1
+      } else {
+        lateByEmployee.set(id, {
+          name: r.employee.user.name,
+          code: r.employee.employeeCode,
+          dept: r.employee.department?.name ?? 'No Department',
+          count: 1,
+        })
+      }
+    }
+    const monthlyLateArrivals = Array.from(lateByEmployee.entries())
+      .map(([employeeId, v]) => ({
+        employeeId,
+        employeeName: v.name,
+        employeeCode: v.code,
+        departmentName: v.dept,
+        lateCount: v.count,
+      }))
+      .sort((a, b) => b.lateCount - a.lateCount)
+
+    const totalHeadcount = Math.max(allEmployees.length, analytics.kpis.totalHeadcount)
+
+    return {
+      ...analytics,
+      kpis: {
+        ...analytics.kpis,
+        todayStrength,
+        totalHeadcount,
+        latecomersCountToday: latecomersToday.length,
+        absentCountToday: absentToday.length,
+      },
+      latecomersToday,
+      absentToday,
+      monthlyLateArrivals,
+    }
+  }, [analytics, todayAttendance, monthAttendance, employees])
+
+  const isLoading = analyticsLoading
 
   return (
     <div className="space-y-5 p-3 sm:p-5">
@@ -219,7 +366,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
             </Card>
           ))}
         </div>
-      ) : analytics ? (
+      ) : mergedAnalytics ? (
         <>
           {/* ─── KPI Cards Row 1: Today ─── */}
           <div>
@@ -227,28 +374,28 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
               <KpiCard
                 title="Strength"
-                value={`${analytics.kpis.todayStrength} / ${analytics.kpis.totalHeadcount}`}
+                value={`${mergedAnalytics.kpis.todayStrength} / ${mergedAnalytics.kpis.totalHeadcount}`}
                 sub="Present / Total"
                 color="border-l-emerald-500"
                 icon={<UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />}
               />
               <KpiCard
                 title="Absent Today"
-                value={String(analytics.kpis.absentCountToday)}
+                value={String(mergedAnalytics.kpis.absentCountToday)}
                 sub="Not punched in"
                 color="border-l-slate-400"
                 icon={<UserMinus className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500 dark:text-slate-400" />}
               />
               <KpiCard
                 title="Late Today"
-                value={`${analytics.kpis.latecomersCountToday}`}
-                sub={`of ${analytics.kpis.todayStrength} present`}
+                value={`${mergedAnalytics.kpis.latecomersCountToday}`}
+                sub={`of ${mergedAnalytics.kpis.todayStrength} present`}
                 color="border-l-orange-500"
                 icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />}
               />
               <KpiCard
                 title="Headcount"
-                value={String(analytics.kpis.totalHeadcount)}
+                value={String(mergedAnalytics.kpis.totalHeadcount)}
                 sub="All employees"
                 color="border-l-blue-500"
                 icon={<Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />}
@@ -264,35 +411,35 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
             <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               <KpiCard
                 title="Monthly Salary"
-                value={formatCurrency(analytics.kpis.monthlySalaryOutgo)}
-                sub={analytics.kpis.hasPayrollData ? 'Actual payroll' : 'CTC estimate'}
+                value={formatCurrency(mergedAnalytics.kpis.monthlySalaryOutgo)}
+                sub={mergedAnalytics.kpis.hasPayrollData ? 'Actual payroll' : 'CTC estimate'}
                 color="border-l-violet-500"
                 icon={<Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600 dark:text-violet-400" />}
               />
               <KpiCard
                 title="Open Tickets"
-                value={String(analytics.kpis.openTicketsCount)}
+                value={String(mergedAnalytics.kpis.openTicketsCount)}
                 sub="Support + Mental health"
                 color="border-l-amber-500"
                 icon={<MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />}
               />
               <KpiCard
                 title="Avg Response"
-                value={formatHours(analytics.kpis.avgTicketResponseHours)}
+                value={formatHours(mergedAnalytics.kpis.avgTicketResponseHours)}
                 sub="48hr SLA target"
                 color="border-l-cyan-500"
                 icon={<Clock className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600 dark:text-cyan-400" />}
               />
               <KpiCard
                 title="Pending Leaves"
-                value={String(analytics.kpis.pendingLeaveCount)}
+                value={String(mergedAnalytics.kpis.pendingLeaveCount)}
                 sub="Awaiting approval"
                 color="border-l-rose-500"
                 icon={<Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-rose-600 dark:text-rose-400" />}
               />
               <KpiCard
                 title="New Joiners"
-                value={String(analytics.kpis.newJoinersCount)}
+                value={String(mergedAnalytics.kpis.newJoinersCount)}
                 sub="Joined this month"
                 color="border-l-teal-500"
                 icon={<UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 dark:text-teal-400" />}
@@ -309,13 +456,13 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                   <div className="h-2 w-2 rounded-full bg-orange-500" />
                   <CardTitle className="text-base">Late Today</CardTitle>
                   <Badge variant="secondary" className="ml-auto text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/30">
-                    {analytics.latecomersToday.length}
+                    {mergedAnalytics.latecomersToday.length}
                   </Badge>
                 </div>
                 <CardDescription className="text-xs">Arrived after shift start + grace period</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {analytics.latecomersToday.length === 0 ? (
+                {mergedAnalytics.latecomersToday.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">No late arrivals today</p>
                 ) : (
                   <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
@@ -329,7 +476,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.latecomersToday.map((e) => (
+                        {mergedAnalytics.latecomersToday.map((e) => (
                           <TableRow key={e.employeeId}>
                             <TableCell className="text-xs font-medium py-2">{e.employeeName}</TableCell>
                             <TableCell className="text-xs py-2 hidden sm:table-cell text-muted-foreground">{e.departmentName}</TableCell>
@@ -355,13 +502,13 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                   <div className="h-2 w-2 rounded-full bg-slate-400" />
                   <CardTitle className="text-base">Absent Today</CardTitle>
                   <Badge variant="secondary" className="ml-auto">
-                    {analytics.absentToday.length}
+                    {mergedAnalytics.absentToday.length}
                   </Badge>
                 </div>
                 <CardDescription className="text-xs">No punch-in recorded today</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                {analytics.absentToday.length === 0 ? (
+                {mergedAnalytics.absentToday.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-6">Everyone is present</p>
                 ) : (
                   <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
@@ -374,7 +521,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.absentToday.map((e, i) => (
+                        {mergedAnalytics.absentToday.map((e, i) => (
                           <TableRow key={i}>
                             <TableCell className="text-xs font-medium py-2">{e.employeeName}</TableCell>
                             <TableCell className="text-xs font-mono py-2 text-muted-foreground">{e.employeeCode}</TableCell>
@@ -390,7 +537,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
           </div>
 
           {/* ─── Monthly Late Arrivals Chart ─── */}
-          {analytics.monthlyLateArrivals.length > 0 && (
+          {mergedAnalytics.monthlyLateArrivals.length > 0 && (
             <Card className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-center gap-2">
@@ -403,10 +550,10 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                 <ChartContainer
                   config={{ lateCount: { label: 'Late Days', color: '#f97316' } }}
                   className="w-full"
-                  style={{ height: Math.max(180, analytics.monthlyLateArrivals.length * 32) }}
+                  style={{ height: Math.max(180, mergedAnalytics.monthlyLateArrivals.length * 32) }}
                 >
                   <BarChart
-                    data={analytics.monthlyLateArrivals}
+                    data={mergedAnalytics.monthlyLateArrivals}
                     layout="vertical"
                     margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
                   >
@@ -439,17 +586,17 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                   <CardTitle className="text-base">Department Salary</CardTitle>
                 </div>
                 <CardDescription>
-                  {analytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} — {MONTHS[month - 1]} {year}
+                  {mergedAnalytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} — {MONTHS[month - 1]} {year}
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-2 sm:px-4">
                 <ChartContainer
                   config={{ amount: { label: 'Amount', color: '#8b5cf6' } }}
                   className="w-full"
-                  style={{ height: Math.max(160, analytics.departmentSalaryBreakdown.length * 36) }}
+                  style={{ height: Math.max(160, mergedAnalytics.departmentSalaryBreakdown.length * 36) }}
                 >
                   <BarChart
-                    data={analytics.departmentSalaryBreakdown}
+                    data={mergedAnalytics.departmentSalaryBreakdown}
                     layout="vertical"
                     margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
                   >
@@ -468,7 +615,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                     />
                     <ChartTooltip content={<ChartTooltipContent formatter={(v) => formatCurrencyFull(Number(v))} />} />
                     <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={22}>
-                      {analytics.departmentSalaryBreakdown.map((_, i) => (
+                      {mergedAnalytics.departmentSalaryBreakdown.map((_, i) => (
                         <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
                       ))}
                     </Bar>
@@ -485,17 +632,17 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                   <CardTitle className="text-base">Team Salary</CardTitle>
                 </div>
                 <CardDescription>
-                  {analytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} by department team
+                  {mergedAnalytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} by department team
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-2 sm:px-4">
                 <ChartContainer
                   config={{ amount: { label: 'Amount', color: '#6366f1' } }}
                   className="w-full"
-                  style={{ height: Math.max(160, analytics.teamSalaryBreakdown.length * 36) }}
+                  style={{ height: Math.max(160, mergedAnalytics.teamSalaryBreakdown.length * 36) }}
                 >
                   <BarChart
-                    data={analytics.teamSalaryBreakdown}
+                    data={mergedAnalytics.teamSalaryBreakdown}
                     layout="vertical"
                     margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
                   >
@@ -514,7 +661,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                     />
                     <ChartTooltip content={<ChartTooltipContent formatter={(v) => formatCurrencyFull(Number(v))} />} />
                     <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={22}>
-                      {analytics.teamSalaryBreakdown.map((_, i) => (
+                      {mergedAnalytics.teamSalaryBreakdown.map((_, i) => (
                         <Cell key={i} fill={CHART_PALETTE[(i + 2) % CHART_PALETTE.length]} />
                       ))}
                     </Bar>
@@ -536,10 +683,10 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                 <ChartContainer
                   config={{ count: { label: 'Employees', color: '#3b82f6' } }}
                   className="w-full"
-                  style={{ height: Math.max(160, analytics.departmentHeadcount.length * 36) }}
+                  style={{ height: Math.max(160, mergedAnalytics.departmentHeadcount.length * 36) }}
                 >
                   <BarChart
-                    data={analytics.departmentHeadcount}
+                    data={mergedAnalytics.departmentHeadcount}
                     layout="vertical"
                     margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
                   >
@@ -554,7 +701,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={22}>
-                      {analytics.departmentHeadcount.map((_, i) => (
+                      {mergedAnalytics.departmentHeadcount.map((_, i) => (
                         <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
                       ))}
                     </Bar>
@@ -585,7 +732,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analytics.ticketAnalytics.map((t) => (
+                      {mergedAnalytics.ticketAnalytics.map((t) => (
                         <TableRow key={t.type}>
                           <TableCell className="text-xs font-medium py-3">{t.type}</TableCell>
                           <TableCell className="text-xs py-3 text-center">{t.totalInMonth}</TableCell>
@@ -617,14 +764,14 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
           </div>
 
           {/* ─── New Joiners ─── */}
-          {analytics.newJoiners.length > 0 && (
+          {mergedAnalytics.newJoiners.length > 0 && (
             <Card className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-teal-500" />
                   <CardTitle className="text-base">New Joiners</CardTitle>
                   <Badge variant="secondary" className="ml-auto text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/30">
-                    {analytics.newJoiners.length}
+                    {mergedAnalytics.newJoiners.length}
                   </Badge>
                 </div>
                 <CardDescription>Joined in {MONTHS[month - 1]} {year}</CardDescription>
@@ -641,7 +788,7 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analytics.newJoiners.map((e, i) => (
+                      {mergedAnalytics.newJoiners.map((e, i) => (
                         <TableRow key={i}>
                           <TableCell className="text-xs font-medium py-2">{e.employeeName}</TableCell>
                           <TableCell className="text-xs font-mono py-2 text-muted-foreground">{e.employeeCode}</TableCell>

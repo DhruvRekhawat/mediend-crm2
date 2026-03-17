@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           profilePicture: true,
-          team: { select: { id: true, name: true, circle: true } },
+          team: { select: { id: true, name: true, teamLead: { select: { name: true } } } },
         },
       }),
       prisma.lead.findMany({

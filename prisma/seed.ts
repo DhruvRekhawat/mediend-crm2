@@ -78,7 +78,6 @@ async function main() {
     await prisma.team.create({
       data: {
         name: 'North Team',
-        circle: 'North',
         salesHeadId: (await prisma.user.findUnique({ where: { email: salesHeadEmail } }))!.id,
       },
     })

@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
       where: { id: teamId },
       include: {
         salesHead: { select: { id: true, name: true, profilePicture: true } },
+        teamLead: { select: { id: true, name: true, profilePicture: true } },
         members: {
           where: { role: UserRole.BD },
           select: { id: true, name: true, profilePicture: true },
@@ -115,8 +116,8 @@ export async function GET(request: NextRequest) {
       team: {
         id: team.id,
         name: team.name,
-        circle: team.circle,
         salesHead: team.salesHead,
+        teamLead: team.teamLead,
       },
       kpis: {
         totalLeads,

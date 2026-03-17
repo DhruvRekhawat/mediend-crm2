@@ -6,7 +6,7 @@ import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-
 import { z } from 'zod'
 
 const autoAssignSchema = z.object({
-  circle: z.enum(['North', 'South', 'East', 'West', 'Central']).optional(),
+  circle: z.string().optional(),
   unassignedOnly: z.boolean().optional().default(true),
   maxLeadsPerBd: z.number().optional(),
 })
@@ -69,15 +69,6 @@ export async function POST(
 
     if (circle) {
       leadWhere.circle = circle
-    } else {
-      // Use team's circle if no circle specified
-      const teamWithCircle = await prisma.team.findUnique({
-        where: { id: teamId },
-        select: { circle: true },
-      })
-      if (teamWithCircle) {
-        leadWhere.circle = teamWithCircle.circle
-      }
     }
 
     if (unassignedOnly) {

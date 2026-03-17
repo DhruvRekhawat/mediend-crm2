@@ -299,6 +299,7 @@ model User {
   leadStageEvents LeadStageEvent[]
   createdTargets  Target[]         @relation("TargetCreator")
   salesHeadTeams  Team[]           @relation("SalesHead")
+  teamLeadOf      Team?            @relation("TeamLead")
   insuranceCases  InsuranceCase[]
   plRecords       PLRecord[]
   employee        Employee?
@@ -386,16 +387,17 @@ model User {
 model Team {
   id          String   @id @default(cuid())
   name        String
-  circle      String   // From MySQL / source (e.g. "PUNE", "Mumbai")
   salesHeadId String
   salesHead   User     @relation("SalesHead", fields: [salesHeadId], references: [id])
+  teamLeadId  String?  @unique
+  teamLead    User?    @relation("TeamLead", fields: [teamLeadId], references: [id])
   members     User[]   @relation("TeamMembers")
   targets     Target[] @relation
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([salesHeadId])
-  @@index([circle])
+  @@index([teamLeadId])
 }
 
 model Lead {

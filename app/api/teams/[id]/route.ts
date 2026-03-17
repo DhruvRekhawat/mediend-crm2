@@ -7,7 +7,8 @@ import { z } from 'zod'
 
 const updateTeamSchema = z.object({
   name: z.string().min(1).optional(),
-  circle: z.enum(['North', 'South', 'East', 'West', 'Central']).optional(),
+  teamLeadId: z.string().nullable().optional(),
+  salesHeadId: z.string().optional(),
 })
 
 export async function GET(
@@ -30,6 +31,13 @@ export async function GET(
       where: { id: teamId },
       include: {
         salesHead: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        teamLead: {
           select: {
             id: true,
             name: true,
@@ -138,11 +146,39 @@ export async function PATCH(
       return errorResponse('Forbidden', 403)
     }
 
+    if (data.salesHeadId !== undefined && !canManageTeam(user, data.salesHeadId)) {
+      return errorResponse('Forbidden', 403)
+    }
+
+    const updateData: { name?: string; teamLeadId?: string | null; salesHeadId?: string } = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.teamLeadId !== undefined) updateData.teamLeadId = data.teamLeadId
+    if (data.salesHeadId !== undefined) updateData.salesHeadId = data.salesHeadId
+
+    if (Object.keys(updateData).length === 0) {
+      const existing = await prisma.team.findUnique({
+        where: { id: teamId },
+        include: {
+          salesHead: { select: { id: true, name: true, email: true } },
+          teamLead: { select: { id: true, name: true, email: true } },
+          members: { select: { id: true, name: true, email: true, role: true } },
+        },
+      })
+      return successResponse(existing ?? null, 'No changes')
+    }
+
     const updatedTeam = await prisma.team.update({
       where: { id: teamId },
-      data,
+      data: updateData,
       include: {
         salesHead: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        teamLead: {
           select: {
             id: true,
             name: true,

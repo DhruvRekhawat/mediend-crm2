@@ -118,7 +118,6 @@ export async function POST(request: NextRequest) {
       team = await prisma.team.create({
         data: {
           name: 'North Team',
-          circle: 'North',
           salesHeadId: salesHead.id,
         },
       })
@@ -198,7 +197,7 @@ export async function POST(request: NextRequest) {
     return successResponse({
       message: 'Default users created successfully',
       users: seededUsers,
-      team: { name: 'North Team', circle: 'North' },
+      team: { name: 'North Team' },
     }, 'Users seeded successfully')
   } catch (error) {
     console.error('Error seeding users:', error)

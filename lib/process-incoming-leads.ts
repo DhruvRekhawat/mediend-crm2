@@ -27,93 +27,40 @@ interface IncomingLeadPayload {
 
 /**
  * Finds a BD user by name using multiple matching strategies
- * Returns both the user ID and their team circle if available
  */
-async function findBDByName(name: string): Promise<{
-  id: string
-  circle: string | null
-} | null> {
+async function findBDByName(name: string): Promise<{ id: string } | null> {
   if (!name) return null
 
   const trimmedName = name.trim()
 
-  // Try multiple matching strategies
-  // 1. Exact match (case-insensitive)
   let user = await prisma.user.findFirst({
     where: {
       role: UserRole.BD,
-      name: {
-        equals: trimmedName,
-        mode: 'insensitive',
-      },
+      name: { equals: trimmedName, mode: 'insensitive' },
     },
-    include: {
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
+    select: { id: true },
   })
+  if (user) return { id: user.id }
 
-  if (user) {
-    return {
-      id: user.id,
-      circle: user.team?.circle || null,
-    }
-  }
-
-  // 2. Contains match (partial)
   user = await prisma.user.findFirst({
     where: {
       role: UserRole.BD,
-      name: {
-        contains: trimmedName,
-        mode: 'insensitive',
-      },
+      name: { contains: trimmedName, mode: 'insensitive' },
     },
-    include: {
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
+    select: { id: true },
   })
+  if (user) return { id: user.id }
 
-  if (user) {
-    return {
-      id: user.id,
-      circle: user.team?.circle || null,
-    }
-  }
-
-  // 3. Try matching first name only (split by space)
   const firstName = trimmedName.split(' ')[0]
   if (firstName && firstName.length > 2) {
     user = await prisma.user.findFirst({
       where: {
         role: UserRole.BD,
-        name: {
-          startsWith: firstName,
-          mode: 'insensitive',
-        },
+        name: { startsWith: firstName, mode: 'insensitive' },
       },
-      include: {
-        team: {
-          select: {
-            circle: true,
-          },
-        },
-      },
+      select: { id: true },
     })
-
-    if (user) {
-      return {
-        id: user.id,
-        circle: user.team?.circle || null,
-      }
-    }
+    if (user) return { id: user.id }
   }
 
   return null
@@ -121,27 +68,22 @@ async function findBDByName(name: string): Promise<{
 
 /**
  * Creates a new BD user with default settings
- * Returns the user ID and circle
  */
 async function createBDUser(
   name: string,
   systemUserId: string
-): Promise<{ id: string; circle: string | null }> {
-  // Generate email from name (lowercase, replace spaces with dots)
+): Promise<{ id: string }> {
   const emailBase = name.toLowerCase().replace(/\s+/g, '.')
   let email = `${emailBase}@mediend.local`
   let counter = 1
 
-  // Ensure unique email
   while (await prisma.user.findUnique({ where: { email } })) {
     email = `${emailBase}${counter}@mediend.local`
     counter++
   }
 
-  // Get default team (first team available, or create one if none exists)
   let team = await prisma.team.findFirst()
   if (!team) {
-    // Create a default team if none exists
     const salesHead = await prisma.user.findFirst({
       where: { role: UserRole.SALES_HEAD },
     })
@@ -152,14 +94,12 @@ async function createBDUser(
     team = await prisma.team.create({
       data: {
         name: 'Default Team',
-        circle: 'Default',
         salesHeadId: salesHead.id,
       },
     })
   }
 
-  // Create BD user
-  const defaultPassword = await hashPassword('Temp@123') // Temporary password
+  const defaultPassword = await hashPassword('Temp@123')
   const newUser = await prisma.user.create({
     data: {
       email,
@@ -168,19 +108,10 @@ async function createBDUser(
       role: UserRole.BD,
       teamId: team.id,
     },
-    include: {
-      team: {
-        select: {
-          circle: true,
-        },
-      },
-    },
+    select: { id: true },
   })
 
-  return {
-    id: newUser.id,
-    circle: newUser.team?.circle || null,
-  }
+  return { id: newUser.id }
 }
 
 /**
@@ -277,9 +208,6 @@ export async function processIncomingLead(
         }
       }
       bdId = bdInfo.id
-      if (bdInfo.circle != null && bdInfo.circle !== '') {
-        bdCircle = bdInfo.circle
-      }
     } else {
       return { success: false, error: 'Missing BDM name' }
     }
@@ -325,7 +253,7 @@ export async function processIncomingLead(
         bdId,
         status,
         pipelineStage: PipelineStage.SALES,
-        circle: bdCircle, // Use BD's team circle if available
+        circle: bdCircle || 'Unknown',
         category: category || null,
         treatment,
         hospitalName: 'Not Specified', // Default hospital (should be updated later)

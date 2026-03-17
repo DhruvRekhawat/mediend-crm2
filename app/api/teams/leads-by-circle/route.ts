@@ -30,11 +30,10 @@ export async function GET(request: NextRequest) {
       return errorResponse('Forbidden', 403)
     }
 
-    // Get all teams managed by this sales head
+    // Get all teams managed by this sales head (circle filter removed from Team; we filter leads by circle below)
     const teams = await prisma.team.findMany({
       where: {
         salesHeadId: targetSalesHeadId || undefined,
-        circle: circle as any,
       },
       select: {
         id: true,
