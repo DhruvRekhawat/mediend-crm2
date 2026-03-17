@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
               select: {
                 id: true,
                 name: true,
-                circle: true,
+                teamLead: { select: { name: true } },
               },
             },
           },

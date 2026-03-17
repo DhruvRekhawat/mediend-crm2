@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            circle: true,
+            teamLead: { select: { name: true } },
           },
         },
         employee: {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            circle: true,
+            teamLead: { select: { name: true } },
           },
         },
       },

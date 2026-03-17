@@ -287,7 +287,7 @@ export function mapMySQLLeadToPrisma(
   const bdmValue = mysqlRow.BDM ? String(mysqlRow.BDM).trim() : null
   if (!bdmValue) return null
 
-  let bdInfo: { id: string; circle: string | null } | null = null
+  let bdInfo: { id: string } | null = null
 
   const isNumeric = /^\d+$/.test(bdmValue)
   if (isNumeric) {
@@ -320,7 +320,7 @@ export async function mapMySQLLeadToPrismaAsyncFallback(
   const bdmValue = mysqlRow.BDM ? String(mysqlRow.BDM).trim() : null
   if (!bdmValue) return null
 
-  let bdInfo: { id: string; circle: string | null } | null = null
+  let bdInfo: { id: string } | null = null
   const isNumeric = /^\d+$/.test(bdmValue)
 
   bdInfo = await findBDByName(bdmValue)
@@ -345,7 +345,7 @@ function buildLeadData(
   mysqlRow: MySQLLeadRow,
   systemUserId: string,
   lookups: LookupMaps,
-  bdInfo: { id: string; circle: string | null },
+  bdInfo: { id: string },
   bdmValue: string
 ): MapMySQLLeadResult {
   const campaignInfo =

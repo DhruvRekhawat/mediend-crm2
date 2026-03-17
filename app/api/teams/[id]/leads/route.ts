@@ -61,38 +61,26 @@ export async function GET(
       // If team has members, show leads from those BDs
       where.bdId = { in: teamBdIds }
     } else {
-      // If team has no members, show leads by circle if circle matches
+      // If team has no members, optionally show leads by circle from BDs managed by this sales head
       if (circle) {
-        const teamWithCircle = await prisma.team.findUnique({
-          where: { id: teamId },
-          select: { circle: true },
+        where.circle = circle
+        const allBdsManaged = await prisma.user.findMany({
+          where: {
+            role: 'BD',
+            OR: [
+              { team: { salesHeadId: team.salesHeadId } },
+              { teamId: null },
+            ],
+          },
+          select: { id: true },
         })
-        if (teamWithCircle && teamWithCircle.circle === circle) {
-          where.circle = circle
-          // Get all BDs managed by this sales head (even if not in team)
-          const allBdsManaged = await prisma.user.findMany({
-            where: {
-              role: 'BD',
-              OR: [
-                { team: { salesHeadId: team.salesHeadId } },
-                { teamId: null },
-              ],
-            },
-            select: { id: true },
-          })
-          const allBdIds = allBdsManaged.map((bd) => bd.id)
-          if (allBdIds.length > 0) {
-            where.bdId = { in: allBdIds }
-          } else {
-            // No BDs found, return empty
-            return successResponse([])
-          }
+        const allBdIds = allBdsManaged.map((bd) => bd.id)
+        if (allBdIds.length > 0) {
+          where.bdId = { in: allBdIds }
         } else {
-          // No members and circle doesn't match, return empty
           return successResponse([])
         }
       } else {
-        // No members and no circle filter, return empty
         return successResponse([])
       }
     }

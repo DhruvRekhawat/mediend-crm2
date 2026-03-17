@@ -239,7 +239,7 @@ async function syncOneBatch(
   systemUserId: string,
   totalSyncedSoFar: number,
   lookups: Awaited<ReturnType<typeof loadLookupMaps>>,
-  bdMap: Map<string, { id: string; circle: string | null }>
+  bdMap: Map<string, { id: string }>
 ): Promise<{ fetched: number; maxDate: Date; maxId: number | null; synced: number; updated: number; errors: number }> {
   console.log(`\n📥 Fetching leads from MySQL (batch size: ${BATCH_SIZE})...`)
   const leads = await queryMySQL<MySQLLeadRow>(
