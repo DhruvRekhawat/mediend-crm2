@@ -222,6 +222,25 @@ services:
       - tools
     entrypoint: ["bun", "run", "scripts/migrate-lead-pipeline-stages.ts"]
 
+  # One-off: rebuild sales Team records from DepartmentTeam in SURGERY SALES
+  # Usage: docker compose --profile tools run --rm rebuild-sales-teams
+  rebuild-sales-teams:
+    image: postgres:16-alpine
+    env_file:
+      - /opt/mediend-crm/mediend-crm2/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint:
+      - sh
+      - -c
+      - |
+        psql "$DATABASE_URL" -f /scripts/db/rebuild-sales-teams.sql
+    volumes:
+      - ./scripts:/scripts:ro
+
 volumes:
   pgdata:
   uptime-kuma-data:
