@@ -102,16 +102,16 @@ function CreateTeamDialog({
 }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
-  const [teamLeadId, setTeamLeadId] = useState('')
+  const [teamLeadId, setTeamLeadId] = useState('none')
   const [salesHeadId, setSalesHeadId] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!salesHeadId) return toast.error('Sales Head is required')
-    onCreate({ name: name.trim() || undefined, teamLeadId: teamLeadId || undefined, salesHeadId })
+    onCreate({ name: name.trim() || undefined, teamLeadId: teamLeadId === 'none' ? undefined : teamLeadId, salesHeadId })
     setOpen(false)
     setName('')
-    setTeamLeadId('')
+    setTeamLeadId('none')
     setSalesHeadId('')
   }
 
@@ -138,7 +138,7 @@ function CreateTeamDialog({
             <Select value={teamLeadId} onValueChange={setTeamLeadId}>
               <SelectTrigger><SelectValue placeholder="Select team lead" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No team lead</SelectItem>
+                <SelectItem value="none">No team lead</SelectItem>
                 {teamLeads.map((u) => (
                   <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                 ))}
@@ -179,13 +179,13 @@ function EditTeamDialog({
 }) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(team.name)
-  const [teamLeadId, setTeamLeadId] = useState(team.teamLeadId ?? '')
+  const [teamLeadId, setTeamLeadId] = useState(team.teamLeadId ?? 'none')
   const [salesHeadId, setSalesHeadId] = useState(team.salesHeadId)
 
   const handleOpen = (v: boolean) => {
     if (v) {
       setName(team.name)
-      setTeamLeadId(team.teamLeadId ?? '')
+      setTeamLeadId(team.teamLeadId ?? 'none')
       setSalesHeadId(team.salesHeadId)
     }
     setOpen(v)
@@ -194,7 +194,7 @@ function EditTeamDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return toast.error('Team name is required')
-    onUpdate({ name: name.trim(), teamLeadId: teamLeadId || null, salesHeadId })
+    onUpdate({ name: name.trim(), teamLeadId: teamLeadId === 'none' ? null : teamLeadId, salesHeadId })
     setOpen(false)
   }
 
@@ -220,7 +220,7 @@ function EditTeamDialog({
             <Select value={teamLeadId} onValueChange={setTeamLeadId}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No team lead</SelectItem>
+                <SelectItem value="none">No team lead</SelectItem>
                 {teamLeads.map((u) => (
                   <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
                 ))}
