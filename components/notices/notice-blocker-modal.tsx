@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPatch } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
-import { Check } from 'lucide-react'
+import { Check, RefreshCw } from 'lucide-react'
 import { BADGE_COUNTS_QUERY_KEY } from '@/hooks/use-badge-counts'
+import { toast } from 'sonner'
 
 interface PendingNotice {
   id: string
@@ -19,7 +20,7 @@ interface PendingNotice {
 export function NoticeBlockerModal() {
   const queryClient = useQueryClient()
 
-  const { data: pending, isLoading } = useQuery<PendingNotice | null>({
+  const { data: pending, isLoading, isError } = useQuery<PendingNotice | null>({
     queryKey: ['notices-pending'],
     queryFn: () => apiGet<PendingNotice | null>('/api/notices/pending'),
   })
@@ -31,9 +32,12 @@ export function NoticeBlockerModal() {
       queryClient.invalidateQueries({ queryKey: ['notices-pending'] })
       queryClient.invalidateQueries({ queryKey: BADGE_COUNTS_QUERY_KEY })
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to acknowledge notice')
+    },
   })
 
-  if (isLoading || !pending) return null
+  if (isLoading || isError || !pending) return null
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -47,7 +51,7 @@ export function NoticeBlockerModal() {
             {pending.body}
           </div>
         </div>
-        <div className="p-6 border-t border-border">
+        <div className="p-6 border-t border-border space-y-2">
           <Button
             className="w-full"
             onClick={() => acknowledgeMutation.mutate(pending.id)}
@@ -56,6 +60,19 @@ export function NoticeBlockerModal() {
             <Check className="h-4 w-4 mr-2" />
             Acknowledge
           </Button>
+          {acknowledgeMutation.isError && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ['notices-pending'] })
+                window.location.reload()
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reload page
+            </Button>
+          )}
         </div>
       </div>
     </div>

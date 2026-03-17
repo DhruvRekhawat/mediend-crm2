@@ -74,7 +74,10 @@ export function getSessionFromRequest(request: Request): SessionUser | null {
     token = authHeader.substring(7)
   } else if (cookieHeader) {
     const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=')
+      const eqIdx = cookie.indexOf('=')
+      if (eqIdx === -1) return acc
+      const key = cookie.slice(0, eqIdx).trim()
+      const value = cookie.slice(eqIdx + 1)
       acc[key] = value
       return acc
     }, {} as Record<string, string>)

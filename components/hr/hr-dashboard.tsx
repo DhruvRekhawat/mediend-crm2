@@ -11,6 +11,9 @@ import {
   MessageSquare,
   Clock,
   Calendar,
+  AlertTriangle,
+  UserMinus,
+  UserPlus,
 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
@@ -23,8 +26,6 @@ import {
   YAxis,
   CartesianGrid,
   Cell,
-  PieChart as RechartsPieChart,
-  Pie,
 } from 'recharts'
 
 const MONTHS = [
@@ -41,6 +42,9 @@ export interface HRAnalytics {
     avgTicketResponseHours: number | null
     pendingLeaveCount: number
     hasPayrollData: boolean
+    latecomersCountToday: number
+    absentCountToday: number
+    newJoinersCount: number
   }
   departmentSalaryBreakdown: Array<{ departmentName: string; amount: number }>
   teamSalaryBreakdown: Array<{ teamName: string; amount: number }>
@@ -53,22 +57,45 @@ export interface HRAnalytics {
     avgResponseHours: number | null
     slaCompliancePercent: number | null
   }>
+  latecomersToday: Array<{
+    employeeId: string
+    employeeName: string
+    employeeCode: string
+    departmentName: string
+    punchTime: string
+    minutesLate: number
+  }>
+  monthlyLateArrivals: Array<{
+    employeeId: string
+    employeeName: string
+    employeeCode: string
+    departmentName: string
+    lateCount: number
+  }>
+  absentToday: Array<{
+    employeeName: string
+    employeeCode: string
+    departmentName: string
+  }>
+  newJoiners: Array<{
+    employeeName: string
+    employeeCode: string
+    departmentName: string
+    joinDate: string
+  }>
   month: number
   year: number
 }
 
-const COLORS = {
-  strength: '#10b981',      // emerald-500
-  headcount: '#3b82f6',    // blue-500
-  salary: '#8b5cf6',       // violet-500
-  tickets: '#f59e0b',      // amber-500
-  responseTime: '#06b6d4',  // cyan-500
-  leaves: '#f43f5e',       // rose-500
-}
-
-const CHART_PALETTE = ['#3b82f6', '#8b5cf6', '#6366f1', '#4f46e5', '#7c3aed', '#a855f7']
+const CHART_PALETTE = ['#3b82f6', '#8b5cf6', '#6366f1', '#4f46e5', '#7c3aed', '#a855f7', '#ec4899', '#06b6d4']
 
 function formatCurrency(n: number) {
+  if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`
+  if (n >= 1000) return `₹${(n / 1000).toFixed(0)}k`
+  return `₹${Math.round(n).toLocaleString('en-IN')}`
+}
+
+function formatCurrencyFull(n: number) {
   return `₹${Math.round(n).toLocaleString('en-IN')}`
 }
 
@@ -81,6 +108,29 @@ function formatHours(h: number | null) {
 interface HRDashboardProps {
   title?: string
   description?: string
+}
+
+interface KpiCardProps {
+  title: string
+  value: string
+  sub: string
+  color: string
+  icon: React.ReactNode
+}
+
+function KpiCard({ title, value, sub, color, icon }: KpiCardProps) {
+  return (
+    <Card className={`border-l-4 ${color} bg-card`}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4 px-4">
+        <CardTitle className="text-xs sm:text-sm font-medium leading-tight">{title}</CardTitle>
+        <div className="shrink-0 ml-2">{icon}</div>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        <div className="text-xl sm:text-2xl font-bold truncate">{value}</div>
+        <p className="text-xs text-muted-foreground mt-1 leading-tight">{sub}</p>
+      </CardContent>
+    </Card>
+  )
 }
 
 export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, salary, and ticket analytics' }: HRDashboardProps) {
@@ -112,17 +162,18 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
   })
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-5 p-3 sm:p-5">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-3xl font-bold">{title}</h1>
-          <p className="text-muted-foreground mt-1">{description}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">{description}</p>
         </div>
-        <div className="flex gap-2 items-center flex-wrap">
+        {/* Date filters - stacked on mobile */}
+        <div className="flex flex-wrap gap-2">
           <Select value={period} onValueChange={(v) => setPeriod(v as 'thisMonth' | 'lastMonth' | 'custom')}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select period" />
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Period" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="thisMonth">This Month</SelectItem>
@@ -132,37 +183,27 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
           </Select>
           <Select
             value={String(month)}
-            onValueChange={(v) => {
-              setPeriod('custom')
-              setSelectedMonth(parseInt(v, 10))
-            }}
+            onValueChange={(v) => { setPeriod('custom'); setSelectedMonth(parseInt(v, 10)) }}
           >
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Month" />
             </SelectTrigger>
             <SelectContent>
               {MONTHS.map((m, i) => (
-                <SelectItem key={m} value={String(i + 1)}>
-                  {m}
-                </SelectItem>
+                <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select
             value={String(year)}
-            onValueChange={(v) => {
-              setPeriod('custom')
-              setSelectedYear(parseInt(v, 10))
-            }}
+            onValueChange={(v) => { setPeriod('custom'); setSelectedYear(parseInt(v, 10)) }}
           >
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[90px]">
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
               {Array.from({ length: 5 }, (_, i) => year - i).map((y) => (
-                <SelectItem key={y} value={String(y)}>
-                  {y}
-                </SelectItem>
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -170,125 +211,263 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
       </div>
 
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+          {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 w-24 bg-muted rounded" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 w-32 bg-muted rounded" />
-              </CardContent>
+              <CardHeader className="pb-2"><div className="h-3 w-20 bg-muted rounded" /></CardHeader>
+              <CardContent><div className="h-7 w-24 bg-muted rounded" /></CardContent>
             </Card>
           ))}
         </div>
       ) : analytics ? (
         <>
-          {/* KPI Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <Card className="border-l-4 border-l-emerald-500 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Today&apos;s Strength</CardTitle>
-                <UserCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                  {analytics.kpis.todayStrength} / {analytics.kpis.totalHeadcount}
+          {/* ─── KPI Cards Row 1: Today ─── */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">Today</p>
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+              <KpiCard
+                title="Strength"
+                value={`${analytics.kpis.todayStrength} / ${analytics.kpis.totalHeadcount}`}
+                sub="Present / Total"
+                color="border-l-emerald-500"
+                icon={<UserCheck className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />}
+              />
+              <KpiCard
+                title="Absent Today"
+                value={String(analytics.kpis.absentCountToday)}
+                sub="Not punched in"
+                color="border-l-slate-400"
+                icon={<UserMinus className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500 dark:text-slate-400" />}
+              />
+              <KpiCard
+                title="Late Today"
+                value={`${analytics.kpis.latecomersCountToday}`}
+                sub={`of ${analytics.kpis.todayStrength} present`}
+                color="border-l-orange-500"
+                icon={<AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />}
+              />
+              <KpiCard
+                title="Headcount"
+                value={String(analytics.kpis.totalHeadcount)}
+                sub="All employees"
+                color="border-l-blue-500"
+                icon={<Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />}
+              />
+            </div>
+          </div>
+
+          {/* ─── KPI Cards Row 2: Month ─── */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+              {MONTHS[month - 1]} {year}
+            </p>
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+              <KpiCard
+                title="Monthly Salary"
+                value={formatCurrency(analytics.kpis.monthlySalaryOutgo)}
+                sub={analytics.kpis.hasPayrollData ? 'Actual payroll' : 'CTC estimate'}
+                color="border-l-violet-500"
+                icon={<Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-violet-600 dark:text-violet-400" />}
+              />
+              <KpiCard
+                title="Open Tickets"
+                value={String(analytics.kpis.openTicketsCount)}
+                sub="Support + Mental health"
+                color="border-l-amber-500"
+                icon={<MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />}
+              />
+              <KpiCard
+                title="Avg Response"
+                value={formatHours(analytics.kpis.avgTicketResponseHours)}
+                sub="48hr SLA target"
+                color="border-l-cyan-500"
+                icon={<Clock className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600 dark:text-cyan-400" />}
+              />
+              <KpiCard
+                title="Pending Leaves"
+                value={String(analytics.kpis.pendingLeaveCount)}
+                sub="Awaiting approval"
+                color="border-l-rose-500"
+                icon={<Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-rose-600 dark:text-rose-400" />}
+              />
+              <KpiCard
+                title="New Joiners"
+                value={String(analytics.kpis.newJoinersCount)}
+                sub="Joined this month"
+                color="border-l-teal-500"
+                icon={<UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-teal-600 dark:text-teal-400" />}
+              />
+            </div>
+          </div>
+
+          {/* ─── Today's Latecomers + Absent Today ─── */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            {/* Late today */}
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  <CardTitle className="text-base">Late Today</CardTitle>
+                  <Badge variant="secondary" className="ml-auto text-orange-700 dark:text-orange-300 bg-orange-100 dark:bg-orange-900/30">
+                    {analytics.latecomersToday.length}
+                  </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Present / Total headcount</p>
+                <CardDescription className="text-xs">Arrived after shift start + grace period</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {analytics.latecomersToday.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">No late arrivals today</p>
+                ) : (
+                  <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Name</TableHead>
+                          <TableHead className="text-xs hidden sm:table-cell">Dept</TableHead>
+                          <TableHead className="text-xs">In</TableHead>
+                          <TableHead className="text-xs text-right">Late by</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {analytics.latecomersToday.map((e) => (
+                          <TableRow key={e.employeeId}>
+                            <TableCell className="text-xs font-medium py-2">{e.employeeName}</TableCell>
+                            <TableCell className="text-xs py-2 hidden sm:table-cell text-muted-foreground">{e.departmentName}</TableCell>
+                            <TableCell className="text-xs py-2 font-mono">{e.punchTime}</TableCell>
+                            <TableCell className="text-xs py-2 text-right">
+                              <Badge variant="outline" className="text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-700 text-xs px-1">
+                                {e.minutesLate}m
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-blue-500 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Headcount</CardTitle>
-                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {analytics.kpis.totalHeadcount}
+            {/* Absent today */}
+            <Card className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-slate-400" />
+                  <CardTitle className="text-base">Absent Today</CardTitle>
+                  <Badge variant="secondary" className="ml-auto">
+                    {analytics.absentToday.length}
+                  </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">All employees</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-violet-500 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Salary</CardTitle>
-                <Wallet className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                <CardDescription className="text-xs">No punch-in recorded today</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-violet-700 dark:text-violet-300">
-                  {formatCurrency(analytics.kpis.monthlySalaryOutgo)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {analytics.kpis.hasPayrollData ? 'Actual payroll' : 'CTC estimate'}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-amber-500 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Open Tickets</CardTitle>
-                <MessageSquare className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
-                  {analytics.kpis.openTicketsCount}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Support + Mental health</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-cyan-500 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
-                <Clock className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-cyan-700 dark:text-cyan-300">
-                  {formatHours(analytics.kpis.avgTicketResponseHours)}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">48hr SLA target</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-rose-500 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Leaves</CardTitle>
-                <Calendar className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-rose-700 dark:text-rose-300">
-                  {analytics.kpis.pendingLeaveCount}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Awaiting approval</p>
+              <CardContent className="p-0">
+                {analytics.absentToday.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">Everyone is present</p>
+                ) : (
+                  <div className="overflow-x-auto max-h-[280px] overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs">Name</TableHead>
+                          <TableHead className="text-xs">Code</TableHead>
+                          <TableHead className="text-xs hidden sm:table-cell">Department</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {analytics.absentToday.map((e, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="text-xs font-medium py-2">{e.employeeName}</TableCell>
+                            <TableCell className="text-xs font-mono py-2 text-muted-foreground">{e.employeeCode}</TableCell>
+                            <TableCell className="text-xs py-2 hidden sm:table-cell text-muted-foreground">{e.departmentName}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Charts */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
+          {/* ─── Monthly Late Arrivals Chart ─── */}
+          {analytics.monthlyLateArrivals.length > 0 && (
+            <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>Department-wise Salary</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-orange-500" />
+                  <CardTitle className="text-base">Monthly Late Arrivals</CardTitle>
+                </div>
+                <CardDescription>{MONTHS[month - 1]} {year} — days arrived late per employee</CardDescription>
+              </CardHeader>
+              <CardContent className="px-2 sm:px-4">
+                <ChartContainer
+                  config={{ lateCount: { label: 'Late Days', color: '#f97316' } }}
+                  className="w-full"
+                  style={{ height: Math.max(180, analytics.monthlyLateArrivals.length * 32) }}
+                >
+                  <BarChart
+                    data={analytics.monthlyLateArrivals}
+                    layout="vertical"
+                    margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                    <YAxis
+                      dataKey="employeeName"
+                      type="category"
+                      width={110}
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <ChartTooltip
+                      content={<ChartTooltipContent />}
+                    />
+                    <Bar dataKey="lateCount" fill="#f97316" radius={[0, 4, 4, 0]} maxBarSize={20} />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* ─── Salary Charts ─── */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+            {/* Department salary */}
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-violet-500" />
+                  <CardTitle className="text-base">Department Salary</CardTitle>
+                </div>
                 <CardDescription>
-                  {analytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} for {MONTHS[month - 1]} {year}
+                  {analytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} — {MONTHS[month - 1]} {year}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-4">
                 <ChartContainer
-                  config={{
-                    amount: { label: 'Amount', color: COLORS.salary },
-                  }}
-                  className="h-[300px]"
+                  config={{ amount: { label: 'Amount', color: '#8b5cf6' } }}
+                  className="w-full"
+                  style={{ height: Math.max(160, analytics.departmentSalaryBreakdown.length * 36) }}
                 >
-                  <BarChart data={analytics.departmentSalaryBreakdown}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="departmentName" angle={-45} textAnchor="end" height={100} />
-                    <YAxis tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                    <ChartTooltip content={<ChartTooltipContent formatter={(v) => formatCurrency(Number(v))} />} />
-                    <Bar dataKey="amount" fill={COLORS.salary} radius={[4, 4, 0, 0]}>
+                  <BarChart
+                    data={analytics.departmentSalaryBreakdown}
+                    layout="vertical"
+                    margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      tickFormatter={(v) => formatCurrency(v)}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <YAxis
+                      dataKey="departmentName"
+                      type="category"
+                      width={110}
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent formatter={(v) => formatCurrencyFull(Number(v))} />} />
+                    <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={22}>
                       {analytics.departmentSalaryBreakdown.map((_, i) => (
                         <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
                       ))}
@@ -298,26 +477,43 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Team salary */}
+            <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>Team-wise Salary</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                  <CardTitle className="text-base">Team Salary</CardTitle>
+                </div>
                 <CardDescription>
-                  {analytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} by team
+                  {analytics.kpis.hasPayrollData ? 'Net payable' : 'CTC estimate'} by department team
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-4">
                 <ChartContainer
-                  config={{
-                    amount: { label: 'Amount', color: COLORS.salary },
-                  }}
-                  className="h-[300px]"
+                  config={{ amount: { label: 'Amount', color: '#6366f1' } }}
+                  className="w-full"
+                  style={{ height: Math.max(160, analytics.teamSalaryBreakdown.length * 36) }}
                 >
-                  <BarChart data={analytics.teamSalaryBreakdown}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="teamName" angle={-45} textAnchor="end" height={100} />
-                    <YAxis tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
-                    <ChartTooltip content={<ChartTooltipContent formatter={(v) => formatCurrency(Number(v))} />} />
-                    <Bar dataKey="amount" fill={COLORS.salary} radius={[4, 4, 0, 0]}>
+                  <BarChart
+                    data={analytics.teamSalaryBreakdown}
+                    layout="vertical"
+                    margin={{ top: 0, right: 60, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      tickFormatter={(v) => formatCurrency(v)}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <YAxis
+                      dataKey="teamName"
+                      type="category"
+                      width={110}
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent formatter={(v) => formatCurrencyFull(Number(v))} />} />
+                    <Bar dataKey="amount" radius={[0, 4, 4, 0]} maxBarSize={22}>
                       {analytics.teamSalaryBreakdown.map((_, i) => (
                         <Cell key={i} fill={CHART_PALETTE[(i + 2) % CHART_PALETTE.length]} />
                       ))}
@@ -327,66 +523,75 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Department headcount - horizontal bar (replaces pie) */}
+            <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>Department Headcount</CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-blue-500" />
+                  <CardTitle className="text-base">Department Headcount</CardTitle>
+                </div>
                 <CardDescription>Employees per department</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-4">
                 <ChartContainer
-                  config={analytics.departmentHeadcount.reduce((acc, d) => {
-                    acc[d.departmentName] = { label: d.departmentName }
-                    return acc
-                  }, {} as Record<string, { label: string }>)}
-                  className="h-[300px]"
+                  config={{ count: { label: 'Employees', color: '#3b82f6' } }}
+                  className="w-full"
+                  style={{ height: Math.max(160, analytics.departmentHeadcount.length * 36) }}
                 >
-                  <RechartsPieChart>
-                    <Pie
-                      data={analytics.departmentHeadcount}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ departmentName, count }) => `${departmentName}: ${count}`}
-                      outerRadius={100}
-                      dataKey="count"
-                    >
-                      {analytics.departmentHeadcount.map((_, index) => (
-                        <Cell key={index} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />
-                      ))}
-                    </Pie>
+                  <BarChart
+                    data={analytics.departmentHeadcount}
+                    layout="vertical"
+                    margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                    <YAxis
+                      dataKey="departmentName"
+                      type="category"
+                      width={110}
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                    />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                  </RechartsPieChart>
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={22}>
+                      {analytics.departmentHeadcount.map((_, i) => (
+                        <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
                 </ChartContainer>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Ticket analytics */}
+            <Card className="overflow-hidden">
               <CardHeader>
-                <CardTitle>Ticket Response Analytics</CardTitle>
-                <CardDescription>
-                  {MONTHS[month - 1]} {year} — 48hr SLA
-                </CardDescription>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-amber-500" />
+                  <CardTitle className="text-base">Ticket Analytics</CardTitle>
+                </div>
+                <CardDescription>{MONTHS[month - 1]} {year} — 48hr SLA</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Total</TableHead>
-                        <TableHead>Resolved</TableHead>
-                        <TableHead>Avg Response</TableHead>
-                        <TableHead>SLA %</TableHead>
+                        <TableHead className="text-xs">Type</TableHead>
+                        <TableHead className="text-xs text-center">Total</TableHead>
+                        <TableHead className="text-xs text-center">Done</TableHead>
+                        <TableHead className="text-xs text-center hidden sm:table-cell">Avg</TableHead>
+                        <TableHead className="text-xs text-right">SLA</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {analytics.ticketAnalytics.map((t) => (
                         <TableRow key={t.type}>
-                          <TableCell className="font-medium">{t.type}</TableCell>
-                          <TableCell>{t.totalInMonth}</TableCell>
-                          <TableCell>{t.resolvedCount}</TableCell>
-                          <TableCell>{formatHours(t.avgResponseHours)}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs font-medium py-3">{t.type}</TableCell>
+                          <TableCell className="text-xs py-3 text-center">{t.totalInMonth}</TableCell>
+                          <TableCell className="text-xs py-3 text-center text-emerald-600 dark:text-emerald-400 font-semibold">{t.resolvedCount}</TableCell>
+                          <TableCell className="text-xs py-3 text-center hidden sm:table-cell text-muted-foreground">{formatHours(t.avgResponseHours)}</TableCell>
+                          <TableCell className="text-xs py-3 text-right">
                             {t.slaCompliancePercent != null ? (
                               <Badge
                                 variant={
@@ -396,12 +601,11 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
                                       ? 'secondary'
                                       : 'destructive'
                                 }
+                                className="text-xs"
                               >
                                 {t.slaCompliancePercent.toFixed(0)}%
                               </Badge>
-                            ) : (
-                              '—'
-                            )}
+                            ) : '—'}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -411,6 +615,48 @@ export function HRDashboard({ title = 'HR Dashboard', description = 'Strength, s
               </CardContent>
             </Card>
           </div>
+
+          {/* ─── New Joiners ─── */}
+          {analytics.newJoiners.length > 0 && (
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-teal-500" />
+                  <CardTitle className="text-base">New Joiners</CardTitle>
+                  <Badge variant="secondary" className="ml-auto text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/30">
+                    {analytics.newJoiners.length}
+                  </Badge>
+                </div>
+                <CardDescription>Joined in {MONTHS[month - 1]} {year}</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Name</TableHead>
+                        <TableHead className="text-xs">Code</TableHead>
+                        <TableHead className="text-xs hidden sm:table-cell">Department</TableHead>
+                        <TableHead className="text-xs text-right">Join Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {analytics.newJoiners.map((e, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs font-medium py-2">{e.employeeName}</TableCell>
+                          <TableCell className="text-xs font-mono py-2 text-muted-foreground">{e.employeeCode}</TableCell>
+                          <TableCell className="text-xs py-2 hidden sm:table-cell text-muted-foreground">{e.departmentName}</TableCell>
+                          <TableCell className="text-xs py-2 text-right text-teal-600 dark:text-teal-400 font-medium">
+                            {new Date(e.joinDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       ) : (
         <Card>

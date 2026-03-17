@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     // Optional: Verify API key or secret for security
     const authHeader = request.headers.get('authorization')
-    const expectedSecret = process.env.ATTENDANCE_SYNC_SECRET
+    const expectedSecret = process.env.CRON_SECRET
     
     if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
       return errorResponse('Unauthorized', 401)
