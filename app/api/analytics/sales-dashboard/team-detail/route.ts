@@ -94,23 +94,52 @@ export async function GET(request: NextRequest) {
     const totalBill = members.reduce((s, m) => s + m.billAmount, 0)
 
     // Month-wise breakdown for the whole team (all time)
-    const monthWise = await prisma.$queryRaw<
-      { month: string; bdId: string; bdName: string; leadCount: number; ipdCount: number }[]
-    >`
-      SELECT
-        TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM') AS month,
-        u.id AS "bdId",
-        u.name AS "bdName",
-        COUNT(*)::int AS "leadCount",
-        COUNT(*) FILTER (WHERE l."pipelineStage" = 'COMPLETED')::int AS "ipdCount"
-      FROM "Lead" l
-      JOIN "User" u ON u.id = l."bdId"
-      WHERE l."bdId" = ANY(${bdIds})
-      GROUP BY TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM'), u.id, u.name
-      ORDER BY month, u.name
-    `
+    // Leads bucketed by leadDate, IPDs bucketed by conversionDate (when done, not when received)
+    const [leadsByMonth, ipdByMonth] = await Promise.all([
+      prisma.$queryRaw<{ month: string; bdId: string; bdName: string; count: number }[]>`
+        SELECT
+          TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM') AS month,
+          u.id AS "bdId",
+          u.name AS "bdName",
+          COUNT(*)::int AS count
+        FROM "Lead" l
+        JOIN "User" u ON u.id = l."bdId"
+        WHERE l."bdId" = ANY(${bdIds})
+        GROUP BY 1, u.id, u.name
+        ORDER BY 1, u.name
+      `,
+      prisma.$queryRaw<{ month: string; bdId: string; bdName: string; count: number }[]>`
+        SELECT
+          TO_CHAR(COALESCE(l."conversionDate", l."surgeryDate", l."leadDate", l."createdDate"), 'YYYY-MM') AS month,
+          u.id AS "bdId",
+          u.name AS "bdName",
+          COUNT(*)::int AS count
+        FROM "Lead" l
+        JOIN "User" u ON u.id = l."bdId"
+        WHERE l."bdId" = ANY(${bdIds}) AND l."pipelineStage" = 'COMPLETED'
+        GROUP BY 1, u.id, u.name
+        ORDER BY 1, u.name
+      `,
+    ])
 
-    const allMonths = [...new Set(monthWise.map((r) => r.month))].sort()
+    const allMonths = [...new Set([...leadsByMonth.map((r) => r.month), ...ipdByMonth.map((r) => r.month)])].sort()
+
+    // Merge lead counts and ipd counts by (month, bdId) key
+    const monthWiseMap = new Map<string, { month: string; bdId: string; bdName: string; leadCount: number; ipdCount: number }>()
+    for (const r of leadsByMonth) {
+      const key = `${r.month}|${r.bdId}`
+      monthWiseMap.set(key, { month: r.month, bdId: r.bdId, bdName: r.bdName, leadCount: Number(r.count), ipdCount: 0 })
+    }
+    for (const r of ipdByMonth) {
+      const key = `${r.month}|${r.bdId}`
+      const existing = monthWiseMap.get(key)
+      if (existing) {
+        existing.ipdCount = Number(r.count)
+      } else {
+        monthWiseMap.set(key, { month: r.month, bdId: r.bdId, bdName: r.bdName, leadCount: 0, ipdCount: Number(r.count) })
+      }
+    }
+    const monthWise = [...monthWiseMap.values()].sort((a, b) => a.month.localeCompare(b.month) || a.bdName.localeCompare(b.bdName))
 
     return successResponse({
       team: {

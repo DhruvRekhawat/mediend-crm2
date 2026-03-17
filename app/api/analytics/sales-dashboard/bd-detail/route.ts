@@ -81,25 +81,44 @@ export async function GET(request: NextRequest) {
     if (!bdUser) return errorResponse('BD not found', 404)
 
     const totalLeads = allLeads.length
-    const ipdDone = allLeads.filter((l) => l.pipelineStage === 'COMPLETED').length
+    // ipdDone, netProfit, billAmount come from completedLeads (conversionDate-filtered)
+    // so they reflect IPDs actually done in the selected period, not leads received
+    const ipdDone = completedLeads.length
     const conversionRate = totalLeads > 0 ? (ipdDone / totalLeads) * 100 : 0
-    const netProfit = allLeads.reduce((s, l) => s + (l.netProfit ?? 0), 0)
-    const billAmount = allLeads.reduce((s, l) => s + (l.billAmount ?? 0), 0)
+    const netProfit = completedLeads.reduce((s, l) => s + (l.netProfit ?? 0), 0)
+    const billAmount = completedLeads.reduce((s, l) => s + (l.billAmount ?? 0), 0)
     const avgTicketSize = ipdDone > 0 ? billAmount / ipdDone : 0
 
     // Month-wise breakdown (all leads for this BD, all time, no date filter)
-    const allLeadsAllTime = await prisma.$queryRaw<
-      { month: string; leadCount: number; ipdCount: number }[]
-    >`
-      SELECT
-        TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM') AS month,
-        COUNT(*)::int AS "leadCount",
-        COUNT(*) FILTER (WHERE l."pipelineStage" = 'COMPLETED')::int AS "ipdCount"
-      FROM "Lead" l
-      WHERE l."bdId" = ${bdId}
-      GROUP BY TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM')
-      ORDER BY month
-    `
+    // Leads bucketed by leadDate, IPDs bucketed by conversionDate (when done, not when received)
+    const [leadsByMonth, ipdByMonth] = await Promise.all([
+      prisma.$queryRaw<{ month: string; count: number }[]>`
+        SELECT
+          TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM') AS month,
+          COUNT(*)::int AS count
+        FROM "Lead" l
+        WHERE l."bdId" = ${bdId}
+        GROUP BY 1
+        ORDER BY 1
+      `,
+      prisma.$queryRaw<{ month: string; count: number }[]>`
+        SELECT
+          TO_CHAR(COALESCE(l."conversionDate", l."surgeryDate", l."leadDate", l."createdDate"), 'YYYY-MM') AS month,
+          COUNT(*)::int AS count
+        FROM "Lead" l
+        WHERE l."bdId" = ${bdId} AND l."pipelineStage" = 'COMPLETED'
+        GROUP BY 1
+        ORDER BY 1
+      `,
+    ])
+    const allMonthsSet = new Set([...leadsByMonth.map((r) => r.month), ...ipdByMonth.map((r) => r.month)])
+    const leadMonthMap = new Map(leadsByMonth.map((r) => [r.month, Number(r.count)]))
+    const ipdMonthMap = new Map(ipdByMonth.map((r) => [r.month, Number(r.count)]))
+    const allLeadsAllTime = [...allMonthsSet].sort().map((month) => ({
+      month,
+      leadCount: leadMonthMap.get(month) ?? 0,
+      ipdCount: ipdMonthMap.get(month) ?? 0,
+    }))
 
     // Treatment breakdown for pie chart
     const treatmentBreakdown: Record<string, number> = {}
