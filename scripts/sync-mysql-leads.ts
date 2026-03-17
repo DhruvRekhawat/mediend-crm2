@@ -98,12 +98,12 @@ async function updateSyncState(
  */
 async function fetchExistingLeads(
   leadRefs: string[]
-): Promise<Map<string, { updatedDate: Date | null; patientName: string; status: string; bdId: string }>> {
+): Promise<Map<string, { updatedDate: Date | null; patientName: string; status: string; pipelineStage: string; bdId: string }>> {
   if (leadRefs.length === 0) return new Map()
 
   // Prisma has a limit on the 'in' clause, so we need to chunk
   const CHUNK_SIZE = 1000
-  const existingLeadsMap = new Map<string, { updatedDate: Date | null; patientName: string; status: string; bdId: string }>()
+  const existingLeadsMap = new Map<string, { updatedDate: Date | null; patientName: string; status: string; pipelineStage: string; bdId: string }>()
 
   for (let i = 0; i < leadRefs.length; i += CHUNK_SIZE) {
     const chunk = leadRefs.slice(i, i + CHUNK_SIZE)
@@ -114,6 +114,7 @@ async function fetchExistingLeads(
         updatedDate: true,
         patientName: true,
         status: true,
+        pipelineStage: true,
         bdId: true,
       },
     })
@@ -122,6 +123,7 @@ async function fetchExistingLeads(
         updatedDate: lead.updatedDate,
         patientName: lead.patientName,
         status: lead.status,
+        pipelineStage: lead.pipelineStage,
         bdId: lead.bdId,
       })
     })
@@ -303,6 +305,7 @@ async function syncOneBatch(
         const hasChanged =
           existingLead.patientName !== leadDataForPrisma.patientName ||
           existingLead.status !== leadDataForPrisma.status ||
+          existingLead.pipelineStage !== leadDataForPrisma.pipelineStage ||
           existingLead.bdId !== leadDataForPrisma.bdId ||
           (updatedDate && existingLead.updatedDate && updatedDate.getTime() !== existingLead.updatedDate.getTime()) ||
           (!existingLead.updatedDate && updatedDate)

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 
-export type TabVariant = 'core-hr' | 'financial' | 'support' | 'mental-health' | 'tasks' | 'hr-core' | 'hr-people' | 'hr-compensation' | 'hr-engagement'
+export type TabVariant = 'core-hr' | 'financial' | 'support' | 'mental-health' | 'tasks' | 'hr-core' | 'hr-people' | 'hr-compensation' | 'hr-engagement' | 'sales'
 
 const variantStyles: Record<
   TabVariant,
@@ -60,6 +60,12 @@ const variantStyles: Record<
     active: 'bg-violet-600 text-white border-violet-600',
     inactive:
       'border-border bg-card text-muted-foreground hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200',
+    list: 'border-b border-border gap-0 bg-card',
+  },
+  sales: {
+    active: 'bg-blue-600 text-white border-blue-600',
+    inactive:
+      'border-border bg-card text-muted-foreground hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200',
     list: 'border-b border-border gap-0 bg-card',
   },
 }

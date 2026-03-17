@@ -94,9 +94,10 @@ export async function GET(request: NextRequest) {
         _count: { id: true },
         _sum: { billAmount: true, netProfit: true },
       }),
+      // Month tab: always all-time, not filtered by date picker
       prisma.lead.findMany({
-        where: completedWhere,
-        select: { conversionDate: true, createdDate: true, billAmount: true, netProfit: true },
+        where: { pipelineStage: 'COMPLETED' },
+        select: { conversionDate: true, surgeryDate: true, leadDate: true, createdDate: true, billAmount: true, netProfit: true },
       }),
     ])
 
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
 
     const monthMap = new Map<string, { count: number; revenue: number; profit: number }>()
     completedForMonth.forEach((lead) => {
-      const d = lead.conversionDate ?? lead.createdDate
+      const d = lead.conversionDate ?? lead.surgeryDate ?? lead.leadDate ?? lead.createdDate
       const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
       const cur = monthMap.get(monthKey) ?? { count: 0, revenue: 0, profit: 0 }
       cur.count += 1

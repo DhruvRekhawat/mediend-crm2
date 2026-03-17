@@ -124,6 +124,22 @@ services:
       - tools
     entrypoint: ["bun", "run", "scripts/sync-mysql-leads.ts"]
 
+  # One-off: backfill numeric source/campaign names with resolved strings
+  # Usage: docker compose --profile tools run --rm backfill-sources
+  backfill-sources:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - /opt/mediend-crm/mediend-crm2/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "scripts/backfill-source-names.ts"]
+
   # One-off: sync historic attendance
   # Usage: docker compose --profile tools run --rm sync-attendance -- --from 2025-01-01
   sync-attendance:
