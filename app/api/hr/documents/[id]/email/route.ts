@@ -5,7 +5,7 @@ import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import {
   generateOfferLetterHTML,
-  generateAppraisalLetterHTML,
+  generateIncrementLetterHTML,
   generateExperienceLetterHTML,
   generateRelievingLetterHTML,
 } from '@/lib/hrms/document-templates'
@@ -14,7 +14,7 @@ import { z } from 'zod'
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
-  APPRAISAL_LETTER: 'Appraisal Letter',
+  INCREMENT_LETTER: 'Increment Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
 }
@@ -101,8 +101,8 @@ export async function POST(
     `
         htmlContent = htmlContent.replace('<!-- ACK_PLACEHOLDER -->', ackSection)
         break
-      case 'APPRAISAL_LETTER':
-        htmlContent = generateAppraisalLetterHTML(employeeData, metadata || undefined)
+      case 'INCREMENT_LETTER':
+        htmlContent = generateIncrementLetterHTML(employeeData, metadata || undefined)
         break
       case 'EXPERIENCE_LETTER':
         htmlContent = generateExperienceLetterHTML(employeeData, metadata || undefined)

@@ -46,6 +46,7 @@ enum PipelineStage {
 enum TargetType {
   BD
   TEAM
+  DEPARTMENT_HEAD
 }
 
 enum PeriodType {
@@ -58,6 +59,10 @@ enum TargetMetric {
   NET_PROFIT
   BILL_AMOUNT
   SURGERIES_DONE
+  IPD_DONE
+  HEAD_COUNT
+  LEADS_GENERATED
+  REVENUE
 }
 
 enum BonusRuleType {
@@ -90,7 +95,7 @@ enum PayrollComponentType {
 
 enum DocumentType {
   OFFER_LETTER
-  APPRAISAL_LETTER
+  INCREMENT_LETTER
   EXPERIENCE_LETTER
   RELIEVING_LETTER
   CUSTOM
@@ -773,9 +778,10 @@ model Employee {
   attendanceLogs       AttendanceLog[]
   salaryStructures     SalaryStructure[]
   monthlyPayrolls      MonthlyPayroll[]
-  attendanceNormalizationsAsSubject AttendanceNormalization[] @relation("NormalizationSubject")
-  attendanceNormalizationsRequested AttendanceNormalization[] @relation("NormalizationRequester")
-  attendanceNormalizationsApproved  AttendanceNormalization[] @relation("NormalizationApprover")
+  attendanceNormalizationsAsSubject     AttendanceNormalization[] @relation("NormalizationSubject")
+  attendanceNormalizationsRequested     AttendanceNormalization[] @relation("NormalizationRequester")
+  attendanceNormalizationsApproved      AttendanceNormalization[] @relation("NormalizationApprover")
+  attendanceNormalizationsManagerApproved AttendanceNormalization[] @relation("NormalizationManagerApprover")
   leaveRequests        LeaveRequest[]
   leaveRequestsTargetApprover LeaveRequest[] @relation("LeaveTargetApprover")
   leaveBalances        LeaveBalance[]
@@ -817,6 +823,7 @@ model AttendanceLog {
 enum NormalizationType {
   SELF
   MANAGER
+  EMPLOYEE_REQUEST
 }
 
 enum NormalizationStatus {
@@ -826,26 +833,32 @@ enum NormalizationStatus {
 }
 
 model AttendanceNormalization {
-  id            String              @id @default(cuid())
-  employeeId    String
-  employee      Employee            @relation("NormalizationSubject", fields: [employeeId], references: [id], onDelete: Cascade)
-  date          DateTime
-  type          NormalizationType
-  requestedById String
-  requestedBy   Employee            @relation("NormalizationRequester", fields: [requestedById], references: [id], onDelete: Cascade)
-  approvedById  String?
-  approvedBy    Employee?           @relation("NormalizationApprover", fields: [approvedById], references: [id], onDelete: SetNull)
-  status        NormalizationStatus @default(APPROVED)
-  reason        String?
-  /** For SELF type: 1, 2, or 3 hours of monthly allowance used. MANAGER type: null. */
-  hoursUsed     Int?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id                   String              @id @default(cuid())
+  employeeId           String
+  employee             Employee            @relation("NormalizationSubject", fields: [employeeId], references: [id], onDelete: Cascade)
+  date                 DateTime
+  type                 NormalizationType
+  requestedById        String
+  requestedBy          Employee            @relation("NormalizationRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  approvedById         String?
+  approvedBy           Employee?           @relation("NormalizationApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  managerApprovedById  String?
+  managerApprovedBy    Employee?           @relation("NormalizationManagerApprover", fields: [managerApprovedById], references: [id], onDelete: SetNull)
+  managerApprovedAt    DateTime?
+  status               NormalizationStatus @default(APPROVED)
+  reason               String?
+  /** For SELF type: 1, 2, or 3 hours of monthly allowance used. MANAGER/EMPLOYEE_REQUEST: null. */
+  hoursUsed            Int?
+  /** FULL_DAY or HALF_DAY - set by manager when approving. */
+  normalizeAs          String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
   @@unique([employeeId, date])
   @@index([employeeId])
   @@index([approvedById])
   @@index([requestedById])
+  @@index([managerApprovedById])
 }
 
 model LeaveTypeMaster {

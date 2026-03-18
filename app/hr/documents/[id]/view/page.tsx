@@ -16,7 +16,7 @@ interface DocumentData {
   document: {
     id: string
     employeeId: string
-    documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+    documentType: 'OFFER_LETTER' | 'INCREMENT_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
     documentUrl?: string | null
     title?: string | null
     generatedAt: string
@@ -35,7 +35,7 @@ interface DocumentData {
 
 const DOCUMENT_TITLES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
-  APPRAISAL_LETTER: 'Appraisal Letter',
+  INCREMENT_LETTER: 'Increment Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
   CUSTOM: 'Document',
@@ -252,7 +252,7 @@ function EmailDocumentButton({
 
   const DOCUMENT_TITLES: Record<string, string> = {
     OFFER_LETTER: 'Offer Letter',
-    APPRAISAL_LETTER: 'Appraisal Letter',
+    INCREMENT_LETTER: 'Increment Letter',
     EXPERIENCE_LETTER: 'Experience Letter',
     RELIEVING_LETTER: 'Relieving Letter',
   }

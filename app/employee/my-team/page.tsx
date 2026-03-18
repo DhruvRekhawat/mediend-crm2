@@ -29,7 +29,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { apiGet, apiPatch, apiPost } from '@/lib/api-client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { format, eachDayOfInterval } from 'date-fns'
+import { format } from 'date-fns'
+import { getDisabledNormalizationDateKeys } from '@/lib/hrms/normalization-deadline'
 import { Calendar, Check, Clock, Users, X, UserCheck, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -113,7 +114,16 @@ export default function MyTeamPage() {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false)
   const [normEmployeeId, setNormEmployeeId] = useState('')
   const [normReason, setNormReason] = useState('')
+  const [normNormalizeAs, setNormNormalizeAs] = useState<'FULL_DAY' | 'HALF_DAY'>('FULL_DAY')
   const [selectedNormDates, setSelectedNormDates] = useState<Set<string>>(new Set())
+  const [selectedNormRequest, setSelectedNormRequest] = useState<{
+    id: string
+    employeeName: string
+    date: string
+    reason: string | null
+  } | null>(null)
+  const [normRequestNormalizeAs, setNormRequestNormalizeAs] = useState<'FULL_DAY' | 'HALF_DAY'>('FULL_DAY')
+  const [normRequestDialogOpen, setNormRequestDialogOpen] = useState(false)
   const [drillDownManager, setDrillDownManager] = useState<TeamMember | null>(null)
 
   const { data: treeData } = useQuery<TeamTreeResponse>({
@@ -143,8 +153,20 @@ export default function MyTeamPage() {
       ),
   })
 
+  const { data: normRequestsData } = useQuery<{ list: Array<{
+    id: string
+    employeeId: string
+    date: string
+    reason: string | null
+    employee: { id: string; employeeCode: string; user: { name: string; email: string } }
+    requestedBy: string | null
+  }> }>({
+    queryKey: ['attendance', 'normalize', 'team-requests'],
+    queryFn: () => apiGet('/api/attendance/normalize/team-requests'),
+  })
+
   const normalizeMutation = useMutation({
-    mutationFn: (payload: { employeeId: string; dates: string[]; reason?: string }) =>
+    mutationFn: (payload: { employeeId: string; dates: string[]; reason?: string; normalizeAs?: 'FULL_DAY' | 'HALF_DAY' }) =>
       apiPost<{ created?: number; skipped?: number }>('/api/attendance/normalize/manager', payload),
     onSuccess: (data: { created?: number; skipped?: number }) => {
       queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team'] })
@@ -156,6 +178,20 @@ export default function MyTeamPage() {
       else if (skipped > 0) toast.info('All selected days were already normalized')
     },
     onError: (e: Error) => toast.error(e.message || 'Failed to normalize'),
+  })
+
+  const managerApproveNormMutation = useMutation({
+    mutationFn: (payload: { id: string; status: 'APPROVED' | 'REJECTED'; normalizeAs?: 'FULL_DAY' | 'HALF_DAY' }) =>
+      apiPatch(`/api/attendance/normalize/${payload.id}/manager-approve`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team'] })
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['hierarchy', 'my-team', 'attendance'] })
+      setNormRequestDialogOpen(false)
+      setSelectedNormRequest(null)
+      toast.success('Request updated')
+    },
+    onError: (e: Error) => toast.error(e.message || 'Failed to update'),
   })
 
   const approveMutation = useMutation({
@@ -193,24 +229,11 @@ export default function MyTeamPage() {
   const from = attendanceData?.fromDate ?? fromDate
   const to = attendanceData?.toDate ?? toDate
 
-  /** Deadline for applying for a month: end of 5th of next month (UTC). */
-  const normalizationDisabledDateKeys = useMemo(() => {
-    const [sy, sm, sd] = from.split('-').map(Number)
-    const [ey, em, ed] = to.split('-').map(Number)
-    const start = new Date(sy, sm - 1, sd)
-    const end = new Date(ey, em - 1, ed)
-    const now = new Date()
-    const disabled = new Set<string>()
-    eachDayOfInterval({ start, end }).forEach((d) => {
-      const y = d.getFullYear()
-      const m = d.getMonth() + 1
-      const deadline = new Date(Date.UTC(y, m, 5, 23, 59, 59, 999))
-      if (now > deadline) {
-        disabled.add(format(d, 'yyyy-MM-dd'))
-      }
-    })
-    return disabled
-  }, [from, to])
+  /** Dates past normalization deadline (week rule from Apr 2026, else 5th of next month). */
+  const normalizationDisabledDateKeys = useMemo(
+    () => getDisabledNormalizationDateKeys(from, to),
+    [from, to]
+  )
 
   const members = treeData?.members ?? []
 
@@ -471,6 +494,72 @@ export default function MyTeamPage() {
         </TabsContent>
 
         <TabsContent value="normalization" className="space-y-4">
+          {normRequestsData?.list && normRequestsData.list.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Employee normalization requests</CardTitle>
+                <CardDescription>
+                  {normRequestsData.list.length} request(s) from your team members. Approve or reject with half/full day.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {normRequestsData.list.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">
+                          {r.employee?.user?.name ?? '—'}
+                          <span className="block text-xs text-muted-foreground">{r.employee?.employeeCode}</span>
+                        </TableCell>
+                        <TableCell>{format(new Date(r.date), 'PPP')}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{r.reason || '—'}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedNormRequest({
+                                  id: r.id,
+                                  employeeName: r.employee?.user?.name ?? '—',
+                                  date: r.date,
+                                  reason: r.reason,
+                                })
+                                setNormRequestNormalizeAs('FULL_DAY')
+                                setNormRequestDialogOpen(true)
+                              }}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() =>
+                                managerApproveNormMutation.mutate({ id: r.id, status: 'REJECTED' })
+                              }
+                              disabled={managerApproveNormMutation.isPending}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Normalize attendance</CardTitle>
@@ -533,6 +622,27 @@ export default function MyTeamPage() {
 
                   <div className="flex flex-wrap items-center gap-3 pt-2 border-t">
                     <div>
+                      <Label className="text-xs text-muted-foreground">Normalize as</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Button
+                          type="button"
+                          variant={normNormalizeAs === 'FULL_DAY' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setNormNormalizeAs('FULL_DAY')}
+                        >
+                          Full day
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={normNormalizeAs === 'HALF_DAY' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setNormNormalizeAs('HALF_DAY')}
+                        >
+                          Half day
+                        </Button>
+                      </div>
+                    </div>
+                    <div>
                       <Label className="text-xs text-muted-foreground">Reason (optional)</Label>
                       <Input
                         value={normReason}
@@ -551,6 +661,7 @@ export default function MyTeamPage() {
                           employeeId: normEmployeeId,
                           dates: Array.from(selectedNormDates),
                           reason: normReason || undefined,
+                          normalizeAs: normNormalizeAs,
                         })
                       }}
                       disabled={selectedNormDates.size === 0 || normalizeMutation.isPending}
@@ -616,6 +727,70 @@ export default function MyTeamPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={normRequestDialogOpen} onOpenChange={setNormRequestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve normalization request</DialogTitle>
+            <DialogDescription>
+              {selectedNormRequest &&
+                `${selectedNormRequest.employeeName} · ${format(new Date(selectedNormRequest.date), 'PPP')}`}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedNormRequest && (
+            <div className="space-y-4">
+              {selectedNormRequest.reason && (
+                <div>
+                  <span className="text-muted-foreground text-sm">Reason:</span>
+                  <p className="font-medium">{selectedNormRequest.reason}</p>
+                </div>
+              )}
+              <div>
+                <Label>Normalize as</Label>
+                <div className="flex gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant={normRequestNormalizeAs === 'FULL_DAY' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setNormRequestNormalizeAs('FULL_DAY')}
+                  >
+                    Full day
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={normRequestNormalizeAs === 'HALF_DAY' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setNormRequestNormalizeAs('HALF_DAY')}
+                  >
+                    Half day
+                  </Button>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setNormRequestDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() =>
+                    managerApproveNormMutation.mutate({
+                      id: selectedNormRequest.id,
+                      status: 'APPROVED',
+                      normalizeAs: normRequestNormalizeAs,
+                    })
+                  }
+                  disabled={managerApproveNormMutation.isPending}
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Approve
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <DialogContent>

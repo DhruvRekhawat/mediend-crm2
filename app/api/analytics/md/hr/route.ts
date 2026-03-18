@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse()
     }
 
-    if (user.role !== 'MD' && user.role !== 'ADMIN' && user.role !== 'HR_HEAD') {
+    if (user.role !== 'MD' && user.role !== 'ADMIN' && user.role !== 'HR_HEAD' && user.role !== 'EXECUTIVE_ASSISTANT') {
       return errorResponse(`Forbidden: Access denied for role ${user.role}.`, 403)
     }
 

@@ -34,6 +34,7 @@ import { TabNavigation, type TabItem } from '@/components/employee/tab-navigatio
 import { AttendanceHeatmap, type AttendanceDay as HeatmapAttendanceDay } from '@/components/employee/attendance-heatmap'
 import { LeaveApplicationForm } from '@/components/hrms/LeaveApplicationForm'
 import { useRouter } from 'next/navigation'
+import { Textarea } from '@/components/ui/textarea'
 
 const CORE_HR_TAB_VALUES = [
   { value: 'attendance', label: 'Attendance' },
@@ -108,7 +109,7 @@ interface LeaveData {
 
 interface EmployeeDocument {
   id: string
-  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+  documentType: 'OFFER_LETTER' | 'INCREMENT_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
   documentUrl?: string | null
   title?: string | null
   generatedAt: string
@@ -116,7 +117,7 @@ interface EmployeeDocument {
 
 const DOCUMENT_TYPES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
-  APPRAISAL_LETTER: 'Appraisal Letter',
+  INCREMENT_LETTER: 'Increment Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
   CUSTOM: 'Custom',
@@ -174,6 +175,110 @@ export default function CoreHRPage() {
         {activeTab === 'documents' && <DocumentsTab router={router} />}
       </div>
     </div>
+  )
+}
+
+function RequestNormalizationButton({ onSuccess }: { onSuccess?: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [dates, setDates] = useState<string[]>([''])
+  const [reason, setReason] = useState('')
+  const queryClient = useQueryClient()
+
+  const requestMutation = useMutation({
+    mutationFn: (payload: { dates: string[]; reason?: string }) =>
+      apiPost<{ created?: number; skipped?: number }>('/api/attendance/normalize/request', payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'my'] })
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'my'] })
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'team-requests'] })
+      setOpen(false)
+      setDates([''])
+      setReason('')
+      const created = data?.created ?? 0
+      if (created > 0) toast.success(`Requested normalization for ${created} day(s). Pending manager approval.`)
+      onSuccess?.()
+    },
+    onError: (error: Error) => toast.error(error.message || 'Failed to request normalization'),
+  })
+
+  const handleSubmit = () => {
+    const validDates = dates.filter((d) => d.trim())
+    if (validDates.length === 0) {
+      toast.error('Add at least one date')
+      return
+    }
+    requestMutation.mutate({ dates: validDates, reason: reason.trim() || undefined })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">Request from manager</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Request normalization from manager</DialogTitle>
+          <DialogDescription>
+            Request attendance normalization for specific days. Your manager will review and approve (as half or full day). From April 2026, requests must be within the same week.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Dates</Label>
+            {dates.map((d, i) => (
+              <div key={i} className="flex gap-2 mt-1 mb-2">
+                <Input
+                  type="date"
+                  value={d}
+                  onChange={(e) => {
+                    const next = [...dates]
+                    next[i] = e.target.value
+                    setDates(next)
+                  }}
+                />
+                {dates.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDates(dates.filter((_, j) => j !== i))}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setDates([...dates, ''])}
+            >
+              Add another date
+            </Button>
+          </div>
+          <div>
+            <Label>Reason (optional)</Label>
+            <Textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. Official travel, client visit"
+              rows={2}
+              className="mt-1"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!dates.some((d) => d.trim()) || requestMutation.isPending}
+            >
+              {requestMutation.isPending ? 'Submitting...' : 'Submit request'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -275,12 +380,19 @@ function AttendanceTab() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <span className="text-muted-foreground text-sm">You can use up to 3 hours per month, on up to 3 days. Choose 1, 2, or 3 hours per day. Only days where you were in by 11 AM or worked at least 7 hours can be normalized; leave and absent days cannot.</span>
-        <Dialog open={normalizeDialogOpen} onOpenChange={setNormalizeDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">Normalize attendance</Button>
-          </DialogTrigger>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <span className="text-muted-foreground text-sm">You can use up to 3 hours per month, on up to 3 days. Choose 1, 2, or 3 hours per day. Only days where you were in by 11 AM or worked at least 7 hours can be normalized; leave and absent days cannot. Or request normalization from your manager for days that need approval.</span>
+        <div className="flex gap-2 shrink-0">
+          <RequestNormalizationButton
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['attendance', 'my'] })
+              queryClient.invalidateQueries({ queryKey: ['attendance', 'normalize', 'my'] })
+            }}
+          />
+          <Dialog open={normalizeDialogOpen} onOpenChange={setNormalizeDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">Normalize attendance</Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Normalize a day</DialogTitle>
@@ -327,6 +439,7 @@ function AttendanceTab() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <SectionContainer title="Attendance records">

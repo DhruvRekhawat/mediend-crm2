@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost } from '@/lib/api-client'
@@ -32,7 +33,7 @@ interface Employee {
 interface EmployeeDocument {
   id: string
   employeeId: string
-  documentType: 'OFFER_LETTER' | 'APPRAISAL_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
+  documentType: 'OFFER_LETTER' | 'INCREMENT_LETTER' | 'EXPERIENCE_LETTER' | 'RELIEVING_LETTER' | 'CUSTOM'
   documentUrl?: string | null
   title?: string | null
   generatedAt: string
@@ -50,7 +51,7 @@ interface EmployeeDocument {
 
 const DOCUMENT_TYPES: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
-  APPRAISAL_LETTER: 'Appraisal Letter',
+  INCREMENT_LETTER: 'Increment Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
   CUSTOM: 'Custom',
@@ -61,7 +62,7 @@ function getDocumentLabel(doc: EmployeeDocument): string {
   return DOCUMENT_TYPES[doc.documentType] ?? doc.documentType
 }
 
-const DOC_TYPES_FOR_TABLE = ['OFFER_LETTER', 'APPRAISAL_LETTER', 'EXPERIENCE_LETTER', 'RELIEVING_LETTER', 'CUSTOM'] as const
+const DOC_TYPES_FOR_TABLE = ['OFFER_LETTER', 'INCREMENT_LETTER', 'EXPERIENCE_LETTER', 'RELIEVING_LETTER', 'CUSTOM'] as const
 
 function DocStatusCell({ docs }: { docs: EmployeeDocument[] }) {
   if (docs.length === 0) return <span className="text-muted-foreground/50">—</span>
@@ -573,9 +574,16 @@ function GenerateDocumentForm({
     documentType: '',
     designation: '',
     ctc: '',
+    isSales: false,
+    salesTarget: '',
+    monthlyTarget: '',
+    joiningDate: '',
+    acceptanceDeadline: '',
     previousSalary: '',
     newSalary: '',
     incrementPercentage: '',
+    effectiveDate: '',
+    joinDate: '',
     lastWorkingDate: '',
     resignationDate: '',
     remarks: '',
@@ -594,9 +602,17 @@ function GenerateDocumentForm({
 
     if (formData.designation) metadata.designation = formData.designation
     if (formData.ctc) metadata.ctc = parseFloat(formData.ctc)
+    if (formData.isSales) metadata.isSales = true
+    if (formData.salesTarget) metadata.salesTarget = formData.salesTarget
+    if (formData.monthlyTarget) metadata.monthlyTarget = formData.monthlyTarget
+    if (formData.joiningDate) metadata.joiningDate = formData.joiningDate
+    if (formData.acceptanceDeadline) metadata.acceptanceDeadline = formData.acceptanceDeadline
     if (formData.previousSalary) metadata.previousSalary = parseFloat(formData.previousSalary)
     if (formData.newSalary) metadata.newSalary = parseFloat(formData.newSalary)
     if (formData.incrementPercentage) metadata.incrementPercentage = parseFloat(formData.incrementPercentage)
+    if (formData.newSalary) metadata.newSalary = parseFloat(formData.newSalary)
+    if (formData.effectiveDate) metadata.effectiveDate = formData.effectiveDate
+    if (formData.joinDate) metadata.joinDate = formData.joinDate
     if (formData.lastWorkingDate) metadata.lastWorkingDate = formData.lastWorkingDate
     if (formData.resignationDate) metadata.resignationDate = formData.resignationDate
     if (formData.remarks) metadata.remarks = formData.remarks
@@ -630,11 +646,72 @@ function GenerateDocumentForm({
                 placeholder="Annual CTC amount"
               />
             </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="isSales"
+                checked={formData.isSales}
+                onCheckedChange={(checked) => setFormData({ ...formData, isSales: !!checked })}
+              />
+              <Label htmlFor="isSales" className="cursor-pointer font-normal">Sales position (include sales targets &amp; commitment)</Label>
+            </div>
+            {formData.isSales && (
+              <>
+                <div>
+                  <Label>Initial Sales Target</Label>
+                  <Input
+                    value={formData.salesTarget}
+                    onChange={(e) => setFormData({ ...formData, salesTarget: e.target.value })}
+                    placeholder="e.g., 10 Surgeries in two months"
+                  />
+                </div>
+                <div>
+                  <Label>Target per Month</Label>
+                  <Input
+                    value={formData.monthlyTarget}
+                    onChange={(e) => setFormData({ ...formData, monthlyTarget: e.target.value })}
+                    placeholder="e.g., 5 Surgeries per month"
+                  />
+                </div>
+              </>
+            )}
+            <div>
+              <Label>Joining Date (optional)</Label>
+              <Input
+                type="date"
+                value={formData.joiningDate}
+                onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Acceptance Deadline (optional)</Label>
+              <Input
+                type="date"
+                value={formData.acceptanceDeadline}
+                onChange={(e) => setFormData({ ...formData, acceptanceDeadline: e.target.value })}
+              />
+            </div>
           </>
         )
-      case 'APPRAISAL_LETTER':
+      case 'INCREMENT_LETTER':
         return (
           <>
+            <div>
+              <Label>Designation</Label>
+              <Input
+                value={formData.designation}
+                onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                placeholder="e.g., Business Development Manager"
+              />
+            </div>
+            <div>
+              <Label>Join Date (for letter text)</Label>
+              <Input
+                type="date"
+                value={formData.joinDate}
+                onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                placeholder="When employee joined"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Previous Annual CTC</Label>
@@ -651,7 +728,7 @@ function GenerateDocumentForm({
                   type="number"
                   value={formData.incrementPercentage}
                   onChange={(e) => setFormData({ ...formData, incrementPercentage: e.target.value })}
-                  placeholder="e.g., 10"
+                  placeholder="e.g., 12.5"
                 />
               </div>
             </div>
@@ -662,6 +739,14 @@ function GenerateDocumentForm({
                 value={formData.newSalary}
                 onChange={(e) => setFormData({ ...formData, newSalary: e.target.value })}
                 placeholder="New annual CTC"
+              />
+            </div>
+            <div>
+              <Label>Effective Date</Label>
+              <Input
+                type="date"
+                value={formData.effectiveDate}
+                onChange={(e) => setFormData({ ...formData, effectiveDate: e.target.value })}
               />
             </div>
             <div>

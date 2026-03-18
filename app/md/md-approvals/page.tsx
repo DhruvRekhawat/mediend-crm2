@@ -16,10 +16,11 @@ import { useQuery as usePermissionQuery } from '@tanstack/react-query'
 import { Check, X, ChevronLeft, ChevronRight, Plus, CheckCircle, Clock, Paperclip } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { useSwipeable } from 'react-swipeable'
 import confetti from 'canvas-confetti'
+import { motion, AnimatePresence } from 'framer-motion'
 import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Attachment {
   name: string
@@ -137,6 +138,33 @@ function SwipeCard({
   )
 }
 
+function PendingCard({ request }: { request: MDApprovalRequest }) {
+  return (
+    <Card className="border-2 border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-900/10">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
+            <Clock className="h-3 w-3 mr-1" />
+            Awaiting MD Review
+          </Badge>
+          <span className="text-sm text-muted-foreground">{format(new Date(request.createdAt), 'dd MMM yyyy')}</span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <h3 className="font-semibold text-lg">{request.title}</h3>
+        {request.description && <p className="text-sm text-muted-foreground">{request.description}</p>}
+        {request.amount != null && (
+          <div className="text-xl font-bold text-indigo-600">{formatCurrency(request.amount)}</div>
+        )}
+        {request.attachments && request.attachments.length > 0 && (
+          <AttachmentCarousel attachments={request.attachments} />
+        )}
+        <p className="text-sm text-muted-foreground">Submitted on {format(new Date(request.createdAt), 'dd MMM yyyy, HH:mm')}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
 function HistoryCard({ request }: { request: MDApprovalRequest }) {
   const isApproved = request.status === 'APPROVED'
   const needsFinanceAck = isApproved && request.amount != null && !request.financeAcknowledged
@@ -179,6 +207,36 @@ function HistoryCard({ request }: { request: MDApprovalRequest }) {
           <AttachmentCarousel attachments={request.attachments} />
         )}
         <p className="text-xs text-muted-foreground">Requested by {request.requestedBy.name}</p>
+        {request.respondedBy && request.respondedAt && (
+          <div className="pt-2 mt-2 border-t border-border/50 space-y-1">
+            <p className="text-xs text-muted-foreground">
+              {request.status === 'APPROVED' ? 'Approved' : 'Rejected'} by {request.respondedBy.name} on{' '}
+              {format(new Date(request.respondedAt), 'dd MMM yyyy, HH:mm')}
+            </p>
+            {request.responseNote && (
+              <p className="text-sm text-muted-foreground italic">&ldquo;{request.responseNote}&rdquo;</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function PendingSkeleton() {
+  return (
+    <Card className="border-2 border-border">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-8 w-32" />
       </CardContent>
     </Card>
   )
@@ -217,35 +275,64 @@ export default function MDApprovalsPage() {
   const approveMutation = useMutation({
     mutationFn: ({ id, note }: { id: string; note?: string }) =>
       apiPatch(`/api/md-approvals/${id}`, { status: 'APPROVED', responseNote: note }),
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: ['md-approvals'] })
+      const prev = queryClient.getQueryData<MDApprovalRequest[]>(['md-approvals'])
+      queryClient.setQueryData<MDApprovalRequest[]>(['md-approvals'], (old) =>
+        (old ?? []).map((r) =>
+          r.id === id ? { ...r, status: 'APPROVED' as const } : r
+        )
+      )
+      return { prev }
+    },
+    onError: (err: Error, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(['md-approvals'], ctx.prev)
+      toast.error(err.message)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['md-approvals', 'badge-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['md-approvals'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       setApproveDialogOpen(false)
       setSelectedRequest(null)
       setResponseNote('')
       confetti({ particleCount: 80, spread: 60 })
       toast.success('Approved')
     },
-    onError: (err: Error) => toast.error(err.message),
   })
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, note }: { id: string; note?: string }) =>
       apiPatch(`/api/md-approvals/${id}`, { status: 'REJECTED', responseNote: note }),
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: ['md-approvals'] })
+      const prev = queryClient.getQueryData<MDApprovalRequest[]>(['md-approvals'])
+      queryClient.setQueryData<MDApprovalRequest[]>(['md-approvals'], (old) =>
+        (old ?? []).map((r) =>
+          r.id === id ? { ...r, status: 'REJECTED' as const } : r
+        )
+      )
+      return { prev }
+    },
+    onError: (err: Error, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(['md-approvals'], ctx.prev)
+      toast.error(err.message)
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['md-approvals', 'badge-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['md-approvals'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       setRejectDialogOpen(false)
       setSelectedRequest(null)
       setResponseNote('')
       toast.success('Rejected')
     },
-    onError: (err: Error) => toast.error(err.message),
   })
 
   const createMutation = useMutation({
     mutationFn: (data: { title: string; description?: string; amount?: number; attachments?: Attachment[] }) =>
       apiPost('/api/md-approvals', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['md-approvals', 'badge-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['md-approvals'] })
+      queryClient.invalidateQueries({ queryKey: ['badge-counts'] })
       setRequestOpen(false)
       setTitle('')
       setDescription('')
@@ -387,47 +474,91 @@ export default function MDApprovalsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="pending" className="relative">
+            Pending
+            {pending.length > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+                {pending.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="history">
+            History
+            {history.length > 0 && (
+              <span className="ml-2 text-muted-foreground text-sm">({history.length})</span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="mt-6">
           {isLoading ? (
-            <div className="text-center py-12 text-muted-foreground">Loading...</div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <PendingSkeleton key={i} />
+              ))}
+            </div>
           ) : pending.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Check className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No pending requests</p>
+            <div className="text-center py-16 text-muted-foreground">
+              <Check className="h-14 w-14 mx-auto mb-4 opacity-40" />
+              <p className="font-medium">{isMD ? 'All caught up' : 'No pending requests'}</p>
+              <p className="text-sm mt-1">{isMD ? 'No requests awaiting your approval' : 'Your submitted requests will appear here until MD responds'}</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {pending.map((req) => (
-                <SwipeCard
-                  key={req.id}
-                  request={req}
-                  onApprove={() => {
-                    setSelectedRequest(req)
-                    setApproveDialogOpen(true)
-                  }}
-                  onReject={() => {
-                    setSelectedRequest(req)
-                    setRejectDialogOpen(true)
-                  }}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {pending.map((req) => (
+                  <motion.div
+                    key={req.id}
+                    layout
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                  >
+                    {isMD ? (
+                      <SwipeCard
+                        request={req}
+                        onApprove={() => {
+                          setSelectedRequest(req)
+                          setApproveDialogOpen(true)
+                        }}
+                        onReject={() => {
+                          setSelectedRequest(req)
+                          setRejectDialogOpen(true)
+                        }}
+                      />
+                    ) : (
+                      <PendingCard request={req} />
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
           {history.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">No history yet</div>
+            <div className="text-center py-16 text-muted-foreground">
+              <Clock className="h-14 w-14 mx-auto mb-4 opacity-40" />
+              <p className="font-medium">No history yet</p>
+              <p className="text-sm mt-1">{isMD ? 'Approved and rejected requests will appear here' : 'Your approved or rejected requests will appear here'}</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              {history.map((req) => (
-                <HistoryCard key={req.id} request={req} />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {history.map((req, i) => (
+                  <motion.div
+                    key={req.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: i * 0.05, ease: [0.25, 0.1, 0.25, 1] }}
+                  >
+                    <HistoryCard request={req} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </TabsContent>

@@ -41,9 +41,12 @@ export type AttendanceNormalizationMinAggregateOutputType = {
   type: $Enums.NormalizationType | null
   requestedById: string | null
   approvedById: string | null
+  managerApprovedById: string | null
+  managerApprovedAt: Date | null
   status: $Enums.NormalizationStatus | null
   reason: string | null
   hoursUsed: number | null
+  normalizeAs: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -55,9 +58,12 @@ export type AttendanceNormalizationMaxAggregateOutputType = {
   type: $Enums.NormalizationType | null
   requestedById: string | null
   approvedById: string | null
+  managerApprovedById: string | null
+  managerApprovedAt: Date | null
   status: $Enums.NormalizationStatus | null
   reason: string | null
   hoursUsed: number | null
+  normalizeAs: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -69,9 +75,12 @@ export type AttendanceNormalizationCountAggregateOutputType = {
   type: number
   requestedById: number
   approvedById: number
+  managerApprovedById: number
+  managerApprovedAt: number
   status: number
   reason: number
   hoursUsed: number
+  normalizeAs: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -93,9 +102,12 @@ export type AttendanceNormalizationMinAggregateInputType = {
   type?: true
   requestedById?: true
   approvedById?: true
+  managerApprovedById?: true
+  managerApprovedAt?: true
   status?: true
   reason?: true
   hoursUsed?: true
+  normalizeAs?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -107,9 +119,12 @@ export type AttendanceNormalizationMaxAggregateInputType = {
   type?: true
   requestedById?: true
   approvedById?: true
+  managerApprovedById?: true
+  managerApprovedAt?: true
   status?: true
   reason?: true
   hoursUsed?: true
+  normalizeAs?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -121,9 +136,12 @@ export type AttendanceNormalizationCountAggregateInputType = {
   type?: true
   requestedById?: true
   approvedById?: true
+  managerApprovedById?: true
+  managerApprovedAt?: true
   status?: true
   reason?: true
   hoursUsed?: true
+  normalizeAs?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -222,9 +240,12 @@ export type AttendanceNormalizationGroupByOutputType = {
   type: $Enums.NormalizationType
   requestedById: string
   approvedById: string | null
+  managerApprovedById: string | null
+  managerApprovedAt: Date | null
   status: $Enums.NormalizationStatus
   reason: string | null
   hoursUsed: number | null
+  normalizeAs: string | null
   createdAt: Date
   updatedAt: Date
   _count: AttendanceNormalizationCountAggregateOutputType | null
@@ -259,14 +280,18 @@ export type AttendanceNormalizationWhereInput = {
   type?: Prisma.EnumNormalizationTypeFilter<"AttendanceNormalization"> | $Enums.NormalizationType
   requestedById?: Prisma.StringFilter<"AttendanceNormalization"> | string
   approvedById?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
+  managerApprovedById?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
+  managerApprovedAt?: Prisma.DateTimeNullableFilter<"AttendanceNormalization"> | Date | string | null
   status?: Prisma.EnumNormalizationStatusFilter<"AttendanceNormalization"> | $Enums.NormalizationStatus
   reason?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
   hoursUsed?: Prisma.IntNullableFilter<"AttendanceNormalization"> | number | null
+  normalizeAs?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AttendanceNormalization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"AttendanceNormalization"> | Date | string
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
   requestedBy?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
   approvedBy?: Prisma.XOR<Prisma.EmployeeNullableScalarRelationFilter, Prisma.EmployeeWhereInput> | null
+  managerApprovedBy?: Prisma.XOR<Prisma.EmployeeNullableScalarRelationFilter, Prisma.EmployeeWhereInput> | null
 }
 
 export type AttendanceNormalizationOrderByWithRelationInput = {
@@ -276,14 +301,18 @@ export type AttendanceNormalizationOrderByWithRelationInput = {
   type?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   approvedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  managerApprovedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  managerApprovedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   reason?: Prisma.SortOrderInput | Prisma.SortOrder
   hoursUsed?: Prisma.SortOrderInput | Prisma.SortOrder
+  normalizeAs?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   employee?: Prisma.EmployeeOrderByWithRelationInput
   requestedBy?: Prisma.EmployeeOrderByWithRelationInput
   approvedBy?: Prisma.EmployeeOrderByWithRelationInput
+  managerApprovedBy?: Prisma.EmployeeOrderByWithRelationInput
 }
 
 export type AttendanceNormalizationWhereUniqueInput = Prisma.AtLeast<{
@@ -297,14 +326,18 @@ export type AttendanceNormalizationWhereUniqueInput = Prisma.AtLeast<{
   type?: Prisma.EnumNormalizationTypeFilter<"AttendanceNormalization"> | $Enums.NormalizationType
   requestedById?: Prisma.StringFilter<"AttendanceNormalization"> | string
   approvedById?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
+  managerApprovedById?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
+  managerApprovedAt?: Prisma.DateTimeNullableFilter<"AttendanceNormalization"> | Date | string | null
   status?: Prisma.EnumNormalizationStatusFilter<"AttendanceNormalization"> | $Enums.NormalizationStatus
   reason?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
   hoursUsed?: Prisma.IntNullableFilter<"AttendanceNormalization"> | number | null
+  normalizeAs?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AttendanceNormalization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"AttendanceNormalization"> | Date | string
   employee?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
   requestedBy?: Prisma.XOR<Prisma.EmployeeScalarRelationFilter, Prisma.EmployeeWhereInput>
   approvedBy?: Prisma.XOR<Prisma.EmployeeNullableScalarRelationFilter, Prisma.EmployeeWhereInput> | null
+  managerApprovedBy?: Prisma.XOR<Prisma.EmployeeNullableScalarRelationFilter, Prisma.EmployeeWhereInput> | null
 }, "id" | "employeeId_date">
 
 export type AttendanceNormalizationOrderByWithAggregationInput = {
@@ -314,9 +347,12 @@ export type AttendanceNormalizationOrderByWithAggregationInput = {
   type?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   approvedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  managerApprovedById?: Prisma.SortOrderInput | Prisma.SortOrder
+  managerApprovedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   reason?: Prisma.SortOrderInput | Prisma.SortOrder
   hoursUsed?: Prisma.SortOrderInput | Prisma.SortOrder
+  normalizeAs?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.AttendanceNormalizationCountOrderByAggregateInput
@@ -336,9 +372,12 @@ export type AttendanceNormalizationScalarWhereWithAggregatesInput = {
   type?: Prisma.EnumNormalizationTypeWithAggregatesFilter<"AttendanceNormalization"> | $Enums.NormalizationType
   requestedById?: Prisma.StringWithAggregatesFilter<"AttendanceNormalization"> | string
   approvedById?: Prisma.StringNullableWithAggregatesFilter<"AttendanceNormalization"> | string | null
+  managerApprovedById?: Prisma.StringNullableWithAggregatesFilter<"AttendanceNormalization"> | string | null
+  managerApprovedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AttendanceNormalization"> | Date | string | null
   status?: Prisma.EnumNormalizationStatusWithAggregatesFilter<"AttendanceNormalization"> | $Enums.NormalizationStatus
   reason?: Prisma.StringNullableWithAggregatesFilter<"AttendanceNormalization"> | string | null
   hoursUsed?: Prisma.IntNullableWithAggregatesFilter<"AttendanceNormalization"> | number | null
+  normalizeAs?: Prisma.StringNullableWithAggregatesFilter<"AttendanceNormalization"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AttendanceNormalization"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"AttendanceNormalization"> | Date | string
 }
@@ -347,14 +386,17 @@ export type AttendanceNormalizationCreateInput = {
   id?: string
   date: Date | string
   type: $Enums.NormalizationType
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   employee: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsAsSubjectInput
   requestedBy: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsRequestedInput
   approvedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsApprovedInput
+  managerApprovedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsManagerApprovedInput
 }
 
 export type AttendanceNormalizationUncheckedCreateInput = {
@@ -364,9 +406,12 @@ export type AttendanceNormalizationUncheckedCreateInput = {
   type: $Enums.NormalizationType
   requestedById: string
   approvedById?: string | null
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -375,14 +420,17 @@ export type AttendanceNormalizationUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employee?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsAsSubjectNestedInput
   requestedBy?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsRequestedNestedInput
   approvedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsApprovedNestedInput
+  managerApprovedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsManagerApprovedNestedInput
 }
 
 export type AttendanceNormalizationUncheckedUpdateInput = {
@@ -392,9 +440,12 @@ export type AttendanceNormalizationUncheckedUpdateInput = {
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -406,9 +457,12 @@ export type AttendanceNormalizationCreateManyInput = {
   type: $Enums.NormalizationType
   requestedById: string
   approvedById?: string | null
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -417,9 +471,11 @@ export type AttendanceNormalizationUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -431,9 +487,12 @@ export type AttendanceNormalizationUncheckedUpdateManyInput = {
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -460,9 +519,12 @@ export type AttendanceNormalizationCountOrderByAggregateInput = {
   type?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   approvedById?: Prisma.SortOrder
+  managerApprovedById?: Prisma.SortOrder
+  managerApprovedAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   hoursUsed?: Prisma.SortOrder
+  normalizeAs?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -478,9 +540,12 @@ export type AttendanceNormalizationMaxOrderByAggregateInput = {
   type?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   approvedById?: Prisma.SortOrder
+  managerApprovedById?: Prisma.SortOrder
+  managerApprovedAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   hoursUsed?: Prisma.SortOrder
+  normalizeAs?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -492,9 +557,12 @@ export type AttendanceNormalizationMinOrderByAggregateInput = {
   type?: Prisma.SortOrder
   requestedById?: Prisma.SortOrder
   approvedById?: Prisma.SortOrder
+  managerApprovedById?: Prisma.SortOrder
+  managerApprovedAt?: Prisma.SortOrder
   status?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   hoursUsed?: Prisma.SortOrder
+  normalizeAs?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -524,6 +592,13 @@ export type AttendanceNormalizationCreateNestedManyWithoutApprovedByInput = {
   connect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
 }
 
+export type AttendanceNormalizationCreateNestedManyWithoutManagerApprovedByInput = {
+  create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput> | Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput[]
+  connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput[]
+  createMany?: Prisma.AttendanceNormalizationCreateManyManagerApprovedByInputEnvelope
+  connect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+}
+
 export type AttendanceNormalizationUncheckedCreateNestedManyWithoutEmployeeInput = {
   create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutEmployeeInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutEmployeeInput> | Prisma.AttendanceNormalizationCreateWithoutEmployeeInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutEmployeeInput[]
   connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutEmployeeInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutEmployeeInput[]
@@ -542,6 +617,13 @@ export type AttendanceNormalizationUncheckedCreateNestedManyWithoutApprovedByInp
   create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutApprovedByInput> | Prisma.AttendanceNormalizationCreateWithoutApprovedByInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutApprovedByInput[]
   connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutApprovedByInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutApprovedByInput[]
   createMany?: Prisma.AttendanceNormalizationCreateManyApprovedByInputEnvelope
+  connect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+}
+
+export type AttendanceNormalizationUncheckedCreateNestedManyWithoutManagerApprovedByInput = {
+  create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput> | Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput[]
+  connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput[]
+  createMany?: Prisma.AttendanceNormalizationCreateManyManagerApprovedByInputEnvelope
   connect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
 }
 
@@ -587,6 +669,20 @@ export type AttendanceNormalizationUpdateManyWithoutApprovedByNestedInput = {
   deleteMany?: Prisma.AttendanceNormalizationScalarWhereInput | Prisma.AttendanceNormalizationScalarWhereInput[]
 }
 
+export type AttendanceNormalizationUpdateManyWithoutManagerApprovedByNestedInput = {
+  create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput> | Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput[]
+  connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput[]
+  upsert?: Prisma.AttendanceNormalizationUpsertWithWhereUniqueWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationUpsertWithWhereUniqueWithoutManagerApprovedByInput[]
+  createMany?: Prisma.AttendanceNormalizationCreateManyManagerApprovedByInputEnvelope
+  set?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  disconnect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  delete?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  connect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  update?: Prisma.AttendanceNormalizationUpdateWithWhereUniqueWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationUpdateWithWhereUniqueWithoutManagerApprovedByInput[]
+  updateMany?: Prisma.AttendanceNormalizationUpdateManyWithWhereWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationUpdateManyWithWhereWithoutManagerApprovedByInput[]
+  deleteMany?: Prisma.AttendanceNormalizationScalarWhereInput | Prisma.AttendanceNormalizationScalarWhereInput[]
+}
+
 export type AttendanceNormalizationUncheckedUpdateManyWithoutEmployeeNestedInput = {
   create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutEmployeeInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutEmployeeInput> | Prisma.AttendanceNormalizationCreateWithoutEmployeeInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutEmployeeInput[]
   connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutEmployeeInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutEmployeeInput[]
@@ -629,6 +725,20 @@ export type AttendanceNormalizationUncheckedUpdateManyWithoutApprovedByNestedInp
   deleteMany?: Prisma.AttendanceNormalizationScalarWhereInput | Prisma.AttendanceNormalizationScalarWhereInput[]
 }
 
+export type AttendanceNormalizationUncheckedUpdateManyWithoutManagerApprovedByNestedInput = {
+  create?: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput> | Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput[] | Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput[]
+  connectOrCreate?: Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput[]
+  upsert?: Prisma.AttendanceNormalizationUpsertWithWhereUniqueWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationUpsertWithWhereUniqueWithoutManagerApprovedByInput[]
+  createMany?: Prisma.AttendanceNormalizationCreateManyManagerApprovedByInputEnvelope
+  set?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  disconnect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  delete?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  connect?: Prisma.AttendanceNormalizationWhereUniqueInput | Prisma.AttendanceNormalizationWhereUniqueInput[]
+  update?: Prisma.AttendanceNormalizationUpdateWithWhereUniqueWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationUpdateWithWhereUniqueWithoutManagerApprovedByInput[]
+  updateMany?: Prisma.AttendanceNormalizationUpdateManyWithWhereWithoutManagerApprovedByInput | Prisma.AttendanceNormalizationUpdateManyWithWhereWithoutManagerApprovedByInput[]
+  deleteMany?: Prisma.AttendanceNormalizationScalarWhereInput | Prisma.AttendanceNormalizationScalarWhereInput[]
+}
+
 export type EnumNormalizationTypeFieldUpdateOperationsInput = {
   set?: $Enums.NormalizationType
 }
@@ -641,13 +751,16 @@ export type AttendanceNormalizationCreateWithoutEmployeeInput = {
   id?: string
   date: Date | string
   type: $Enums.NormalizationType
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   requestedBy: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsRequestedInput
   approvedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsApprovedInput
+  managerApprovedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsManagerApprovedInput
 }
 
 export type AttendanceNormalizationUncheckedCreateWithoutEmployeeInput = {
@@ -656,9 +769,12 @@ export type AttendanceNormalizationUncheckedCreateWithoutEmployeeInput = {
   type: $Enums.NormalizationType
   requestedById: string
   approvedById?: string | null
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -677,13 +793,16 @@ export type AttendanceNormalizationCreateWithoutRequestedByInput = {
   id?: string
   date: Date | string
   type: $Enums.NormalizationType
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   employee: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsAsSubjectInput
   approvedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsApprovedInput
+  managerApprovedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsManagerApprovedInput
 }
 
 export type AttendanceNormalizationUncheckedCreateWithoutRequestedByInput = {
@@ -692,9 +811,12 @@ export type AttendanceNormalizationUncheckedCreateWithoutRequestedByInput = {
   date: Date | string
   type: $Enums.NormalizationType
   approvedById?: string | null
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -713,13 +835,16 @@ export type AttendanceNormalizationCreateWithoutApprovedByInput = {
   id?: string
   date: Date | string
   type: $Enums.NormalizationType
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   employee: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsAsSubjectInput
   requestedBy: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsRequestedInput
+  managerApprovedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsManagerApprovedInput
 }
 
 export type AttendanceNormalizationUncheckedCreateWithoutApprovedByInput = {
@@ -728,9 +853,12 @@ export type AttendanceNormalizationUncheckedCreateWithoutApprovedByInput = {
   date: Date | string
   type: $Enums.NormalizationType
   requestedById: string
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -742,6 +870,48 @@ export type AttendanceNormalizationCreateOrConnectWithoutApprovedByInput = {
 
 export type AttendanceNormalizationCreateManyApprovedByInputEnvelope = {
   data: Prisma.AttendanceNormalizationCreateManyApprovedByInput | Prisma.AttendanceNormalizationCreateManyApprovedByInput[]
+  skipDuplicates?: boolean
+}
+
+export type AttendanceNormalizationCreateWithoutManagerApprovedByInput = {
+  id?: string
+  date: Date | string
+  type: $Enums.NormalizationType
+  managerApprovedAt?: Date | string | null
+  status?: $Enums.NormalizationStatus
+  reason?: string | null
+  hoursUsed?: number | null
+  normalizeAs?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  employee: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsAsSubjectInput
+  requestedBy: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsRequestedInput
+  approvedBy?: Prisma.EmployeeCreateNestedOneWithoutAttendanceNormalizationsApprovedInput
+}
+
+export type AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput = {
+  id?: string
+  employeeId: string
+  date: Date | string
+  type: $Enums.NormalizationType
+  requestedById: string
+  approvedById?: string | null
+  managerApprovedAt?: Date | string | null
+  status?: $Enums.NormalizationStatus
+  reason?: string | null
+  hoursUsed?: number | null
+  normalizeAs?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type AttendanceNormalizationCreateOrConnectWithoutManagerApprovedByInput = {
+  where: Prisma.AttendanceNormalizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput>
+}
+
+export type AttendanceNormalizationCreateManyManagerApprovedByInputEnvelope = {
+  data: Prisma.AttendanceNormalizationCreateManyManagerApprovedByInput | Prisma.AttendanceNormalizationCreateManyManagerApprovedByInput[]
   skipDuplicates?: boolean
 }
 
@@ -771,9 +941,12 @@ export type AttendanceNormalizationScalarWhereInput = {
   type?: Prisma.EnumNormalizationTypeFilter<"AttendanceNormalization"> | $Enums.NormalizationType
   requestedById?: Prisma.StringFilter<"AttendanceNormalization"> | string
   approvedById?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
+  managerApprovedById?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
+  managerApprovedAt?: Prisma.DateTimeNullableFilter<"AttendanceNormalization"> | Date | string | null
   status?: Prisma.EnumNormalizationStatusFilter<"AttendanceNormalization"> | $Enums.NormalizationStatus
   reason?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
   hoursUsed?: Prisma.IntNullableFilter<"AttendanceNormalization"> | number | null
+  normalizeAs?: Prisma.StringNullableFilter<"AttendanceNormalization"> | string | null
   createdAt?: Prisma.DateTimeFilter<"AttendanceNormalization"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"AttendanceNormalization"> | Date | string
 }
@@ -810,15 +983,34 @@ export type AttendanceNormalizationUpdateManyWithWhereWithoutApprovedByInput = {
   data: Prisma.XOR<Prisma.AttendanceNormalizationUpdateManyMutationInput, Prisma.AttendanceNormalizationUncheckedUpdateManyWithoutApprovedByInput>
 }
 
+export type AttendanceNormalizationUpsertWithWhereUniqueWithoutManagerApprovedByInput = {
+  where: Prisma.AttendanceNormalizationWhereUniqueInput
+  update: Prisma.XOR<Prisma.AttendanceNormalizationUpdateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedUpdateWithoutManagerApprovedByInput>
+  create: Prisma.XOR<Prisma.AttendanceNormalizationCreateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedCreateWithoutManagerApprovedByInput>
+}
+
+export type AttendanceNormalizationUpdateWithWhereUniqueWithoutManagerApprovedByInput = {
+  where: Prisma.AttendanceNormalizationWhereUniqueInput
+  data: Prisma.XOR<Prisma.AttendanceNormalizationUpdateWithoutManagerApprovedByInput, Prisma.AttendanceNormalizationUncheckedUpdateWithoutManagerApprovedByInput>
+}
+
+export type AttendanceNormalizationUpdateManyWithWhereWithoutManagerApprovedByInput = {
+  where: Prisma.AttendanceNormalizationScalarWhereInput
+  data: Prisma.XOR<Prisma.AttendanceNormalizationUpdateManyMutationInput, Prisma.AttendanceNormalizationUncheckedUpdateManyWithoutManagerApprovedByInput>
+}
+
 export type AttendanceNormalizationCreateManyEmployeeInput = {
   id?: string
   date: Date | string
   type: $Enums.NormalizationType
   requestedById: string
   approvedById?: string | null
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -829,9 +1021,12 @@ export type AttendanceNormalizationCreateManyRequestedByInput = {
   date: Date | string
   type: $Enums.NormalizationType
   approvedById?: string | null
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -842,9 +1037,28 @@ export type AttendanceNormalizationCreateManyApprovedByInput = {
   date: Date | string
   type: $Enums.NormalizationType
   requestedById: string
+  managerApprovedById?: string | null
+  managerApprovedAt?: Date | string | null
   status?: $Enums.NormalizationStatus
   reason?: string | null
   hoursUsed?: number | null
+  normalizeAs?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type AttendanceNormalizationCreateManyManagerApprovedByInput = {
+  id?: string
+  employeeId: string
+  date: Date | string
+  type: $Enums.NormalizationType
+  requestedById: string
+  approvedById?: string | null
+  managerApprovedAt?: Date | string | null
+  status?: $Enums.NormalizationStatus
+  reason?: string | null
+  hoursUsed?: number | null
+  normalizeAs?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -853,13 +1067,16 @@ export type AttendanceNormalizationUpdateWithoutEmployeeInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   requestedBy?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsRequestedNestedInput
   approvedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsApprovedNestedInput
+  managerApprovedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsManagerApprovedNestedInput
 }
 
 export type AttendanceNormalizationUncheckedUpdateWithoutEmployeeInput = {
@@ -868,9 +1085,12 @@ export type AttendanceNormalizationUncheckedUpdateWithoutEmployeeInput = {
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -881,9 +1101,12 @@ export type AttendanceNormalizationUncheckedUpdateManyWithoutEmployeeInput = {
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
   approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -892,13 +1115,16 @@ export type AttendanceNormalizationUpdateWithoutRequestedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employee?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsAsSubjectNestedInput
   approvedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsApprovedNestedInput
+  managerApprovedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsManagerApprovedNestedInput
 }
 
 export type AttendanceNormalizationUncheckedUpdateWithoutRequestedByInput = {
@@ -907,9 +1133,12 @@ export type AttendanceNormalizationUncheckedUpdateWithoutRequestedByInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -920,9 +1149,12 @@ export type AttendanceNormalizationUncheckedUpdateManyWithoutRequestedByInput = 
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -931,13 +1163,16 @@ export type AttendanceNormalizationUpdateWithoutApprovedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   employee?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsAsSubjectNestedInput
   requestedBy?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsRequestedNestedInput
+  managerApprovedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsManagerApprovedNestedInput
 }
 
 export type AttendanceNormalizationUncheckedUpdateWithoutApprovedByInput = {
@@ -946,9 +1181,12 @@ export type AttendanceNormalizationUncheckedUpdateWithoutApprovedByInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -959,9 +1197,60 @@ export type AttendanceNormalizationUncheckedUpdateManyWithoutApprovedByInput = {
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
   requestedById?: Prisma.StringFieldUpdateOperationsInput | string
+  managerApprovedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttendanceNormalizationUpdateWithoutManagerApprovedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  employee?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsAsSubjectNestedInput
+  requestedBy?: Prisma.EmployeeUpdateOneRequiredWithoutAttendanceNormalizationsRequestedNestedInput
+  approvedBy?: Prisma.EmployeeUpdateOneWithoutAttendanceNormalizationsApprovedNestedInput
+}
+
+export type AttendanceNormalizationUncheckedUpdateWithoutManagerApprovedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  employeeId?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  requestedById?: Prisma.StringFieldUpdateOperationsInput | string
+  approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type AttendanceNormalizationUncheckedUpdateManyWithoutManagerApprovedByInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  employeeId?: Prisma.StringFieldUpdateOperationsInput | string
+  date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  type?: Prisma.EnumNormalizationTypeFieldUpdateOperationsInput | $Enums.NormalizationType
+  requestedById?: Prisma.StringFieldUpdateOperationsInput | string
+  approvedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  managerApprovedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.EnumNormalizationStatusFieldUpdateOperationsInput | $Enums.NormalizationStatus
+  reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hoursUsed?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  normalizeAs?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -975,14 +1264,18 @@ export type AttendanceNormalizationSelect<ExtArgs extends runtime.Types.Extensio
   type?: boolean
   requestedById?: boolean
   approvedById?: boolean
+  managerApprovedById?: boolean
+  managerApprovedAt?: boolean
   status?: boolean
   reason?: boolean
   hoursUsed?: boolean
+  normalizeAs?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   requestedBy?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   approvedBy?: boolean | Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>
+  managerApprovedBy?: boolean | Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>
 }, ExtArgs["result"]["attendanceNormalization"]>
 
 export type AttendanceNormalizationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -992,14 +1285,18 @@ export type AttendanceNormalizationSelectCreateManyAndReturn<ExtArgs extends run
   type?: boolean
   requestedById?: boolean
   approvedById?: boolean
+  managerApprovedById?: boolean
+  managerApprovedAt?: boolean
   status?: boolean
   reason?: boolean
   hoursUsed?: boolean
+  normalizeAs?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   requestedBy?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   approvedBy?: boolean | Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>
+  managerApprovedBy?: boolean | Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>
 }, ExtArgs["result"]["attendanceNormalization"]>
 
 export type AttendanceNormalizationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1009,14 +1306,18 @@ export type AttendanceNormalizationSelectUpdateManyAndReturn<ExtArgs extends run
   type?: boolean
   requestedById?: boolean
   approvedById?: boolean
+  managerApprovedById?: boolean
+  managerApprovedAt?: boolean
   status?: boolean
   reason?: boolean
   hoursUsed?: boolean
+  normalizeAs?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   requestedBy?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   approvedBy?: boolean | Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>
+  managerApprovedBy?: boolean | Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>
 }, ExtArgs["result"]["attendanceNormalization"]>
 
 export type AttendanceNormalizationSelectScalar = {
@@ -1026,28 +1327,34 @@ export type AttendanceNormalizationSelectScalar = {
   type?: boolean
   requestedById?: boolean
   approvedById?: boolean
+  managerApprovedById?: boolean
+  managerApprovedAt?: boolean
   status?: boolean
   reason?: boolean
   hoursUsed?: boolean
+  normalizeAs?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type AttendanceNormalizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "date" | "type" | "requestedById" | "approvedById" | "status" | "reason" | "hoursUsed" | "createdAt" | "updatedAt", ExtArgs["result"]["attendanceNormalization"]>
+export type AttendanceNormalizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "employeeId" | "date" | "type" | "requestedById" | "approvedById" | "managerApprovedById" | "managerApprovedAt" | "status" | "reason" | "hoursUsed" | "normalizeAs" | "createdAt" | "updatedAt", ExtArgs["result"]["attendanceNormalization"]>
 export type AttendanceNormalizationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   requestedBy?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   approvedBy?: boolean | Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>
+  managerApprovedBy?: boolean | Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>
 }
 export type AttendanceNormalizationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   requestedBy?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   approvedBy?: boolean | Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>
+  managerApprovedBy?: boolean | Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>
 }
 export type AttendanceNormalizationIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   employee?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   requestedBy?: boolean | Prisma.EmployeeDefaultArgs<ExtArgs>
   approvedBy?: boolean | Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>
+  managerApprovedBy?: boolean | Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>
 }
 
 export type $AttendanceNormalizationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1056,6 +1363,7 @@ export type $AttendanceNormalizationPayload<ExtArgs extends runtime.Types.Extens
     employee: Prisma.$EmployeePayload<ExtArgs>
     requestedBy: Prisma.$EmployeePayload<ExtArgs>
     approvedBy: Prisma.$EmployeePayload<ExtArgs> | null
+    managerApprovedBy: Prisma.$EmployeePayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1064,12 +1372,18 @@ export type $AttendanceNormalizationPayload<ExtArgs extends runtime.Types.Extens
     type: $Enums.NormalizationType
     requestedById: string
     approvedById: string | null
+    managerApprovedById: string | null
+    managerApprovedAt: Date | null
     status: $Enums.NormalizationStatus
     reason: string | null
     /**
-     * * For SELF type: 1, 2, or 3 hours of monthly allowance used. MANAGER type: null.
+     * * For SELF type: 1, 2, or 3 hours of monthly allowance used. MANAGER/EMPLOYEE_REQUEST: null.
      */
     hoursUsed: number | null
+    /**
+     * * FULL_DAY or HALF_DAY - set by manager when approving.
+     */
+    normalizeAs: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["attendanceNormalization"]>
@@ -1469,6 +1783,7 @@ export interface Prisma__AttendanceNormalizationClient<T, Null = never, ExtArgs 
   employee<T extends Prisma.EmployeeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmployeeDefaultArgs<ExtArgs>>): Prisma.Prisma__EmployeeClient<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   requestedBy<T extends Prisma.EmployeeDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.EmployeeDefaultArgs<ExtArgs>>): Prisma.Prisma__EmployeeClient<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   approvedBy<T extends Prisma.AttendanceNormalization$approvedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AttendanceNormalization$approvedByArgs<ExtArgs>>): Prisma.Prisma__EmployeeClient<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  managerApprovedBy<T extends Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AttendanceNormalization$managerApprovedByArgs<ExtArgs>>): Prisma.Prisma__EmployeeClient<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1504,9 +1819,12 @@ export interface AttendanceNormalizationFieldRefs {
   readonly type: Prisma.FieldRef<"AttendanceNormalization", 'NormalizationType'>
   readonly requestedById: Prisma.FieldRef<"AttendanceNormalization", 'String'>
   readonly approvedById: Prisma.FieldRef<"AttendanceNormalization", 'String'>
+  readonly managerApprovedById: Prisma.FieldRef<"AttendanceNormalization", 'String'>
+  readonly managerApprovedAt: Prisma.FieldRef<"AttendanceNormalization", 'DateTime'>
   readonly status: Prisma.FieldRef<"AttendanceNormalization", 'NormalizationStatus'>
   readonly reason: Prisma.FieldRef<"AttendanceNormalization", 'String'>
   readonly hoursUsed: Prisma.FieldRef<"AttendanceNormalization", 'Int'>
+  readonly normalizeAs: Prisma.FieldRef<"AttendanceNormalization", 'String'>
   readonly createdAt: Prisma.FieldRef<"AttendanceNormalization", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"AttendanceNormalization", 'DateTime'>
 }
@@ -1913,6 +2231,25 @@ export type AttendanceNormalizationDeleteManyArgs<ExtArgs extends runtime.Types.
  * AttendanceNormalization.approvedBy
  */
 export type AttendanceNormalization$approvedByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Employee
+   */
+  select?: Prisma.EmployeeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Employee
+   */
+  omit?: Prisma.EmployeeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EmployeeInclude<ExtArgs> | null
+  where?: Prisma.EmployeeWhereInput
+}
+
+/**
+ * AttendanceNormalization.managerApprovedBy
+ */
+export type AttendanceNormalization$managerApprovedByArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
    * Select specific fields to fetch from the Employee
    */

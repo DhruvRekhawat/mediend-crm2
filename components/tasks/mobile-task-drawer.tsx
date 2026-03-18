@@ -29,7 +29,7 @@ import {
   Check,
 } from "lucide-react"
 import { PriorityIcon } from "./priority-icon"
-import { format } from "date-fns"
+import { format, startOfDay } from "date-fns"
 import { useAuth } from "@/hooks/use-auth"
 import { useMDTeamOverview } from "@/hooks/use-md-team"
 import { getAvatarColor } from "@/lib/avatar-colors"
@@ -94,7 +94,6 @@ export function MobileTaskDrawer({
   const [priority, setPriority] = useState<CreateTaskInput["priority"]>("MEDIUM")
   const [assigneeId, setAssigneeId] = useState<string>(() => {
     if (prefillAssigneeId) return prefillAssigneeId
-    if (isMD) return ""
     return user?.id ?? ""
   })
   const [projectId, setProjectId] = useState<string | null>(null)
@@ -155,7 +154,7 @@ export function MobileTaskDrawer({
         teamMembers.find((m) => m.id === effectiveAssigneeId)?.name ??
         prefillAssigneeName ??
         "Add assignees"
-    : "Add assignees"
+    : "Me"
 
   const selectedPriority = PRIORITIES.find((p) => p.value === (priority ?? "MEDIUM"))
   const selectedProjectName = projectId ? projects.find((p) => p.id === projectId)?.name : null
@@ -167,9 +166,9 @@ export function MobileTaskDrawer({
 
   const reset = useCallback(() => {
     setTitle("")
-    setDueDate(undefined)
+    setDueDate(startOfDay(new Date()))
     setPriority("MEDIUM")
-    setAssigneeId(prefillAssigneeId ?? (isMD ? "" : user?.id ?? ""))
+    setAssigneeId(prefillAssigneeId ?? user?.id ?? "")
     setProjectId(null)
     setNewProjectName("")
     setPickerOpen(null)
@@ -380,7 +379,7 @@ export function MobileTaskDrawer({
           <ScrollArea className="flex-1 min-h-0">
             <div className="px-2 pb-4">
               {!isMD && <p className="text-sm font-medium text-muted-foreground px-2 py-2">People</p>}
-              {!isMD && user && (
+              {user && (
                 <button
                   type="button"
                   className={cn(
@@ -399,25 +398,6 @@ export function MobileTaskDrawer({
                   </Avatar>
                   <span className="flex-1 truncate">Me</span>
                   {effectiveAssigneeId === user.id && <Check className="h-5 w-5 shrink-0 text-primary" />}
-                </button>
-              )}
-              {isMD && (
-                <button
-                  type="button"
-                  className={cn(
-                    "flex w-full min-h-[52px] items-center gap-3 rounded-lg px-3 py-3 text-base text-left touch-manipulation active:bg-muted/50",
-                    !effectiveAssigneeId && "bg-muted"
-                  )}
-                  onClick={() => {
-                    setAssigneeId("")
-                    setPickerOpen(null)
-                  }}
-                >
-                  <span className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                    —
-                  </span>
-                  <span className="flex-1 truncate">Select person</span>
-                  {!effectiveAssigneeId && <Check className="h-5 w-5 shrink-0 text-primary" />}
                 </button>
               )}
               {isMD ? (

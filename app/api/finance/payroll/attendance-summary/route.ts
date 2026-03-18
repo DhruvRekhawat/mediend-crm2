@@ -83,16 +83,19 @@ export async function GET(request: NextRequest) {
           status: 'APPROVED',
           date: { gte: monthStart, lte: monthEnd },
         },
-        select: { date: true },
+        select: { date: true, normalizeAs: true },
       }),
     ])
 
     const timing = getDepartmentTiming(employee.department)
     const grouped = groupAttendanceByDate(logs, timing)
 
-    const normalizedDates = new Set(
-      normalizations.map((n) => n.date.toISOString().split('T')[0])
-    )
+    const normalizedByDate = new Map<string, string>()
+    for (const n of normalizations) {
+      const dateKey = n.date.toISOString().split('T')[0]
+      const normAs = (n as { normalizeAs?: string | null }).normalizeAs
+      normalizedByDate.set(dateKey, normAs === 'HALF_DAY' ? 'HALF_DAY' : 'FULL_DAY')
+    }
 
     // From attendance records only: full days, half days, late fines
     let fullDays = 0
@@ -102,7 +105,12 @@ export async function GET(request: NextRequest) {
     for (const day of grouped) {
       const dateKey = day.date.toISOString().split('T')[0]
       attendedDates.add(dateKey)
-      if (day.isHalfDay) {
+      const normAs = normalizedByDate.get(dateKey)
+      if (normAs === 'FULL_DAY') {
+        fullDays += 1
+      } else if (normAs === 'HALF_DAY') {
+        halfDays += 1
+      } else if (day.isHalfDay) {
         halfDays += 1
       } else {
         fullDays += 1
@@ -110,10 +118,11 @@ export async function GET(request: NextRequest) {
       lateFines += day.penalty ?? 0
     }
 
-    // Approved normalizations for days with no punch: count as full days
-    for (const dateKey of normalizedDates) {
+    // Approved normalizations for days with no punch
+    for (const [dateKey, normAs] of normalizedByDate) {
       if (!attendedDates.has(dateKey)) {
-        fullDays += 1
+        if (normAs === 'HALF_DAY') halfDays += 1
+        else fullDays += 1
       }
     }
 

@@ -6,6 +6,7 @@ import { PriorityIcon } from "./priority-icon"
 import { format, differenceInDays } from "date-fns"
 import { type Task } from "@/hooks/use-tasks"
 import { useUpdateTask } from "@/hooks/use-tasks"
+import { useAuth } from "@/hooks/use-auth"
 import { cn } from "@/lib/utils"
 import { isSelfAssigned } from "@/lib/task-utils"
 import { Star, AlertTriangle, CalendarClock, Clock, UserCircle } from "lucide-react"
@@ -96,6 +97,7 @@ export function TaskRow({
   onExitAnimationEnd,
   className,
 }: TaskRowProps) {
+  const { user } = useAuth()
   const updateMutation = useUpdateTask()
   const isCompleted = task.status === "COMPLETED"
   const isEmployeeDone = task.status === "EMPLOYEE_DONE"
@@ -194,7 +196,7 @@ export function TaskRow({
         <span className="relative min-w-0 flex-1">
           <span
             className={cn(
-              "block break-words text-base md:text-sm font-medium leading-snug",
+              "block wrap-break-word text-base md:text-sm font-medium leading-snug",
               isDone && "text-muted-foreground"
             )}
           >
@@ -251,11 +253,13 @@ export function TaskRow({
           )}
           {showAssignee && isSelfAssigned(task) && (
             <span
-              className="flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400"
-              title="You assigned this task to yourself"
+              className="flex items-center gap-0.5 text-xs text-amber-600 dark:text-amber-400 truncate max-w-[140px]"
+              title={user?.id === task.createdById ? "You assigned this task to yourself" : undefined}
             >
               <UserCircle className="h-3 w-3 shrink-0" />
-              Self-assigned
+              {user?.id === task.createdById
+                ? "Self assigned"
+                : `Assigned by ${task.createdBy?.name ?? "—"}`}
             </span>
           )}
         </div>

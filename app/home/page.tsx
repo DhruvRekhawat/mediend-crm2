@@ -88,6 +88,7 @@ const ICON_COLOR_MAP: Record<string, string> = {
   'MD Messages': 'bg-pink-100 text-pink-600',
   Appointments: 'bg-sky-100 text-sky-600',
   Surgeries: 'bg-red-100 text-red-600',
+  'Dept Targets': 'bg-rose-100 text-rose-600',
   Finance: 'bg-yellow-100 text-yellow-600',
   'Finance Ledger': 'bg-lime-100 text-lime-600',
   Calendar: 'bg-teal-100 text-teal-600',
@@ -238,6 +239,51 @@ function RecentNotifications() {
   )
 }
 
+// ─── My Target Widget (for department heads) ──────────────────────────────────
+
+const HEAD_ROLES = ['SALES_HEAD', 'HR_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD'] as const
+
+function MyTargetWidget() {
+  const { user } = useAuth()
+  const isHead = user && HEAD_ROLES.includes(user.role as (typeof HEAD_ROLES)[number])
+  const { data } = useQuery({
+    queryKey: ['head-target-achievement', user?.id],
+    queryFn: () =>
+      apiGet<{
+        metric: string
+        currentMonth: { month: string; targetValue: number; actual: number; percentage: number }
+      }>(`/api/md/head-targets/achievement?headUserId=${user?.id}`),
+    enabled: !!user?.id && !!isHead,
+  })
+
+  if (!isHead || !data?.currentMonth || data.currentMonth.targetValue <= 0) return null
+
+  const { actual, targetValue, percentage } = data.currentMonth
+  const metricLabel =
+    data.metric === 'IPD_DONE'
+      ? 'IPD Done'
+      : data.metric === 'HEAD_COUNT'
+        ? 'New Hires'
+        : data.metric === 'LEADS_GENERATED'
+          ? 'Leads'
+          : 'Revenue'
+
+  const displayValue =
+    data.metric === 'REVENUE'
+      ? `₹${(actual / 100000).toFixed(1)}L / ₹${(targetValue / 100000).toFixed(1)}L`
+      : `${actual} / ${targetValue}`
+
+  return (
+    <StatCard
+      label={`My target (${metricLabel})`}
+      value={`${displayValue} · ${percentage}%`}
+      accent="emerald"
+      valueAccent
+      href="/md/targets"
+    />
+  )
+}
+
 // ─── KPI section ──────────────────────────────────────────────────────────────
 
 function KPISection() {
@@ -293,6 +339,7 @@ function KPISection() {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <MyTargetWidget />
       <StatCard
         label="My pending tasks"
         value={badgeCounts?.myPendingTasks ?? '—'}

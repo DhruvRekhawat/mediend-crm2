@@ -64,7 +64,6 @@ export function TaskInput({
   const [priority, setPriority] = useState<CreateTaskInput["priority"]>("MEDIUM")
   const [assigneeId, setAssigneeId] = useState<string>(() => {
     if (prefillAssignee) return prefillAssignee.id
-    if (isMD) return ""
     return user?.id ?? ""
   })
   const [projectId, setProjectId] = useState<string | null>(null)
@@ -99,9 +98,7 @@ export function TaskInput({
     ? effectiveAssigneeId === user?.id
       ? "Me"
       : assignableUsers.find((u) => u.id === effectiveAssigneeId)?.name ?? "Select person"
-    : isMD
-      ? "Select person"
-      : "Me"
+    : "Me"
 
   const canSubmit =
     !!title.trim() &&
@@ -112,7 +109,7 @@ export function TaskInput({
     setTitle("")
     setDueDate(undefined)
     setPriority("MEDIUM")
-    setAssigneeId(prefillAssignee ? prefillAssignee.id : isMD ? "" : user?.id ?? "")
+    setAssigneeId(prefillAssignee ? prefillAssignee.id : user?.id ?? "")
     setProjectId(null)
     setNewProjectName("")
     inputRef.current?.focus()
@@ -224,7 +221,7 @@ export function TaskInput({
             ) : (
               <button
                 type="button"
-                onClick={() => setAssigneeId(isMD ? "" : user?.id ?? "")}
+                onClick={() => setAssigneeId(user?.id ?? "")}
                 className="inline-flex items-center gap-1 rounded-full bg-blue-100 dark:bg-blue-900/40 pl-2 pr-1 py-0.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
               >
                 @{selectedAssigneeName}
@@ -359,7 +356,7 @@ export function TaskInput({
               </div>
               <div className="overflow-y-auto overflow-x-hidden max-h-[280px] overscroll-contain">
                 <div className="py-1">
-                  {!isMD && user && (
+                  {user && (
                     <button
                       type="button"
                       className={cn(
@@ -373,22 +370,6 @@ export function TaskInput({
                     >
                       {effectiveAssigneeId === user.id ? <Check className="h-4 w-4 shrink-0 text-primary" /> : <span className="w-4 shrink-0" />}
                       Me
-                    </button>
-                  )}
-                  {isMD && (
-                    <button
-                      type="button"
-                      className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm rounded-sm mx-1 hover:bg-muted/80 active:bg-muted",
-                        !effectiveAssigneeId ? "bg-muted text-foreground" : "text-muted-foreground"
-                      )}
-                      onClick={() => {
-                        setAssigneeId("")
-                        setAssigneePopoverOpen(false)
-                      }}
-                    >
-                      {!effectiveAssigneeId ? <Check className="h-4 w-4 shrink-0 text-primary" /> : <span className="w-4 shrink-0" />}
-                      Select person
                     </button>
                   )}
                   {assigneeOptions.map((u) => (

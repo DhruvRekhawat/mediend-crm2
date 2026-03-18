@@ -2,30 +2,19 @@ import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { getNormalizationDeadline, isWithinNormalizationWindow } from '@/lib/hrms/normalization-deadline'
 import { z } from 'zod'
 
 const bodySchema = z.object({
   employeeId: z.string(),
   dates: z.array(z.string().transform((s) => new Date(s))).min(1),
   reason: z.string().optional(),
+  normalizeAs: z.enum(['FULL_DAY', 'HALF_DAY']).default('FULL_DAY'),
 })
 
 function toDayStart(d: Date): Date {
   const [y, m, day] = d.toISOString().split('T')[0].split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, day, 0, 0, 0, 0))
-}
-
-/** Deadline for applying normalization for a given month: end of 5th of next month. */
-function getNormalizationDeadline(monthDate: Date): Date {
-  const y = monthDate.getUTCFullYear()
-  const m = monthDate.getUTCMonth()
-  return new Date(Date.UTC(y, m + 1, 5, 23, 59, 59, 999))
-}
-
-function isWithinApplicationWindow(date: Date, now: Date): boolean {
-  const monthStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0))
-  const deadline = getNormalizationDeadline(monthStart)
-  return now <= deadline
 }
 
 export async function POST(request: NextRequest) {
@@ -44,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { employeeId, dates, reason } = bodySchema.parse(body)
+    const { employeeId, dates, reason, normalizeAs } = bodySchema.parse(body)
 
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },
@@ -64,15 +53,14 @@ export async function POST(request: NextRequest) {
     )
 
     const now = new Date()
-    const outOfWindow = dayStarts.filter((d) => !isWithinApplicationWindow(d, now))
+    const outOfWindow = dayStarts.filter((d) => !isWithinNormalizationWindow(d, now))
     if (outOfWindow.length > 0) {
       const d = outOfWindow[0]
-      const monthStart = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1, 0, 0, 0, 0))
-      const deadline = getNormalizationDeadline(monthStart)
-      const monthKey = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-      const deadlineStr = `${deadline.getUTCDate()}/${deadline.getUTCMonth() + 1}/${deadline.getUTCFullYear()}`
+      const deadline = getNormalizationDeadline(d)
+      const dateKey = d.toISOString().split('T')[0]
+      const deadlineStr = deadline.toISOString().split('T')[0]
       return errorResponse(
-        `Cannot apply for ${monthKey} after the 5th of the next month (deadline was ${deadlineStr}). Remove out-of-window dates and try again.`,
+        `Cannot apply for ${dateKey} - deadline has passed (${deadlineStr}). Remove out-of-window dates and try again.`,
         400
       )
     }
@@ -107,8 +95,11 @@ export async function POST(request: NextRequest) {
         type: 'MANAGER',
         requestedById: manager.id,
         approvedById: null,
+        managerApprovedById: manager.id,
+        managerApprovedAt: new Date(),
         status: 'PENDING',
         reason: reason ?? null,
+        normalizeAs,
       })),
     })
 

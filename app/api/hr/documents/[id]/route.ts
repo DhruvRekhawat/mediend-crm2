@@ -5,7 +5,7 @@ import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { 
   generateOfferLetterHTML, 
-  generateAppraisalLetterHTML, 
+  generateIncrementLetterHTML, 
   generateExperienceLetterHTML, 
   generateRelievingLetterHTML 
 } from '@/lib/hrms/document-templates'
@@ -72,8 +72,8 @@ export async function GET(
           '<br><br><p>Signature: _________________ &nbsp;&nbsp;&nbsp;&nbsp; Date: _________________</p>'
         )
         break
-      case 'APPRAISAL_LETTER':
-        htmlContent = generateAppraisalLetterHTML(employeeData, metadata || undefined)
+      case 'INCREMENT_LETTER':
+        htmlContent = generateIncrementLetterHTML(employeeData, metadata || undefined)
         break
       case 'EXPERIENCE_LETTER':
         htmlContent = generateExperienceLetterHTML(employeeData, metadata || undefined)

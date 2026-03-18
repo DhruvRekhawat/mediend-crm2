@@ -14,7 +14,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
-import { CalendarIcon, CheckSquare, LayoutDashboard, ListTodo, MessageSquare, Search, Sparkles, Home, UserCircle, Wallet } from 'lucide-react'
+import { CalendarIcon, CheckSquare, LayoutDashboard, ListTodo, MessageSquare, Search, Sparkles, Home, UserCheck, UserCircle, Wallet } from 'lucide-react'
 import { useAI } from '@/components/ai/ai-provider'
 import { CommandPalette } from '@/components/command-palette'
 import { PageTransition } from '@/components/page-transition'
@@ -138,7 +138,7 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
 
     const hasApprovals = u.role === 'MD' || u.role === 'ADMIN' || hasPermission(u, 'finance:approve')
     const hasDashboard = ['SALES_HEAD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'ADMIN'].includes(u.role)
-    const hasCoreHr = ['USER', 'BD', 'SALES_HEAD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'].includes(u.role)
+    const hasCoreHr = ['USER', 'BD', 'TEAM_LEAD', 'INSURANCE_HEAD', 'PL_HEAD', 'HR_HEAD', 'FINANCE_HEAD', 'ADMIN'].includes(u.role)
     const hasPipeline = u.role === 'BD' || u.role === 'TEAM_LEAD'
     const hasMessages =
       u.role === 'MD' ||
@@ -216,15 +216,23 @@ export function AuthenticatedWrapper({ children }: { children: React.ReactNode }
       matchPrefixes: ['/home'],
     }
 
-    const profileItem: BottomNavItem = {
-      href: '/profile',
-      label: 'Profile',
-      icon: UserCircle,
-      matchPrefixes: ['/profile'],
-    }
+    const profileOrMdApprovalsItem: BottomNavItem =
+      u.role === 'MD'
+        ? {
+            href: '/md/md-approvals',
+            label: 'MD Approvals',
+            icon: UserCheck,
+            matchPrefixes: ['/md/md-approvals'],
+          }
+        : {
+            href: '/profile',
+            label: 'Profile',
+            icon: UserCircle,
+            matchPrefixes: ['/profile'],
+          }
 
     const leftItems = left.map(({ show, ...item }) => item)
-    const rightItems = [...right.map(({ show, ...item }) => item), profileItem]
+    const rightItems = [...right.map(({ show, ...item }) => item), profileOrMdApprovalsItem]
     return [...leftItems, homeItem, ...rightItems]
   }, [user, badgeCounts])
 

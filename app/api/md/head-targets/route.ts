@@ -1,0 +1,277 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/session'
+import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { z } from 'zod'
+const HEAD_ROLES = ['SALES_HEAD', 'HR_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD'] as const
+
+function getMonthBounds(monthOffset = 0) {
+  const d = new Date()
+  d.setMonth(d.getMonth() + monthOffset)
+  const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+  return { start, end }
+}
+
+async function computeAchievement(
+  metric: string,
+  start: Date,
+  end: Date
+): Promise<number> {
+  switch (metric) {
+    case 'IPD_DONE': {
+      const count = await prisma.lead.count({
+        where: {
+          pipelineStage: 'COMPLETED',
+          OR: [
+            { conversionDate: { gte: start, lte: end } },
+            {
+              AND: [
+                { conversionDate: null },
+                { surgeryDate: { gte: start, lte: end } },
+              ],
+            },
+            {
+              AND: [
+                { conversionDate: null },
+                { surgeryDate: null },
+                { leadDate: { gte: start, lte: end } },
+              ],
+            },
+          ],
+        },
+      })
+      return count
+    }
+    case 'HEAD_COUNT': {
+      const count = await prisma.employee.count({
+        where: {
+          createdAt: { gte: start, lte: end },
+        },
+      })
+      return count
+    }
+    case 'LEADS_GENERATED': {
+      const count = await prisma.incomingLead.count({
+        where: {
+          receivedAt: { gte: start, lte: end },
+        },
+      })
+      return count
+    }
+    case 'REVENUE': {
+      const result = await prisma.salesEntry.aggregate({
+        where: {
+          transactionDate: { gte: start, lte: end },
+          isDeleted: false,
+        },
+        _sum: { amount: true },
+      })
+      return result._sum.amount ?? 0
+    }
+    default:
+      return 0
+  }
+}
+
+function getMetricForRole(role: string): string {
+  switch (role) {
+    case 'SALES_HEAD':
+      return 'IPD_DONE'
+    case 'HR_HEAD':
+      return 'HEAD_COUNT'
+    case 'DIGITAL_MARKETING_HEAD':
+      return 'LEADS_GENERATED'
+    case 'IT_HEAD':
+      return 'REVENUE'
+    default:
+      return 'IPD_DONE'
+  }
+}
+
+function getDepartmentLabel(role: string): string {
+  switch (role) {
+    case 'SALES_HEAD':
+      return 'Sales'
+    case 'HR_HEAD':
+      return 'HR'
+    case 'DIGITAL_MARKETING_HEAD':
+      return 'Digital Marketing'
+    case 'IT_HEAD':
+      return 'IT'
+    default:
+      return role.replace(/_/g, ' ')
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) return unauthorizedResponse()
+    if (user.role !== 'MD' && user.role !== 'ADMIN') {
+      return errorResponse('Forbidden', 403)
+    }
+
+    const { start, end } = getMonthBounds(0)
+
+    const heads = await prisma.user.findMany({
+      where: {
+        role: { in: [...HEAD_ROLES] },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        profilePicture: true,
+        departmentHeadOf: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { name: 'asc' },
+    })
+
+    const headIds = heads.map((h) => h.id)
+
+    const targets = await prisma.target.findMany({
+      where: {
+        targetType: 'DEPARTMENT_HEAD',
+        targetForId: { in: headIds },
+        periodStartDate: { lte: end },
+        periodEndDate: { gte: start },
+      },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+      },
+      orderBy: { periodStartDate: 'desc' },
+    })
+
+    const targetByHead = new Map(targets.map((t) => [t.targetForId, t]))
+
+    const result = await Promise.all(
+      heads.map(async (head) => {
+        const target = targetByHead.get(head.id)
+        const metric = target?.metric ?? getMetricForRole(head.role)
+        const targetValue = target?.targetValue ?? 0
+        const actual = await computeAchievement(metric, start, end)
+        const percentage =
+          targetValue > 0 ? Math.round((actual / targetValue) * 100) : 0
+
+        return {
+          head: {
+            id: head.id,
+            name: head.name,
+            email: head.email,
+            role: head.role,
+            profilePicture: head.profilePicture,
+            department: head.departmentHeadOf[0] ?? null,
+            departmentLabel: getDepartmentLabel(head.role),
+          },
+          activeTarget: target
+            ? {
+                id: target.id,
+                metric: target.metric,
+                targetValue: target.targetValue,
+                periodStartDate: target.periodStartDate.toISOString(),
+                periodEndDate: target.periodEndDate.toISOString(),
+                periodType: target.periodType,
+              }
+            : null,
+          achievement: {
+            actual,
+            targetValue,
+            percentage,
+            metric,
+          },
+        }
+      })
+    )
+
+    return successResponse(result)
+  } catch (error) {
+    console.error('Error fetching head targets:', error)
+    return errorResponse('Failed to fetch head targets', 500)
+  }
+}
+
+const createTargetSchema = z.object({
+  headUserId: z.string(),
+  metric: z.enum([
+    'IPD_DONE',
+    'HEAD_COUNT',
+    'LEADS_GENERATED',
+    'REVENUE',
+  ]),
+  targetValue: z.number().positive(),
+  periodStartDate: z.string(),
+  periodEndDate: z.string(),
+  periodType: z.enum(['WEEK', 'MONTH']),
+  departmentBreakdown: z
+    .array(
+      z.object({
+        departmentId: z.string(),
+        addCount: z.number().int().min(0),
+      })
+    )
+    .optional(),
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) return unauthorizedResponse()
+    if (user.role !== 'MD' && user.role !== 'ADMIN') {
+      return errorResponse('Forbidden', 403)
+    }
+
+    const body = await request.json()
+    const data = createTargetSchema.parse(body)
+
+    const headUser = await prisma.user.findUnique({
+      where: { id: data.headUserId },
+    })
+    if (!headUser) return errorResponse('Head user not found', 404)
+    if (!HEAD_ROLES.includes(headUser.role as (typeof HEAD_ROLES)[number])) {
+      return errorResponse('User is not a department head', 400)
+    }
+
+    const periodStart = new Date(data.periodStartDate)
+    const periodEnd = new Date(data.periodEndDate)
+
+    await prisma.target.deleteMany({
+      where: {
+        targetType: 'DEPARTMENT_HEAD',
+        targetForId: data.headUserId,
+        periodStartDate: periodStart,
+        periodEndDate: periodEnd,
+      },
+    })
+
+    const target = await prisma.target.create({
+      data: {
+        targetType: 'DEPARTMENT_HEAD',
+        targetForId: data.headUserId,
+        periodType: data.periodType,
+        periodStartDate: periodStart,
+        periodEndDate: periodEnd,
+        metric: data.metric,
+        targetValue: data.targetValue,
+        createdById: user.id,
+      },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+      },
+    })
+
+    return successResponse(target, 'Target created successfully')
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse(
+        error.errors.map((e) => e.message).join('; ') || 'Invalid request data',
+        400
+      )
+    }
+    console.error('Error creating head target:', error)
+    return errorResponse('Failed to create target', 500)
+  }
+}

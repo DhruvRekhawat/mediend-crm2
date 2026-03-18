@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getSession()
     if (!user) return unauthorizedResponse()
-    if (user.role !== UserRole.MD && user.role !== UserRole.SALES_HEAD) {
+    if (user.role !== UserRole.MD && user.role !== UserRole.SALES_HEAD && user.role !== UserRole.EXECUTIVE_ASSISTANT) {
       return errorResponse('Forbidden', 403)
     }
 

@@ -1,0 +1,117 @@
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { getSessionFromRequest } from '@/lib/session'
+import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { isWithinNormalizationWindow } from '@/lib/hrms/normalization-deadline'
+import { z } from 'zod'
+
+const bodySchema = z.object({
+  dates: z.array(z.string().transform((s) => new Date(s))).min(1),
+  reason: z.string().optional(),
+})
+
+function toDayStart(d: Date): Date {
+  const [y, m, day] = d.toISOString().split('T')[0].split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, day, 0, 0, 0, 0))
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = getSessionFromRequest(request)
+    if (!user) {
+      return unauthorizedResponse()
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: { userId: user.id },
+      include: {
+        user: { select: { name: true } },
+        manager: { select: { id: true, userId: true } },
+      },
+    })
+
+    if (!employee) {
+      return errorResponse('Employee record not found', 404)
+    }
+
+    if (!employee.managerId || !employee.manager) {
+      return errorResponse('You do not have a manager. Cannot request normalization.', 400)
+    }
+
+    const body = await request.json()
+    const { dates, reason } = bodySchema.parse(body)
+
+    const dayStarts = [...new Set(dates.map(toDayStart).map((d) => d.getTime()))].map(
+      (t) => new Date(t)
+    )
+
+    const now = new Date()
+    const outOfWindow = dayStarts.filter((d) => !isWithinNormalizationWindow(d, now))
+    if (outOfWindow.length > 0) {
+      const d = outOfWindow[0]
+      const dateKey = d.toISOString().split('T')[0]
+      return errorResponse(
+        `Cannot request normalization for ${dateKey} - deadline has passed. Normalization must be applied within the same week (from April 2026) or by 5th of next month.`,
+        400
+      )
+    }
+
+    const existingNorm = await prisma.attendanceNormalization.findMany({
+      where: {
+        employeeId: employee.id,
+        date: { in: dayStarts },
+      },
+      select: { date: true },
+    })
+    const existingSet = new Set(
+      existingNorm.map((n) => n.date.toISOString().split('T')[0])
+    )
+
+    const toCreate = dayStarts.filter((d) => {
+      const key = d.toISOString().split('T')[0]
+      return !existingSet.has(key)
+    })
+
+    if (toCreate.length === 0) {
+      return successResponse(
+        { created: 0, skipped: dayStarts.length, message: 'All selected days already have a normalization or pending request' },
+        'No new requests created'
+      )
+    }
+
+    await prisma.attendanceNormalization.createMany({
+      data: toCreate.map((date) => ({
+        employeeId: employee.id,
+        date,
+        type: 'EMPLOYEE_REQUEST',
+        requestedById: employee.id,
+        status: 'PENDING',
+        reason: reason ?? null,
+      })),
+    })
+
+    if (employee.manager.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: employee.manager.userId,
+          type: 'NORMALIZATION_REQUESTED',
+          title: 'Normalization Request',
+          message: `${employee.user?.name ?? 'An employee'} has requested attendance normalization for ${toCreate.length} day(s)`,
+          link: '/employee/my-team?tab=normalization',
+          relatedId: employee.id,
+        },
+      })
+    }
+
+    return successResponse(
+      { created: toCreate.length, skipped: dayStarts.length - toCreate.length },
+      `Requested normalization for ${toCreate.length} day(s). Pending manager approval.`
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return errorResponse('Invalid request data', 400)
+    }
+    console.error('Error creating normalization request:', error)
+    return errorResponse('Failed to request normalization', 500)
+  }
+}

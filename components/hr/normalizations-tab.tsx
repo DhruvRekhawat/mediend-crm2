@@ -23,6 +23,7 @@ interface NormalizationRow {
   type: string
   status: string
   reason: string | null
+  normalizeAs: string | null
   createdAt: string
   requestedBy: string | null
   requestedByEmail: string | null
@@ -67,7 +68,7 @@ export function NormalizationsTab() {
       <div>
         <h1 className="text-3xl font-bold">Attendance Normalizations</h1>
         <p className="text-muted-foreground mt-1">
-          Manager-applied normalization requests. Approve or reject to finalize.
+          Manager and employee normalization requests (manager-approved). Approve or reject to finalize.
         </p>
       </div>
 
@@ -122,6 +123,8 @@ export function NormalizationsTab() {
                 <TableRow>
                   <TableHead>Employee</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Normalize as</TableHead>
                   <TableHead>Requested by</TableHead>
                   <TableHead>Reason</TableHead>
                   <TableHead>Status</TableHead>
@@ -136,6 +139,12 @@ export function NormalizationsTab() {
                       <span className="block text-xs text-muted-foreground">{row.employeeCode} · {row.employeeEmail}</span>
                     </TableCell>
                     <TableCell>{format(new Date(row.date), 'PPP')}</TableCell>
+                    <TableCell>
+                      {row.type === 'EMPLOYEE_REQUEST' ? 'Employee Request' : 'Manager'}
+                    </TableCell>
+                    <TableCell>
+                      {row.normalizeAs === 'HALF_DAY' ? 'Half Day' : row.normalizeAs === 'FULL_DAY' ? 'Full Day' : '—'}
+                    </TableCell>
                     <TableCell>
                       {row.requestedBy ?? '—'}
                       {row.requestedByEmail && <span className="block text-xs text-muted-foreground">{row.requestedByEmail}</span>}

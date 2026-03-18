@@ -10,9 +10,12 @@ import { useBackClose } from "@/providers/back-close-provider"
 function Sheet({
   open,
   onOpenChange,
+  skipBackOnCloseRef,
   ...props
-}: React.ComponentProps<typeof SheetPrimitive.Root>) {
-  useBackClose(open, onOpenChange)
+}: React.ComponentProps<typeof SheetPrimitive.Root> & {
+  skipBackOnCloseRef?: React.RefObject<boolean>
+}) {
+  useBackClose(open, onOpenChange, skipBackOnCloseRef)
   return (
     <SheetPrimitive.Root
       data-slot="sheet"

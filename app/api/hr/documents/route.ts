@@ -5,7 +5,7 @@ import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
 import { 
   generateOfferLetterHTML, 
-  generateAppraisalLetterHTML, 
+  generateIncrementLetterHTML, 
   generateExperienceLetterHTML, 
   generateRelievingLetterHTML 
 } from '@/lib/hrms/document-templates'
@@ -14,7 +14,7 @@ import { DocumentType } from '@/generated/prisma/client'
 
 const generateDocumentSchema = z.object({
   employeeId: z.string(),
-  documentType: z.enum(['OFFER_LETTER', 'APPRAISAL_LETTER', 'EXPERIENCE_LETTER', 'RELIEVING_LETTER']),
+  documentType: z.enum(['OFFER_LETTER', 'INCREMENT_LETTER', 'EXPERIENCE_LETTER', 'RELIEVING_LETTER']),
   metadata: z.record(z.any()).optional(),
 })
 
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
       case 'OFFER_LETTER':
         htmlContent = generateOfferLetterHTML(employeeData, metadata)
         break
-      case 'APPRAISAL_LETTER':
-        htmlContent = generateAppraisalLetterHTML(employeeData, metadata)
+      case 'INCREMENT_LETTER':
+        htmlContent = generateIncrementLetterHTML(employeeData, metadata)
         break
       case 'EXPERIENCE_LETTER':
         htmlContent = generateExperienceLetterHTML(employeeData, metadata)

@@ -1,0 +1,8 @@
+-- Add DEPARTMENT_HEAD to TargetType enum
+ALTER TYPE "TargetType" ADD VALUE IF NOT EXISTS 'DEPARTMENT_HEAD';
+
+-- Add new metrics to TargetMetric enum for department head targets
+ALTER TYPE "TargetMetric" ADD VALUE IF NOT EXISTS 'IPD_DONE';
+ALTER TYPE "TargetMetric" ADD VALUE IF NOT EXISTS 'HEAD_COUNT';
+ALTER TYPE "TargetMetric" ADD VALUE IF NOT EXISTS 'LEADS_GENERATED';
+ALTER TYPE "TargetMetric" ADD VALUE IF NOT EXISTS 'REVENUE';

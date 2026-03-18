@@ -46,7 +46,7 @@ export function OverviewTab() {
   const [expandedAssigneeId, setExpandedAssigneeId] = useState<string | null>(null)
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [taskToComplete, setTaskToComplete] = useState<Task | null>(null)
-  const [statDrawer, setStatDrawer] = useState<"total" | "completed" | "pending" | "pendingReview" | null>(null)
+  const [statDrawer, setStatDrawer] = useState<"total" | "completed" | "pending" | "pendingReview" | "overdue" | null>(null)
   const isMobile = useIsMobile()
 
   const canMarkComplete = (task: Task) =>
@@ -84,10 +84,12 @@ export function OverviewTab() {
         return tasks.filter((t) => t.status === "PENDING" || t.status === "IN_PROGRESS")
       case "pendingReview":
         return tasks.filter((t) => t.status === "EMPLOYEE_DONE")
+      case "overdue":
+        return overdueTasks
       default:
         return []
     }
-  }, [statDrawer, tasks])
+  }, [statDrawer, tasks, overdueTasks])
 
   if (statsError) {
     return (
@@ -121,7 +123,9 @@ export function OverviewTab() {
           ? "Pending"
           : statDrawer === "pendingReview"
             ? "Needs review"
-            : ""
+            : statDrawer === "overdue"
+              ? "Overdue"
+              : ""
 
   return (
     <div className="space-y-6">
@@ -158,7 +162,14 @@ export function OverviewTab() {
               className="cursor-pointer active:opacity-80"
               onClick={() => setStatDrawer("pendingReview")}
             />
-            <StatCard label="Overdue" value={stats.overdue} accent="red" valueAccent />
+            <StatCard
+              label="Overdue"
+              value={stats.overdue}
+              accent="red"
+              valueAccent
+              className="cursor-pointer active:opacity-80"
+              onClick={() => setStatDrawer("overdue")}
+            />
           </>
         ) : (
           <>

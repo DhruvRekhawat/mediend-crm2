@@ -63,7 +63,7 @@ export const navItems: NavItem[] = [
     title: 'Sales Dashboard',
     url: '/md/sales',
     icon: TrendingUp,
-    roles: ['MD', 'ADMIN', 'SALES_HEAD'],
+    roles: ['MD', 'ADMIN', 'SALES_HEAD', 'EXECUTIVE_ASSISTANT'],
   },
   {
     title: 'Finance Dashboard',
@@ -72,10 +72,16 @@ export const navItems: NavItem[] = [
     roles: ['MD', 'ADMIN'],
   },
   {
-    title: 'HR Dashboard',
+    title: 'MD HR Dashboard',
     url: '/md/hr',
     icon: Users,
-    roles: ['MD', 'ADMIN'],
+    roles: ['MD', 'ADMIN', 'EXECUTIVE_ASSISTANT'],
+  },
+  {
+    title: 'Dept Targets',
+    url: '/md/targets',
+    icon: Target,
+    roles: ['MD', 'ADMIN', 'SALES_HEAD', 'HR_HEAD', 'DIGITAL_MARKETING_HEAD', 'IT_HEAD'],
   },
   {
     title: 'HR Dashboard',
@@ -308,7 +314,7 @@ function filterNavItems(user: SessionUser | null): NavItem[] {
       return (
         item.title === 'Sales Dashboard' ||
         item.title === 'Finance Dashboard' ||
-        item.title === 'HR Dashboard' ||
+        item.title === 'MD HR Dashboard' ||
         item.title.startsWith('MD ')
       )
     }
@@ -320,6 +326,8 @@ function filterNavItems(user: SessionUser | null): NavItem[] {
       return true
     }
     if (user.role === 'ADMIN' || user.role === 'TESTER') {
+      // Exclude HR_HEAD-only HR Dashboard to avoid duplicate (ADMIN sees MD HR Dashboard)
+      if (item.title === 'HR Dashboard' && item.url === '/hr/dashboard') return false
       return true
     }
     if (item.roles) {

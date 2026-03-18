@@ -49,8 +49,12 @@ export async function PATCH(
       return errorResponse('This request is not pending', 400)
     }
 
-    if (normalization.type !== 'MANAGER') {
-      return errorResponse('Only manager-initiated normalizations can be approved by HR', 400)
+    if (normalization.type !== 'MANAGER' && normalization.type !== 'EMPLOYEE_REQUEST') {
+      return errorResponse('Only manager-initiated or employee-request normalizations can be approved by HR', 400)
+    }
+
+    if (!normalization.managerApprovedAt) {
+      return errorResponse('Manager must approve this request before HR can finalize', 400)
     }
 
     const hrEmployee = await prisma.employee.findUnique({

@@ -53,7 +53,8 @@ export type PipelineStage = (typeof PipelineStage)[keyof typeof PipelineStage]
 
 export const TargetType = {
   BD: 'BD',
-  TEAM: 'TEAM'
+  TEAM: 'TEAM',
+  DEPARTMENT_HEAD: 'DEPARTMENT_HEAD'
 } as const
 
 export type TargetType = (typeof TargetType)[keyof typeof TargetType]
@@ -71,7 +72,11 @@ export const TargetMetric = {
   LEADS_CLOSED: 'LEADS_CLOSED',
   NET_PROFIT: 'NET_PROFIT',
   BILL_AMOUNT: 'BILL_AMOUNT',
-  SURGERIES_DONE: 'SURGERIES_DONE'
+  SURGERIES_DONE: 'SURGERIES_DONE',
+  IPD_DONE: 'IPD_DONE',
+  HEAD_COUNT: 'HEAD_COUNT',
+  LEADS_GENERATED: 'LEADS_GENERATED',
+  REVENUE: 'REVENUE'
 } as const
 
 export type TargetMetric = (typeof TargetMetric)[keyof typeof TargetMetric]
@@ -122,7 +127,7 @@ export type PayrollComponentType = (typeof PayrollComponentType)[keyof typeof Pa
 
 export const DocumentType = {
   OFFER_LETTER: 'OFFER_LETTER',
-  APPRAISAL_LETTER: 'APPRAISAL_LETTER',
+  INCREMENT_LETTER: 'INCREMENT_LETTER',
   EXPERIENCE_LETTER: 'EXPERIENCE_LETTER',
   RELIEVING_LETTER: 'RELIEVING_LETTER',
   CUSTOM: 'CUSTOM'
@@ -373,7 +378,8 @@ export type PreAuthStatus = (typeof PreAuthStatus)[keyof typeof PreAuthStatus]
 
 export const NormalizationType = {
   SELF: 'SELF',
-  MANAGER: 'MANAGER'
+  MANAGER: 'MANAGER',
+  EMPLOYEE_REQUEST: 'EMPLOYEE_REQUEST'
 } as const
 
 export type NormalizationType = (typeof NormalizationType)[keyof typeof NormalizationType]

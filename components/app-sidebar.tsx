@@ -93,13 +93,16 @@ function getBadgeCount(
 export function AppSidebar() {
   const { user, logout, isTester, setActiveRole } = useAuth()
   const pathname = usePathname()
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { isMobile, setOpenMobile, navigatingRef } = useSidebar()
   const { data: badgeCounts } = useBadgeCounts()
   const isMdOrAdmin = user?.role === 'MD' || user?.role === 'ADMIN'
 
   const closeSidebarOnMobile = React.useCallback(() => {
-    if (isMobile) setOpenMobile(false)
-  }, [isMobile, setOpenMobile])
+    if (isMobile) {
+      navigatingRef.current = true
+      setOpenMobile(false)
+    }
+  }, [isMobile, setOpenMobile, navigatingRef])
   const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({
     services: false,
     finance: false,
@@ -130,7 +133,7 @@ export function AppSidebar() {
             item.title === 'Tasks' ||
             item.title === 'Sales Dashboard' ||
             item.title === 'Finance Dashboard' ||
-            item.title === 'HR Dashboard' ||
+            item.title === 'MD HR Dashboard' ||
             item.title.startsWith('MD ')
         )
       : user.role === 'ADMIN' || user.role === 'TESTER'
@@ -140,23 +143,20 @@ export function AppSidebar() {
               item.title === 'Tasks' ||
               item.title === 'Sales Dashboard' ||
               item.title === 'Finance Dashboard' ||
-              item.title === 'HR Dashboard' ||
+              item.title === 'MD HR Dashboard' ||
               item.title.startsWith('MD ') ||
               item.title === 'Attendance & Leaves' ||
               item.title === 'People & Org' ||
               item.title === 'Compensation & Docs' ||
               item.title === 'Engagement'
           )
-        : user.role === 'USER'
+        : user.role === 'EXECUTIVE_ASSISTANT'
           ? itemsWithUrls.filter(
               (item) =>
                 item.title === 'Home' ||
                 item.title === 'Tasks' ||
-                item.title.startsWith('My ')
-            )
-          : itemsWithUrls.filter(
-              (item) =>
-                item.title === 'Home' ||
+                item.title === 'Sales Dashboard' ||
+                item.title === 'MD HR Dashboard' ||
                 item.title.startsWith('My ') ||
                 item.title === 'Attendance & Leaves' ||
                 item.title === 'People & Org' ||
@@ -165,6 +165,29 @@ export function AppSidebar() {
                 (!item.title.startsWith('Svc ') &&
                   !item.title.startsWith('MD ') &&
                   !item.title.startsWith('Fin '))
+            )
+          : user.role === 'USER'
+          ? itemsWithUrls.filter(
+              (item) =>
+                item.title === 'Home' ||
+                item.title === 'Tasks' ||
+                item.title.startsWith('My ')
+            )
+          : itemsWithUrls.filter(
+              (item) => {
+                if (user.role === 'SALES_HEAD' && HRM_TITLES.includes(item.title)) return false
+                return (
+                  item.title === 'Home' ||
+                  item.title.startsWith('My ') ||
+                  item.title === 'Attendance & Leaves' ||
+                  item.title === 'People & Org' ||
+                  item.title === 'Compensation & Docs' ||
+                  item.title === 'Engagement' ||
+                  (!item.title.startsWith('Svc ') &&
+                    !item.title.startsWith('MD ') &&
+                    !item.title.startsWith('Fin '))
+                )
+              }
             )
 
   const mainItems = navigationItems.filter((item) => {
@@ -464,6 +487,7 @@ export function AppSidebar() {
                   <option value="HR_HEAD">HR_HEAD</option>
                   <option value="FINANCE_HEAD">FINANCE_HEAD</option>
                   <option value="IT_HEAD">IT_HEAD</option>
+                  <option value="EXECUTIVE_ASSISTANT">EXECUTIVE_ASSISTANT</option>
                   <option value="ADMIN">ADMIN</option>
                   <option value="USER">USER</option>
                 </select>

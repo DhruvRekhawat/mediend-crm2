@@ -85,10 +85,6 @@ export async function GET(request: NextRequest) {
     const isMD = user.role === 'MD' || user.role === 'ADMIN'
     const isFinance = user.role === 'FINANCE_HEAD'
 
-    if (isFinance && !financePending) {
-      return successResponse([])
-    }
-
     const where: Prisma.MDApprovalRequestWhereInput = {}
     if (financePending && isFinance) {
       where.status = MDApprovalStatus.APPROVED
@@ -97,7 +93,7 @@ export async function GET(request: NextRequest) {
     } else if (status && status in MDApprovalStatus) {
       where.status = status as (typeof MDApprovalStatus)[keyof typeof MDApprovalStatus]
     }
-    if (!isMD && !isFinance) {
+    if (!isMD && !(isFinance && financePending)) {
       where.requestedById = user.id
     }
 

@@ -20,13 +20,20 @@ export async function GET(request: NextRequest) {
     const toDate = searchParams.get('toDate')
 
     const where: {
-      type: 'MANAGER'
+      type: { in: ['MANAGER', 'EMPLOYEE_REQUEST'] }
       status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+      managerApprovedAt?: { not: null } | null
       date?: { gte?: Date; lte?: Date }
-    } = { type: 'MANAGER' }
+    } = {
+      type: { in: ['MANAGER', 'EMPLOYEE_REQUEST'] },
+    }
 
     if (status) {
       where.status = status
+    }
+
+    if (status === 'PENDING') {
+      where.managerApprovedAt = { not: null }
     }
 
     if (fromDate || toDate) {
@@ -78,6 +85,7 @@ export async function GET(request: NextRequest) {
         type: n.type,
         status: n.status,
         reason: n.reason,
+        normalizeAs: n.normalizeAs ?? null,
         createdAt: n.createdAt.toISOString(),
         requestedBy: n.requestedBy?.user?.name ?? null,
         requestedByEmail: n.requestedBy?.user?.email ?? null,

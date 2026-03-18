@@ -50,7 +50,8 @@ export function BackCloseProvider({ children }: { children: React.ReactNode }) {
 
 export function useBackClose(
   open: boolean | undefined,
-  onOpenChange: ((open: boolean) => void) | undefined
+  onOpenChange: ((open: boolean) => void) | undefined,
+  skipBackOnCloseRef?: React.RefObject<boolean>
 ) {
   const ctx = React.useContext(BackCloseContext)
   const unregisterRef = useRef<(() => void) | null>(null)
@@ -79,11 +80,15 @@ export function useBackClose(
       unregisterRef.current?.()
       unregisterRef.current = null
       if (pushedRef.current && !closedByBackRef.current) {
-        ctx.consumeHistoryEntry()
+        if (skipBackOnCloseRef?.current) {
+          skipBackOnCloseRef.current = false
+        } else {
+          ctx.consumeHistoryEntry()
+        }
       }
       pushedRef.current = false
     }
-  }, [open, ctx])
+  }, [open, ctx, skipBackOnCloseRef])
 
   // Cleanup if component unmounts while open
   useEffect(() => {

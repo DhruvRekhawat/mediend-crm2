@@ -17,15 +17,52 @@ interface CompanyData {
   state: string
   pincode: string
   email: string
+  website: string
+  cin: string
 }
 
 const COMPANY_DATA: CompanyData = {
-  name: 'Kundkund Healthcare Private Limited',
-  address: 'H-166, Sector 63 Rd, H Block, Sector 63, Noida, Uttar Pradesh 201309',
+  name: 'Kundkund Healthcare Pvt. Ltd.',
+  address: 'FF, H-166, Sector 63 Rd, H Block, Sector 63, Noida, Uttar Pradesh 201301',
   city: 'Noida',
   state: 'Uttar Pradesh',
-  pincode: '201309',
-  email: 'hr@mediend.com',
+  pincode: '201301',
+  email: 'info@mediend.com',
+  website: 'www.mediend.com',
+  cin: 'U74999UP2022PTC174636',
+}
+
+function getBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL || 'https://app.mediend.com'
+}
+
+function renderLetterhead(): string {
+  const baseUrl = getBaseUrl()
+  const logoUrl = `${baseUrl}/images/mediend-logo.png`
+  return `
+  <div class="letterhead">
+    <img src="${logoUrl}" alt="Mediend" style="max-width: 200px; height: auto;" />
+  </div>`
+}
+
+function renderSignature(): string {
+  const baseUrl = getBaseUrl()
+  const stampUrl = `${baseUrl}/images/hr-sign-and-stamp.png`
+  return `
+  <div class="signature">
+    <img src="${stampUrl}" alt="Authorized Signature" style="max-width: 180px; height: auto; display: block; margin-bottom: 8px;" />
+    <p><strong>Vaishali Tomar</strong></p>
+    <p>Senior Manager-Human Resources</p>
+  </div>`
+}
+
+function renderFooter(): string {
+  return `
+  <div class="doc-footer">
+    <p class="footer-company"><strong>${COMPANY_DATA.name}</strong></p>
+    <p class="footer-address">${COMPANY_DATA.address}</p>
+    <p class="footer-contact">${COMPANY_DATA.email} | ${COMPANY_DATA.website} | CIN ${COMPANY_DATA.cin}</p>
+  </div>`
 }
 
 function formatCurrency(amount: number): string {
@@ -40,7 +77,7 @@ function numberToWords(num: number): string {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
     'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-  
+
   if (num === 0) return 'Zero'
   if (num < 20) return ones[num]
   if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '')
@@ -50,325 +87,339 @@ function numberToWords(num: number): string {
   return numberToWords(Math.floor(num / 10000000)) + ' Crore' + (num % 10000000 ? ' ' + numberToWords(num % 10000000) : '')
 }
 
-export function generateOfferLetterHTML(employee: EmployeeData, metadata?: { designation?: string; ctc?: number }): string {
+const BASE_STYLES = `
+  body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; color: #333; }
+  .letterhead { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 3px solid transparent; border-image: linear-gradient(to right, #14b8a6, #1e3a5f) 1; }
+  .date { text-align: right; margin-bottom: 20px; }
+  .subject { font-weight: bold; text-align: center; margin: 20px 0; font-size: 16px; text-decoration: underline; }
+  .content p { text-align: justify; margin: 15px 0; }
+  .content ul { margin: 15px 0; padding-left: 24px; }
+  .content li { margin: 8px 0; }
+  .signature { margin-top: 40px; }
+  .doc-footer { margin-top: 48px; padding-top: 16px; border-top: 2px solid #14b8a6; font-size: 12px; color: #64748b; }
+  .footer-company { font-weight: bold; color: #334155; margin: 4px 0; }
+  .footer-address { margin: 4px 0; }
+  .footer-contact { margin: 4px 0; }
+`
+
+export function generateOfferLetterHTML(
+  employee: EmployeeData,
+  metadata?: {
+    designation?: string
+    ctc?: number
+    isSales?: boolean
+    salesTarget?: string
+    monthlyTarget?: string
+    joiningDate?: string
+    acceptanceDeadline?: string
+  }
+): string {
   const today = format(new Date(), 'do MMMM, yyyy')
   const designation = metadata?.designation || 'Associate'
   const ctc = metadata?.ctc || employee.salary || 0
-  
+  const monthlySalary = Math.round(ctc / 12)
+  const isSales = metadata?.isSales ?? false
+  const salesTarget = metadata?.salesTarget || 'As per performance plan'
+  const monthlyTarget = metadata?.monthlyTarget || 'As per performance plan'
+  const joiningDateRaw = metadata?.joiningDate || employee.joinDate
+  const joiningDate = joiningDateRaw
+    ? (typeof joiningDateRaw === 'string'
+        ? format(new Date(joiningDateRaw), "do MMMM, yyyy 'at' 09:30 AM")
+        : format(joiningDateRaw, "do MMMM, yyyy 'at' 09:30 AM"))
+    : 'To be confirmed'
+  const acceptanceDeadlineRaw = metadata?.acceptanceDeadline
+  const acceptanceDeadline = acceptanceDeadlineRaw
+    ? (typeof acceptanceDeadlineRaw === 'string' ? format(new Date(acceptanceDeadlineRaw), 'do MMMM, yyyy') : format(acceptanceDeadlineRaw, 'do MMMM, yyyy'))
+    : format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'do MMMM, yyyy')
+
+  const salesSection = isSales
+    ? `
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Sales Commitment</h4>
+    <p>The Employee has to complete all his/her Sales &amp; Revenue Targets which has been decided &amp; committed by the Employee. If Employee fails to achieve the desired targets, in such cases company will issue the PIP or can be asked to leave the company with immediate effect.</p>
+    <p>We believe in recognizing and rewarding exceptional performance. If you achieve your targets, you will benefit from a performance-based appraisal in six months, which could lead to a salary increase or enhanced benefits. Additionally, successful performance may open doors for internal promotions, allowing you to further develop your career within our organization.</p>
+    <p><strong>Initial Sales Target:</strong> ${salesTarget}</p>
+    <p><strong>Target per month:</strong> ${monthlyTarget}</p>
+    <p><em>Target can be changed as per the performance.</em></p>
+    <p>Employee would also be eligible for Monthly incentives on Quarterly basis as per the consistent performance. You will have to achieve the desired target which you have been committed. You will have sales and revenue targets to meet, as specified in your performance plan. If you are unable to fulfill your targets after PIP, you will be required to leave the company immediately.</p>
+    `
+    : ''
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; color: #333; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a365d; padding-bottom: 20px; }
-    .header h1 { color: #1a365d; margin: 0; font-size: 28px; }
-    .header p { margin: 5px 0; color: #666; }
-    .date { text-align: right; margin-bottom: 20px; }
-    .subject { font-weight: bold; text-align: center; margin: 20px 0; font-size: 16px; text-decoration: underline; }
-    .salutation { margin: 20px 0; }
-    .content p { text-align: justify; margin: 15px 0; }
-    .terms { margin: 20px 0; }
-    .terms li { margin: 10px 0; }
-    .signature { margin-top: 50px; }
-    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; font-size: 12px; color: #666; }
-  </style>
+  <style>${BASE_STYLES}</style>
 </head>
 <body>
-  <div class="header">
-    <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}</p>
-    <p>Email: ${COMPANY_DATA.email}</p>
-  </div>
-  
+  ${renderLetterhead()}
+
   <div class="date">
     <p>Date: ${today}</p>
     <p>Ref: KUNDKUND/HR/OFFER/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
-  
-  <div class="salutation">
+
+  <div>
     <p><strong>To,</strong></p>
-    <p>${employee.name}</p>
+    <p>Ms/Mr ${employee.name}</p>
     <p>Email: ${employee.email}</p>
   </div>
-  
-  <div class="subject">
-    OFFER OF EMPLOYMENT
-  </div>
-  
+
+  <div class="subject">OFFER LETTER</div>
+
   <div class="content">
     <p>Dear ${employee.name},</p>
-    
-    <p>We are pleased to offer you the position of <strong>${designation}</strong> at ${COMPANY_DATA.name}. We were impressed with your background and believe you will be a valuable addition to our team.</p>
-    
-    <p>The terms of your employment are as follows:</p>
-    
-    <div class="terms">
-      <ul>
-        <li><strong>Position:</strong> ${designation}</li>
-        <li><strong>Department:</strong> ${employee.department || 'To be assigned'}</li>
-        <li><strong>Employee Code:</strong> ${employee.employeeCode}</li>
-        <li><strong>Annual CTC:</strong> ${formatCurrency(ctc)} (${numberToWords(ctc)} Rupees Only)</li>
-        <li><strong>Joining Date:</strong> ${employee.joinDate ? format(employee.joinDate, 'do MMMM, yyyy') : 'To be confirmed'}</li>
-        <li><strong>Probation Period:</strong> 6 months from date of joining</li>
-        <li><strong>Notice Period:</strong> 30 days (during probation) / 60 days (post probation)</li>
-      </ul>
+
+    <p>With reference to your interview for seeking employment with the organization, we are pleased to offer you the post of <strong>${designation}</strong> in the <strong>${employee.department || 'Operations'}</strong> Department with Kundkund Healthcare Pvt. Ltd. We are delighted to make you the following job offer.</p>
+
+    <p>The position we are offering you is at Gross Monthly Salary of INR ${monthlySalary.toLocaleString('en-IN')} with an annual cost to company INR ${ctc.toLocaleString('en-IN')} (${numberToWords(ctc)} Rupees Only) (Including TDS as per Govt Rule of India) (Individual Medical Insurance, Employee &amp; Employer Provident Fund portion will be a part of your cost to company if opted).</p>
+
+    <p>You will be paid your salary monthly after giving effect to withholding(s) as required by law. Any Income Tax applicable on your remuneration or any other payment made by the Company in respect to taxes will be borne by you and as required by law, will be deducted at source.</p>
+
+    <p>Your hours of work will be as per the Company policy and requirement of the project you are working on. You shall always be subject to overall policy of the company and agree to be bound by the same.</p>
+
+    <p>This position is offered subject to satisfactory reference and pre-employment checks by third party vendors/Kundkund Healthcare and completion of Six-month probation period during which time your performance will be reviewed.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Non-Solicitation and Non-Hire of Company Employees</h4>
+    <p>You agree that during the term of your employment and a further period of 12 (twelve) calendar months after separation from the Company, for whatever reasons, you shall not either directly or indirectly solicit or entice away or endeavor to solicit or to entice away or assist any other person to solicit or hire or entice away from the Company, any Company employee.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Confidentiality &amp; Non-Compete and Non-Solicitation</h4>
+    <p>You agree not to share your salary or any confidential company information, not to join any competitor as an employee or contractor, and not to solicit any employee of the Company to join another organization.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Transfer &amp; Relocation</h4>
+    <p>You may be transferred in such capacity as the company may from time to time determine to any other location, department, establishment, factory or branch of the company or its affiliate, associate or subsidiary companies. You agree that you are willing to travel to such places, within or outside India, as the Company may from time to time require in relation to Company's business.</p>
+
+    <p>All information, data and documents shared by the Company with you are the intellectual property of the Company and you will at all times maintain the confidentiality of all the information, data and documents shared with you, including this offer letter.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Confidentiality &amp; Integrity Issue</h4>
+    <p>The Employee shall not disclose, at any time to any person who is not employed, part of or associated with the Company; or use for any purpose that is not within the scope of his services, any Confidential Information. The Employee shall not be a part of same business involvement/Freelancing while working with Kundkund Healthcare. The Employee shall not be a part of sharing Kundkund Healthcare business leads outside the company with any of the person/Doctor/Hospital. In such cases employee can be asked to leave the company with immediate effect without salary.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Termination of Employment</h4>
+    <p>Termination of the employment for "cause": The Company may terminate Employee's employment without notice in the event of non-performance, willful or serious misconduct on Employee's part. Termination in case the Employee is absconding from work: In case the Employee is absent from his official duty continuously for 3 (Three) or more days without any information, the Employee shall be deemed to have left and relinquished the service on his own accord.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Probation</h4>
+    <p>The Employee has to pursue 6 Months' probation period with the Kundkund Healthcare. During Probation period your notice period would be of 15 Days.</p>
+
+    <h4 style="margin-top: 24px; margin-bottom: 8px;">Leaves Under Probation</h4>
+    <p>Casual Leave: 6 Leaves (1 per month), Sick Leave: 3 Leaves (0.5 per month), Earned Leave: 3 Leaves (1 per month) - credited after successful completion of 6 months' probation period.</p>
+    ${salesSection}
+
+    <p>Initially, you will be posted at our Noida office (Address: FF, H-166, Sector-63, Noida 201301). This position reports to HOD. Your working hours will be intimated by your reporting manager.</p>
+
+    <p>We would like you to start work on <strong>${joiningDate}</strong>. If this date is not acceptable, please contact undersigned immediately.</p>
+
+    <p>Please sign the enclosed copy of this letter and return it to undersigned by <strong>${acceptanceDeadline}</strong> to indicate your acceptance of this offer.</p>
+
+    <p>We are confident you will be able to make a significant contribution to the success of our Kundkund Healthcare Limited and look forward to working with you.</p>
+  </div>
+
+  <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-start;">
+    <div>
+      <p>Sincerely</p>
+      ${renderSignature()}
     </div>
-    
-    <p>This offer is contingent upon successful completion of background verification and submission of all required documents.</p>
-    
-    <p>Please sign and return a copy of this letter to indicate your acceptance of this offer within 7 days of receipt.</p>
-    
-    <p>We look forward to welcoming you to our team!</p>
+    <div style="text-align: right;">
+      <p><strong>Employee Acceptance</strong></p>
+      <p>Signature: _________________</p>
+      <p>Date: _________________</p>
+    </div>
   </div>
-  
-  <div class="signature">
-    <p>Yours sincerely,</p>
-    <br><br>
-    <p><strong>HR Department</strong></p>
-    <p>${COMPANY_DATA.name}</p>
-  </div>
-  
-  <div style="margin-top: 60px; border-top: 1px dashed #999; padding-top: 20px;">
+
+  <div style="margin-top: 40px; border-top: 1px dashed #999; padding-top: 20px;">
     <p><strong>Acceptance:</strong></p>
     <p>I, ${employee.name}, hereby accept the offer of employment as mentioned above.</p>
     <!-- ACK_PLACEHOLDER -->
   </div>
-  
-  <div class="footer">
-    <p>This is a computer-generated document. For any queries, please contact HR at ${COMPANY_DATA.email}</p>
-  </div>
+
+  ${renderFooter()}
 </body>
 </html>`
 }
 
-export function generateAppraisalLetterHTML(employee: EmployeeData, metadata?: { 
-  previousSalary?: number
-  newSalary?: number
-  incrementPercentage?: number
-  effectiveDate?: string
-  remarks?: string
-}): string {
+export function generateIncrementLetterHTML(
+  employee: EmployeeData,
+  metadata?: {
+    designation?: string
+    previousSalary?: number
+    newSalary?: number
+    incrementPercentage?: number
+    effectiveDate?: string
+    joinDate?: string
+    remarks?: string
+  }
+): string {
   const today = format(new Date(), 'do MMMM, yyyy')
+  const designation = metadata?.designation || employee.designation || 'Associate'
   const previousSalary = metadata?.previousSalary || employee.salary || 0
   const incrementPercentage = metadata?.incrementPercentage || 10
   const newSalary = metadata?.newSalary || Math.round(previousSalary * (1 + incrementPercentage / 100))
-  const effectiveDate = metadata?.effectiveDate || format(new Date(), 'do MMMM, yyyy')
-  
+  const newMonthlySalary = Math.round(newSalary / 12)
+  const effectiveDateRaw = metadata?.effectiveDate
+  const effectiveDate = effectiveDateRaw
+    ? (typeof effectiveDateRaw === 'string' ? format(new Date(effectiveDateRaw), 'do MMMM, yyyy') : format(effectiveDateRaw, 'do MMMM, yyyy'))
+    : format(new Date(), 'do MMMM, yyyy')
+  const joinDateRaw = metadata?.joinDate || employee.joinDate
+  const joinDate = joinDateRaw
+    ? (typeof joinDateRaw === 'string' ? format(new Date(joinDateRaw), 'do MMMM, yyyy') : format(joinDateRaw, 'do MMMM, yyyy'))
+    : 'N/A'
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; color: #333; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a365d; padding-bottom: 20px; }
-    .header h1 { color: #1a365d; margin: 0; font-size: 28px; }
-    .header p { margin: 5px 0; color: #666; }
-    .date { text-align: right; margin-bottom: 20px; }
-    .subject { font-weight: bold; text-align: center; margin: 20px 0; font-size: 16px; text-decoration: underline; }
-    .content p { text-align: justify; margin: 15px 0; }
-    .highlight { background: #f0f9ff; padding: 15px; border-left: 4px solid #1a365d; margin: 20px 0; }
-    .signature { margin-top: 50px; }
-    .confidential { color: red; font-weight: bold; text-align: center; margin-bottom: 20px; }
-  </style>
+  <style>${BASE_STYLES}</style>
 </head>
 <body>
-  <div class="confidential">*** CONFIDENTIAL ***</div>
-  
-  <div class="header">
-    <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}</p>
-    <p>Email: ${COMPANY_DATA.email}</p>
-  </div>
-  
+  ${renderLetterhead()}
+
   <div class="date">
     <p>Date: ${today}</p>
-    <p>Ref: KUNDKUND/HR/APPRAISAL/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
+    <p>Ref: KUNDKUND/HR/INCREMENT/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
-  
+
   <div>
-    <p><strong>${employee.name}</strong></p>
-    <p>Employee Code: ${employee.employeeCode}</p>
+    <p><strong>To,</strong></p>
+    <p>Mr/Ms ${employee.name}</p>
+    <p>Employee ID: ${employee.employeeCode}</p>
     <p>Department: ${employee.department || 'N/A'}</p>
   </div>
-  
-  <div class="subject">
-    ANNUAL APPRAISAL LETTER
+
+  <div>
+    <p><strong>Company - Kundkund Healthcare Pvt. Ltd.</strong></p>
+    <p>Add - H-166 First Floor, Sector 63, Noida, 201301</p>
   </div>
-  
+
+  <div class="subject">SALARY INCREMENT LETTER</div>
+
   <div class="content">
     <p>Dear ${employee.name},</p>
-    
-    <p>We take great pleasure in informing you about your annual performance appraisal. Based on your performance evaluation and contribution to the organization, the management has decided to revise your compensation.</p>
-    
-    <div class="highlight">
-      <p><strong>Appraisal Details:</strong></p>
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-          <td style="padding: 8px 0;">Previous Annual CTC:</td>
-          <td style="padding: 8px 0; text-align: right;"><strong>${formatCurrency(previousSalary)}</strong></td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0;">Increment Percentage:</td>
-          <td style="padding: 8px 0; text-align: right;"><strong>${incrementPercentage}%</strong></td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0;">Revised Annual CTC:</td>
-          <td style="padding: 8px 0; text-align: right;"><strong>${formatCurrency(newSalary)}</strong></td>
-        </tr>
-        <tr>
-          <td style="padding: 8px 0;">Effective Date:</td>
-          <td style="padding: 8px 0; text-align: right;"><strong>${effectiveDate}</strong></td>
-        </tr>
-      </table>
-    </div>
-    
+
+    <p>As we reflect on the progress and achievements over the past year, it brings me immense joy to acknowledge your contributions to Kundkund Healthcare Pvt Ltd. Since joining us as a <strong>${designation}</strong> on ${joinDate}, your exemplary performance and unwavering commitment have played a pivotal role in driving our mission forward.</p>
+
+    <p>Your remarkable ability to foster relationships, identify new opportunities, and execute strategic initiatives has not only exceeded expectations but has also made a significant impact on our team and the company's growth trajectory. Your contributions resonate with our core values, and we are truly grateful to have you on board.</p>
+
+    <p>In recognition of your hard work and dedication, we are excited to announce a salary increment of <strong>${incrementPercentage}%</strong>, effective from <strong>${effectiveDate}</strong>. Your new monthly salary will be <strong>INR ${newMonthlySalary.toLocaleString('en-IN')}</strong> (Annual CTC: ${formatCurrency(newSalary)}). This increment reflects not just your past performance but also our confidence in your future contributions to our success.</p>
+
     ${metadata?.remarks ? `<p><strong>Remarks:</strong> ${metadata.remarks}</p>` : ''}
-    
-    <p>We appreciate your dedication and hard work. We hope you will continue to contribute towards the growth of the organization with the same enthusiasm.</p>
-    
-    <p>Congratulations on your well-deserved appraisal!</p>
+
+    <p>At Kundkund Healthcare, we are committed to fostering a culture of excellence and continuous improvement, and we are thrilled to support your professional journey. We look forward to witnessing your continued growth and the positive impact you will undoubtedly make in the future.</p>
+
+    <p>Congratulations on this well-deserved recognition! Let's continue to achieve great things together.</p>
   </div>
-  
-  <div class="signature">
-    <p>Best Regards,</p>
-    <br><br>
-    <p><strong>HR Department</strong></p>
-    <p>${COMPANY_DATA.name}</p>
-  </div>
+
+  ${renderSignature()}
+
+  ${renderFooter()}
 </body>
 </html>`
 }
 
-export function generateExperienceLetterHTML(employee: EmployeeData, metadata?: {
-  designation?: string
-  lastWorkingDate?: string
-}): string {
+export function generateExperienceLetterHTML(
+  employee: EmployeeData,
+  metadata?: {
+    designation?: string
+    lastWorkingDate?: string
+  }
+): string {
   const today = format(new Date(), 'do MMMM, yyyy')
   const designation = metadata?.designation || 'Associate'
   const lastWorkingDate = metadata?.lastWorkingDate || today
-  
+  const joinDateFormatted = employee.joinDate ? format(employee.joinDate, 'do MMMM, yyyy') : 'N/A'
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; color: #333; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a365d; padding-bottom: 20px; }
-    .header h1 { color: #1a365d; margin: 0; font-size: 28px; }
-    .header p { margin: 5px 0; color: #666; }
-    .date { text-align: right; margin-bottom: 20px; }
-    .subject { font-weight: bold; text-align: center; margin: 30px 0; font-size: 18px; text-decoration: underline; }
-    .content p { text-align: justify; margin: 15px 0; }
-    .signature { margin-top: 50px; }
-  </style>
+  <style>${BASE_STYLES}</style>
 </head>
 <body>
-  <div class="header">
-    <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}</p>
-    <p>Email: ${COMPANY_DATA.email}</p>
-  </div>
-  
+  ${renderLetterhead()}
+
   <div class="date">
     <p>Date: ${today}</p>
     <p>Ref: KUNDKUND/HR/EXP/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
-  
-  <div class="subject">
-    EXPERIENCE CERTIFICATE
-  </div>
-  
+
+  <div class="subject">EXPERIENCE CERTIFICATE</div>
+
   <div class="content">
     <p><strong>TO WHOMSOEVER IT MAY CONCERN</strong></p>
-    
-    <p>This is to certify that <strong>${employee.name}</strong> (Employee Code: ${employee.employeeCode}) was employed with ${COMPANY_DATA.name} as <strong>${designation}</strong> in the ${employee.department || 'Operations'} Department.</p>
-    
-    <p>The period of employment was from <strong>${employee.joinDate ? format(employee.joinDate, 'do MMMM, yyyy') : 'N/A'}</strong> to <strong>${lastWorkingDate}</strong>.</p>
-    
-    <p>During the tenure with us, we found ${employee.name} to be sincere, hardworking, and dedicated to the assigned responsibilities. The performance and conduct were satisfactory throughout the employment period.</p>
-    
-    <p>We wish ${employee.name} all the best for future endeavors.</p>
+
+    <p>This is to certify that Mr/Ms <strong>${employee.name}</strong> was employed with Kundkund Healthcare Pvt. Ltd. from <strong>${joinDateFormatted}</strong> to <strong>${lastWorkingDate}</strong> in the capacity of <strong>${designation}</strong>.</p>
+
+    <p>During the tenure with our organization, ${employee.name.split(' ')[0]} demonstrated a high level of professionalism, commitment, and responsibility in carrying out assigned duties. ${employee.name.split(' ')[0]} consistently displayed strong work ethics, effective communication skills, and the ability to work both independently and as part of a team.</p>
+
+    <p>His/Her contribution to the organization was valuable, and performance throughout the employment period was found to be commendable. ${employee.name.split(' ')[0]} maintained excellent conduct and adhered to company policies and standards at all times.</p>
+
+    <p>This letter is being issued upon the employee's request for professional and official purposes.</p>
+
+    <p>We appreciate his/her contributions and wish him/her continued success in all future professional endeavors.</p>
   </div>
-  
-  <div class="signature">
-    <p>For ${COMPANY_DATA.name}</p>
-    <br><br><br>
-    <p><strong>Authorized Signatory</strong></p>
-    <p>HR Department</p>
+
+  <div style="margin-top: 40px;">
+    <p>For Kundkund Healthcare Pvt. Ltd.</p>
+    ${renderSignature()}
   </div>
+
+  ${renderFooter()}
 </body>
 </html>`
 }
 
-export function generateRelievingLetterHTML(employee: EmployeeData, metadata?: {
-  designation?: string
-  lastWorkingDate?: string
-  resignationDate?: string
-}): string {
+export function generateRelievingLetterHTML(
+  employee: EmployeeData,
+  metadata?: {
+    designation?: string
+    lastWorkingDate?: string
+    resignationDate?: string
+  }
+): string {
   const today = format(new Date(), 'do MMMM, yyyy')
   const designation = metadata?.designation || 'Associate'
   const lastWorkingDate = metadata?.lastWorkingDate || today
   const resignationDate = metadata?.resignationDate || format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'do MMMM, yyyy')
-  
+
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body { font-family: 'Times New Roman', serif; margin: 40px; line-height: 1.6; color: #333; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1a365d; padding-bottom: 20px; }
-    .header h1 { color: #1a365d; margin: 0; font-size: 28px; }
-    .header p { margin: 5px 0; color: #666; }
-    .date { text-align: right; margin-bottom: 20px; }
-    .subject { font-weight: bold; text-align: center; margin: 30px 0; font-size: 18px; text-decoration: underline; }
-    .content p { text-align: justify; margin: 15px 0; }
-    .signature { margin-top: 50px; }
-  </style>
+  <style>${BASE_STYLES}</style>
 </head>
 <body>
-  <div class="header">
-    <h1>${COMPANY_DATA.name}</h1>
-    <p>${COMPANY_DATA.address}</p>
-    <p>Email: ${COMPANY_DATA.email}</p>
-  </div>
-  
+  ${renderLetterhead()}
+
   <div class="date">
     <p>Date: ${today}</p>
     <p>Ref: KUNDKUND/HR/REL/${employee.employeeCode}/${format(new Date(), 'yyyy')}</p>
   </div>
-  
-  <div class="subject">
-    RELIEVING LETTER
-  </div>
-  
+
+  <div class="subject">RELIEVING LETTER</div>
+
   <div class="content">
     <p><strong>${employee.name}</strong></p>
     <p>Employee Code: ${employee.employeeCode}</p>
     <br>
-    
+
     <p>Dear ${employee.name},</p>
-    
+
     <p>With reference to your resignation letter dated <strong>${resignationDate}</strong>, we hereby confirm that you have been relieved from your duties as <strong>${designation}</strong> at ${COMPANY_DATA.name} with effect from <strong>${lastWorkingDate}</strong>.</p>
-    
+
     <p>During your tenure from <strong>${employee.joinDate ? format(employee.joinDate, 'do MMMM, yyyy') : 'N/A'}</strong> to <strong>${lastWorkingDate}</strong>, your services were found satisfactory.</p>
-    
+
     <p>You have completed all handover formalities and cleared all company dues. There are no financial or material obligations pending from your side.</p>
-    
+
     <p>We thank you for your contributions to the organization and wish you success in your future endeavors.</p>
   </div>
-  
-  <div class="signature">
+
+  <div style="margin-top: 40px;">
     <p>For ${COMPANY_DATA.name}</p>
-    <br><br><br>
-    <p><strong>Authorized Signatory</strong></p>
-    <p>HR Department</p>
+    ${renderSignature()}
   </div>
+
+  ${renderFooter()}
 </body>
 </html>`
 }
-

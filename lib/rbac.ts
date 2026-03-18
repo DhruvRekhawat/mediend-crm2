@@ -67,6 +67,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'it:permissions',
   ],
   EXECUTIVE_ASSISTANT: [
+    'analytics:read',
+    'leads:read',
     'hrms:read',
     'hrms:attendance:read',
     'hrms:leaves:read',

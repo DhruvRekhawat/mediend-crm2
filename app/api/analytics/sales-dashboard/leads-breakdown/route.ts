@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
     const user = await getSession()
     if (!user) return unauthorizedResponse()
 
-    if (user.role !== 'MD' && user.role !== 'ADMIN' && user.role !== 'SALES_HEAD') {
-      return errorResponse(`Forbidden: Only MD, ADMIN, and SALES_HEAD can access.`, 403)
+    if (user.role !== 'MD' && user.role !== 'ADMIN' && user.role !== 'SALES_HEAD' && user.role !== 'EXECUTIVE_ASSISTANT') {
+      return errorResponse(`Forbidden: Only MD, ADMIN, SALES_HEAD, and EXECUTIVE_ASSISTANT can access.`, 403)
     }
 
     const { searchParams } = new URL(request.url)

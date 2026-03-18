@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { errorResponse, successResponse } from '@/lib/api-utils'
 import {
   generateOfferLetterHTML,
-  generateAppraisalLetterHTML,
+  generateIncrementLetterHTML,
   generateExperienceLetterHTML,
   generateRelievingLetterHTML,
 } from '@/lib/hrms/document-templates'
@@ -12,7 +12,7 @@ import { format } from 'date-fns'
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   OFFER_LETTER: 'Offer Letter',
-  APPRAISAL_LETTER: 'Appraisal Letter',
+  INCREMENT_LETTER: 'Increment Letter',
   EXPERIENCE_LETTER: 'Experience Letter',
   RELIEVING_LETTER: 'Relieving Letter',
 }
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
           '<br><br><p>Signature: _________________ &nbsp;&nbsp;&nbsp;&nbsp; Date: _________________</p>'
         )
         break
-      case 'APPRAISAL_LETTER':
-        htmlContent = generateAppraisalLetterHTML(employeeData, metadata || undefined)
+      case 'INCREMENT_LETTER':
+        htmlContent = generateIncrementLetterHTML(employeeData, metadata || undefined)
         break
       case 'EXPERIENCE_LETTER':
         htmlContent = generateExperienceLetterHTML(employeeData, metadata || undefined)
