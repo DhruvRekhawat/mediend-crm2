@@ -81,6 +81,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const financePending = searchParams.get('financePending') === 'true'
+    const financeHistory = searchParams.get('financeHistory') === 'true'
 
     const isMD = user.role === 'MD' || user.role === 'ADMIN'
     const isFinance = user.role === 'FINANCE_HEAD'
@@ -90,10 +91,14 @@ export async function GET(request: NextRequest) {
       where.status = MDApprovalStatus.APPROVED
       where.amount = { not: null }
       where.financeAcknowledged = false
+    } else if (financeHistory && isFinance) {
+      where.status = MDApprovalStatus.APPROVED
+      where.amount = { not: null }
+      where.financeAcknowledged = true
     } else if (status && status in MDApprovalStatus) {
       where.status = status as (typeof MDApprovalStatus)[keyof typeof MDApprovalStatus]
     }
-    if (!isMD && !(isFinance && financePending)) {
+    if (!isMD && !(isFinance && (financePending || financeHistory))) {
       where.requestedById = user.id
     }
 

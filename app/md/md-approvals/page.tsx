@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client'
 import { useAuth } from '@/hooks/use-auth'
 import { useQuery as usePermissionQuery } from '@tanstack/react-query'
-import { Check, X, ChevronLeft, ChevronRight, Plus, CheckCircle, Clock, Paperclip } from 'lucide-react'
+import { Check, X, ChevronLeft, ChevronRight, Plus, CheckCircle, Clock, Paperclip, LayoutGrid, LayoutList } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'sonner'
 import { useSwipeable } from 'react-swipeable'
@@ -21,6 +21,8 @@ import confetti from 'canvas-confetti'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AttachmentCarousel } from '@/components/finance/attachment-carousel'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 interface Attachment {
   name: string
@@ -245,7 +247,9 @@ function PendingSkeleton() {
 export default function MDApprovalsPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const isMobile = useIsMobile()
   const [activeTab, setActiveTab] = useState('pending')
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
   const [requestOpen, setRequestOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -271,6 +275,11 @@ export default function MDApprovalsPage() {
 
   const pending = requests.filter((r) => r.status === 'PENDING')
   const history = requests.filter((r) => r.status !== 'PENDING')
+
+  // Mobile: cards only. Desktop: grid default, user can toggle to table.
+  useEffect(() => {
+    if (isMobile) setViewMode('grid')
+  }, [isMobile])
 
   const approveMutation = useMutation({
     mutationFn: ({ id, note }: { id: string; note?: string }) =>
@@ -406,9 +415,29 @@ export default function MDApprovalsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold">MD Team Approvals</h1>
-        {canRequest?.allowed && !isMD && (
+        <div className="flex items-center gap-2">
+          {!isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+            >
+              {viewMode === 'grid' ? (
+                <>
+                  <LayoutList className="h-4 w-4 mr-2" />
+                  Table View
+                </>
+              ) : (
+                <>
+                  <LayoutGrid className="h-4 w-4 mr-2" />
+                  Grid View
+                </>
+              )}
+            </Button>
+          )}
+          {canRequest?.allowed && !isMD && (
           <Dialog open={requestOpen} onOpenChange={setRequestOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -471,6 +500,7 @@ export default function MDApprovalsPage() {
             </DialogContent>
           </Dialog>
         )}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -504,8 +534,82 @@ export default function MDApprovalsPage() {
               <p className="font-medium">{isMD ? 'All caught up' : 'No pending requests'}</p>
               <p className="text-sm mt-1">{isMD ? 'No requests awaiting your approval' : 'Your submitted requests will appear here until MD responds'}</p>
             </div>
+          ) : viewMode === 'table' ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Requested By</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Attachments</TableHead>
+                    {isMD && <TableHead className="text-right">Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pending.map((req) => (
+                    <TableRow key={req.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{req.title}</div>
+                          {req.description && (
+                            <div className="text-xs text-muted-foreground truncate max-w-[200px]">{req.description}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{req.requestedBy.name}</TableCell>
+                      <TableCell className="font-semibold text-indigo-600">
+                        {req.amount != null ? formatCurrency(req.amount) : '—'}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(req.createdAt), 'dd MMM yyyy')}
+                      </TableCell>
+                      <TableCell>
+                        {req.attachments && req.attachments.length > 0 ? (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Paperclip className="h-4 w-4" />
+                            <span>{req.attachments.length}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                      {isMD && (
+                        <TableCell className="text-right">
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                setSelectedRequest(req)
+                                setRejectDialogOpen(true)
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-indigo-600 hover:bg-indigo-700"
+                              onClick={() => {
+                                setSelectedRequest(req)
+                                setApproveDialogOpen(true)
+                              }}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className={isMobile ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}>
               <AnimatePresence mode="popLayout">
                 {pending.map((req) => (
                   <motion.div
@@ -545,8 +649,66 @@ export default function MDApprovalsPage() {
               <p className="font-medium">No history yet</p>
               <p className="text-sm mt-1">{isMD ? 'Approved and rejected requests will appear here' : 'Your approved or rejected requests will appear here'}</p>
             </div>
+          ) : viewMode === 'table' ? (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Requested By</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Responded</TableHead>
+                    <TableHead>Attachments</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {history.map((req) => (
+                    <TableRow key={req.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{req.title}</div>
+                          {req.description && (
+                            <div className="text-xs text-muted-foreground truncate max-w-[200px]">{req.description}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>{req.requestedBy.name}</TableCell>
+                      <TableCell className="font-semibold text-indigo-600">
+                        {req.amount != null ? formatCurrency(req.amount) : '—'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={req.status === 'APPROVED' ? 'bg-indigo-100 text-indigo-800' : 'bg-red-100 text-red-800'}>
+                          {req.status === 'APPROVED' ? 'Approved' : 'Rejected'}
+                        </Badge>
+                        {req.status === 'APPROVED' && req.amount != null && !req.financeAcknowledged && (
+                          <Badge variant="outline" className="ml-1 text-amber-600 border-amber-300">
+                            Awaiting Finance
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {req.respondedAt && req.respondedBy
+                          ? `${req.respondedBy.name} on ${format(new Date(req.respondedAt), 'dd MMM yyyy, HH:mm')}`
+                          : '—'}
+                      </TableCell>
+                      <TableCell>
+                        {req.attachments && req.attachments.length > 0 ? (
+                          <div className="flex items-center gap-1 text-sm">
+                            <Paperclip className="h-4 w-4" />
+                            <span>{req.attachments.length}</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className={isMobile ? 'space-y-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}>
               <AnimatePresence mode="popLayout">
                 {history.map((req, i) => (
                   <motion.div
