@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { format, startOfDay } from "date-fns"
+import { useQuery } from "@tanstack/react-query"
 import {
   Drawer,
   DrawerContent,
@@ -12,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useWorkLogCheck, useCreateWorkLog } from "@/hooks/use-work-logs"
+import { apiGet } from "@/lib/api-client"
 import { toast } from "sonner"
 import { Clock } from "lucide-react"
 
@@ -39,6 +41,10 @@ export function WorkLogEnforcer() {
   const [description, setDescription] = useState("")
   const { data: check, isLoading, refetch } = useWorkLogCheck({
     tzOffsetMinutes: -new Date().getTimezoneOffset(),
+  })
+  const { data: pendingNotice } = useQuery<{ id: string } | null>({
+    queryKey: ["notices-pending"],
+    queryFn: () => apiGet<{ id: string } | null>("/api/notices/pending"),
   })
   const createMutation = useCreateWorkLog()
 
@@ -77,6 +83,7 @@ export function WorkLogEnforcer() {
   }
 
   if (isLoading || !check) return null
+  if (pendingNotice) return null
   if (!isBlocked) return null
 
   return (
