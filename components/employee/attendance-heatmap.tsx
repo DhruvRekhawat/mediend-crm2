@@ -82,7 +82,8 @@ function getStatusConfig(
   attendanceRecord: AttendanceDay | undefined,
   leaveInfo: LeaveDay | undefined,
   isSunday: boolean,
-  dateKey: string
+  dateKey: string,
+  officialHoliday?: { name: string }
 ): { status: AttendanceStatusType; bgColor: string; textColor: string; tooltipText: string; pendingNormalization?: boolean; baseBgColor?: string } {
   if (attendanceRecord) {
     if (attendanceRecord.isNormalized) {
