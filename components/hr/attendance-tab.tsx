@@ -120,6 +120,30 @@ export function AttendanceTab() {
     queryFn: () => apiGet<LeaveData>('/api/leaves?status=APPROVED&limit=1000'),
   })
 
+  const { data: holidaysData = [] } = useQuery<{ id: string; date: string; name: string; type: string }[]>({
+    queryKey: ['holidays', fromDate, toDate],
+    queryFn: () => {
+      const [y, m, d] = fromDate.split('-').map(Number)
+      const year = new Date(y, m - 1, d).getFullYear()
+      return apiGet<{ id: string; date: string; name: string; type: string }[]>(`/api/holidays?year=${year}`)
+    },
+  })
+
+  const heatmapHolidayDays = useMemo(() => {
+    if (!holidaysData.length) return []
+    const [fromY, fromM, fromD] = fromDate.split('-').map(Number)
+    const [toY, toM, toD] = toDate.split('-').map(Number)
+    const rangeStart = new Date(fromY, fromM - 1, fromD)
+    const rangeEnd = new Date(toY, toM - 1, toD)
+    return holidaysData
+      .filter((h) => {
+        const [y, m, d] = h.date.split('-').map(Number)
+        const dObj = new Date(y, m - 1, d)
+        return dObj >= rangeStart && dObj <= rangeEnd
+      })
+      .map((h) => ({ date: h.date, name: h.name }))
+  }, [holidaysData, fromDate, toDate])
+
   const { data: departments } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: () => apiGet<Department[]>('/api/departments'),
@@ -543,6 +567,7 @@ export function AttendanceTab() {
                 fromDate={fromDate}
                 toDate={toDate}
                 leaveDays={heatmapLeaveDays}
+                holidayDays={heatmapHolidayDays}
               />
             ) : (
               <div className="h-[200px] flex items-center justify-center text-muted-foreground">

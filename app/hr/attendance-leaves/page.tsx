@@ -10,6 +10,7 @@ import { LeavesTab } from '@/components/hr/leaves-tab'
 import { NormalizationsTab } from '@/components/hr/normalizations-tab'
 import { LeaveTypesTab } from '@/components/hr/leave-types-tab'
 import { LeaveBalancesTab } from '@/components/hr/leave-balances-tab'
+import { HolidaysManagementTab } from '@/components/hr/holidays-management-tab'
 import { useAuth } from '@/hooks/use-auth'
 import { hasPermission } from '@/lib/rbac'
 import type { BadgeCounts } from '@/app/api/badge-counts/route'
@@ -17,6 +18,7 @@ import type { BadgeCounts } from '@/app/api/badge-counts/route'
 const ALL_TABS: (TabItem & { permission?: string })[] = [
   { value: 'attendance', label: 'Attendance', permission: 'hrms:attendance:read' },
   { value: 'leaves', label: 'Leaves', permission: 'hrms:leaves:read' },
+  { value: 'holidays', label: 'Holidays', permission: 'hrms:attendance:read' },
   { value: 'normalizations', label: 'Normalizations', permission: 'hrms:attendance:write' },
   { value: 'leave-types', label: 'Leave Types', permission: 'hrms:leaves:read' },
   { value: 'leave-balances', label: 'Leave Balances', permission: 'hrms:leaves:write' },
@@ -76,6 +78,7 @@ export default function HRAttendanceLeavesPage() {
       <div className="mt-6">
         {activeTab === 'attendance' && <AttendanceTab />}
         {activeTab === 'leaves' && <LeavesTab />}
+        {activeTab === 'holidays' && <HolidaysManagementTab />}
         {activeTab === 'normalizations' && <NormalizationsTab />}
         {activeTab === 'leave-types' && <LeaveTypesTab />}
         {activeTab === 'leave-balances' && <LeaveBalancesTab />}

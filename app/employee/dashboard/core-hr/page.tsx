@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import type { BadgeCounts } from '@/app/api/badge-counts/route'
 import { format } from 'date-fns'
-import { Calendar, FileText, ExternalLink } from 'lucide-react'
+import { Calendar, FileText, ExternalLink, CalendarDays } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,6 +39,7 @@ import { Textarea } from '@/components/ui/textarea'
 const CORE_HR_TAB_VALUES = [
   { value: 'attendance', label: 'Attendance' },
   { value: 'leaves', label: 'Leaves' },
+  { value: 'holidays', label: 'Holidays' },
   { value: 'documents', label: 'Documents' },
 ] as const
 
@@ -57,6 +58,7 @@ interface AttendanceDay {
 interface AttendanceMyResponse {
   attendance: AttendanceDay[]
   leaveDays: { date: string; isUnpaid: boolean }[]
+  holidayDays?: { date: string; name: string }[]
 }
 
 interface AttendanceStats {
@@ -172,6 +174,7 @@ export default function CoreHRPage() {
       <div className="mt-6">
         {activeTab === 'attendance' && <AttendanceTab />}
         {activeTab === 'leaves' && <LeavesTab />}
+        {activeTab === 'holidays' && <HolidaysTab />}
         {activeTab === 'documents' && <DocumentsTab router={router} />}
       </div>
     </div>
@@ -326,6 +329,7 @@ function AttendanceTab() {
 
   const attendance = attendanceData?.attendance ?? []
   const leaveDays = attendanceData?.leaveDays ?? []
+  const holidayDays = attendanceData?.holidayDays ?? []
 
   return (
     <div className="space-y-6">
@@ -451,6 +455,7 @@ function AttendanceTab() {
             fromDate={fromDate}
             toDate={toDate}
             leaveDays={leaveDays}
+            holidayDays={holidayDays}
           />
         ) : (
           <div className="text-center py-8 text-muted-foreground">
@@ -689,6 +694,68 @@ function LeavesTab() {
               )}
             </TableBody>
           </Table>
+        )}
+      </SectionContainer>
+    </div>
+  )
+}
+
+interface HolidayItem {
+  id: string
+  date: string
+  name: string
+  type: string
+}
+
+function HolidaysTab() {
+  const currentYear = new Date().getFullYear()
+  const { data: holidays = [], isLoading } = useQuery<HolidayItem[]>({
+    queryKey: ['holidays', currentYear],
+    queryFn: () => apiGet<HolidayItem[]>(`/api/holidays?year=${currentYear}`),
+  })
+
+  return (
+    <div className="space-y-6">
+      <SectionContainer title="Official holidays">
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+        ) : holidays.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sl No</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Day</TableHead>
+                <TableHead>Holiday</TableHead>
+                <TableHead>Type</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {holidays.map((h, i) => (
+                <TableRow key={h.id}>
+                  <TableCell>{i + 1}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      {format(new Date(h.date), 'PPP')}
+                    </div>
+                  </TableCell>
+                  <TableCell>{format(new Date(h.date), 'EEEE')}</TableCell>
+                  <TableCell className="font-medium">{h.name}</TableCell>
+                  <TableCell>
+                    <Badge variant={h.type === 'Compulsory' ? 'default' : 'secondary'}>
+                      {h.type}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            <CalendarDays className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No holidays configured for {currentYear}</p>
+          </div>
         )}
       </SectionContainer>
     </div>

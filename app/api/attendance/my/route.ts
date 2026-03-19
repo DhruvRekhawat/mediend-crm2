@@ -125,6 +125,25 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    const holidayDays: { date: string; name: string }[] = []
+    if (rangeStart && rangeEnd) {
+      const holidays = await prisma.holiday.findMany({
+        where: {
+          date: {
+            gte: rangeStart,
+            lte: rangeEnd,
+          },
+        },
+        select: { date: true, name: true },
+      })
+      for (const h of holidays) {
+        holidayDays.push({
+          date: h.date.toISOString().split('T')[0],
+          name: h.name,
+        })
+      }
+    }
+
     const leaveDays: { date: string; isUnpaid: boolean }[] = []
     const rangeStartStr = rangeStart?.toISOString().split('T')[0]
     const rangeEndStr = rangeEnd?.toISOString().split('T')[0]
@@ -147,6 +166,7 @@ export async function GET(request: NextRequest) {
     return successResponse({
       attendance: attendanceWithNormalized,
       leaveDays,
+      holidayDays,
     })
   } catch (error) {
     console.error('Error fetching attendance:', error)

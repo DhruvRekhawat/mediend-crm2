@@ -103,6 +103,11 @@ export type LeaveRequest = Prisma.LeaveRequestModel
  */
 export type LeaveBalance = Prisma.LeaveBalanceModel
 /**
+ * Model Holiday
+ * 
+ */
+export type Holiday = Prisma.HolidayModel
+/**
  * Model PayrollRecord
  * 
  */

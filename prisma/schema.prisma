@@ -947,6 +947,17 @@ model LeaveBalance {
   @@index([leaveTypeId])
 }
 
+model Holiday {
+  id        String   @id @default(cuid())
+  date      DateTime @unique @db.Date
+  name      String
+  type      String // "Compulsory" | "Optional"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+}
+
 model PayrollRecord {
   id          String   @id @default(cuid())
   employeeId  String

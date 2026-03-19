@@ -119,6 +119,22 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Official holiday exemption
+  const isHoliday = await prisma.holiday.findFirst({
+    where: { date: dayStart },
+    select: { id: true },
+  })
+  if (isHoliday) {
+    return successResponse({
+      complete: true,
+      isBlocked: false,
+      missingIntervals: [],
+      isExempt: true,
+      loggedIntervals: [],
+      subjectToWorkLogs: true,
+    })
+  }
+
   // Leave exemption
   const dayEnd = endOfDay(dayForWeekend)
   const onLeave = await prisma.leaveRequest.findFirst({
