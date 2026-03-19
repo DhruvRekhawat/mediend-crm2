@@ -48,6 +48,8 @@ import { ViewNoticesSheet } from '@/components/notices/view-notices-sheet'
 import { CreateNoticeModal } from '@/components/notices/create-notice-modal'
 import { Megaphone } from 'lucide-react'
 import { FnFReminderCard } from '@/components/hr/fnf-reminder-card'
+import { BirthdayCelebrationCard } from '@/components/birthday-celebration-card'
+import { BirthdayPopup } from '@/components/birthday-popup'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -540,6 +542,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto w-full">
+      <BirthdayPopup />
       <NoticeBlockerModal />
       {/* Banner + Greeting */}
       {uploading && (
@@ -561,6 +564,9 @@ export default function HomePage() {
 
       {/* Thought of the Day */}
       <ThoughtOfTheDay thought={thought} />
+
+      {/* Birthday celebration */}
+      <BirthdayCelebrationCard />
 
       {/* Add work log - MD team & watchlist users (those enforced to log) */}
       {subjectToWorkLogs && (

@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api-client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Cake } from 'lucide-react'
-import Link from 'next/link'
 
 interface BirthdayItem {
   id: string
@@ -32,14 +31,12 @@ export function BirthdayCelebrationCard() {
       <CardContent>
         <ul className="space-y-2">
           {birthdays.map((item) => (
-            <li key={item.id}>
-              <Link
-                href={`/profile/${item.userId}`}
-                className="flex items-center gap-2 rounded-lg border border-pink-200 dark:border-pink-900/50 bg-white/60 dark:bg-pink-950/30 px-3 py-2 hover:bg-pink-100/50 dark:hover:bg-pink-900/30 transition-colors"
-              >
-                <span className="text-lg">🎈</span>
-                <span className="font-medium">{item.name}</span>
-              </Link>
+            <li
+              key={item.id}
+              className="flex items-center gap-2 rounded-lg border border-pink-200 dark:border-pink-900/50 bg-white/60 dark:bg-pink-950/30 px-3 py-2"
+            >
+              <span className="text-lg">🎈</span>
+              <span className="font-medium">{item.name}</span>
             </li>
           ))}
         </ul>
