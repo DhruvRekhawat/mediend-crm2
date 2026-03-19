@@ -9,7 +9,11 @@ import { UserRole, type Prisma } from '@/generated/prisma/client'
 
 const toggleSchema = z.object({
   userId: z.string().min(1),
-  featureKey: z.enum([FEATURE_KEYS.MD_APPROVAL_REQUEST, FEATURE_KEYS.CREATE_NOTICE]),
+  featureKey: z.enum([
+    FEATURE_KEYS.MD_APPROVAL_REQUEST,
+    FEATURE_KEYS.CREATE_NOTICE,
+    FEATURE_KEYS.WORKLOG_ENFORCEMENT,
+  ]),
   enabled: z.boolean(),
 })
 
@@ -25,8 +29,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const search = searchParams.get('search')
+    const userId = searchParams.get('userId')
 
     const where: Prisma.UserWhereInput = {}
+    if (userId) where.id = userId
     if (role && role in UserRole) where.role = role as (typeof UserRole)[keyof typeof UserRole]
     if (search) {
       where.OR = [
@@ -67,6 +73,7 @@ export async function GET(request: NextRequest) {
       permissions: {
         [FEATURE_KEYS.MD_APPROVAL_REQUEST]: permMap.get(u.id)?.[FEATURE_KEYS.MD_APPROVAL_REQUEST] ?? null,
         [FEATURE_KEYS.CREATE_NOTICE]: permMap.get(u.id)?.[FEATURE_KEYS.CREATE_NOTICE] ?? null,
+        [FEATURE_KEYS.WORKLOG_ENFORCEMENT]: permMap.get(u.id)?.[FEATURE_KEYS.WORKLOG_ENFORCEMENT] ?? null,
       },
     }))
 

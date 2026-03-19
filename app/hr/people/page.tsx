@@ -7,6 +7,7 @@ import { EmployeesTab } from '@/components/hr/employees-tab'
 import { DepartmentsTab } from '@/components/hr/departments-tab'
 import { OrgChartTab } from '@/components/hr/org-chart-tab'
 import { UsersTab } from '@/components/hr/users-tab'
+import { FnFReminderCard } from '@/components/hr/fnf-reminder-card'
 import { useAuth } from '@/hooks/use-auth'
 import { hasPermission } from '@/lib/rbac'
 
@@ -53,8 +54,11 @@ export default function HRPeoplePage() {
     )
   }
 
+  const showFnFCard = user && hasPermission(user, 'hrms:employees:read') && user.role !== 'ADMIN' && user.role !== 'MD'
+
   return (
     <div className="space-y-6">
+      {showFnFCard && <FnFReminderCard />}
       <TabNavigation
         tabs={tabs}
         value={activeTab}

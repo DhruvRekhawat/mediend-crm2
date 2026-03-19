@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSessionFromRequest } from '@/lib/session'
 import { hasPermission } from '@/lib/rbac'
 import { errorResponse, successResponse, unauthorizedResponse } from '@/lib/api-utils'
+import { getComputedBalancesForEmployee } from '@/lib/hrms/leave-policy-calculator'
 import { z } from 'zod'
 import { Prisma } from '@/generated/prisma/client'
 
@@ -48,6 +49,8 @@ export async function GET(
             name: true,
             email: true,
             role: true,
+            phoneNumber: true,
+            address: true,
           },
         },
         department: {
@@ -60,7 +63,26 @@ export async function GET(
     })
 
     if (!employee) return errorResponse('Employee not found', 404)
-    return successResponse(employee)
+
+    const [leaveBalances, documents] = await Promise.all([
+      getComputedBalancesForEmployee(employee.id),
+      prisma.employeeDocument.findMany({
+        where: { employeeId: employee.id },
+        orderBy: { generatedAt: 'desc' },
+      }),
+    ])
+
+    return successResponse({
+      ...employee,
+      leaveBalances: leaveBalances.map((b) => ({
+        leaveTypeId: b.leaveTypeId,
+        leaveTypeName: b.leaveTypeName,
+        allocated: b.allocated,
+        used: b.used,
+        remaining: b.remaining,
+      })),
+      documents,
+    })
   } catch (error) {
     console.error('Error fetching employee:', error)
     return errorResponse('Failed to fetch employee', 500)

@@ -283,6 +283,13 @@ enum PreAuthStatus {
   TEMP_APPROVED
 }
 
+enum EmployeeStatus {
+  ACTIVE
+  ON_PIP
+  ON_NOTICE
+  TERMINATED
+}
+
 model User {
   id             String   @id @default(cuid())
   email          String   @unique
@@ -383,6 +390,9 @@ model User {
   // Feature Permissions
   featurePermissions  UserFeaturePermission[]
   featurePermissionsGranted UserFeaturePermission[] @relation("PermissionGranter")
+
+  // FnF completed by (HR marking Full and Final settlement done)
+  fnfCompletedForEmployees Employee[] @relation("FnFCompletedBy")
 
   @@index([email])
   @@index([role])
@@ -772,6 +782,17 @@ model Employee {
   bankAccountNumber  String?
   ifscCode           String?
   uanNumber          String?
+  status             EmployeeStatus @default(ACTIVE)
+  pipStartDate       DateTime?
+  pipEndDate         DateTime?
+  noticePeriodStartDate DateTime?
+  noticePeriodEndDate DateTime?
+  finalWorkingDay    DateTime?
+  terminationReason String?
+  fnfCompleted       Boolean      @default(false)
+  fnfCompletedAt     DateTime?
+  fnfCompletedById   String?
+  fnfCompletedBy    User?        @relation("FnFCompletedBy", fields: [fnfCompletedById], references: [id])
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
 

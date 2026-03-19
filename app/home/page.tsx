@@ -47,6 +47,7 @@ import { NoticeBlockerModal } from '@/components/notices/notice-blocker-modal'
 import { ViewNoticesSheet } from '@/components/notices/view-notices-sheet'
 import { CreateNoticeModal } from '@/components/notices/create-notice-modal'
 import { Megaphone } from 'lucide-react'
+import { FnFReminderCard } from '@/components/hr/fnf-reminder-card'
 
 // ─── Greeting ─────────────────────────────────────────────────────────────────
 
@@ -510,6 +511,7 @@ function NoticeActions() {
 
 export default function HomePage() {
   const { user } = useAuth()
+  const showFnFCard = user?.role === 'HR_HEAD'
   const { data: workLogCheck } = useWorkLogCheck({
     tzOffsetMinutes: -new Date().getTimezoneOffset(),
   })
@@ -569,6 +571,9 @@ export default function HomePage() {
 
       {/* Push reminder banner */}
       <PushReminderBanner />
+
+      {/* FnF reminder for HR */}
+      {showFnFCard && <FnFReminderCard />}
 
       {/* Notice actions */}
       <div className="flex justify-between items-center">

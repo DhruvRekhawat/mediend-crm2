@@ -459,6 +459,16 @@ export const EmployeeScalarFieldEnum = {
   bankAccountNumber: 'bankAccountNumber',
   ifscCode: 'ifscCode',
   uanNumber: 'uanNumber',
+  status: 'status',
+  pipStartDate: 'pipStartDate',
+  pipEndDate: 'pipEndDate',
+  noticePeriodStartDate: 'noticePeriodStartDate',
+  noticePeriodEndDate: 'noticePeriodEndDate',
+  finalWorkingDay: 'finalWorkingDay',
+  terminationReason: 'terminationReason',
+  fnfCompleted: 'fnfCompleted',
+  fnfCompletedAt: 'fnfCompletedAt',
+  fnfCompletedById: 'fnfCompletedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

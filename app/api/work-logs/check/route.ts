@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { getSessionFromRequest } from "@/lib/session"
 import { successResponse, unauthorizedResponse } from "@/lib/api-utils"
 import { prisma } from "@/lib/prisma"
+import { FEATURE_KEYS } from "@/lib/feature-keys"
 import { startOfDay, endOfDay, getHours, getMinutes } from "date-fns"
 
 // Required intervals (morning catch-up 0-9 is optional, not enforced)
@@ -31,12 +32,16 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // Only enforce for MD team members or MD watchlist members
-  const employee = await prisma.employee.findFirst({
-    where: { userId: user.id },
+  // Only enforce when user has worklog_enforcement permission enabled
+  const worklogPermission = await prisma.userFeaturePermission.findFirst({
+    where: {
+      userId: user.id,
+      featureKey: FEATURE_KEYS.WORKLOG_ENFORCEMENT,
+      enabled: true,
+    },
     select: { id: true },
   })
-  if (!employee) {
+  if (!worklogPermission) {
     return successResponse({
       complete: true,
       isBlocked: false,
@@ -47,18 +52,11 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const inTeam = await prisma.mDTaskTeamMember.findFirst({
-    where: {
-      employeeId: employee.id,
-      team: { owner: { role: "MD" } },
-    },
+  const employee = await prisma.employee.findFirst({
+    where: { userId: user.id },
     select: { id: true },
   })
-  const inWatchlist = await prisma.mDWatchlistEmployee.findFirst({
-    where: { employeeId: employee.id },
-    select: { id: true },
-  })
-  if (!inTeam && !inWatchlist) {
+  if (!employee) {
     return successResponse({
       complete: true,
       isBlocked: false,

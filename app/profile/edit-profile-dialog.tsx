@@ -27,6 +27,7 @@ export interface ProfileEmployee {
   employeeCode: string
   joinDate: Date | null
   dateOfBirth: Date | null
+  designation: string | null
   panNumber: string | null
   aadharNumber: string | null
   uanNumber: string | null

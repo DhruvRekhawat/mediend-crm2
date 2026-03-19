@@ -176,6 +176,12 @@ export default function ProfilePage() {
                     Joined {format(new Date(employee.joinDate), 'MMM yyyy')}
                   </span>
                 )}
+                {employee?.dateOfBirth && (
+                  <span className="inline-flex items-center gap-1">
+                    <Cake className="size-3" />
+                    Birthday {format(new Date(employee.dateOfBirth), 'MMM d')}
+                  </span>
+                )}
                 {employee?.department?.name && (
                   <span className="inline-flex items-center gap-1">
                     <Building className="size-3" />
@@ -236,25 +242,36 @@ export default function ProfilePage() {
               </div>
               <div className="px-4 sm:px-5">
                 <FieldRow
+                  icon={FileText}
+                  label="Position"
+                  value={employee.designation ?? user.role ?? null}
+                />
+              </div>
+              <div className="px-4 sm:px-5">
+                <FieldRow
                   icon={Building}
                   label="Department"
                   value={employee.department?.name ?? null}
                 />
               </div>
-              <div className="px-4 sm:px-5">
-                <FieldRow
-                  icon={Calendar}
-                  label="Join date"
-                  value={employee.joinDate ? format(new Date(employee.joinDate), 'PPP') : null}
-                />
-              </div>
-              <div className="px-4 sm:px-5">
-                <FieldRow
-                  icon={Cake}
-                  label="Date of birth"
-                  value={employee.dateOfBirth ? format(new Date(employee.dateOfBirth), 'PPP') : null}
-                />
-              </div>
+              {employee.joinDate && (
+                <div className="px-4 sm:px-5">
+                  <FieldRow
+                    icon={Calendar}
+                    label="Join date"
+                    value={format(new Date(employee.joinDate), 'PPP')}
+                  />
+                </div>
+              )}
+              {employee.dateOfBirth && (
+                <div className="px-4 sm:px-5">
+                  <FieldRow
+                    icon={Cake}
+                    label="Date of birth"
+                    value={format(new Date(employee.dateOfBirth), 'PPP')}
+                  />
+                </div>
+              )}
               <div className="px-4 sm:px-5">
                 <FieldRow
                   icon={FileText}

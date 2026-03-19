@@ -38,12 +38,14 @@ interface UserWithPermissions {
   permissions: {
     [FEATURE_KEYS.MD_APPROVAL_REQUEST]: boolean | null
     [FEATURE_KEYS.CREATE_NOTICE]: boolean | null
+    [FEATURE_KEYS.WORKLOG_ENFORCEMENT]: boolean | null
   }
 }
 
 const FEATURE_LABELS: Record<string, string> = {
   [FEATURE_KEYS.MD_APPROVAL_REQUEST]: 'Ask MD Approval',
   [FEATURE_KEYS.CREATE_NOTICE]: 'Create Notice',
+  [FEATURE_KEYS.WORKLOG_ENFORCEMENT]: 'Work Log Enforcement',
 }
 
 export default function ITPermissionsPage() {
@@ -161,12 +163,13 @@ export default function ITPermissionsPage() {
                   <TableHead>Department</TableHead>
                   <TableHead>{FEATURE_LABELS[FEATURE_KEYS.MD_APPROVAL_REQUEST]}</TableHead>
                   <TableHead>{FEATURE_LABELS[FEATURE_KEYS.CREATE_NOTICE]}</TableHead>
+                  <TableHead>{FEATURE_LABELS[FEATURE_KEYS.WORKLOG_ENFORCEMENT]}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       Loading...
                     </TableCell>
                   </TableRow>
@@ -215,6 +218,19 @@ export default function ITPermissionsPage() {
                               u.id,
                               FEATURE_KEYS.CREATE_NOTICE,
                               u.permissions[FEATURE_KEYS.CREATE_NOTICE]
+                            )
+                          }
+                          disabled={toggleMutation.isPending}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={u.permissions[FEATURE_KEYS.WORKLOG_ENFORCEMENT] ?? false}
+                          onCheckedChange={() =>
+                            handleToggle(
+                              u.id,
+                              FEATURE_KEYS.WORKLOG_ENFORCEMENT,
+                              u.permissions[FEATURE_KEYS.WORKLOG_ENFORCEMENT]
                             )
                           }
                           disabled={toggleMutation.isPending}

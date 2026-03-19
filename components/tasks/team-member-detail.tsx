@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Plus, AlertTriangle, Star, ArrowUpRight, Crown, Users, FileText, CheckCircle2, Clock, MoreVertical, ClipboardList, ShieldAlert } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,11 @@ import type { MDTeamOverviewMember } from "@/hooks/use-md-team"
 import type { Task } from "@/hooks/use-tasks"
 import { cn } from "@/lib/utils"
 import { getAvatarColor } from "@/lib/avatar-colors"
+import { apiGet, apiPatch } from "@/lib/api-client"
+import { FEATURE_KEYS } from "@/lib/feature-keys"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
 
 type TabId = "active" | "completed" | "overdue"
 
@@ -117,7 +123,36 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
     return map
   }, [warnings])
   const canIssueWarning = user?.role === "MD" || user?.role === "ADMIN"
+  const isMD = user?.role === "MD"
+  const queryClient = useQueryClient()
   const today = startOfDay(new Date())
+
+  const { data: memberPermissions } = useQuery({
+    queryKey: ["it-permissions", "member", member.id],
+    queryFn: () =>
+      apiGet<{ id: string; permissions: { [FEATURE_KEYS.WORKLOG_ENFORCEMENT]: boolean | null } }[]>(
+        `/api/it/permissions?userId=${member.id}`
+      ),
+    enabled: !!isMD && !!member.id && actionsSheetOpen,
+  })
+  const workLogEnforcementEnabled =
+    memberPermissions?.[0]?.permissions[FEATURE_KEYS.WORKLOG_ENFORCEMENT] ?? false
+
+  const workLogEnforcementMutation = useMutation({
+    mutationFn: ({ enabled }: { enabled: boolean }) =>
+      apiPatch("/api/it/permissions", {
+        userId: member.id,
+        featureKey: FEATURE_KEYS.WORKLOG_ENFORCEMENT,
+        enabled,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["it-permissions"] })
+      toast.success("Work log enforcement updated")
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to update")
+    },
+  })
 
   const extensionRequests = useMemo(() => {
     return allApprovals.filter((a) => a.task.assignee?.id === member.id)
@@ -618,6 +653,21 @@ export function TeamMemberDetailContent({ member }: TeamMemberDetailContentProps
             <SheetTitle>Actions</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-1 pt-4">
+            {isMD && (
+              <div className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm">
+                <Label htmlFor="worklog-enforcement" className="font-medium cursor-pointer flex-1">
+                  Work Log Enforcement
+                </Label>
+                <Switch
+                  id="worklog-enforcement"
+                  checked={workLogEnforcementEnabled}
+                  onCheckedChange={(checked) =>
+                    workLogEnforcementMutation.mutate({ enabled: checked })
+                  }
+                  disabled={workLogEnforcementMutation.isPending}
+                />
+              </div>
+            )}
             <button
               type="button"
               onClick={() => {

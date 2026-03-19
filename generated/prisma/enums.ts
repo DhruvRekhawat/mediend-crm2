@@ -376,6 +376,16 @@ export const PreAuthStatus = {
 export type PreAuthStatus = (typeof PreAuthStatus)[keyof typeof PreAuthStatus]
 
 
+export const EmployeeStatus = {
+  ACTIVE: 'ACTIVE',
+  ON_PIP: 'ON_PIP',
+  ON_NOTICE: 'ON_NOTICE',
+  TERMINATED: 'TERMINATED'
+} as const
+
+export type EmployeeStatus = (typeof EmployeeStatus)[keyof typeof EmployeeStatus]
+
+
 export const NormalizationType = {
   SELF: 'SELF',
   MANAGER: 'MANAGER',

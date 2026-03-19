@@ -20,6 +20,7 @@ const createEmployeeSchema = z.object({
   panNumber: z.string().max(10).optional().nullable(),
   aadharDocUrl: z.string().url().optional().nullable().or(z.literal('')),
   panDocUrl: z.string().url().optional().nullable().or(z.literal('')),
+  designation: z.string().max(200).optional().nullable(),
 })
 
 export async function POST(request: NextRequest) {
@@ -63,6 +64,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const targetUser = await prisma.user.findUnique({
+      where: { id: data.userId },
+      select: { role: true },
+    })
+    const defaultDesignation = data.designation ?? targetUser?.role ?? null
+
     const { clearBdNumberCache } = await import('@/lib/sync/bd-number-map')
     const employee = await prisma.employee.create({
       data: {
@@ -78,6 +85,7 @@ export async function POST(request: NextRequest) {
         bdNumber: data.bdNumber ?? null,
         aadharDocUrl: data.aadharDocUrl || null,
         panDocUrl: data.panDocUrl || null,
+        designation: defaultDesignation,
       },
       include: {
         user: {
@@ -127,10 +135,14 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const departmentId = searchParams.get('departmentId')
     const search = searchParams.get('search')?.trim()
+    const status = searchParams.get('status')
 
     const where: Prisma.EmployeeWhereInput = {}
     if (departmentId) {
       where.departmentId = departmentId
+    }
+    if (status && ['ACTIVE', 'ON_PIP', 'ON_NOTICE', 'TERMINATED'].includes(status)) {
+      where.status = status as 'ACTIVE' | 'ON_PIP' | 'ON_NOTICE' | 'TERMINATED'
     }
     if (search) {
       where.OR = [

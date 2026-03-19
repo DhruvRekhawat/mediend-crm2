@@ -3,17 +3,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiGet, apiPatch } from '@/lib/api-client'
 import { useState } from 'react'
-import { Edit, Building, Hash, Calendar, DollarSign, Search, Filter, X } from 'lucide-react'
+import { Building, Hash, Calendar, DollarSign, Search, Filter, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/hooks/use-auth'
+import { hasPermission } from '@/lib/rbac'
+import { cn } from '@/lib/utils'
+import { EmployeeDetailDrawer } from '@/components/hr/employee-detail-drawer'
 
 interface Department {
   id: string
@@ -25,6 +29,8 @@ interface Employee {
   employeeCode: string
   joinDate: Date | null
   salary: number | null
+  designation: string | null
+  status: string
   user: {
     id: string
     name: string
@@ -37,24 +43,46 @@ interface Employee {
   } | null
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: 'Active',
+  ON_PIP: 'On PIP',
+  ON_NOTICE: 'Notice',
+  TERMINATED: 'Inactive',
+}
+
+const ROW_STATUS_CLASS: Record<string, string> = {
+  ACTIVE: '',
+  ON_PIP: 'bg-orange-50/50 dark:bg-orange-950/20',
+  ON_NOTICE: 'bg-amber-50/50 dark:bg-amber-950/20',
+  TERMINATED: 'bg-red-50/50 dark:bg-red-950/20',
+}
+
 export default function HREmployeesPage() {
+  const { user } = useAuth()
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [drawerEmployeeId, setDrawerEmployeeId] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const queryClient = useQueryClient()
-  
+  const canEdit = !!user && hasPermission(user, 'hrms:employees:write')
+
   // Filter states
   const [departmentFilter, setDepartmentFilter] = useState<string>('all')
   const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [joinDateFrom, setJoinDateFrom] = useState('')
   const [joinDateTo, setJoinDateTo] = useState('')
 
   const { data: employees, isLoading } = useQuery<Employee[]>({
-    queryKey: ['employees', departmentFilter],
+    queryKey: ['employees', departmentFilter, statusFilter],
     queryFn: () => {
       const params = new URLSearchParams()
       if (departmentFilter && departmentFilter !== 'all') {
         params.set('departmentId', departmentFilter)
+      }
+      if (statusFilter && statusFilter !== 'all') {
+        params.set('status', statusFilter)
       }
       return apiGet<Employee[]>(`/api/employees?${params.toString()}`)
     },
@@ -66,7 +94,7 @@ export default function HREmployeesPage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null; designation?: string | null } }) =>
       apiPatch<Employee>(`/api/employees/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['employees'] })
@@ -87,13 +115,8 @@ export default function HREmployeesPage() {
   // Get unique roles from employees
   const uniqueRoles = Array.from(new Set(employees?.map(e => e.user.role) || [])).sort()
 
-  // Filter employees based on filters
+  // Filter employees based on filters (status is server-side; role/search/date are client-side)
   const filteredEmployees = employees?.filter((employee) => {
-    // Department filter
-    if (departmentFilter !== 'all' && employee.department?.id !== departmentFilter) {
-      return false
-    }
-
     // Role filter
     if (roleFilter !== 'all' && employee.user.role !== roleFilter) {
       return false
@@ -130,14 +153,26 @@ export default function HREmployeesPage() {
     return true
   }) || []
 
-  const hasActiveFilters = departmentFilter !== 'all' || roleFilter !== 'all' || searchQuery || joinDateFrom || joinDateTo
+  const hasActiveFilters = departmentFilter !== 'all' || roleFilter !== 'all' || statusFilter !== 'all' || searchQuery || joinDateFrom || joinDateTo
 
   const clearFilters = () => {
     setDepartmentFilter('all')
     setRoleFilter('all')
+    setStatusFilter('all')
     setSearchQuery('')
     setJoinDateFrom('')
     setJoinDateTo('')
+  }
+
+  const handleRowClick = (employee: Employee) => {
+    setDrawerEmployeeId(employee.id)
+    setDrawerOpen(true)
+  }
+
+  const handleEditFromDrawer = (emp: unknown) => {
+    setDrawerOpen(false)
+    setSelectedEmployee(emp as Employee)
+    setIsDialogOpen(true)
   }
 
   return (
@@ -164,7 +199,7 @@ export default function HREmployeesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
               <Label>Search</Label>
               <div className="relative">
@@ -210,6 +245,21 @@ export default function HREmployeesPage() {
               </Select>
             </div>
             <div>
+              <Label>Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="ON_PIP">On PIP</SelectItem>
+                  <SelectItem value="ON_NOTICE">On Notice</SelectItem>
+                  <SelectItem value="TERMINATED">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label>Join Date From</Label>
               <Input
                 type="date"
@@ -244,20 +294,44 @@ export default function HREmployeesPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Position</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Employee Code</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Join Date</TableHead>
                   <TableHead>Salary</TableHead>
-                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
+                  <TableRow
+                    key={employee.id}
+                    className={cn(
+                      'cursor-pointer hover:bg-muted/50 transition-colors',
+                      ROW_STATUS_CLASS[employee.status] ?? ''
+                    )}
+                    onClick={() => handleRowClick(employee)}
+                  >
                     <TableCell className="font-medium">{employee.user.name}</TableCell>
                     <TableCell>{employee.user.email}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{employee.user.role.replace('_', ' ')}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {employee.designation || employee.user.role.replace('_', ' ')}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          employee.status === 'ACTIVE' && 'border-emerald-300 text-emerald-700 bg-emerald-50/80 dark:border-emerald-800 dark:text-emerald-300 dark:bg-emerald-950/30',
+                          employee.status === 'ON_PIP' && 'border-orange-300 text-orange-700 bg-orange-50/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30',
+                          employee.status === 'ON_NOTICE' && 'border-amber-300 text-amber-700 bg-amber-50/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30',
+                          employee.status === 'TERMINATED' && 'border-red-300 text-red-700 bg-red-50/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30'
+                        )}
+                      >
+                        {STATUS_LABELS[employee.status] ?? employee.status}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -299,21 +373,12 @@ export default function HREmployeesPage() {
                         'N/A'
                       )}
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(employee)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))}
                 {filteredEmployees.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      {hasActiveFilters ? 'No employees match the filters' : 'No employees found. Click a row to view full profile.'}
                       {hasActiveFilters ? 'No employees match the filters' : 'No employees found'}
                     </TableCell>
                   </TableRow>
@@ -340,11 +405,12 @@ export default function HREmployeesPage() {
               employee={selectedEmployee}
               departments={departments || []}
               onSubmit={(data) => {
-                const updateData: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null } = {}
+                const updateData: { employeeCode?: string; joinDate?: string | null; salary?: number | null; departmentId?: string | null; designation?: string | null } = {}
                 if (data.employeeCode) updateData.employeeCode = data.employeeCode
                 if (data.joinDate !== undefined) updateData.joinDate = data.joinDate
                 if (data.salary !== undefined) updateData.salary = data.salary
                 if (data.departmentId !== undefined) updateData.departmentId = data.departmentId
+                if (data.designation !== undefined) updateData.designation = data.designation
                 updateMutation.mutate({ id: selectedEmployee.id, data: updateData })
               }}
               isLoading={updateMutation.isPending}
@@ -352,6 +418,15 @@ export default function HREmployeesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <EmployeeDetailDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        employeeId={drawerEmployeeId}
+        canEdit={canEdit}
+        onEditRequest={handleEditFromDrawer}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['employees'] })}
+      />
     </div>
   )
 }
@@ -369,6 +444,7 @@ function EmployeeEditForm({
     joinDate?: string | null
     salary?: number | null
     departmentId?: string | null
+    designation?: string | null
   }) => void
   isLoading: boolean
 }) {
@@ -377,6 +453,7 @@ function EmployeeEditForm({
     joinDate: employee.joinDate ? format(new Date(employee.joinDate), 'yyyy-MM-dd') : '',
     salary: employee.salary?.toString() || '',
     departmentId: employee.department?.id || 'none',
+    designation: employee.designation || employee.user.role.replace('_', ' ') || '',
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -386,11 +463,21 @@ function EmployeeEditForm({
       joinDate: formData.joinDate ? formData.joinDate : null,
       salary: formData.salary ? parseFloat(formData.salary) : null,
       departmentId: formData.departmentId === 'none' ? null : formData.departmentId || null,
+      designation: formData.designation || null,
     })
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label>Position</Label>
+        <Input
+          value={formData.designation}
+          onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+          placeholder="e.g. Business Development Executive"
+        />
+      </div>
+
       <div>
         <Label>Employee Code</Label>
         <Input

@@ -6530,6 +6530,16 @@ export const EmployeeScalarFieldEnum = {
   bankAccountNumber: 'bankAccountNumber',
   ifscCode: 'ifscCode',
   uanNumber: 'uanNumber',
+  status: 'status',
+  pipStartDate: 'pipStartDate',
+  pipEndDate: 'pipEndDate',
+  noticePeriodStartDate: 'noticePeriodStartDate',
+  noticePeriodEndDate: 'noticePeriodEndDate',
+  finalWorkingDay: 'finalWorkingDay',
+  terminationReason: 'terminationReason',
+  fnfCompleted: 'fnfCompleted',
+  fnfCompletedAt: 'fnfCompletedAt',
+  fnfCompletedById: 'fnfCompletedById',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -7959,6 +7969,20 @@ export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'J
  * Reference to a field of type 'QueryMode'
  */
 export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'EmployeeStatus'
+ */
+export type EnumEmployeeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EmployeeStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'EmployeeStatus[]'
+ */
+export type ListEnumEmployeeStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EmployeeStatus[]'>
     
 
 
