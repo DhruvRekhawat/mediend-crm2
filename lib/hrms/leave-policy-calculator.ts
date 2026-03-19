@@ -16,16 +16,21 @@ const PROBATION_MONTHS = 6
 
 /**
  * Compute leave balances from policy: monthly accrual + approved leave history.
- * Policy: CL 1/month, SL 0.5/month, EL 0.5/month + 12 unlock after 6 months.
+ * Policy: CL 1/month, SL 0.5/month, EL 0.5/month. Pure accrual, no bonus at month 7.
  */
 export async function getComputedBalancesForEmployee(
   employeeId: string
 ): Promise<ComputedBalance[]> {
-  const [employee, leaveTypes, approvedLeaves, dbBalances] = await Promise.all([
-    prisma.employee.findUnique({
-      where: { id: employeeId },
-      select: { joinDate: true },
-    }),
+  const [employeeResult, leaveTypes, approvedLeaves, dbBalances] = await Promise.all([
+    prisma.$queryRaw<
+      Array<{ joinDate: Date | null; isProbation: boolean }>
+    >`
+      SELECT
+        e."joinDate",
+        (e."joinDate" IS NOT NULL AND e."joinDate"::date > ((CURRENT_DATE - INTERVAL '6 months')::date)) AS "isProbation"
+      FROM "Employee" e
+      WHERE e.id = ${employeeId}
+    `,
     prisma.leaveTypeMaster.findMany({
       where: { isActive: true },
       select: {
@@ -33,7 +38,6 @@ export async function getComputedBalancesForEmployee(
         name: true,
         monthlyAccrual: true,
         carryForward: true,
-        probationUnlockDays: true,
       },
     }),
     prisma.leaveRequest.findMany({
@@ -49,11 +53,10 @@ export async function getComputedBalancesForEmployee(
     }),
   ])
 
-  const joinDate = employee?.joinDate
+  const row = employeeResult[0]
+  const joinDate = row?.joinDate ?? null
+  const isProbation = row?.isProbation ?? false
   const now = new Date()
-  const isProbation = joinDate
-    ? differenceInMonths(now, joinDate) < PROBATION_MONTHS
-    : false
 
   const usedByLeaveType = new Map<string, number>()
   for (const l of approvedLeaves) {
@@ -67,7 +70,7 @@ export async function getComputedBalancesForEmployee(
     let locked = 0
 
     const dbBalance = dbBalanceByLeaveType.get(lt.id)
-    if (dbBalance) {
+    if (dbBalance && !isProbation) {
       // Active employee with imported balance: use DB allocated, subtract CRM-approved leaves
       allocated = dbBalance.allocated
       locked = 0
@@ -75,11 +78,6 @@ export async function getComputedBalancesForEmployee(
       // Probation / new employee: use DOJ formula (no DB record)
       const monthsWorked = Math.max(0, differenceInMonths(now, joinDate))
       allocated = monthsWorked * lt.monthlyAccrual
-
-      // EL: probationUnlockDays (12) added after 6 months
-      if (lt.probationUnlockDays != null && monthsWorked >= PROBATION_MONTHS) {
-        allocated += lt.probationUnlockDays
-      }
 
       // During probation, allocated is locked
       if (isProbation) {
