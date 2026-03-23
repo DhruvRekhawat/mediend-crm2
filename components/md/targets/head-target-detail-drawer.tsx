@@ -188,8 +188,8 @@ export function HeadTargetDetailDrawer({
                             formatter={(value: number) => [formatValue(Number(value), metric), '']}
                             labelFormatter={(label) => label}
                           />
-                          <Bar dataKey="actual" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Achieved" />
-                          <Bar dataKey="target" fill="hsl(var(--muted-foreground) / 0.3)" radius={[4, 4, 0, 0]} name="Target" />
+                          <Bar dataKey="actual" fill="rgb(var(--primary))" radius={[4, 4, 0, 0]} name="Achieved" />
+                          <Bar dataKey="target" fill="rgb(var(--muted-foreground) / 0.3)" radius={[4, 4, 0, 0]} name="Target" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>

@@ -1,5 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @keyframes gradient-rotate {
   0% {
@@ -29,133 +30,85 @@
   }
 }
 
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
-
 :root {
   --radius: 0.65rem;
-  --background: oklch(0.97 0.004 260);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: #062D4C;
-  --primary-foreground: #ffffff;
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: #062D4C;
-  --sidebar-foreground: oklch(0.94 0.01 250);
-  --sidebar-primary: #1EC5B7;
-  --sidebar-primary-foreground: #062D4C;
-  --sidebar-accent: #1EC5B7;
-  --sidebar-accent-foreground: #062D4C;
-  --sidebar-border: oklch(0.35 0.02 255);
-  --sidebar-ring: #1EC5B7;
+  --background: 243 245 248;
+  --foreground: 9 9 11;
+  --card: 255 255 255;
+  --card-foreground: 9 9 11;
+  --popover: 255 255 255;
+  --popover-foreground: 9 9 11;
+  --primary: 6 45 76;
+  --primary-foreground: 255 255 255;
+  --secondary: 244 244 245;
+  --secondary-foreground: 24 24 27;
+  --muted: 244 244 245;
+  --muted-foreground: 113 113 123;
+  --accent: 244 244 245;
+  --accent-foreground: 24 24 27;
+  --destructive: 231 0 11;
+  --border: 228 228 231;
+  --input: 228 228 231;
+  --ring: 161 161 161;
+  --chart-1: 142 197 255;
+  --chart-2: 43 127 255;
+  --chart-3: 21 93 252;
+  --chart-4: 20 71 230;
+  --chart-5: 25 60 184;
+  --sidebar: 6 45 76;
+  --sidebar-foreground: 230 236 242;
+  --sidebar-primary: 30 197 183;
+  --sidebar-primary-foreground: 6 45 76;
+  --sidebar-accent: 30 197 183;
+  --sidebar-accent-foreground: 6 45 76;
+  --sidebar-border: 52 59 69;
+  --sidebar-ring: 30 197 183;
 }
 
 .dark {
   --radius: 0.85rem;
 
-  /* 1️⃣ Sidebar - deepest layer */
-  --sidebar: #062D4C;
-  --sidebar-foreground: oklch(0.94 0.01 250);
+  --sidebar: 6 45 76;
+  --sidebar-foreground: 230 236 242;
 
-  /* 2️⃣ App background */
-  --background: oklch(0.18 0.015 255);
-  --foreground: oklch(0.94 0.01 250);
+  --background: 13 18 24;
+  --foreground: 230 236 242;
 
-  /* 3️⃣ Card surface */
-  --card: oklch(0.22 0.015 255);
-  --card-foreground: oklch(0.94 0.01 250);
+  --card: 22 27 34;
+  --card-foreground: 230 236 242;
 
-  --popover: oklch(0.22 0.015 255);
-  --popover-foreground: oklch(0.94 0.01 250);
+  --popover: 22 27 34;
+  --popover-foreground: 230 236 242;
 
-  /* 4️⃣ Input surface (slightly darker than card) */
-  --input: oklch(0.26 0.015 255);
+  --input: 31 36 43;
 
-  --border: oklch(0.30 0.015 255);
+  --border: 41 46 53;
 
-  /* Premium muted teal */
-  --primary: oklch(0.60 0.11 190);
-  --primary-foreground: oklch(0.12 0.01 190);
+  --primary: 0 149 143;
+  --primary-foreground: 3 7 6;
 
-  --secondary: oklch(0.26 0.015 255);
-  --secondary-foreground: oklch(0.9 0.01 250);
+  --secondary: 29 34 41;
+  --secondary-foreground: 217 223 229;
 
-  --muted: oklch(0.25 0.015 255);
-  --muted-foreground: oklch(0.70 0.015 250);
+  --muted: 29 34 41;
+  --muted-foreground: 152 159 168;
 
-  --accent: oklch(0.30 0.03 190);
-  --accent-foreground: oklch(0.94 0.01 250);
+  --accent: 27 51 49;
+  --accent-foreground: 230 236 242;
 
-  --destructive: oklch(0.65 0.18 25);
+  --destructive: 232 88 84;
 
-  --ring: oklch(0.60 0.11 190);
+  --ring: 0 149 143;
 
-  --sidebar-primary: #1EC5B7;
-  --sidebar-primary-foreground: #062D4C;
+  --sidebar-primary: 30 197 183;
+  --sidebar-primary-foreground: 6 45 76;
 
-  --sidebar-accent: #1EC5B7;
-  --sidebar-accent-foreground: #062D4C;
+  --sidebar-accent: 30 197 183;
+  --sidebar-accent-foreground: 6 45 76;
 
-  --sidebar-border: oklch(0.35 0.02 255);
-  --sidebar-ring: #1EC5B7;
+  --sidebar-border: 52 59 69;
+  --sidebar-ring: 30 197 183;
 }
-
 
 @layer base {
   * {
@@ -168,24 +121,24 @@
 
 /* FullCalendar modern theme (calendar page) */
 .fc-calendar-modern .fc {
-  --fc-border-color: oklch(0.92 0.004 286.32);
-  --fc-button-text-color: oklch(0.97 0.014 254.604);
-  --fc-button-bg-color: oklch(0.488 0.243 264.376);
-  --fc-button-border-color: oklch(0.488 0.243 264.376);
-  --fc-button-hover-bg-color: oklch(0.424 0.199 265.638);
-  --fc-button-hover-border-color: oklch(0.424 0.199 265.638);
-  --fc-button-active-bg-color: oklch(0.424 0.199 265.638);
-  --fc-button-active-border-color: oklch(0.424 0.199 265.638);
-  --fc-today-bg-color: oklch(0.97 0.02 264);
+  --fc-border-color: #e4e4e7;
+  --fc-button-text-color: #f4f4f5;
+  --fc-button-bg-color: #1447e6;
+  --fc-button-border-color: #1447e6;
+  --fc-button-hover-bg-color: #193cb8;
+  --fc-button-hover-border-color: #193cb8;
+  --fc-button-active-bg-color: #193cb8;
+  --fc-button-active-border-color: #193cb8;
+  --fc-today-bg-color: #eef5ff;
   --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: oklch(0.967 0.001 286.375);
-  --fc-now-indicator-color: oklch(0.488 0.243 264.376);
+  --fc-neutral-bg-color: #f4f4f5;
+  --fc-now-indicator-color: #1447e6;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 .dark .fc-calendar-modern .fc {
-  --fc-border-color: oklch(1 0 0 / 15%);
-  --fc-today-bg-color: oklch(0.3 0.05 264);
-  --fc-neutral-bg-color: oklch(0.274 0.006 286.033);
+  --fc-border-color: rgba(255, 255, 255, 0.15);
+  --fc-today-bg-color: #212d47;
+  --fc-neutral-bg-color: #27272a;
 }
 .fc-calendar-modern .fc-toolbar-title {
   font-size: 1.25rem;
@@ -201,12 +154,12 @@
   overflow: hidden;
 }
 .fc-calendar-modern .fc-col-header-cell {
-  background: oklch(0.967 0.001 286.375);
+  background: #f4f4f5;
   font-weight: 600;
   padding: 0.5rem 0;
 }
 .dark .fc-calendar-modern .fc-col-header-cell {
-  background: oklch(0.274 0.006 286.033);
+  background: #27272a;
 }
 .fc-calendar-modern .fc-daygrid-day-number {
   border-radius: 9999px;
@@ -215,8 +168,8 @@
   font-weight: 500;
 }
 .fc-calendar-modern .fc-day-today .fc-daygrid-day-number {
-  background: oklch(0.488 0.243 264.376);
-  color: oklch(0.97 0.014 254.604);
+  background: #1447e6;
+  color: #f4f4f5;
 }
 .fc-calendar-modern .fc-event {
   border-radius: 6px;
@@ -230,7 +183,7 @@
 .fc-calendar-modern .fc-timegrid-axis-cushion,
 .fc-calendar-modern .fc-timegrid-slot-label {
   font-size: 0.75rem;
-  color: oklch(0.552 0.016 285.938);
+  color: #71717b;
 }
 
 /* Print: hide app layout (sidebar, top bar, bottom nav) so only page content prints */

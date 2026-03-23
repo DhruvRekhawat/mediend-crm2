@@ -318,7 +318,7 @@ export default function InsuranceDashboardPage() {
   }
 
   const chartConfig = {
-    count: { label: 'IPD Cases', color: 'hsl(var(--chart-1))' },
+    count: { label: 'IPD Cases', color: 'rgb(var(--chart-1))' },
   }
 
   return (
@@ -433,7 +433,7 @@ export default function InsuranceDashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="p-2">
-              <ChartContainer config={{ count: { label: 'IPD Cases', color: 'hsl(var(--chart-2))' } }} className="h-[110px] w-full">
+              <ChartContainer config={{ count: { label: 'IPD Cases', color: 'rgb(var(--chart-2))' } }} className="h-[110px] w-full">
                 <BarChart data={ipdChartData.monthly} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="month" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} />
