@@ -1,0 +1,197 @@
+CompanyName
+Other
+Bandhan Bank Limited
+Self Fund
+Medi Assist
+Niva Bupa
+Niva Bupa
+Universal Sompo General Insurance Co. Ltd.
+United India Insurance Co. Ltd.
+The Oriental Insurance Co. Ltd.
+The New India Assurance Co. Ltd.
+Tata AIG General Insurance Co. Ltd.
+Star Health & Allied Insurance Co. Ltd.
+Shriram General Insurance Co. Ltd.
+SBI General Insurance Co. Ltd.
+Royal Sundaram General Insurance Co. Ltd.
+Reliance General Insurance Co. Ltd.
+Raheja QBE General Insurance Co. Ltd.
+Navi General Insurance Ltd.
+National Insurance Co. Ltd.
+Max Bupa Health Insurance Company Ltd.
+Manipal Cigna Health Insurance Company Limited
+Magma HDI General Insurance Co. Ltd.
+Liberty General Insurance Ltd.
+Kotak Mahindra General Insurance Co. Ltd.
+IffcoTokio General Insurance Co. Ltd.
+ICICI Lombard General Insurance Co. Ltd.
+HDFC ERGO General Insurance Co. Ltd.
+Go Digit General Insurance Ltd.
+Future Generali India Insurance Co. Ltd.
+Edelweiss General Insurance Co. Ltd.
+Cholamandalam MS General Insurance Co. Ltd.
+Care Health Insurance Ltd.
+Bharti AXA General Insurance Co. Ltd.
+Bajaj Allianz General Insurance Co. Ltd.
+Aditya Birla Health Insurance Co. Ltd.
+Acko General Insurance Ltd.
+
+
+Surgeon names:
+Dr Sahil Singhla
+Dr Abhilash Reddy
+Dr Abhinav Kesarvani
+Dr Aditya Phadke
+Dr Akash Dua
+Dr Amar Raghu
+Dr Amit Maurya
+Dr Amol Chaudhary
+Dr Anitha M
+Dr Ankit Poddar
+Dr Anubhav Sangwen
+Dr Ashok Shelke
+Dr Ashwani Kumar
+Dr Ashwani Kumar Singh
+Dr B.K Mohanty
+Dr Bala Ganesh
+Dr Chiraj Vaja
+Dr Deepak Maharana
+Dr Deepanshu Gupta
+Dr Devendran
+Dr Dhurv Kundra
+Dr Dinesh Thakur
+Dr Harshvardhan
+Dr Hitesh Gupta
+Dr Itishree Gupta
+Dr Jatin Asher
+Dr Kapil Agarwal
+Dr Kunwar Vishal Singh
+Dr Lokesh Handa
+Dr Mahesh Jadhav
+Dr Manoj Pawar
+Dr Maunil Bhuta
+Dr Neeraj Singh
+Dr Nibedita Parida
+Dr Nikunj Mody
+Dr Nilesh Dhariya
+Dr Om Prakash Gupta
+Dr Pallavi Gupta
+Dr Parmeshwar Babulal Bambrule
+Dr Piyush Jain
+Dr Piyush Tewari
+Dr Pradeep N
+Dr Prakash Jain
+Dr Pranam Sadawarte
+Dr Prasad Brahme
+Dr Praveen Kumar
+Dr Prerana Matta
+Dr Priyanka Sharma
+Dr Raj Kumar Singh
+Dr Rajeev Jain
+Dr Ramesh Pawar
+Dr Sachin Dongre
+Dr Sagar
+Dr Santosh Naik
+Dr Sheetal Londhe Monteiro
+Dr Shishir Agrawal
+Dr Shiv Kishore
+Dr Shweta Jain
+Dr Sourabh Goyal
+Dr Sunil Palwae
+Dr Sunny Aggarwal
+Dr Suraj Chauhan
+Dr Swapnil Wahane
+Dr Varun Gogia
+Dr Veena Priya
+Dr Vicky Jain
+Dr Vikas Kumar
+Dr Vineet Tanwar
+Dr Vishal Dhiren
+Dr Vishal Diddi
+Dr Vishal Patel
+Dr Vivek Gupta
+
+
+General anesthesia 
+Spinal anesthesia 
+Local anesthesia 
+Tropical anesthesia
+
+- Minnerva Superspeciality Hospital
+- Eye Clinix Hospital
+- Minnerva Clinic
+- Varalakshmi Hospital
+- Vedant Hospital
+- Gurukripa Clinic
+- Save Sight Centre Eye Hospital
+- Sama Hospital
+- Vasavi Hospital Lakdikapul
+- Mayom Hospital
+- MASSH - Minimal Access Smart Surgery Hospital
+- Massh Hospital
+- Sunrise hospital
+- Shubham hospital
+- ICI Hospital
+- Bensups Hospital
+- Apolllo spectra sheetla
+- Apollo Noida 26
+- Acme Hospital
+- SRV Hospitals - Dombivali
+- Apex All Branches
+- Surya Hospital All Branches Mumbai and pune
+- SRV Hospitals - Goregaon
+- Apex SuperSpeciality Hospitals,Borivali West
+- GEM Hospital
+- Healing Hand PC
+- Sukhmani Hospital
+- Wanshika Hospital
+- Apex Hospital - Chandravarkar
+- ONP Hospital
+- Abhyudaya Hospital
+- Hind Hospital
+- Renovo Hospital
+- Health Sqaure Kharadi
+- SVC Hospital
+- SCI Hospital, Gurgaon
+- Envision Eye Hospital
+- Mumbai Eye Care
+- Eye Mantra Hospital
+- Alpha One Hospital Khargar
+- KHARGHAR MULTISPECIALITY HOSPITAL
+- Healing Hands Clinic
+- VNA Hospital
+- Aroha Hospital
+- TX Hospital
+- Deccan Hardikar
+- Motherland Hospital
+- Zenil Clinic
+- Artemis Lite
+- Swayam Hospitals and ICU
+- Jyoti Hospital
+- Bhandari Hospital
+- SRV Hospitals - Chembur
+- Diyos Hospital
+- Shree Hospital
+- Intimate Clinic
+- Jeevan Sparash Hospital
+- Plastic & Hands Clinic
+- Dhiren Eye Care
+- Apex Hospitals, Mulund
+- Fortune Clinic
+- Mallika Hospital
+- Medwin Care Hospital
+- Kanva Sri Sai Hospital, Nandini Layout
+- Tewari Eye Centre
+- SCI Hospital, Greater Kailash
+- HHC baner
+- Curemaxx Hospital
+- HHC Ludhiana
+- Fortis C-Doc
+- Renova Hospital
+- Surya Hospital Chembur
+- Surya Hospital Santacruz
+- Surya Hospital Pune
+- Lifecare Hospital
+- Max Hospital
+- Taywade Multispeciality Hospital
+- Ekana Multi Specialty Hospital

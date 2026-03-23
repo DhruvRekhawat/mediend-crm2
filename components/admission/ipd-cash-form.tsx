@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { apiPost, apiPatch } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { User, MapPin, Stethoscope, Building2, Wallet, Calendar, Package, ChevronDown, ChevronUp } from 'lucide-react'
+import { MasterCombobox } from '@/components/ui/master-combobox'
 
 export interface IPDCashFormProps {
   leadId: string
@@ -421,13 +422,13 @@ export function IPDCashForm({
               />
             </div>
             <div>
-              <Label htmlFor="anesthesia">Type of Anaesthesia</Label>
-              <Input
+              <MasterCombobox
                 id="anesthesia"
+                label="Type of Anaesthesia"
+                masterType="anesthesia"
                 value={formData.anesthesia}
-                onChange={(e) => set('anesthesia', e.target.value)}
-                placeholder="e.g. General, Spinal, Local"
-                className="mt-1"
+                onChange={(v) => set('anesthesia', v)}
+                placeholder="Search or type anaesthesia type"
               />
             </div>
           </div>
@@ -442,13 +443,13 @@ export function IPDCashForm({
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="surgeonName">Surgeon Name</Label>
-            <Input
+            <MasterCombobox
               id="surgeonName"
+              label="Surgeon Name"
+              masterType="doctors"
               value={formData.surgeonName}
-              onChange={(e) => set('surgeonName', e.target.value)}
-              placeholder="Surgeon name"
-              className="mt-1"
+              onChange={(v) => set('surgeonName', v)}
+              placeholder="Search or type surgeon name"
             />
           </div>
           <div>
@@ -472,13 +473,13 @@ export function IPDCashForm({
       >
         <div className="space-y-4">
           <div>
-            <Label htmlFor="hospitalName">Hospital / Clinic Name</Label>
-            <Input
+            <MasterCombobox
               id="hospitalName"
+              label="Hospital / Clinic Name"
+              masterType="hospitals"
               value={formData.hospitalName}
-              onChange={(e) => set('hospitalName', e.target.value)}
-              placeholder="Hospital or clinic name"
-              className="mt-1"
+              onChange={(v) => set('hospitalName', v)}
+              placeholder="Search or type hospital name"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

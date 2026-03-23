@@ -422,6 +422,26 @@ export type PushSubscription = Prisma.PushSubscriptionModel
  */
 export type CronJobLog = Prisma.CronJobLogModel
 /**
+ * Model HospitalMaster
+ * 
+ */
+export type HospitalMaster = Prisma.HospitalMasterModel
+/**
+ * Model DoctorMaster
+ * 
+ */
+export type DoctorMaster = Prisma.DoctorMasterModel
+/**
+ * Model TPAMaster
+ * 
+ */
+export type TPAMaster = Prisma.TPAMasterModel
+/**
+ * Model AnesthesiaMaster
+ * 
+ */
+export type AnesthesiaMaster = Prisma.AnesthesiaMasterModel
+/**
  * Model AppSetting
  * 
  */

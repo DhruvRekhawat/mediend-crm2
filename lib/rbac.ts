@@ -40,6 +40,8 @@ export type Permission =
   | 'hierarchy:team:read'
   | 'hierarchy:leave:approve'
   | 'it:permissions'
+  | 'masters:read'
+  | 'masters:write'
 
 const rolePermissions: Record<UserRole, Permission[]> = {
   MD: [
@@ -65,6 +67,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hierarchy:team:read',
     'hierarchy:leave:approve',
     'it:permissions',
+    'masters:read',
+    'masters:write',
   ],
   EXECUTIVE_ASSISTANT: [
     'analytics:read',
@@ -75,6 +79,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hrms:employees:read',
     'hierarchy:read',
     'hierarchy:team:read',
+    'masters:read',
+    'masters:write',
   ],
   SALES_HEAD: [
     'leads:read',
@@ -262,6 +268,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hierarchy:write',
     'hierarchy:team:read',
     'hierarchy:leave:approve',
+    'masters:read',
+    'masters:write',
   ],
   USER: [
     'hrms:read',
@@ -308,6 +316,8 @@ const rolePermissions: Record<UserRole, Permission[]> = {
     'hierarchy:write',
     'hierarchy:team:read',
     'hierarchy:leave:approve',
+    'masters:read',
+    'masters:write',
   ],
 }
 

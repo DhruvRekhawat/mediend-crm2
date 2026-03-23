@@ -2488,6 +2488,53 @@ model CronJobLog {
   @@index([createdAt])
 }
 
+// CRM reference masters (BD / Insurance forms — dropdowns)
+model HospitalMaster {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  address       String?  @db.Text
+  googleMapLink String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model DoctorMaster {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model TPAMaster {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([isActive])
+}
+
+model AnesthesiaMaster {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([isActive])
+}
+
 // Global app settings (key-value store)
 model AppSetting {
   key       String   @id

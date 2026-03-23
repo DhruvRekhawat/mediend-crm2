@@ -460,6 +460,10 @@ export const ModelName = {
   WorkLog: 'WorkLog',
   PushSubscription: 'PushSubscription',
   CronJobLog: 'CronJobLog',
+  HospitalMaster: 'HospitalMaster',
+  DoctorMaster: 'DoctorMaster',
+  TPAMaster: 'TPAMaster',
+  AnesthesiaMaster: 'AnesthesiaMaster',
   AppSetting: 'AppSetting',
   RequestLog: 'RequestLog'
 } as const
@@ -477,7 +481,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "holiday" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "notice" | "noticeRecipient" | "mDApprovalRequest" | "userFeaturePermission" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "userTaskSeen" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "appSetting" | "requestLog"
+    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "holiday" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "notice" | "noticeRecipient" | "mDApprovalRequest" | "userFeaturePermission" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "userTaskSeen" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "hospitalMaster" | "doctorMaster" | "tPAMaster" | "anesthesiaMaster" | "appSetting" | "requestLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -6105,6 +6109,302 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    HospitalMaster: {
+      payload: Prisma.$HospitalMasterPayload<ExtArgs>
+      fields: Prisma.HospitalMasterFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.HospitalMasterFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.HospitalMasterFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>
+        }
+        findFirst: {
+          args: Prisma.HospitalMasterFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.HospitalMasterFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>
+        }
+        findMany: {
+          args: Prisma.HospitalMasterFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>[]
+        }
+        create: {
+          args: Prisma.HospitalMasterCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>
+        }
+        createMany: {
+          args: Prisma.HospitalMasterCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.HospitalMasterCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>[]
+        }
+        delete: {
+          args: Prisma.HospitalMasterDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>
+        }
+        update: {
+          args: Prisma.HospitalMasterUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>
+        }
+        deleteMany: {
+          args: Prisma.HospitalMasterDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.HospitalMasterUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.HospitalMasterUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>[]
+        }
+        upsert: {
+          args: Prisma.HospitalMasterUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$HospitalMasterPayload>
+        }
+        aggregate: {
+          args: Prisma.HospitalMasterAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateHospitalMaster>
+        }
+        groupBy: {
+          args: Prisma.HospitalMasterGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HospitalMasterGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.HospitalMasterCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.HospitalMasterCountAggregateOutputType> | number
+        }
+      }
+    }
+    DoctorMaster: {
+      payload: Prisma.$DoctorMasterPayload<ExtArgs>
+      fields: Prisma.DoctorMasterFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DoctorMasterFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DoctorMasterFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>
+        }
+        findFirst: {
+          args: Prisma.DoctorMasterFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DoctorMasterFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>
+        }
+        findMany: {
+          args: Prisma.DoctorMasterFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>[]
+        }
+        create: {
+          args: Prisma.DoctorMasterCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>
+        }
+        createMany: {
+          args: Prisma.DoctorMasterCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DoctorMasterCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>[]
+        }
+        delete: {
+          args: Prisma.DoctorMasterDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>
+        }
+        update: {
+          args: Prisma.DoctorMasterUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>
+        }
+        deleteMany: {
+          args: Prisma.DoctorMasterDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DoctorMasterUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DoctorMasterUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>[]
+        }
+        upsert: {
+          args: Prisma.DoctorMasterUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DoctorMasterPayload>
+        }
+        aggregate: {
+          args: Prisma.DoctorMasterAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDoctorMaster>
+        }
+        groupBy: {
+          args: Prisma.DoctorMasterGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DoctorMasterGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DoctorMasterCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DoctorMasterCountAggregateOutputType> | number
+        }
+      }
+    }
+    TPAMaster: {
+      payload: Prisma.$TPAMasterPayload<ExtArgs>
+      fields: Prisma.TPAMasterFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TPAMasterFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TPAMasterFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>
+        }
+        findFirst: {
+          args: Prisma.TPAMasterFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TPAMasterFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>
+        }
+        findMany: {
+          args: Prisma.TPAMasterFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>[]
+        }
+        create: {
+          args: Prisma.TPAMasterCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>
+        }
+        createMany: {
+          args: Prisma.TPAMasterCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TPAMasterCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>[]
+        }
+        delete: {
+          args: Prisma.TPAMasterDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>
+        }
+        update: {
+          args: Prisma.TPAMasterUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>
+        }
+        deleteMany: {
+          args: Prisma.TPAMasterDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TPAMasterUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TPAMasterUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>[]
+        }
+        upsert: {
+          args: Prisma.TPAMasterUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TPAMasterPayload>
+        }
+        aggregate: {
+          args: Prisma.TPAMasterAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTPAMaster>
+        }
+        groupBy: {
+          args: Prisma.TPAMasterGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TPAMasterGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TPAMasterCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TPAMasterCountAggregateOutputType> | number
+        }
+      }
+    }
+    AnesthesiaMaster: {
+      payload: Prisma.$AnesthesiaMasterPayload<ExtArgs>
+      fields: Prisma.AnesthesiaMasterFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AnesthesiaMasterFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AnesthesiaMasterFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>
+        }
+        findFirst: {
+          args: Prisma.AnesthesiaMasterFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AnesthesiaMasterFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>
+        }
+        findMany: {
+          args: Prisma.AnesthesiaMasterFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>[]
+        }
+        create: {
+          args: Prisma.AnesthesiaMasterCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>
+        }
+        createMany: {
+          args: Prisma.AnesthesiaMasterCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AnesthesiaMasterCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>[]
+        }
+        delete: {
+          args: Prisma.AnesthesiaMasterDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>
+        }
+        update: {
+          args: Prisma.AnesthesiaMasterUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>
+        }
+        deleteMany: {
+          args: Prisma.AnesthesiaMasterDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AnesthesiaMasterUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AnesthesiaMasterUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>[]
+        }
+        upsert: {
+          args: Prisma.AnesthesiaMasterUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AnesthesiaMasterPayload>
+        }
+        aggregate: {
+          args: Prisma.AnesthesiaMasterAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAnesthesiaMaster>
+        }
+        groupBy: {
+          args: Prisma.AnesthesiaMasterGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AnesthesiaMasterGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AnesthesiaMasterCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AnesthesiaMasterCountAggregateOutputType> | number
+        }
+      }
+    }
     AppSetting: {
       payload: Prisma.$AppSettingPayload<ExtArgs>
       fields: Prisma.AppSettingFieldRefs
@@ -7777,6 +8077,52 @@ export const CronJobLogScalarFieldEnum = {
 export type CronJobLogScalarFieldEnum = (typeof CronJobLogScalarFieldEnum)[keyof typeof CronJobLogScalarFieldEnum]
 
 
+export const HospitalMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  address: 'address',
+  googleMapLink: 'googleMapLink',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type HospitalMasterScalarFieldEnum = (typeof HospitalMasterScalarFieldEnum)[keyof typeof HospitalMasterScalarFieldEnum]
+
+
+export const DoctorMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DoctorMasterScalarFieldEnum = (typeof DoctorMasterScalarFieldEnum)[keyof typeof DoctorMasterScalarFieldEnum]
+
+
+export const TPAMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TPAMasterScalarFieldEnum = (typeof TPAMasterScalarFieldEnum)[keyof typeof TPAMasterScalarFieldEnum]
+
+
+export const AnesthesiaMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AnesthesiaMasterScalarFieldEnum = (typeof AnesthesiaMasterScalarFieldEnum)[keyof typeof AnesthesiaMasterScalarFieldEnum]
+
+
 export const AppSettingScalarFieldEnum = {
   key: 'key',
   value: 'value',
@@ -8719,6 +9065,10 @@ export type GlobalOmitConfig = {
   workLog?: Prisma.WorkLogOmit
   pushSubscription?: Prisma.PushSubscriptionOmit
   cronJobLog?: Prisma.CronJobLogOmit
+  hospitalMaster?: Prisma.HospitalMasterOmit
+  doctorMaster?: Prisma.DoctorMasterOmit
+  tPAMaster?: Prisma.TPAMasterOmit
+  anesthesiaMaster?: Prisma.AnesthesiaMasterOmit
   appSetting?: Prisma.AppSettingOmit
   requestLog?: Prisma.RequestLogOmit
 }

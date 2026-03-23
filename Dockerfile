@@ -48,7 +48,8 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 CMD ["node", "server.js"]
 
-# Stage for running one-off migrations (has full source + deps)
+# Stage for running one-off migrations and tool scripts (full source + deps).
+# Examples: prisma migrate deploy, db:seed:masters, scripts under scripts/.
 FROM builder AS migrate
 WORKDIR /app
 CMD ["bun", "run", "migrate:case-stages-v2"]

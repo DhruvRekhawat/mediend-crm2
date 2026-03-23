@@ -127,6 +127,10 @@ export const ModelName = {
   WorkLog: 'WorkLog',
   PushSubscription: 'PushSubscription',
   CronJobLog: 'CronJobLog',
+  HospitalMaster: 'HospitalMaster',
+  DoctorMaster: 'DoctorMaster',
+  TPAMaster: 'TPAMaster',
+  AnesthesiaMaster: 'AnesthesiaMaster',
   AppSetting: 'AppSetting',
   RequestLog: 'RequestLog'
 } as const
@@ -1630,6 +1634,52 @@ export const CronJobLogScalarFieldEnum = {
 } as const
 
 export type CronJobLogScalarFieldEnum = (typeof CronJobLogScalarFieldEnum)[keyof typeof CronJobLogScalarFieldEnum]
+
+
+export const HospitalMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  address: 'address',
+  googleMapLink: 'googleMapLink',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type HospitalMasterScalarFieldEnum = (typeof HospitalMasterScalarFieldEnum)[keyof typeof HospitalMasterScalarFieldEnum]
+
+
+export const DoctorMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DoctorMasterScalarFieldEnum = (typeof DoctorMasterScalarFieldEnum)[keyof typeof DoctorMasterScalarFieldEnum]
+
+
+export const TPAMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TPAMasterScalarFieldEnum = (typeof TPAMasterScalarFieldEnum)[keyof typeof TPAMasterScalarFieldEnum]
+
+
+export const AnesthesiaMasterScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AnesthesiaMasterScalarFieldEnum = (typeof AnesthesiaMasterScalarFieldEnum)[keyof typeof AnesthesiaMasterScalarFieldEnum]
 
 
 export const AppSettingScalarFieldEnum = {

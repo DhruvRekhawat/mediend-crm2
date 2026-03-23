@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Clock,
   CreditCard,
+  Database,
   DollarSign,
   FileText,
   FolderTree,
@@ -76,6 +77,12 @@ export const navItems: NavItem[] = [
     url: '/md/hr',
     icon: Users,
     roles: ['MD', 'ADMIN', 'EXECUTIVE_ASSISTANT'],
+  },
+  {
+    title: 'Master Data',
+    url: '/master-data',
+    icon: Database,
+    roles: ['EXECUTIVE_ASSISTANT', 'MD', 'ADMIN', 'TESTER'],
   },
   {
     title: 'Dept Targets',
@@ -315,7 +322,8 @@ function filterNavItems(user: SessionUser | null): NavItem[] {
         item.title === 'Sales Dashboard' ||
         item.title === 'Finance Dashboard' ||
         item.title === 'MD HR Dashboard' ||
-        item.title.startsWith('MD ')
+        item.title.startsWith('MD ') ||
+        (item.title === 'Master Data' && item.roles?.includes('MD'))
       )
     }
     // USER role can only see Tasks + "My " prefixed pages (MyHRMS)

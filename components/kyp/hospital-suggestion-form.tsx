@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Plus, Trash2 } from 'lucide-react'
+import { MasterCombobox } from '@/components/ui/master-combobox'
 
 interface HospitalRow {
   hospitalName: string
@@ -253,20 +254,21 @@ export function HospitalSuggestionForm({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <Label>Hospital Name *</Label>
-                  <Input
-                    required
+                  <Label className="mb-2 block">Hospital Name *</Label>
+                  <MasterCombobox
+                    masterType="hospitals"
                     value={h.hospitalName}
-                    onChange={(e) => updateHospital(index, 'hospitalName', e.target.value)}
-                    placeholder="Enter hospital name"
+                    onChange={(v) => updateHospital(index, 'hospitalName', v)}
+                    placeholder="Search or type hospital name"
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label>Suggested Doctor</Label>
-                  <Input
+                  <Label className="mb-2 block">Suggested Doctor</Label>
+                  <MasterCombobox
+                    masterType="doctors"
                     value={h.suggestedDoctor}
-                    onChange={(e) => updateHospital(index, 'suggestedDoctor', e.target.value)}
-                    placeholder="Doctor name"
+                    onChange={(v) => updateHospital(index, 'suggestedDoctor', v)}
+                    placeholder="Search or type doctor name"
                   />
                 </div>
                 <div>

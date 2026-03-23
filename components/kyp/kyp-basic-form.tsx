@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/combobox'
 import { cn } from '@/lib/utils'
 import { validateAadhaar, validatePAN } from '@/lib/validations'
+import { MasterCombobox } from '@/components/ui/master-combobox'
 
 interface KYPBasicFormProps {
   leadId: string
@@ -275,15 +276,16 @@ export function KYPBasicForm({
           />
         </div>
         <div>
-          <Label htmlFor="doctorName">Surgeon/Doctor Name *</Label>
-          <Input
+          <MasterCombobox
             id="doctorName"
+            label="Surgeon/Doctor Name"
+            masterType="doctors"
             value={formData.doctorName}
-            onChange={(e) => setFormData({ ...formData, doctorName: e.target.value })}
-            placeholder="Enter doctor name"
+            onChange={(doctorName) => setFormData({ ...formData, doctorName })}
+            placeholder="Search or type doctor name"
             required
+            error={errors.doctorName}
           />
-          {errors.doctorName && <p className="text-xs text-destructive mt-1">{errors.doctorName}</p>}
         </div>
       </div>
 

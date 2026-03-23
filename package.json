@@ -27,7 +27,8 @@
     "fix:lead-mappings": "tsx scripts/fix-existing-lead-mappings.ts",
     "fix:lead-categories-circles": "bun run scripts/fix-lead-categories-circles.ts",
     "seed:employees": "bun scripts/seed-employees-from-json.ts",
-    "seed:leads": "tsx prisma/seed-leads.ts"
+    "seed:leads": "tsx prisma/seed-leads.ts",
+    "db:seed:masters": "tsx prisma/seed-masters.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

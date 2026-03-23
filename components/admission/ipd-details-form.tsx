@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { apiPost } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { User, MapPin, Stethoscope, Building2, Shield, Calendar, Package, ChevronDown, ChevronUp } from 'lucide-react'
+import { MasterCombobox } from '@/components/ui/master-combobox'
 
 export interface IPDDetailsFormProps {
   leadId: string
@@ -289,13 +290,13 @@ export function IPDDetailsForm({
               />
             </div>
             <div>
-              <Label htmlFor="anesthesia">Type of Anaesthesia</Label>
-              <Input
+              <MasterCombobox
                 id="anesthesia"
+                label="Type of Anaesthesia"
+                masterType="anesthesia"
                 value={formData.anesthesia}
-                onChange={(e) => set('anesthesia', e.target.value)}
-                placeholder="e.g. General, Spinal, Local"
-                className="mt-1"
+                onChange={(v) => set('anesthesia', v)}
+                placeholder="Search or type anaesthesia type"
               />
             </div>
           </div>

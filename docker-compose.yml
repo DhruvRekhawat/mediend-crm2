@@ -43,6 +43,23 @@ services:
     volumes:
       - uptime-kuma-data:/app/data
 
+  # One-off: seed CRM master dropdown data (hospitals, doctors, TPAs, anesthesia) from app/bd-insurance-dropdowns.txt
+  # Requires migrations applied so HospitalMaster / DoctorMaster / TPAMaster / AnesthesiaMaster tables exist.
+  # Usage: docker compose --profile tools run --rm seed-master-data
+  seed-master-data:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    env_file:
+      - /opt/mediend-crm/mediend-crm2/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - tools
+    entrypoint: ["bun", "run", "db:seed:masters"]
+
   # One-off: run Prisma migrations (apply all pending migrations)
   # Usage: docker compose --profile tools run --rm migrate-deploy
   # Fallback when Bun image cannot be pulled (Docker Hub timeout): use migrate-deploy-node instead

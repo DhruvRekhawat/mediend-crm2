@@ -1,250 +1,718 @@
 # Patient / Case Flow Documentation
 
-This document describes the end-to-end flow of an insurance patient case in the Mediend CRM, including **Pipeline Stages**, **Case Stages**, and the **PL** and **Outstanding** stages.
+This document describes the end-to-end flow of a patient case in the Mediend CRM, covering both **Insurance** and **Cash** paths, all **Pipeline Stages**, **Case Stages**, forms, fields, permissions, and the downstream **P&L** and **Outstanding** modules.
 
 ---
 
-## 1. Two Axes: Pipeline Stage vs Case Stage
+## 1. Data Model Overview
 
-Each lead has two independent stage concepts:
+There is **no separate Patient table**. The `Lead` model is the central entity — patient identity, demographics, clinical, and commercial data all live on it. Every downstream record hangs off `leadId` (all 1:1 unique):
+
+```
+Lead
+ ├── KYPSubmission (1:1) ── PreAuthorization (1:1) ── HospitalSuggestion[] ── InsuranceQuery[]
+ ├── InsuranceCase (1:1)
+ ├── InsuranceInitiateForm (1:1)
+ ├── AdmissionRecord (1:1)
+ ├── DischargeSheet (1:1) ──optional──> PLRecord
+ ├── PLRecord (1:1)
+ ├── OutstandingCase (1:1)
+ ├── CaseStageHistory[]
+ └── CaseChatMessage[]
+```
+
+---
+
+## 2. Two Axes: Pipeline Stage vs Case Stage
 
 | Concept | Purpose | Values |
-|--------|---------|--------|
-| **Pipeline Stage** | High-level business pipeline (SALES → INSURANCE → PL → COMPLETED / LOST) | `SALES`, `INSURANCE`, `PL`, `COMPLETED`, `LOST` |
-| **Case Stage** | Granular workflow state for the insurance case (KYP → Pre-Auth → Admitted → Discharged, etc.) | See Case Stage enum below |
-
-- **Pipeline stage** drives which dashboard the case appears on (Sales, Insurance, P/L) and reporting.
-- **Case stage** drives which actions are allowed (e.g. “Raise Pre-Auth”, “Mark Admitted”) and permissions.
+|---------|---------|--------|
+| **Pipeline Stage** | High-level business funnel — drives which dashboard the case appears on | `SALES`, `INSURANCE`, `PL`, `COMPLETED`, `LOST` |
+| **Case Stage** | Granular workflow state — drives which actions are allowed and permissions | See full enum below |
+| **Flow Type** | Determines insurance vs cash path | `INSURANCE`, `CASH` |
 
 ---
 
-## 2. Case Stage Enum (Full List)
+## 3. Case Stage Enum (Full List)
+
+### Insurance Flow Stages
 
 | Case Stage | Description |
 |------------|-------------|
 | `NEW_LEAD` | Lead created; no KYP yet |
-| `KYP_PENDING` | BD has submitted KYP; Insurance must add details (hospitals, room types, TPA) |
-| `KYP_COMPLETE` | Insurance has added KYP details; BD can raise pre-auth |
-| `PREAUTH_RAISED` | BD has raised pre-auth (hospital + room + disease); Insurance must approve/reject |
-| `PREAUTH_COMPLETE` | Insurance has approved pre-auth; BD can mark patient admitted |
+| `KYP_BASIC_PENDING` | KYP basic form needs to be filled by BD |
+| `KYP_BASIC_COMPLETE` | BD has submitted KYP basic; Insurance can suggest hospitals |
+| `KYP_DETAILED_PENDING` | Insurance KYP details pending (legacy/alternate) |
+| `KYP_DETAILED_COMPLETE` | Insurance KYP details complete (legacy/alternate) |
+| `KYP_PENDING` | Legacy alias for KYP in progress |
+| `KYP_COMPLETE` | Legacy alias for KYP complete |
+| `HOSPITALS_SUGGESTED` | Insurance has suggested hospitals; BD can raise pre-auth |
+| `PREAUTH_RAISED` | BD has raised pre-auth; Insurance must approve/reject |
+| `PREAUTH_COMPLETE` | Insurance has approved pre-auth; BD can mark admitted |
 | `INITIATED` | BD has marked patient admitted (admission details recorded) |
-| `ADMITTED` | Used in filters/reporting (logically same as INITIATED in current flow) |
+| `ADMITTED` | Patient admitted (used in IPD tracking) |
+| `IPD_DONE` | IPD procedure completed |
 | `DISCHARGED` | BD has marked patient discharged; Insurance can fill discharge sheet |
-| `IPD_DONE` | Used in dashboards for “IPD Done” classification |
-| `PL_PENDING` | Case is in P/L (profit & loss) pipeline; used in reporting |
-| `OUTSTANDING` | Case has outstanding payments / follow-up; used in reporting |
+| `PL_PENDING` | Case is in P&L pipeline |
+| `OUTSTANDING` | Case has outstanding payments/follow-up |
 
-**Note:** Transitions to `INITIATED`, `DISCHARGED`, and the pre-auth/KYP stages are driven by the APIs below. `ADMITTED`, `IPD_DONE`, `PL_PENDING`, and `OUTSTANDING` are used in the schema and UI for filtering/reporting; they may be set by other flows or manual updates.
+### Cash Flow Stages
+
+| Case Stage | Description |
+|------------|-------------|
+| `CASH_IPD_PENDING` | Cash mode started; BD needs to fill IPD cash form |
+| `CASH_IPD_SUBMITTED` | BD submitted cash IPD; Insurance must review |
+| `CASH_ON_HOLD` | Insurance put cash case on hold (needs BD revision) |
+| `CASH_APPROVED` | Insurance approved cash case; discharge can proceed |
+| `CASH_DISCHARGED` | Cash discharge completed |
 
 ---
 
-## 3. Pipeline Stage Enum
+## 4. Pipeline Stage Transitions
 
-| Pipeline Stage | When It’s Set | Who Cares |
+| Pipeline Stage | When It's Set | Who Cares |
 |----------------|---------------|-----------|
-| `SALES` | Default when lead is created | BD, Team Lead, Sales |
-| `INSURANCE` | When case is in insurance workflow (e.g. Insurance dashboard filter) | Insurance team |
-| `PL` | When discharge sheet is created (auto), or “Create PNL” from discharge sheet, or Insurance case approved | PL team |
-| `COMPLETED` | Manual or other business logic | Reporting, MD |
-| `LOST` | Manual or other business logic | Reporting |
+| `SALES` | Default when lead is created / synced | BD, Team Lead, Sales |
+| `INSURANCE` | When hospital suggestions are submitted (`POST /api/kyp/pre-auth`) | Insurance team |
+| `PL` | When discharge sheet is created (auto-creates PLRecord), or manual "Create PNL", or insurance case approved | PL team |
+| `COMPLETED` | Manual or business logic (e.g. both payouts PAID on PL edit) | Reporting, MD |
+| `LOST` | BD marks lead as lost (`POST /api/leads/:id/mark-lost`) | Reporting |
 
 ---
 
-## 4. End-to-End Case Flow (Step by Step)
+## 5. End-to-End Insurance Flow (Step by Step)
 
-### 4.1 Lead creation (SALES, NEW_LEAD)
+### 5.1 Lead Creation (`SALES`, `NEW_LEAD`)
 
 - Lead is created with `pipelineStage = SALES`, `caseStage = NEW_LEAD`.
-- BD/Team Lead owns the lead.
-
-### 4.2 BD: Start KYP
-
-- **Who:** BD (or ADMIN).
-- **When:** No KYP submission exists for the lead.
-- **Action:** “Start KYP” → open **KYP Form** (on patient page, KYP tab).
-- **Result:** KYP submission created; **case stage → `KYP_PENDING`**. Insurance is notified.
-
-**KYP Form (BD):** At least one of: Aadhar, PAN, Insurance Card, Disease, Location, Remark, or any document (Aadhar/PAN/Insurance/Other). All fields optional as long as at least one is filled.
-
-### 4.3 Insurance: Add KYP Details
-
-- **Who:** Insurance (INSURANCE_HEAD) or ADMIN.
-- **When:** `caseStage === KYP_PENDING`.
-- **Action:** “Add KYP Details” → go to **Pre-Auth page** → **PreAuth Form** (Add KYP Details).
-- **Result:** Pre-auth data saved (sum insured, hospitals, room types, TPA, etc.); **case stage → `KYP_COMPLETE`**.
-
-**PreAuth Form (Insurance – Add KYP Details):**  
-- Required: Sum Insured; at least one Suggested Hospital; at least one Room Type.  
-- Optional: Insurance, TPA, Room Rent, ICU, Capping, Copay, Notes.
-
-### 4.4 BD: Raise Pre-Auth
-
-- **Who:** BD (or ADMIN).
-- **When:** `caseStage === KYP_COMPLETE`.
-- **Action:** “Raise Pre-Auth” → **PreAuth Raise Form** (hospital + room + disease + optional docs).
-- **Result:** **case stage → `PREAUTH_RAISED`**. Insurance is notified.
-
-**PreAuth Raise Form (BD):**  
-- Required: Hospital, Room Type, Disease Description.  
-- Optional: Expected Admission/Surgery dates, Disease Images.
-
-### 4.5 Insurance: Complete Pre-Auth (Approve / Reject)
-
-- **Who:** Insurance (INSURANCE_HEAD) or ADMIN.
-- **When:** `caseStage === PREAUTH_RAISED`.
-- **Action:** “Complete Pre-Auth” → **PreAuth Approval Modal**: Approve or Reject.
-- **Result:**  
-  - **Approve:** **case stage → `PREAUTH_COMPLETE`**; BD can mark admitted.  
-  - **Reject:** Stays `PREAUTH_RAISED`; Rejection Reason required.
-
-**Complete Pre-Auth (Insurance):**  
-- Approve: no extra fields.  
-- Reject: **Rejection Reason** required.
-
-### 4.6 BD: Mark Admitted (Initiate)
-
-- **Who:** BD (or ADMIN).
-- **When:** `caseStage === PREAUTH_COMPLETE`.
-- **Action:** “Mark Admitted” → **Mark Admitted** modal on patient page.
-- **Result:** Admission record created; **case stage → `INITIATED`**; hospital name updated; Insurance notified.
-
-**Mark Admitted form (BD):**  
-- Required: Admission Date, Admitting Hospital.  
-- Optional: Admission Time, Expected Surgery Date, Notes.
-
-### 4.7 BD: Mark Discharged
-
-- **Who:** BD (or ADMIN).
-- **When:** `caseStage === INITIATED` or `ADMITTED`.
-- **Action:** “Mark Discharged” → confirmation dialog (no form fields).
-- **Result:** **case stage → `DISCHARGED`**; Insurance notified; Insurance can fill discharge sheet.
-
-### 4.8 Insurance: Fill Discharge Form
-
-- **Who:** Insurance (INSURANCE_HEAD) or ADMIN.
-- **When:** `caseStage === DISCHARGED`.
-- **Action:** “Fill Discharge Form” / “View / Edit Discharge Sheet” → **Discharge Sheet** page → **DischargeSheet Form**.
-- **Result:** Discharge sheet created/updated. On **create**: PL record is auto-created and **pipeline stage → `PL`**; PL team is notified.
-
-**Discharge Sheet Form (Insurance):**  
-- Required: Discharge Date, Hospital Bill Amount.  
-- Optional: Surgery Date, Hospital Name, Status, Payment Type, Approved/Cash, Total Amount, Cash Paid, Settled Amount, cost breakdown (Referral, CAB, Implant, D&C, Doctor), revenue split (Hospital/Mediend % and amounts, Net Profit), Remarks, Upload documents.
+- BD / Team Lead owns the lead (`lead.bdId`).
 
 ---
 
-## 5. Pre-Auth Q&A (Insurance ↔ BD)
+### 5.2 Stage 1: KYP Basic — BD Fills Card Details
 
-- **Where:** Pre-Auth page → Q&A tab.
-- **Who:** Insurance can raise queries; BD can answer (via query list).
-- **Query Form:** One required field: **Question**.
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** `caseStage` is `NEW_LEAD` or `KYP_BASIC_PENDING`
+- **Page:** `/patient/[leadId]/kyp/basic`
+- **Component:** `KYPBasicForm`
+- **API:** `POST /api/kyp/submit`
+- **Result:** KYP submission created; **case stage → `KYP_BASIC_COMPLETE`**
 
----
+**Form Fields:**
 
-## 6. Generate PDF (Insurance)
-
-- **Who:** Insurance or ADMIN.
-- **When:** `caseStage === PREAUTH_COMPLETE`.
-- **Action:** “Generate PDF” (from patient page or pre-auth page). No form; button triggers PDF generation.
-
----
-
-## 7. PL Stage and P/L Dashboard
-
-### 7.1 When does a case enter the PL pipeline?
-
-- **Automatically:** When Insurance **creates** a **Discharge Sheet** for a lead:
-  - A **PL Record** is created from the discharge sheet.
-  - Lead’s **pipeline stage** is set to **`PL`**.
-  - PL team (PL_HEAD, ADMIN) gets a notification.
-
-- **Manually:** Insurance or PL_HEAD can call **Create PNL** from an existing discharge sheet (e.g. if the auto-create was skipped). That also creates a PL Record and sets **pipeline stage → `PL`**.
-
-### 7.2 P/L Dashboard
-
-- **Who:** PL_HEAD, ADMIN (and any role with access to `/pl/dashboard`).
-- **What:** Shows leads with **pipeline stage `PL` or `COMPLETED`** (with date filter). Displays PL records, payout status (hospital, doctor, mediend invoice), net profit, etc.
-- **Actions:** Update PL record (payout status, amounts, etc.) via lead PATCH; no separate “case stage” transition for PL in the patient flow—**PL is primarily a pipeline stage**, and the case stage may remain `DISCHARGED` or progress to `IPD_DONE` / `PL_PENDING` in reporting.
-
-### 7.3 Case stages used in PL context
-
-- **`PL_PENDING`** and **`IPD_DONE`** are **case stages** used in the schema and dashboards (e.g. Insurance dashboard “IPD Done”, BD dashboard filters). They are not automatically set by the current patient-page APIs; they can be used for classification or future automation.
-- **Pipeline stage `PL`** is what moves the case into the P/L dashboard and PL team’s scope.
+| Field | Type | Required |
+|-------|------|----------|
+| patientName | text | Yes |
+| phone | text | Only visible if `canViewPhoneNumber` |
+| location (City) | combobox with suggestions | Yes |
+| area | text | Yes |
+| insuranceName | text | No |
+| doctorName (Surgeon/Doctor) | text | Yes |
+| disease (Treatment) | textarea (read-only, prefilled from lead) | Yes |
+| insuranceType | select: `Individual` / `Group-Corporate` | Yes |
+| dob | date | Yes |
+| age | number | No |
+| sex | select: Male / Female / Other | No |
+| aadhar | text (validated as Aadhaar format) | No |
+| pan | text (validated as PAN format) | No |
+| Insurance card files | multi-file upload (pdf/jpg/png) | Yes (≥1) |
+| Aadhaar card file | single file upload | No |
+| PAN card file | single file upload | No |
+| remark (Notes) | textarea | No |
 
 ---
 
-## 8. Outstanding Stage and Outstanding Cases
+### 5.3 Stage 2: Suggest Hospitals — Insurance
 
-### 8.1 What is “Outstanding”?
+- **Who:** INSURANCE, INSURANCE_HEAD, ADMIN, TESTER
+- **When:** `caseStage === KYP_BASIC_COMPLETE`
+- **Page:** `/patient/[leadId]/pre-auth`
+- **Component:** `HospitalSuggestionForm`
+- **API:** `POST /api/kyp/pre-auth`
+- **Result:** Hospital suggestions saved; **case stage → `HOSPITALS_SUGGESTED`**; **pipeline stage → `INSURANCE`**; BD notified via system chat
 
-- **Outstanding** in this system refers to **Outstanding Cases**: cases where payments/settlements are still pending (e.g. hospital share, doctor share, mediend invoice). It is **not** the same as pipeline stage “PL” or case stage “OUTSTANDING” alone.
+**Policy Fields:**
 
-### 8.2 OutstandingCase model
+| Field | Type | Required |
+|-------|------|----------|
+| sumInsured | text | No |
+| balanceInsured | text | No |
+| copay % | text | No |
+| insuranceName | text | No |
+| TPA | text | No |
+| diseaseCapping | text | No |
 
-- **OutstandingCase** is a separate entity linked to a lead. It holds: bill amount, settlement amount, cash paid by patient, hospital/mediend share, **outstanding days** (days since date of service), remarks, etc.
-- Used to track and follow up on unpaid or partially paid cases.
+**Per Hospital Row:**
 
-### 8.3 How do Outstanding Cases get created/updated?
+| Field | Type | Required |
+|-------|------|----------|
+| hospitalName | text | Yes |
+| suggestedDoctor | text | No |
+| tentativeBill (₹) | number | No |
+| roomRent — General | number | No |
+| roomRent — Single | number | No |
+| roomRent — Deluxe | number | No |
+| roomRent — Semi-Private | number | No |
+| notes | text | No |
 
-- **Sync API:** `POST /api/outstanding/sync` (PL_HEAD, FINANCE_HEAD, or ADMIN).
-- Sync reads **PL Records** (from discharge/PNL flow) and creates or updates **OutstandingCase** records for the corresponding leads. Outstanding days are calculated from date of service (e.g. surgery date) to today.
-- So: **PL Record exists** → sync runs → **OutstandingCase** created/updated. Lead can be considered “in Outstanding” for reporting when it has an OutstandingCase (and optionally `caseStage === OUTSTANDING` if that is set elsewhere).
-
-### 8.4 Case stage OUTSTANDING
-
-- **`OUTSTANDING`** is a **case stage** in the enum, used in filters and badges (e.g. Insurance/BD dashboards). It is not set automatically by the patient-page flow; it can be used to flag cases that need follow-up. The **operational** “outstanding” view is driven by the **OutstandingCase** entity and the sync process.
-
----
-
-## 9. Role Summary: Who Can Do What (Patient Page & Related)
-
-| Role | Main actions on patient flow |
-|------|------------------------------|
-| **BD** | Start KYP, Raise Pre-Auth, Mark Admitted, Mark Discharged |
-| **INSURANCE_HEAD** | Add KYP Details, Complete Pre-Auth (approve/reject), Generate PDF, Fill/Edit Discharge Form, Raise Queries (Q&A) |
-| **PL_HEAD** | View P/L dashboard, create PNL from discharge sheet, sync Outstanding cases, update PL records |
-| **ADMIN** | All of the above (can act as BD or Insurance); access to all dashboards |
-| **TEAM_LEAD** | Same as BD for pipeline/KYP; can update lead (e.g. pipeline stage to INSURANCE in some flows) |
-
----
-
-## 10. Stage Transition Summary (Case Stage)
-
-| From | To | Trigger (API / Action) |
-|------|----|------------------------|
-| NEW_LEAD | KYP_PENDING | BD submits KYP (`POST /api/kyp/submit`) |
-| KYP_PENDING | KYP_COMPLETE | Insurance adds KYP details (`POST /api/kyp/pre-auth`) |
-| KYP_COMPLETE | PREAUTH_RAISED | BD raises pre-auth (`POST /api/leads/:id/raise-preauth`) |
-| PREAUTH_RAISED | PREAUTH_COMPLETE | Insurance approves pre-auth (`POST /api/pre-auth/:kypSubmissionId/approve`) |
-| PREAUTH_COMPLETE | INITIATED | BD marks admitted (`POST /api/leads/:id/initiate`) |
-| INITIATED or ADMITTED | DISCHARGED | BD marks discharged (`POST /api/leads/:id/discharge`) |
-
-Pipeline stage **SALES → INSURANCE** can be set manually (e.g. lead update) or by other flows. **→ PL** is set when discharge sheet is created (or Create PNL / Insurance case approved, depending on flow).
+**Sub-flow — BD Suggests New Hospital:**
+- API: `POST /api/leads/[id]/suggest-hospital` (BD, TEAM_LEAD only)
+- Sets `PreAuthorization.bdSuggestedHospital`; notifies Insurance Head
+- Insurance can then update the suggestion list (which clears `bdSuggestedHospital` and `preAuthRaisedAt`, forcing BD to re-raise)
 
 ---
 
-## 11. Forms Quick Reference (Required vs Optional)
+### 5.4 Stage 3: Raise Pre-Auth — BD
 
-| Form | Role | Required fields | Optional fields |
-|------|------|-----------------|-----------------|
-| **KYP Form** | BD | At least one of: Aadhar, PAN, Insurance Card, Disease, Location, Remark, or any file | All others |
-| **PreAuth Form** (Add KYP Details) | Insurance | Sum Insured; ≥1 Hospital; ≥1 Room Type | Insurance, TPA, Room Rent, ICU, Capping, Copay, Notes |
-| **PreAuth Raise Form** | BD | Hospital, Room Type, Disease Description | Expected Admission/Surgery dates, Disease Images |
-| **Complete Pre-Auth** | Insurance | — (Approve) or Rejection Reason (Reject) | — |
-| **Mark Admitted** | BD | Admission Date, Admitting Hospital | Admission Time, Expected Surgery Date, Notes |
-| **Mark Discharged** | BD | — (confirmation only) | — |
-| **Discharge Sheet Form** | Insurance | Discharge Date, Bill Amount | All other financial, breakdown, revenue split, remarks, files |
-| **Query Form** (Q&A) | Insurance | Question | — |
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** `caseStage === HOSPITALS_SUGGESTED`
+- **Page:** `/patient/[leadId]/raise-preauth`
+- **Component:** `PreAuthRaiseForm` (multi-step)
+- **API:** `POST /api/leads/[id]/raise-preauth`
+- **Result:** Pre-auth data saved; **case stage → `PREAUTH_RAISED`**; Insurance notified
+
+**Step 1 — Hospital & Timeline:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| selectedHospital | card pick from suggested hospitals | Yes |
+| roomType | select (from hospital's available room types) | Yes |
+| expectedAdmissionDate | date | Yes |
+| expectedSurgeryDate | date | Yes |
+
+**Step 2 — Documents & Medical:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| aadhar (number) | text | No |
+| aadharFileUrl | file upload | Yes |
+| pan (number) | text | No |
+| panFileUrl | file upload | Yes |
+| prescriptionFiles | multi-file upload | Yes (≥1) |
+| investigationFileUrls | multi-file upload | No |
+| diseaseDescription | textarea | Yes |
+| diseaseImages | multi-image upload | No |
+| notes | textarea | No |
+
+Step 3 is review only (no new fields).
 
 ---
 
-## 12. Key URLs
+### 5.5 Stage 4: Pre-Auth Approval — Insurance
 
-- Patient details: `/patient/[leadId]`
-- Pre-Auth (add details / complete / PDF): `/patient/[leadId]/pre-auth`
-- Discharge sheet: `/patient/[leadId]/discharge`
-- Insurance dashboard: `/insurance/dashboard`
-- P/L dashboard: `/pl/dashboard`
+- **Who:** INSURANCE, INSURANCE_HEAD, ADMIN, TESTER
+- **When:** `caseStage === PREAUTH_RAISED`
+- **Page:** `/patient/[leadId]/pre-auth`
+- **Component:** `PreAuthInlineApproval`
+- **APIs:**
+  - Approve: `POST /api/pre-auth/[kypSubmissionId]/approve`
+  - Reject: `POST /api/pre-auth/[kypSubmissionId]/reject`
+  - Mark new hospital raised: `POST /api/pre-auth/[kypSubmissionId]/mark-new-hospital-raised`
+- **Result:** On approve → **case stage → `PREAUTH_COMPLETE`**; on reject → stays `PREAUTH_RAISED` with `REJECTED` status
+
+**Approve Fields:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| approvalStatus | `APPROVED` or `TEMP_APPROVED` | Yes |
+| approvedAmount | number | Yes |
+| approvalNotes | text | No |
+
+**Reject Fields:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| reason | text | Yes |
+| rejectionLetterUrl | file upload | No |
+
+**Notes:**
+- **Temp approval** allows partial progress; BD can proceed while insurance finalizes
+- **Full `APPROVED`** requires the Insurance Initiate Form to be filled first (totalBillAmount > 0, copay set)
+- On approval: `lead.ipdDrName` may be set from the selected hospital's `suggestedDoctor`
 
 ---
 
-*This document reflects the implementation as of the codebase snapshot. For form field-level detail, see the earlier “Forms and actions by role” breakdown.*
+### 5.6 Stage 5: Insurance Initiate Form — Insurance
+
+- **Who:** INSURANCE, INSURANCE_HEAD, ADMIN, TESTER
+- **When:** `caseStage` is `PREAUTH_RAISED` or `PREAUTH_COMPLETE` (and onward)
+- **Page:** `/patient/[leadId]/pre-auth?initiate=true`
+- **Component:** `InsuranceInitiateForm`
+- **APIs:** `POST /api/insurance-initiate-form` (create), `PATCH /api/insurance-initiate-form/[id]` (update)
+- **Result:** Initiate form saved; required before full pre-auth approval and before discharge sheet can be filled
+
+**Form Fields:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| totalBillAmount | number | Yes |
+| discount | number | No |
+| otherReductions | number | No |
+| copay | number | Yes (autofilled from pre-auth copay) |
+| copayBuffer | number | No |
+| deductible | number | No |
+| exceedsPolicyLimit | text | No |
+| policyDeductibleAmount | number | No |
+| totalAuthorizedAmount | number | No |
+| amountToBePaidByInsurance | number | No |
+| roomCategory | text (autofilled from requestedRoomType) | No |
+| initialApprovalByHospital | file upload (pdf/jpg/png) | No |
+
+---
+
+### 5.7 Stage 6: Mark Admitted / IPD Details — BD
+
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** `caseStage === PREAUTH_COMPLETE`
+- **Page:** `/patient/[leadId]` (modal)
+- **Component:** `IPDDetailsForm`
+- **API:** `POST /api/leads/[id]/initiate`
+- **Result:** Admission record created; **case stage → `INITIATED`**
+
+**IPD Details Form Fields:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| admissionDate | date | Yes |
+| admissionTime | time | Yes |
+| surgeryDate | date | Yes |
+| surgeryTime | time | Yes |
+| TPA | text (from pre-auth prop) | Yes |
+| alternateContactName | text | No |
+| alternateContactNumber | text | No |
+| quantityGrade | text | No |
+| anesthesia | text | No |
+| surgeonType | text | No |
+| hospitalAddress | text | No |
+| googleMapLocation | text | No |
+| implantText / implantAmount | text / number | No |
+| instrumentText / instrumentAmount | text / number | No |
+| consumablesText / consumablesAmount | text / number | No |
+| notes | textarea | No |
+
+**Read-only display (from lead/KYP/pre-auth):** Patient name, lead ref, age, gender, circle, treatment, surgeon, hospital, insurance type/company, copay %, sum insured, room type, capping, TPA, BD name, BD manager.
+
+---
+
+### 5.8 Stage 6b: Update IPD Status — BD
+
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** `caseStage === INITIATED`
+- **Page:** `/patient/[leadId]` (modal)
+- **Component:** `IPDMarkComponent`
+- **API:** `POST /api/leads/[id]/ipd-mark`
+
+**Status options and fields:**
+
+| Status | Fields | Required |
+|--------|--------|----------|
+| `ADMITTED_DONE` | notes | No |
+| `IPD_DONE` | notes | No |
+| `POSTPONED` | reason, newSurgeryDate, notes | reason + newSurgeryDate: Yes |
+| `CANCELLED` | reason, notes | reason: Yes |
+| `DISCHARGED` | dischargeDate, notes | dischargeDate: Yes |
+
+---
+
+### 5.9 Stage 7: BD Marks Discharged
+
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** `caseStage` is `INITIATED` or `ADMITTED`
+- **API:** `POST /api/leads/[id]/discharge`
+- **Result:** **case stage → `DISCHARGED`**; Insurance Head notified to fill discharge sheet
+- This is a status change only — no form fields.
+
+---
+
+### 5.10 Stage 8: Discharge Sheet — Insurance
+
+- **Who:** INSURANCE_HEAD, ADMIN (create); INSURANCE, PL_HEAD, PL_ENTRY also for edit
+- **When:** `caseStage === DISCHARGED` **and** `insuranceInitiateForm` exists (blocked otherwise with warning)
+- **Page:** `/patient/[leadId]/discharge`
+- **Components:** `DischargeSheetForm` (create), `DischargeSheetView` (read-only)
+- **APIs:** `POST /api/discharge-sheet` (create), `PATCH /api/discharge-sheet/[id]` (update)
+- **Result:** Discharge sheet created; **PLRecord auto-created** (if none exists) with payout statuses set to `PENDING`; **pipeline stage → `PL`**; PL team notified
+
+**Discharge Sheet Form Fields:**
+
+| Section | Field | Type | Required |
+|---------|-------|------|----------|
+| **Discharge Info** | dischargeDate | date | Yes |
+| | finalAmount (final bill amount ₹) | number | Yes |
+| **Documents** | dischargeSummaryUrl | file upload | Yes |
+| | otNotesUrl (OT notes) | file upload | No |
+| | finalBillUrl | file upload | Yes |
+| | settlementLetterUrl | file upload | No |
+| **Bill Breakup** | roomRentAmount | number | No |
+| | pharmacyAmount | number | No |
+| | investigationAmount | number | No |
+| | consumablesAmount | number | No |
+| | implantsAmount | number | No |
+| | instrumentsAmount | number | No |
+| | totalFinalBill | computed from above | — |
+| **Deductions** | finalApprovedAmount | number | No |
+| | cashOrDedPaid (Paid by insured) | number | No |
+| | deductionAmount | number | No |
+| | discountAmount | number | No |
+| | waivedOffAmount | number | No |
+| | otherDeduction | number | No |
+| | netSettlementAmount | computed | — |
+| **Other** | remarks | textarea | No |
+
+**DischargeSheet model also stores** (populated server-side or via PATCH): month, surgeryDate, status, paymentType, approvedOrCash, paymentCollectedAt, managerRole, managerName, bdmName, patientName, patientPhone, doctorName, hospitalName, category, treatment, circle, leadSource, tentativeAmount, copayPct, totalAmount, billAmount, cashPaidByPatient, referralAmount, cabCharges, implantCost, dcCharges, doctorCharges, hospitalSharePct/Amount, mediendSharePct/Amount, mediendNetProfit.
+
+---
+
+## 6. Cash Flow (Alternate Path)
+
+BD can switch a lead to cash mode at early stages. This bypasses the full insurance pre-auth/approval flow.
+
+**Start Cash Mode:** `PATCH /api/leads/[id]` — sets `flowType: CASH`, `caseStage: CASH_IPD_PENDING`
+**Revert to Insurance:** Same PATCH — sets `flowType: INSURANCE`, reverts to `KYP_BASIC_COMPLETE` or `NEW_LEAD`
+
+### 6.1 Fill IPD Cash Form — BD
+
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** `flowType === CASH` and `caseStage` is `CASH_IPD_PENDING` or `CASH_ON_HOLD`
+- **Page:** `/patient/[leadId]` (modal)
+- **Component:** `IPDCashForm`
+- **Result:** **case stage → `CASH_IPD_SUBMITTED`**
+
+**Form Fields:**
+
+| Section | Field | Type | Required |
+|---------|-------|------|----------|
+| **Patient** | patientName, age, sex, circle | text/number | No |
+| | leadRef | read-only | — |
+| | alternateContactName / Number | text | No |
+| **Treatment** | category, treatment, quantityGrade, anesthesia | text | No |
+| **Surgeon** | surgeonName, surgeonType | text | No |
+| **Hospital** | hospitalName, hospitalAddress, googleMapLocation | text | No |
+| **Payment** | modeOfPayment | select: Cash / EMI | No (default: Cash) |
+| | approvedAmount | number | Yes |
+| | finalBillAmount | number | Yes |
+| | collectedAmount | number | No |
+| | collectedByMediend / collectedByHospital | number | No |
+| | discount, copay, deduction | number | No |
+| **EMI (if EMI)** | emiAmount | number | Yes (when EMI) |
+| | processingFee, gst | number | No |
+| | subventionFee | read-only computed | — |
+| | finalEmiAmount | number | Yes (when EMI) |
+| **Timeline** | admissionDate, admissionTime | date / time | Yes |
+| | surgeryDate, surgeryTime | date / time | Yes |
+| **Extras** | implant/instrument/consumables text + amount | text / number | No |
+| | notes | textarea | No |
+
+### 6.2 Insurance Reviews Cash Case
+
+- **Who:** INSURANCE, INSURANCE_HEAD, ADMIN, TESTER
+- **When:** `flowType === CASH` and `caseStage` is `CASH_IPD_SUBMITTED` or `CASH_ON_HOLD`
+- **Page:** `/insurance/cash-cases`
+- **API:** `POST /api/leads/[id]/cash-review`
+- **Fields:** `action: APPROVE | HOLD`, `reason` (required for HOLD)
+- **Result:** APPROVE → `CASH_APPROVED`; HOLD → `CASH_ON_HOLD` (BD can re-edit)
+
+### 6.3 Cash Discharge — Insurance
+
+- **Who:** INSURANCE, INSURANCE_HEAD, ADMIN, TESTER
+- **When:** `flowType === CASH` and `caseStage === CASH_APPROVED`
+- **Page:** `/patient/[leadId]/discharge-cash`
+- **Component:** `DischargeCashForm`
+- **API:** `POST /api/discharge-sheet-cash`
+- **Result:** DischargeSheet + PLRecord created; **case stage → `CASH_DISCHARGED`**; **pipeline stage → `PL`**; BD notified
+
+**Cash Discharge Form Fields:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| dischargeDate | date | Yes |
+| finalAmount | number | Yes |
+| remarks | textarea | No |
+| finalBillUrl | file upload | No |
+| settlementLetterUrl | file upload | No |
+| roomRentAmount | number | No |
+| pharmacyAmount | number | No |
+| investigationAmount | number | No |
+| consumablesAmount | number | No |
+| implantsAmount | number | No |
+| instrumentsAmount | number | No |
+| totalFinalBill | computed | — |
+
+---
+
+## 7. P&L Dashboard
+
+### 7.1 How a case enters PL
+
+- **Automatically:** When Insurance creates a Discharge Sheet → PLRecord auto-created, `pipelineStage → PL`, PL team notified
+- **Manually:** "Create PNL Record" button on `DischargeSheetView` calls `POST /api/discharge-sheet/[id]/create-pnl` (PL_HEAD, INSURANCE_HEAD, ADMIN) — creates PLRecord if none exists, links to discharge sheet
+- **Cash:** `POST /api/discharge-sheet-cash` also creates PLRecord
+
+### 7.2 PLRecord Fields
+
+**Editable on `/pl/record/[leadId]`** (via `PATCH /api/leads/[id]` with `{ plRecord: {...} }`):
+
+| Section | Field | Type |
+|---------|-------|------|
+| **Identity** | month, surgeryDate, status, paymentType, approvedOrCash, paymentCollectedAt | date/text |
+| **People** | managerRole, managerName, bdmName, patientName, patientPhone, doctorName, hospitalName | text |
+| **Case** | category, treatment, circle, leadSource | text |
+| **Financials** | totalAmount, billAmount, cashPaidByPatient, cashOrDedPaid | number |
+| **Cost Lines** | referralAmount, cabCharges, implantCost, dcCharges, doctorCharges | number |
+| **Revenue Split** | hospitalSharePct / hospitalShareAmount | number |
+| | mediendSharePct / mediendShareAmount | number |
+| **Profit** | mediendNetProfit, finalProfit | number |
+| **Payout Tracking** | hospitalPayoutStatus | `PENDING` / `PARTIAL` / `PAID` |
+| | doctorPayoutStatus | `PENDING` / `PARTIAL` / `PAID` |
+| | mediendInvoiceStatus | `PENDING` / `SENT` / `PAID` |
+| | hospitalAmountPending, doctorAmountPending | number |
+| **Meta** | remarks, closedAt | text / date |
+
+### 7.3 Profit Calculation (on PL edit save)
+
+```
+hospAmount = billAmount × hospitalSharePct / 100  (or manual hospitalShareAmount)
+medAmount  = billAmount × mediendSharePct / 100   (or manual mediendShareAmount)
+costs      = referralAmount + cabCharges + dcCharges + doctorCharges + implantCost
+netProfit  = medAmount - costs
+mediendNetProfit = manual override OR netProfit
+closedAt auto-set when hospitalPayoutStatus + doctorPayoutStatus both = PAID
+```
+
+### 7.4 PL Dashboard
+
+- **Page:** `/pl/dashboard`
+- **Who:** PL_HEAD, ADMIN
+- **Data:** Leads with `pipelineStage` in `[PL, COMPLETED]`, date-filtered
+- **KPIs:** Sum of `finalProfit`, average ticket size, pending payout counts
+- **Actions:** Click row → `/pl/record/[leadId]` to edit
+
+---
+
+## 8. Outstanding Dashboard
+
+### 8.1 What is "Outstanding"
+
+Post-P&L money still to be collected or paid out for discharged cases: hospital payout, doctor payout, Mediend invoice status, and a "payment received" flag with follow-up remarks.
+
+### 8.2 Outstanding Dashboard
+
+- **Page:** `/outstanding/dashboard`
+- **Who:** OUTSTANDING_HEAD, ADMIN
+- **Data:** `GET /api/outstanding` — leads with `dischargeSheet` present and `pipelineStage` in `[PL, COMPLETED]`
+- **KPIs:** From `plRecord` pending amounts and payout/invoice statuses
+- **Actions:** Click → `/outstanding/edit/[leadId]`
+
+### 8.3 Outstanding Edit
+
+- **Page:** `/outstanding/edit/[leadId]`
+- **API:** `PATCH /api/outstanding/[leadId]`
+- **Prerequisite:** Lead must have a `dischargeSheet`
+
+**Editable Fields:**
+
+| Source | Field | Type |
+|--------|-------|------|
+| PLRecord | hospitalPayoutStatus | `PENDING` / `PARTIAL` / `PAID` |
+| PLRecord | doctorPayoutStatus | `PENDING` / `PARTIAL` / `PAID` |
+| PLRecord | mediendInvoiceStatus | `PENDING` / `SENT` / `PAID` |
+| PLRecord | hospitalAmountPending | number |
+| PLRecord | doctorAmountPending | number |
+| OutstandingCase | paymentReceived | boolean (Received / Pending) |
+| OutstandingCase | remark2 (follow-up notes) | textarea |
+
+### 8.4 Outstanding Sync
+
+- **API:** `POST /api/outstanding/sync` (PL_HEAD, FINANCE_HEAD, ADMIN)
+- Reads PLRecord rows and creates/updates `OutstandingCase` with financial snapshot + computed `outstandingDays` (surgery date → today)
+- Does not require discharge sheet — only needs PLRecord
+
+### 8.5 OutstandingCase Model
+
+| Field | Type |
+|-------|------|
+| srNo | number (Excel serial) |
+| month, dos (date of service) | date |
+| status, paymentReceived | string / boolean |
+| managerName, bdmName, patientName, treatment, hospitalName | text |
+| billAmount, settlementAmount, cashPaidByPatient, overallAmount | number |
+| implantCost, dciCost | number |
+| hospitalSharePct / hospitalShareAmount | number |
+| mediendSharePct / mediendShareAmount | number |
+| outstandingDays | number (calculated) |
+| remarks, remark2 | text |
+| handledById | user reference |
+
+---
+
+## 9. Pre-Auth Q&A (Insurance ↔ BD)
+
+- **Page:** `/patient/[leadId]/pre-auth` → Q&A section
+- **APIs:** `POST /api/kyp/queries` (raise), answer and resolve routes
+- **Model:** `InsuranceQuery` on `PreAuthorization`
+- Insurance raises queries; BD answers
+
+---
+
+## 10. Generate PDF
+
+- **Who:** INSURANCE, INSURANCE_HEAD, ADMIN, TESTER
+- **When:** `caseStage` is `PREAUTH_RAISED` or `PREAUTH_COMPLETE`
+- **Action:** Opens `/api/leads/[id]/preauth-pdf` — no form, button only
+
+---
+
+## 11. Mark Lost
+
+- **Who:** BD, TEAM_LEAD, ADMIN
+- **When:** Not `NEW_LEAD`; not in post-admission stages; stage in allowed list (KYP through pre-auth complete)
+- **Page:** `/patient/[leadId]` (dialog)
+- **API:** `POST /api/leads/[id]/mark-lost`
+- **Fields:** reason (select, required), details (textarea, optional)
+
+---
+
+## 12. Role Permissions Summary
+
+| Function | Roles | Condition |
+|----------|-------|-----------|
+| **Fill Card Details (KYP)** | BD, TEAM_LEAD, ADMIN | `NEW_LEAD` or `KYP_BASIC_PENDING` |
+| **Suggest Hospitals** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `KYP_BASIC_COMPLETE` |
+| **Modify Hospital Suggestions** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `HOSPITALS_SUGGESTED` or `PREAUTH_RAISED` |
+| **Raise Pre-Auth** | BD, TEAM_LEAD, ADMIN | `HOSPITALS_SUGGESTED` |
+| **Complete Pre-Auth (approve/reject)** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `PREAUTH_RAISED` |
+| **Fill Initiate Form** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `PREAUTH_RAISED` or `PREAUTH_COMPLETE` |
+| **View Initiate Form** | INSURANCE, INSURANCE_HEAD, PL_HEAD, PL_ENTRY, OUTSTANDING_HEAD, ADMIN, FINANCE_HEAD, BD, TEAM_LEAD | No stage check |
+| **Mark Admitted (Initiate)** | BD, TEAM_LEAD, ADMIN | `PREAUTH_COMPLETE` |
+| **Update IPD Status** | BD, TEAM_LEAD, ADMIN | `INITIATED` |
+| **Generate PDF** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `PREAUTH_RAISED` or `PREAUTH_COMPLETE` |
+| **Edit Discharge Sheet** | INSURANCE, INSURANCE_HEAD, PL_HEAD, PL_ENTRY, ADMIN | `DISCHARGED` and initiate form exists |
+| **Mark Lost** | BD, TEAM_LEAD, ADMIN | Not `NEW_LEAD`; not post-admission; stage in allowed list |
+| **Start Cash Mode** | BD, TEAM_LEAD, ADMIN | `flowType !== CASH`; stage in early/cash-allowed list |
+| **Revert Cash Mode** | BD, TEAM_LEAD, ADMIN | `flowType === CASH` and `CASH_IPD_PENDING` |
+| **Fill IPD Cash Form** | BD, TEAM_LEAD, ADMIN | `flowType === CASH` and `CASH_IPD_PENDING` or `CASH_ON_HOLD` |
+| **Review Cash Case** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `flowType === CASH` and `CASH_IPD_SUBMITTED` or `CASH_ON_HOLD` |
+| **Fill Cash Discharge** | INSURANCE, INSURANCE_HEAD, ADMIN, TESTER | `flowType === CASH` and `CASH_APPROVED` |
+| **Edit Outstanding** | OUTSTANDING_HEAD, ADMIN | `lead.dischargeSheet` exists |
+| **View Phone Number** | INSURANCE_HEAD, ADMIN | Always |
+
+---
+
+## 13. Stage Transition Summary
+
+### Insurance Flow
+
+| From | To | Trigger (API) | Actor |
+|------|----|---------------|-------|
+| `NEW_LEAD` | `KYP_BASIC_COMPLETE` | `POST /api/kyp/submit` | BD |
+| `KYP_BASIC_COMPLETE` | `HOSPITALS_SUGGESTED` | `POST /api/kyp/pre-auth` (with hospitals) | Insurance |
+| `HOSPITALS_SUGGESTED` | `PREAUTH_RAISED` | `POST /api/leads/:id/raise-preauth` | BD |
+| `PREAUTH_RAISED` | `PREAUTH_COMPLETE` | `POST /api/pre-auth/:kypSubId/approve` | Insurance |
+| `PREAUTH_COMPLETE` | `INITIATED` | `POST /api/leads/:id/initiate` (Mark Admitted) | BD |
+| `INITIATED` / `ADMITTED` | `DISCHARGED` | `POST /api/leads/:id/discharge` | BD |
+| `DISCHARGED` | (PLRecord created) | `POST /api/discharge-sheet` | Insurance |
+
+Pipeline: `SALES → INSURANCE` (on hospital suggestion) → `PL` (on discharge sheet creation)
+
+### Cash Flow
+
+| From | To | Trigger | Actor |
+|------|----|---------|-------|
+| Early stage | `CASH_IPD_PENDING` | `PATCH /api/leads/:id` (start cash mode) | BD |
+| `CASH_IPD_PENDING` | `CASH_IPD_SUBMITTED` | IPD Cash Form submit | BD |
+| `CASH_IPD_SUBMITTED` | `CASH_APPROVED` | `POST /api/leads/:id/cash-review` (APPROVE) | Insurance |
+| `CASH_IPD_SUBMITTED` | `CASH_ON_HOLD` | `POST /api/leads/:id/cash-review` (HOLD) | Insurance |
+| `CASH_ON_HOLD` | `CASH_IPD_SUBMITTED` | BD re-edits and resubmits | BD |
+| `CASH_APPROVED` | `CASH_DISCHARGED` | `POST /api/discharge-sheet-cash` | Insurance |
+
+---
+
+## 14. 8-Step Stage Progress (UI Component)
+
+The `StageProgress` component (`components/case/stage-progress.tsx`) shows these 8 steps visually on the patient page:
+
+| # | Step | Actor | Color |
+|---|------|-------|-------|
+| 1 | Insurance Card Details (KYP) | BD | Blue |
+| 2 | Suggest Hospitals | Insurance | Purple |
+| 3 | Pre-Auth Raise | BD | Blue |
+| 4 | Pre-Auth Approval | Insurance | Purple |
+| 5 | Insurance Initial Form | Insurance | Purple |
+| 6 | IPD Details (Mark Admitted) | BD | Blue |
+| 7 | IPD Mark (Status Update) | BD | Blue |
+| 8 | Discharge Summary | Insurance | Purple |
+
+Cash flow uses `CashStageProgress` with 4 steps: IPD Cash Form → Insurance Review → Approved → Discharge.
+
+---
+
+## 15. Key Pages Reference
+
+| Page | Route | Purpose |
+|------|-------|---------|
+| BD Pipeline | `/bd/pipeline` | Lead table with status buckets, stage badges, filters |
+| Team Lead Pipeline | `/team-lead/pipeline` | Same component as BD pipeline |
+| Patient Hub | `/patient/[leadId]` | Central detail page — all sections, actions, modals |
+| KYP Basic | `/patient/[leadId]/kyp/basic` | BD fills card details |
+| Pre-Auth Workspace | `/patient/[leadId]/pre-auth` | Insurance: hospitals, approval, initiate form, Q&A |
+| Raise Pre-Auth | `/patient/[leadId]/raise-preauth` | BD raises pre-auth (multi-step) |
+| Insurance Discharge | `/patient/[leadId]/discharge` | Insurance fills discharge sheet |
+| Cash Discharge | `/patient/[leadId]/discharge-cash` | Cash flow discharge |
+| Print IPD | `/patient/[leadId]/print/ipd` | Print IPD details |
+| Insurance Dashboard | `/insurance/dashboard` | Insurance work queue with tabs |
+| Cash Cases | `/insurance/cash-cases` | Cash case review dashboard |
+| PL Dashboard | `/pl/dashboard` | P&L overview + KPIs |
+| PL Record Edit | `/pl/record/[leadId]` | Edit PL financials and payout statuses |
+| Outstanding Dashboard | `/outstanding/dashboard` | Payout tracking and pending amounts |
+| Outstanding Edit | `/outstanding/edit/[leadId]` | Edit payout statuses and follow-up |
+| Chat | `/chat/[leadId]` | BD ↔ Insurance case chat |
+
+---
+
+## 16. Key API Routes Reference
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/leads` | GET | List leads (filtered by role) |
+| `/api/leads/[id]` | GET / PATCH | Single lead + nested data / update lead + plRecord |
+| `/api/leads/[id]/stage-history` | GET | Case stage transition timeline |
+| `/api/leads/[id]/mark-lost` | POST | Mark lead as lost |
+| `/api/leads/[id]/suggest-hospital` | POST | BD suggests new hospital |
+| `/api/leads/[id]/raise-preauth` | POST | BD raises pre-auth |
+| `/api/leads/[id]/initiate` | POST | BD marks admitted |
+| `/api/leads/[id]/ipd-mark` | POST | BD updates IPD status |
+| `/api/leads/[id]/discharge` | POST | BD marks discharged |
+| `/api/leads/[id]/cash-review` | POST | Insurance approve/hold cash case |
+| `/api/leads/[id]/preauth-pdf` | GET | Generate pre-auth PDF |
+| `/api/kyp/submit` | POST | Submit KYP basic form |
+| `/api/kyp/pre-auth` | POST | Insurance suggests hospitals / updates policy |
+| `/api/kyp/queries` | POST | Insurance raises query |
+| `/api/pre-auth/[kypSubId]/approve` | POST | Insurance approves pre-auth |
+| `/api/pre-auth/[kypSubId]/reject` | POST | Insurance rejects pre-auth |
+| `/api/pre-auth/[kypSubId]/mark-new-hospital-raised` | POST | Mark new hospital pre-auth raised |
+| `/api/insurance-initiate-form` | POST / GET | Create / read initiate form |
+| `/api/insurance-initiate-form/[id]` | GET / PATCH | Read / update initiate form |
+| `/api/insurance/cases` | GET | List insurance cases |
+| `/api/insurance/cases/[id]` | PATCH | Update insurance case (→ PL on approve) |
+| `/api/discharge-sheet` | GET / POST | List / create insurance discharge sheet |
+| `/api/discharge-sheet/[id]` | GET / PATCH | Read / update discharge sheet |
+| `/api/discharge-sheet/[id]/create-pnl` | POST | Manual PL creation from discharge |
+| `/api/discharge-sheet-cash` | POST | Cash discharge creation |
+| `/api/outstanding` | GET | List outstanding cases |
+| `/api/outstanding/[leadId]` | PATCH | Update payout statuses |
+| `/api/outstanding/sync` | POST | Sync PLRecord → OutstandingCase |
+
+---
+
+## 17. Reference Data
+
+- **37 insurance companies** (Bajaj Allianz, Star Health, HDFC ERGO, ICICI Lombard, Care Health, Niva Bupa, etc.)
+- **73 surgeons** (pre-populated list)
+- **4 anesthesia types:** General, Spinal, Local, Tropical
+- **78 partner hospitals** (Minerva, Apollo, Fortis, MASSH, SRV, Apex, Surya, HHC, SCI, etc.)
+
+See `app/bd-insurance-dropdowns.txt` for full lists.
+
+---
+
+*This document reflects the implementation as of the current codebase state. Source of truth: Prisma schema, API routes, page components, and `lib/case-permissions.ts`.*
