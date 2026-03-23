@@ -18,11 +18,33 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse()
     }
 
+    const { searchParams } = new URL(request.url)
+
+    // Team leads: only their team (no users:read required)
+    if (user.role === 'TEAM_LEAD' && user.teamId) {
+      const team = await prisma.team.findUnique({
+        where: { id: user.teamId },
+        include: {
+          salesHead: { select: { id: true, name: true, email: true } },
+          teamLead: { select: { id: true, name: true, email: true } },
+          members: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              _count: { select: { assignedLeads: true } },
+            },
+          },
+        },
+      })
+      return successResponse(team ? [team] : [])
+    }
+
     if (!hasPermission(user, 'users:read')) {
       return errorResponse('Forbidden', 403)
     }
 
-    const { searchParams } = new URL(request.url)
     const salesHeadId = searchParams.get('salesHeadId')
 
     const where: any = {}

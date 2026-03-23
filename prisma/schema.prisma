@@ -394,6 +394,8 @@ model User {
   // FnF completed by (HR marking Full and Final settlement done)
   fnfCompletedForEmployees Employee[] @relation("FnFCompletedBy")
 
+  leadCallNotes CallNote[] @relation("LeadCallNoteAuthor")
+
   @@index([email])
   @@index([role])
   @@index([teamId])
@@ -541,6 +543,7 @@ model Lead {
   insuranceInitiateForm InsuranceInitiateForm?
   caseStageHistory CaseStageHistory[]
   caseChatMessages CaseChatMessage[]
+  callNotes        CallNote[]
 
   @@index([bdId])
   @@index([status])
@@ -556,6 +559,19 @@ model Lead {
   @@index([leadEntryDate])
   @@index([leadDate])
   @@index([followUpDate])
+}
+
+model CallNote {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content     String   @db.Text
+  createdById String
+  createdBy   User     @relation("LeadCallNoteAuthor", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@index([leadId])
+  @@index([createdAt])
 }
 
 model LeadStageEvent {

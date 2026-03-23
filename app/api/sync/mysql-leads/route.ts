@@ -35,14 +35,19 @@ export async function POST(request: NextRequest) {
   try {
     // Check for API key authentication
     const authHeader = request.headers.get('authorization')
-    const expectedSecret = process.env.SYNC_API_SECRET || process.env.LEADS_API_SECRET
+    const expectedSecrets = [
+      process.env.SYNC_API_SECRET,
+      process.env.LEADS_API_SECRET,
+      process.env.MYSQL_SYNC_SECRET,
+      process.env.CRON_SECRET,
+    ].filter(Boolean) as string[]
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return unauthorizedResponse('Missing or invalid Authorization header')
     }
 
     const token = authHeader.substring(7)
-    if (!expectedSecret || token !== expectedSecret) {
+    if (!expectedSecrets.length || !expectedSecrets.includes(token)) {
       return unauthorizedResponse('Invalid API token')
     }
 
@@ -307,14 +312,19 @@ export async function GET(request: NextRequest) {
   try {
     // Check for API key authentication
     const authHeader = request.headers.get('authorization')
-    const expectedSecret = process.env.SYNC_API_SECRET || process.env.LEADS_API_SECRET
+    const expectedSecrets = [
+      process.env.SYNC_API_SECRET,
+      process.env.LEADS_API_SECRET,
+      process.env.MYSQL_SYNC_SECRET,
+      process.env.CRON_SECRET,
+    ].filter(Boolean) as string[]
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return unauthorizedResponse('Missing or invalid Authorization header')
     }
 
     const token = authHeader.substring(7)
-    if (!expectedSecret || token !== expectedSecret) {
+    if (!expectedSecrets.length || !expectedSecrets.includes(token)) {
       return unauthorizedResponse('Invalid API token')
     }
 

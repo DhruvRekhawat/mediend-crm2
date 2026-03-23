@@ -103,7 +103,7 @@ export const navItems: NavItem[] = [
     roles: ['BD', 'TEAM_LEAD'],
   },
   {
-    title: 'KYP',
+    title: 'Case Tracker',
     url: '/bd/kyp',
     icon: FileText,
     roles: ['BD', 'TEAM_LEAD', 'SALES_HEAD'],
@@ -136,7 +136,7 @@ export const navItems: NavItem[] = [
     title: 'Chat',
     url: '/chat',
     icon: MessageSquare,
-    roles: ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN'],
+    roles: ['BD', 'TEAM_LEAD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER'],
   },
   {
     title: 'P/L',
@@ -358,7 +358,7 @@ function mapItemUrls(items: NavItem[], role: string): (NavItem & { url: string }
     }
     if (item.title === 'Pipeline') {
       if (role === 'BD') return { ...item, url: '/bd/pipeline' }
-      if (role === 'TEAM_LEAD') return { ...item, url: '/bd/pipeline' }
+      if (role === 'TEAM_LEAD') return { ...item, url: '/team-lead/pipeline' }
       if (role === 'ADMIN') return { ...item, url: '/bd/pipeline' }
     }
     return item

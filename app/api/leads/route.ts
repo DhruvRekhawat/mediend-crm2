@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     const hospitalName = searchParams.get('hospitalName')
     const treatment = searchParams.get('treatment')
     const source = searchParams.get('source')
+    const campaignName = searchParams.get('campaignName')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
@@ -69,6 +70,7 @@ export async function GET(request: NextRequest) {
     if (hospitalName) where.hospitalName = { contains: hospitalName, mode: 'insensitive' }
     if (treatment) where.treatment = { contains: treatment, mode: 'insensitive' }
     if (source) where.source = source
+    if (campaignName) where.campaignName = campaignName
 
     if (startDate || endDate) {
       where.createdDate = {}
@@ -76,100 +78,136 @@ export async function GET(request: NextRequest) {
       if (endDate) where.createdDate.lte = new Date(endDate)
     }
 
-    const leads = await prisma.lead.findMany({
-      where,
-      include: {
-        bd: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            team: {
-              select: {
-                id: true,
-                name: true,
-                teamLead: { select: { name: true } },
-              },
+    const view = searchParams.get('view')
+
+    const isPipelineView = view === 'pipeline'
+
+    const pipelineSelect = {
+      id: true,
+      leadRef: true,
+      patientName: true,
+      phoneNumber: true,
+      treatment: true,
+      category: true,
+      status: true,
+      caseStage: true,
+      pipelineStage: true,
+      bdId: true,
+      circle: true,
+      campaignName: true,
+      leadDate: true,
+      createdDate: true,
+      hospitalName: true,
+      source: true,
+      netProfit: true,
+      flowType: true,
+      bd: { select: { id: true, name: true, team: { select: { id: true } } } },
+      kypSubmission: { select: { id: true, status: true } },
+    } satisfies Prisma.LeadSelect
+
+    const fullInclude = {
+      bd: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          team: {
+            select: {
+              id: true,
+              name: true,
+              teamLead: { select: { name: true } },
             },
           },
         },
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
         },
-    kypSubmission: {
-      select: {
-        id: true,
-        status: true,
-        submittedAt: true,
-        preAuthData: {
-          select: {
-            id: true,
-            requestedHospitalName: true,
-            requestedRoomType: true,
-            bdSuggestedHospital: true,
-            diseaseDescription: true,
-            diseaseImages: true,
-            preAuthRaisedAt: true,
-            sumInsured: true,
-            balanceInsured: true,
-            roomRent: true,
-            capping: true,
-            copay: true,
-            icu: true,
-            insurance: true,
-            tpa: true,
-            hospitalNameSuggestion: true,
-            hospitalSuggestions: true,
-            roomTypes: true,
-            handledAt: true,
-            approvalStatus: true,
-            rejectionReason: true,
-            suggestedHospitals: true,
-            handledBy: {
-              select: {
-                id: true,
-                name: true,
+      },
+      kypSubmission: {
+        select: {
+          id: true,
+          status: true,
+          submittedAt: true,
+          preAuthData: {
+            select: {
+              id: true,
+              requestedHospitalName: true,
+              requestedRoomType: true,
+              bdSuggestedHospital: true,
+              diseaseDescription: true,
+              diseaseImages: true,
+              preAuthRaisedAt: true,
+              sumInsured: true,
+              balanceInsured: true,
+              roomRent: true,
+              capping: true,
+              copay: true,
+              icu: true,
+              insurance: true,
+              tpa: true,
+              hospitalNameSuggestion: true,
+              hospitalSuggestions: true,
+              roomTypes: true,
+              handledAt: true,
+              approvalStatus: true,
+              rejectionReason: true,
+              suggestedHospitals: true,
+              handledBy: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
-            },
-            preAuthRaisedBy: {
-              select: {
-                id: true,
-                name: true,
+              preAuthRaisedBy: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
           },
         },
       },
-    },
-        admissionRecord: {
-          select: {
-            id: true,
-            admissionDate: true,
-            admittingHospital: true,
-            ipdStatus: true,
-          },
+      admissionRecord: {
+        select: {
+          id: true,
+          admissionDate: true,
+          admittingHospital: true,
+          ipdStatus: true,
         },
-        insuranceInitiateForm: {
-          select: {
-            id: true,
-          },
-        },
-        dischargeSheet: {
-          select: {
-            id: true,
-            plRecordId: true,
-          },
-        },
-        plRecord: true,
       },
-      orderBy: {
-        createdDate: 'desc',
+      insuranceInitiateForm: {
+        select: {
+          id: true,
+        },
       },
-      take: 1000, // Add pagination later
-    })
+      dischargeSheet: {
+        select: {
+          id: true,
+          plRecordId: true,
+        },
+      },
+      plRecord: true,
+    }
+
+    const leads = isPipelineView
+      ? await prisma.lead.findMany({
+          where,
+          select: pipelineSelect,
+          orderBy: {
+            createdDate: 'desc',
+          },
+        })
+      : await prisma.lead.findMany({
+          where,
+          include: fullInclude,
+          orderBy: {
+            createdDate: 'desc',
+          },
+        })
 
     // Filter leads based on access control
     const accessibleLeads = leads.filter((lead) =>

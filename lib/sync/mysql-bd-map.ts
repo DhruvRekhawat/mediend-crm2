@@ -5,16 +5,24 @@ import { UserRole } from '@/generated/prisma/client'
  * Batch fetch all BD users and create a lookup map (includes Employee.bdNumber for numeric BDM lookups)
  */
 export async function fetchBDUsersMap(): Promise<Map<string, { id: string }>> {
-  const [bdUsers, employeesWithBdNumber] = await Promise.all([
-    prisma.user.findMany({
+  const employeesWithBdNumber = await prisma.employee.findMany({
+    where: { bdNumber: { not: null } },
+    select: { bdNumber: true, userId: true },
+  })
+
+  let bdUsers: Array<{ id: string; name: string }> = []
+  try {
+    bdUsers = await prisma.user.findMany({
       where: { role: UserRole.BD },
       select: { id: true, name: true },
-    }),
-    prisma.employee.findMany({
-      where: { bdNumber: { not: null } },
-      select: { bdNumber: true, userId: true },
-    }),
-  ])
+    })
+  } catch (error) {
+    // Fallback for environments where `User.role` is missing due schema drift.
+    console.warn('[sync] User.role query failed, falling back to unfiltered user list:', error)
+    bdUsers = await prisma.user.findMany({
+      select: { id: true, name: true },
+    })
+  }
 
   const bdMap = new Map<string, { id: string }>()
 

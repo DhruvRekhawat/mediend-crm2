@@ -22,7 +22,16 @@ export async function GET(request: NextRequest) {
       where.bdId = user.id
     } else if (user.role === 'TEAM_LEAD') {
       const subordinateUserIds = await getSubordinateUserIdsForLeadAccess(user.id)
-      where.bdId = { in: [user.id, ...subordinateUserIds] }
+      const teamMemberIds = user.teamId
+        ? (
+            await prisma.user.findMany({
+              where: { teamId: user.teamId, role: 'BD' },
+              select: { id: true },
+            })
+          ).map((member) => member.id)
+        : []
+
+      where.bdId = { in: Array.from(new Set([user.id, ...subordinateUserIds, ...teamMemberIds])) }
     }
     // Insurance users see leads with KYP submissions
     if (user.role === 'INSURANCE_HEAD') {

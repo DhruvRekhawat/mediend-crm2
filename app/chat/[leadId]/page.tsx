@@ -51,7 +51,7 @@ export default function ChatPage() {
   }
 
   // Role-based access check
-  const allowedRoles = ['BD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN']
+  const allowedRoles = ['BD', 'TEAM_LEAD', 'INSURANCE', 'INSURANCE_HEAD', 'PL_HEAD', 'PL_ENTRY', 'PL_VIEWER', 'ACCOUNTS', 'ADMIN', 'TESTER']
   if (!allowedRoles.includes(user.role)) {
     return (
       <AuthenticatedLayout>

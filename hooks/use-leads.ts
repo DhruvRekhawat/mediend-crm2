@@ -17,6 +17,7 @@ export interface LeadFilters {
   source?: string
   startDate?: string
   endDate?: string
+  view?: string
 }
 
 import { CaseStage } from '@/generated/prisma/enums'
@@ -27,6 +28,7 @@ export interface Lead {
   age?: number
   phoneNumber?: string
   city?: string
+  circle?: string | null
   hospitalName?: string
   treatment?: string
   remarks?: string
@@ -41,11 +43,14 @@ export interface Lead {
   source?: string
   bdId?: string
   createdDate?: string | Date
+  leadDate?: string | Date | null
+  campaignName?: string | null
   bd?: {
     id: string
     name: string
     email: string
   }
+  kypSubmission?: { id: string; status?: string } | null
   insuranceCase?: {
     caseStatus: string
     approvalAmount?: number

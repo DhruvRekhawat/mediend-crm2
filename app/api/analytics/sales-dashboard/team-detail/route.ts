@@ -8,13 +8,23 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getSession()
     if (!user) return unauthorizedResponse()
-    if (user.role !== UserRole.MD && user.role !== UserRole.SALES_HEAD && user.role !== UserRole.EXECUTIVE_ASSISTANT) {
+    if (
+      user.role !== UserRole.MD &&
+      user.role !== UserRole.ADMIN &&
+      user.role !== UserRole.SALES_HEAD &&
+      user.role !== UserRole.EXECUTIVE_ASSISTANT &&
+      user.role !== UserRole.TEAM_LEAD
+    ) {
       return errorResponse('Forbidden', 403)
     }
 
     const { searchParams } = new URL(request.url)
     const teamId = searchParams.get('teamId')
     if (!teamId) return errorResponse('teamId is required', 400)
+
+    if (user.role === UserRole.TEAM_LEAD && user.teamId !== teamId) {
+      return errorResponse('Forbidden', 403)
+    }
 
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')

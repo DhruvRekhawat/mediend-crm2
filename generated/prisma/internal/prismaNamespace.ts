@@ -387,6 +387,7 @@ export const ModelName = {
   User: 'User',
   Team: 'Team',
   Lead: 'Lead',
+  CallNote: 'CallNote',
   LeadStageEvent: 'LeadStageEvent',
   Target: 'Target',
   BonusRule: 'BonusRule',
@@ -481,7 +482,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "team" | "lead" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "holiday" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "notice" | "noticeRecipient" | "mDApprovalRequest" | "userFeaturePermission" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "userTaskSeen" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "hospitalMaster" | "doctorMaster" | "tPAMaster" | "anesthesiaMaster" | "appSetting" | "requestLog"
+    modelProps: "user" | "team" | "lead" | "callNote" | "leadStageEvent" | "target" | "bonusRule" | "insuranceCase" | "pLRecord" | "incomingLead" | "department" | "departmentTeam" | "employee" | "attendanceLog" | "attendanceNormalization" | "leaveTypeMaster" | "leaveRequest" | "leaveBalance" | "holiday" | "payrollRecord" | "payrollComponent" | "salaryStructure" | "monthlyPayroll" | "employeeDocument" | "feedback" | "anonymousMessage" | "mDAppointment" | "mentalHealthRequest" | "supportTicket" | "incrementRequest" | "internalJobPosting" | "iJPApplication" | "partyMaster" | "headMaster" | "projectMaster" | "paymentTypeMaster" | "paymentModeMaster" | "ledgerEntry" | "ledgerAuditLog" | "salesEntry" | "locationMaster" | "itemMaster" | "stockMovement" | "purchaseTransaction" | "issueTransaction" | "leadRemark" | "syncState" | "kYPSubmission" | "preAuthorization" | "hospitalSuggestion" | "notification" | "notice" | "noticeRecipient" | "mDApprovalRequest" | "userFeaturePermission" | "insuranceQuery" | "preAuthPDF" | "admissionRecord" | "insuranceInitiateForm" | "caseStageHistory" | "caseChatMessage" | "dischargeSheet" | "outstandingCase" | "task" | "taskDueDateApproval" | "userTaskSeen" | "taskRating" | "taskProject" | "taskComment" | "taskActivityLog" | "warning" | "mDTaskTeam" | "mDTaskTeamMember" | "mDWatchlistEmployee" | "workLog" | "pushSubscription" | "cronJobLog" | "hospitalMaster" | "doctorMaster" | "tPAMaster" | "anesthesiaMaster" | "appSetting" | "requestLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -704,6 +705,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.LeadCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.LeadCountAggregateOutputType> | number
+        }
+      }
+    }
+    CallNote: {
+      payload: Prisma.$CallNotePayload<ExtArgs>
+      fields: Prisma.CallNoteFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CallNoteFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CallNoteFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>
+        }
+        findFirst: {
+          args: Prisma.CallNoteFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CallNoteFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>
+        }
+        findMany: {
+          args: Prisma.CallNoteFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>[]
+        }
+        create: {
+          args: Prisma.CallNoteCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>
+        }
+        createMany: {
+          args: Prisma.CallNoteCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CallNoteCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>[]
+        }
+        delete: {
+          args: Prisma.CallNoteDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>
+        }
+        update: {
+          args: Prisma.CallNoteUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>
+        }
+        deleteMany: {
+          args: Prisma.CallNoteDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CallNoteUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CallNoteUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>[]
+        }
+        upsert: {
+          args: Prisma.CallNoteUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CallNotePayload>
+        }
+        aggregate: {
+          args: Prisma.CallNoteAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCallNote>
+        }
+        groupBy: {
+          args: Prisma.CallNoteGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CallNoteGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CallNoteCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CallNoteCountAggregateOutputType> | number
         }
       }
     }
@@ -6732,6 +6807,17 @@ export const LeadScalarFieldEnum = {
 export type LeadScalarFieldEnum = (typeof LeadScalarFieldEnum)[keyof typeof LeadScalarFieldEnum]
 
 
+export const CallNoteScalarFieldEnum = {
+  id: 'id',
+  leadId: 'leadId',
+  content: 'content',
+  createdById: 'createdById',
+  createdAt: 'createdAt'
+} as const
+
+export type CallNoteScalarFieldEnum = (typeof CallNoteScalarFieldEnum)[keyof typeof CallNoteScalarFieldEnum]
+
+
 export const LeadStageEventScalarFieldEnum = {
   id: 'id',
   leadId: 'leadId',
@@ -8992,6 +9078,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   team?: Prisma.TeamOmit
   lead?: Prisma.LeadOmit
+  callNote?: Prisma.CallNoteOmit
   leadStageEvent?: Prisma.LeadStageEventOmit
   target?: Prisma.TargetOmit
   bonusRule?: Prisma.BonusRuleOmit

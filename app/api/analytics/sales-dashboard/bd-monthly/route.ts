@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@/generated/prisma/client'
 import { getSession } from '@/lib/session'
 import { successResponse, errorResponse, unauthorizedResponse } from '@/lib/api-utils'
 
@@ -24,9 +25,23 @@ export async function GET(request: NextRequest) {
     const user = await getSession()
     if (!user) return unauthorizedResponse()
 
-    if (user.role !== 'MD' && user.role !== 'ADMIN' && user.role !== 'SALES_HEAD' && user.role !== 'EXECUTIVE_ASSISTANT') {
-      return errorResponse('Forbidden: Only MD, ADMIN, SALES_HEAD, and EXECUTIVE_ASSISTANT can access.', 403)
+    if (
+      user.role !== 'MD' &&
+      user.role !== 'ADMIN' &&
+      user.role !== 'SALES_HEAD' &&
+      user.role !== 'EXECUTIVE_ASSISTANT' &&
+      user.role !== 'TEAM_LEAD'
+    ) {
+      return errorResponse('Forbidden', 403)
     }
+    if (user.role === 'TEAM_LEAD' && !user.teamId) {
+      return errorResponse('No team assigned', 403)
+    }
+
+    const teamSql =
+      user.role === 'TEAM_LEAD' && user.teamId
+        ? Prisma.sql`AND t.id = ${user.teamId}`
+        : Prisma.sql``
 
     const { searchParams } = new URL(request.url)
     const startDate = searchParams.get('startDate')
@@ -54,6 +69,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN "Team" t ON t.id = u."teamId"
         WHERE COALESCE(l."leadDate", l."createdDate") >= ${start}
           AND COALESCE(l."leadDate", l."createdDate") <= ${end}
+          ${teamSql}
         GROUP BY u.id, u.name, t.name,
                  TO_CHAR(COALESCE(l."leadDate", l."createdDate"), 'YYYY-MM')
         ORDER BY u.name,
@@ -74,6 +90,7 @@ export async function GET(request: NextRequest) {
         WHERE l."pipelineStage" = 'COMPLETED'
           AND COALESCE(l."conversionDate", l."surgeryDate", l."leadDate", l."createdDate") >= ${start}
           AND COALESCE(l."conversionDate", l."surgeryDate", l."leadDate", l."createdDate") <= ${end}
+          ${teamSql}
         GROUP BY u.id, u.name, t.name,
                  TO_CHAR(COALESCE(l."conversionDate", l."surgeryDate", l."leadDate", l."createdDate"), 'YYYY-MM')
         ORDER BY u.name,

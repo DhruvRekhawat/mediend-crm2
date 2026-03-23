@@ -8,7 +8,13 @@ export async function GET(request: NextRequest) {
   try {
     const user = await getSession()
     if (!user) return unauthorizedResponse()
-    if (user.role !== UserRole.MD && user.role !== UserRole.SALES_HEAD && user.role !== UserRole.EXECUTIVE_ASSISTANT) {
+    if (
+      user.role !== UserRole.MD &&
+      user.role !== UserRole.ADMIN &&
+      user.role !== UserRole.SALES_HEAD &&
+      user.role !== UserRole.EXECUTIVE_ASSISTANT &&
+      user.role !== UserRole.TEAM_LEAD
+    ) {
       return errorResponse('Forbidden', 403)
     }
 
@@ -28,6 +34,7 @@ export async function GET(request: NextRequest) {
           id: true,
           name: true,
           profilePicture: true,
+          teamId: true,
           team: { select: { id: true, name: true, teamLead: { select: { name: true } } } },
         },
       }),
@@ -79,6 +86,12 @@ export async function GET(request: NextRequest) {
     ])
 
     if (!bdUser) return errorResponse('BD not found', 404)
+
+    if (user.role === UserRole.TEAM_LEAD) {
+      if (!user.teamId || bdUser.teamId !== user.teamId) {
+        return errorResponse('Forbidden', 403)
+      }
+    }
 
     const totalLeads = allLeads.length
     // ipdDone, netProfit, billAmount come from completedLeads (conversionDate-filtered)

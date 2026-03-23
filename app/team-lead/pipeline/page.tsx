@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation'
+'use client'
 
-/**
- * Team leads use the same pipeline as BD. Serve BD pipeline at this URL so no client redirect.
- */
-export { default } from '@/app/bd/pipeline/page'
+import { SalesPipelinePage } from '@/components/pipeline/sales-pipeline-page'
+
+export default function TeamLeadPipelinePage() {
+  return <SalesPipelinePage variant="team-lead" />
+}

@@ -163,7 +163,7 @@ Keep Tailwind v4 but add `postcss-lightningcss` as a second PostCSS plugin to tr
 
 - `**@layer`**: LightningCSS can strip cascade layers, but specificity ordering may break in edge cases. Tailwind v4's entire specificity model relies on layers.
 - `**:is()` / `:where()`**: Used for dark mode (`@custom-variant dark (&:is(.dark *))`), group variants, and peer variants. Chrome < 88 doesn't support these. No transpilation possible.
-- `**@property**`: Chrome < 85 has no support. LightningCSS can remove these declarations but fallbacks may not work correctly for opacity modifiers.
+- `**@property`**: Chrome < 85 has no support. LightningCSS can remove these declarations but fallbacks may not work correctly for opacity modifiers.
 
 ### Setup
 

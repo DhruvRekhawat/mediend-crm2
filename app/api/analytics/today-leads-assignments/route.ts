@@ -37,6 +37,9 @@ export async function GET(request: NextRequest) {
     const todayStartUTC = new Date(todayStart.getTime() - istOffsetMs)
     const todayEndUTC = new Date(todayEnd.getTime() - istOffsetMs)
 
+    const teamScope =
+      user.role === 'TEAM_LEAD' && user.teamId ? { bd: { teamId: user.teamId } } : {}
+
     // Get all leads created today, grouped by BD
     const leads = await prisma.lead.findMany({
       where: {
@@ -44,6 +47,7 @@ export async function GET(request: NextRequest) {
           gte: todayStartUTC,
           lte: todayEndUTC,
         },
+        ...teamScope,
       },
       include: {
         bd: {

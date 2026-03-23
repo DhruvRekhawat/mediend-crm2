@@ -291,6 +291,7 @@ export type UserWhereInput = {
   featurePermissions?: Prisma.UserFeaturePermissionListRelationFilter
   featurePermissionsGranted?: Prisma.UserFeaturePermissionListRelationFilter
   fnfCompletedForEmployees?: Prisma.EmployeeListRelationFilter
+  leadCallNotes?: Prisma.CallNoteListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -366,6 +367,7 @@ export type UserOrderByWithRelationInput = {
   featurePermissions?: Prisma.UserFeaturePermissionOrderByRelationAggregateInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionOrderByRelationAggregateInput
   fnfCompletedForEmployees?: Prisma.EmployeeOrderByRelationAggregateInput
+  leadCallNotes?: Prisma.CallNoteOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -444,6 +446,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   featurePermissions?: Prisma.UserFeaturePermissionListRelationFilter
   featurePermissionsGranted?: Prisma.UserFeaturePermissionListRelationFilter
   fnfCompletedForEmployees?: Prisma.EmployeeListRelationFilter
+  leadCallNotes?: Prisma.CallNoteListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -552,6 +555,7 @@ export type UserCreateInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -626,6 +630,7 @@ export type UserUncheckedCreateInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUpdateInput = {
@@ -700,6 +705,7 @@ export type UserUpdateInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -774,6 +780,7 @@ export type UserUncheckedUpdateInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1007,6 +1014,20 @@ export type UserUpdateOneRequiredWithoutUpdatedLeadsNestedInput = {
   upsert?: Prisma.UserUpsertWithoutUpdatedLeadsInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUpdatedLeadsInput, Prisma.UserUpdateWithoutUpdatedLeadsInput>, Prisma.UserUncheckedUpdateWithoutUpdatedLeadsInput>
+}
+
+export type UserCreateNestedOneWithoutLeadCallNotesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLeadCallNotesInput, Prisma.UserUncheckedCreateWithoutLeadCallNotesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLeadCallNotesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutLeadCallNotesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLeadCallNotesInput, Prisma.UserUncheckedCreateWithoutLeadCallNotesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLeadCallNotesInput
+  upsert?: Prisma.UserUpsertWithoutLeadCallNotesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLeadCallNotesInput, Prisma.UserUpdateWithoutLeadCallNotesInput>, Prisma.UserUncheckedUpdateWithoutLeadCallNotesInput>
 }
 
 export type UserCreateNestedOneWithoutLeadStageEventsInput = {
@@ -1886,6 +1907,7 @@ export type UserCreateWithoutSalesHeadTeamsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutSalesHeadTeamsInput = {
@@ -1959,6 +1981,7 @@ export type UserUncheckedCreateWithoutSalesHeadTeamsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutSalesHeadTeamsInput = {
@@ -2037,6 +2060,7 @@ export type UserCreateWithoutTeamLeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTeamLeadOfInput = {
@@ -2110,6 +2134,7 @@ export type UserUncheckedCreateWithoutTeamLeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTeamLeadOfInput = {
@@ -2188,6 +2213,7 @@ export type UserCreateWithoutTeamInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTeamInput = {
@@ -2261,6 +2287,7 @@ export type UserUncheckedCreateWithoutTeamInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTeamInput = {
@@ -2355,6 +2382,7 @@ export type UserUpdateWithoutSalesHeadTeamsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSalesHeadTeamsInput = {
@@ -2428,6 +2456,7 @@ export type UserUncheckedUpdateWithoutSalesHeadTeamsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutTeamLeadOfInput = {
@@ -2512,6 +2541,7 @@ export type UserUpdateWithoutTeamLeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTeamLeadOfInput = {
@@ -2585,6 +2615,7 @@ export type UserUncheckedUpdateWithoutTeamLeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithWhereUniqueWithoutTeamInput = {
@@ -2691,6 +2722,7 @@ export type UserCreateWithoutAssignedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAssignedLeadsInput = {
@@ -2764,6 +2796,7 @@ export type UserUncheckedCreateWithoutAssignedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAssignedLeadsInput = {
@@ -2842,6 +2875,7 @@ export type UserCreateWithoutCreatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCreatedLeadsInput = {
@@ -2915,6 +2949,7 @@ export type UserUncheckedCreateWithoutCreatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCreatedLeadsInput = {
@@ -2993,6 +3028,7 @@ export type UserCreateWithoutUpdatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutUpdatedLeadsInput = {
@@ -3066,6 +3102,7 @@ export type UserUncheckedCreateWithoutUpdatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutUpdatedLeadsInput = {
@@ -3155,6 +3192,7 @@ export type UserUpdateWithoutAssignedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedLeadsInput = {
@@ -3228,6 +3266,7 @@ export type UserUncheckedUpdateWithoutAssignedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutCreatedLeadsInput = {
@@ -3312,6 +3351,7 @@ export type UserUpdateWithoutCreatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedLeadsInput = {
@@ -3385,6 +3425,7 @@ export type UserUncheckedUpdateWithoutCreatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutUpdatedLeadsInput = {
@@ -3469,6 +3510,7 @@ export type UserUpdateWithoutUpdatedLeadsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUpdatedLeadsInput = {
@@ -3485,6 +3527,319 @@ export type UserUncheckedUpdateWithoutUpdatedLeadsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
   assignedLeads?: Prisma.LeadUncheckedUpdateManyWithoutBdNestedInput
+  leadStageEvents?: Prisma.LeadStageEventUncheckedUpdateManyWithoutChangedByNestedInput
+  createdTargets?: Prisma.TargetUncheckedUpdateManyWithoutCreatedByNestedInput
+  salesHeadTeams?: Prisma.TeamUncheckedUpdateManyWithoutSalesHeadNestedInput
+  teamLeadOf?: Prisma.TeamUncheckedUpdateOneWithoutTeamLeadNestedInput
+  insuranceCases?: Prisma.InsuranceCaseUncheckedUpdateManyWithoutHandledByNestedInput
+  plRecords?: Prisma.PLRecordUncheckedUpdateManyWithoutHandledByNestedInput
+  employee?: Prisma.EmployeeUncheckedUpdateOneWithoutUserNestedInput
+  approvedLeaves?: Prisma.LeaveRequestUncheckedUpdateManyWithoutApprovedByNestedInput
+  createdLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutCreatedByNestedInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutApprovedByNestedInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutDeletedByNestedInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutEditRequestedByNestedInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUncheckedUpdateManyWithoutEditApprovedByNestedInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUncheckedUpdateManyWithoutPerformedByNestedInput
+  createdSalesEntries?: Prisma.SalesEntryUncheckedUpdateManyWithoutCreatedByNestedInput
+  stockMovementsCreated?: Prisma.StockMovementUncheckedUpdateManyWithoutCreatedByNestedInput
+  purchasesCreated?: Prisma.PurchaseTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  issuesCreated?: Prisma.IssueTransactionUncheckedUpdateManyWithoutCreatedByNestedInput
+  issuesReceived?: Prisma.IssueTransactionUncheckedUpdateManyWithoutIssuedToNestedInput
+  kypSubmissions?: Prisma.KYPSubmissionUncheckedUpdateManyWithoutSubmittedByNestedInput
+  preAuthHandled?: Prisma.PreAuthorizationUncheckedUpdateManyWithoutHandledByNestedInput
+  queriesRaised?: Prisma.InsuranceQueryUncheckedUpdateManyWithoutRaisedByNestedInput
+  queriesAnswered?: Prisma.InsuranceQueryUncheckedUpdateManyWithoutAnsweredByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUncheckedUpdateManyWithoutCreatedByNestedInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUncheckedUpdateManyWithoutCreatedByNestedInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUncheckedUpdateManyWithoutHandledByNestedInput
+  departmentHeadOf?: Prisma.DepartmentUncheckedUpdateManyWithoutHeadNestedInput
+  preAuthsRaised?: Prisma.PreAuthorizationUncheckedUpdateManyWithoutPreAuthRaisedByNestedInput
+  pdfsCreated?: Prisma.PreAuthPDFUncheckedUpdateManyWithoutCreatedByNestedInput
+  admissionsInitiated?: Prisma.AdmissionRecordUncheckedUpdateManyWithoutInitiatedByNestedInput
+  caseStageChanges?: Prisma.CaseStageHistoryUncheckedUpdateManyWithoutChangedByNestedInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUncheckedUpdateManyWithoutSenderNestedInput
+  tasksAssigned?: Prisma.TaskUncheckedUpdateManyWithoutAssigneeNestedInput
+  tasksCreated?: Prisma.TaskUncheckedUpdateManyWithoutCreatedByNestedInput
+  tasksCompleted?: Prisma.TaskUncheckedUpdateManyWithoutCompletedByNestedInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUncheckedUpdateManyWithoutRequestedByNestedInput
+  taskRatingsGiven?: Prisma.TaskRatingUncheckedUpdateManyWithoutRatedByNestedInput
+  taskRatingsReceived?: Prisma.TaskRatingUncheckedUpdateManyWithoutEmployeeNestedInput
+  taskProjectsCreated?: Prisma.TaskProjectUncheckedUpdateManyWithoutCreatedByNestedInput
+  taskComments?: Prisma.TaskCommentUncheckedUpdateManyWithoutUserNestedInput
+  taskActivityLogs?: Prisma.TaskActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  workLogs?: Prisma.WorkLogUncheckedUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedUpdateManyWithoutOwnerNestedInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedUpdateManyWithoutOwnerNestedInput
+  warningsReceived?: Prisma.WarningUncheckedUpdateManyWithoutEmployeeNestedInput
+  warningsIssued?: Prisma.WarningUncheckedUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedUpdateManyWithoutUserNestedInput
+  noticesCreated?: Prisma.NoticeUncheckedUpdateManyWithoutCreatedByNestedInput
+  noticeRecipients?: Prisma.NoticeRecipientUncheckedUpdateManyWithoutUserNestedInput
+  mdApprovalRequests?: Prisma.MDApprovalRequestUncheckedUpdateManyWithoutRequestedByNestedInput
+  mdApprovalsResponded?: Prisma.MDApprovalRequestUncheckedUpdateManyWithoutRespondedByNestedInput
+  mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedUpdateManyWithoutFinanceAcknowledgedByNestedInput
+  featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
+  featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
+  fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
+}
+
+export type UserCreateWithoutLeadCallNotesInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name: string
+  role: $Enums.UserRole
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  team?: Prisma.TeamCreateNestedOneWithoutMembersInput
+  createdLeads?: Prisma.LeadCreateNestedManyWithoutCreatedByInput
+  assignedLeads?: Prisma.LeadCreateNestedManyWithoutBdInput
+  updatedLeads?: Prisma.LeadCreateNestedManyWithoutUpdatedByInput
+  leadStageEvents?: Prisma.LeadStageEventCreateNestedManyWithoutChangedByInput
+  createdTargets?: Prisma.TargetCreateNestedManyWithoutCreatedByInput
+  salesHeadTeams?: Prisma.TeamCreateNestedManyWithoutSalesHeadInput
+  teamLeadOf?: Prisma.TeamCreateNestedOneWithoutTeamLeadInput
+  insuranceCases?: Prisma.InsuranceCaseCreateNestedManyWithoutHandledByInput
+  plRecords?: Prisma.PLRecordCreateNestedManyWithoutHandledByInput
+  employee?: Prisma.EmployeeCreateNestedOneWithoutUserInput
+  approvedLeaves?: Prisma.LeaveRequestCreateNestedManyWithoutApprovedByInput
+  createdLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutCreatedByInput
+  approvedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutApprovedByInput
+  deletedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutDeletedByInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutEditRequestedByInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryCreateNestedManyWithoutEditApprovedByInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogCreateNestedManyWithoutPerformedByInput
+  createdSalesEntries?: Prisma.SalesEntryCreateNestedManyWithoutCreatedByInput
+  stockMovementsCreated?: Prisma.StockMovementCreateNestedManyWithoutCreatedByInput
+  purchasesCreated?: Prisma.PurchaseTransactionCreateNestedManyWithoutCreatedByInput
+  issuesCreated?: Prisma.IssueTransactionCreateNestedManyWithoutCreatedByInput
+  issuesReceived?: Prisma.IssueTransactionCreateNestedManyWithoutIssuedToInput
+  kypSubmissions?: Prisma.KYPSubmissionCreateNestedManyWithoutSubmittedByInput
+  preAuthHandled?: Prisma.PreAuthorizationCreateNestedManyWithoutHandledByInput
+  queriesRaised?: Prisma.InsuranceQueryCreateNestedManyWithoutRaisedByInput
+  queriesAnswered?: Prisma.InsuranceQueryCreateNestedManyWithoutAnsweredByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetCreateNestedManyWithoutCreatedByInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormCreateNestedManyWithoutCreatedByInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseCreateNestedManyWithoutHandledByInput
+  departmentHeadOf?: Prisma.DepartmentCreateNestedManyWithoutHeadInput
+  preAuthsRaised?: Prisma.PreAuthorizationCreateNestedManyWithoutPreAuthRaisedByInput
+  pdfsCreated?: Prisma.PreAuthPDFCreateNestedManyWithoutCreatedByInput
+  admissionsInitiated?: Prisma.AdmissionRecordCreateNestedManyWithoutInitiatedByInput
+  caseStageChanges?: Prisma.CaseStageHistoryCreateNestedManyWithoutChangedByInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageCreateNestedManyWithoutSenderInput
+  tasksAssigned?: Prisma.TaskCreateNestedManyWithoutAssigneeInput
+  tasksCreated?: Prisma.TaskCreateNestedManyWithoutCreatedByInput
+  tasksCompleted?: Prisma.TaskCreateNestedManyWithoutCompletedByInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalCreateNestedManyWithoutRequestedByInput
+  taskRatingsGiven?: Prisma.TaskRatingCreateNestedManyWithoutRatedByInput
+  taskRatingsReceived?: Prisma.TaskRatingCreateNestedManyWithoutEmployeeInput
+  taskProjectsCreated?: Prisma.TaskProjectCreateNestedManyWithoutCreatedByInput
+  taskComments?: Prisma.TaskCommentCreateNestedManyWithoutUserInput
+  taskActivityLogs?: Prisma.TaskActivityLogCreateNestedManyWithoutUserInput
+  workLogs?: Prisma.WorkLogCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionCreateNestedManyWithoutUserInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamCreateNestedManyWithoutOwnerInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeCreateNestedManyWithoutOwnerInput
+  warningsReceived?: Prisma.WarningCreateNestedManyWithoutEmployeeInput
+  warningsIssued?: Prisma.WarningCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenCreateNestedManyWithoutUserInput
+  noticesCreated?: Prisma.NoticeCreateNestedManyWithoutCreatedByInput
+  noticeRecipients?: Prisma.NoticeRecipientCreateNestedManyWithoutUserInput
+  mdApprovalRequests?: Prisma.MDApprovalRequestCreateNestedManyWithoutRequestedByInput
+  mdApprovalsResponded?: Prisma.MDApprovalRequestCreateNestedManyWithoutRespondedByInput
+  mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestCreateNestedManyWithoutFinanceAcknowledgedByInput
+  featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
+  featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
+  fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+}
+
+export type UserUncheckedCreateWithoutLeadCallNotesInput = {
+  id?: string
+  email: string
+  passwordHash: string
+  name: string
+  role: $Enums.UserRole
+  teamId?: string | null
+  phoneNumber?: string | null
+  address?: string | null
+  profilePicture?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  createdLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutCreatedByInput
+  assignedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutBdInput
+  updatedLeads?: Prisma.LeadUncheckedCreateNestedManyWithoutUpdatedByInput
+  leadStageEvents?: Prisma.LeadStageEventUncheckedCreateNestedManyWithoutChangedByInput
+  createdTargets?: Prisma.TargetUncheckedCreateNestedManyWithoutCreatedByInput
+  salesHeadTeams?: Prisma.TeamUncheckedCreateNestedManyWithoutSalesHeadInput
+  teamLeadOf?: Prisma.TeamUncheckedCreateNestedOneWithoutTeamLeadInput
+  insuranceCases?: Prisma.InsuranceCaseUncheckedCreateNestedManyWithoutHandledByInput
+  plRecords?: Prisma.PLRecordUncheckedCreateNestedManyWithoutHandledByInput
+  employee?: Prisma.EmployeeUncheckedCreateNestedOneWithoutUserInput
+  approvedLeaves?: Prisma.LeaveRequestUncheckedCreateNestedManyWithoutApprovedByInput
+  createdLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutCreatedByInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutApprovedByInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutDeletedByInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutEditRequestedByInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutEditApprovedByInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUncheckedCreateNestedManyWithoutPerformedByInput
+  createdSalesEntries?: Prisma.SalesEntryUncheckedCreateNestedManyWithoutCreatedByInput
+  stockMovementsCreated?: Prisma.StockMovementUncheckedCreateNestedManyWithoutCreatedByInput
+  purchasesCreated?: Prisma.PurchaseTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  issuesCreated?: Prisma.IssueTransactionUncheckedCreateNestedManyWithoutCreatedByInput
+  issuesReceived?: Prisma.IssueTransactionUncheckedCreateNestedManyWithoutIssuedToInput
+  kypSubmissions?: Prisma.KYPSubmissionUncheckedCreateNestedManyWithoutSubmittedByInput
+  preAuthHandled?: Prisma.PreAuthorizationUncheckedCreateNestedManyWithoutHandledByInput
+  queriesRaised?: Prisma.InsuranceQueryUncheckedCreateNestedManyWithoutRaisedByInput
+  queriesAnswered?: Prisma.InsuranceQueryUncheckedCreateNestedManyWithoutAnsweredByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUncheckedCreateNestedManyWithoutCreatedByInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUncheckedCreateNestedManyWithoutCreatedByInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUncheckedCreateNestedManyWithoutHandledByInput
+  departmentHeadOf?: Prisma.DepartmentUncheckedCreateNestedManyWithoutHeadInput
+  preAuthsRaised?: Prisma.PreAuthorizationUncheckedCreateNestedManyWithoutPreAuthRaisedByInput
+  pdfsCreated?: Prisma.PreAuthPDFUncheckedCreateNestedManyWithoutCreatedByInput
+  admissionsInitiated?: Prisma.AdmissionRecordUncheckedCreateNestedManyWithoutInitiatedByInput
+  caseStageChanges?: Prisma.CaseStageHistoryUncheckedCreateNestedManyWithoutChangedByInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUncheckedCreateNestedManyWithoutSenderInput
+  tasksAssigned?: Prisma.TaskUncheckedCreateNestedManyWithoutAssigneeInput
+  tasksCreated?: Prisma.TaskUncheckedCreateNestedManyWithoutCreatedByInput
+  tasksCompleted?: Prisma.TaskUncheckedCreateNestedManyWithoutCompletedByInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUncheckedCreateNestedManyWithoutRequestedByInput
+  taskRatingsGiven?: Prisma.TaskRatingUncheckedCreateNestedManyWithoutRatedByInput
+  taskRatingsReceived?: Prisma.TaskRatingUncheckedCreateNestedManyWithoutEmployeeInput
+  taskProjectsCreated?: Prisma.TaskProjectUncheckedCreateNestedManyWithoutCreatedByInput
+  taskComments?: Prisma.TaskCommentUncheckedCreateNestedManyWithoutUserInput
+  taskActivityLogs?: Prisma.TaskActivityLogUncheckedCreateNestedManyWithoutUserInput
+  workLogs?: Prisma.WorkLogUncheckedCreateNestedManyWithoutEmployeeInput
+  pushSubscriptions?: Prisma.PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUncheckedCreateNestedManyWithoutOwnerInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUncheckedCreateNestedManyWithoutOwnerInput
+  warningsReceived?: Prisma.WarningUncheckedCreateNestedManyWithoutEmployeeInput
+  warningsIssued?: Prisma.WarningUncheckedCreateNestedManyWithoutIssuedByInput
+  userTaskSeen?: Prisma.UserTaskSeenUncheckedCreateNestedManyWithoutUserInput
+  noticesCreated?: Prisma.NoticeUncheckedCreateNestedManyWithoutCreatedByInput
+  noticeRecipients?: Prisma.NoticeRecipientUncheckedCreateNestedManyWithoutUserInput
+  mdApprovalRequests?: Prisma.MDApprovalRequestUncheckedCreateNestedManyWithoutRequestedByInput
+  mdApprovalsResponded?: Prisma.MDApprovalRequestUncheckedCreateNestedManyWithoutRespondedByInput
+  mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedCreateNestedManyWithoutFinanceAcknowledgedByInput
+  featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
+  featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
+  fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+}
+
+export type UserCreateOrConnectWithoutLeadCallNotesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutLeadCallNotesInput, Prisma.UserUncheckedCreateWithoutLeadCallNotesInput>
+}
+
+export type UserUpsertWithoutLeadCallNotesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutLeadCallNotesInput, Prisma.UserUncheckedUpdateWithoutLeadCallNotesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutLeadCallNotesInput, Prisma.UserUncheckedCreateWithoutLeadCallNotesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutLeadCallNotesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutLeadCallNotesInput, Prisma.UserUncheckedUpdateWithoutLeadCallNotesInput>
+}
+
+export type UserUpdateWithoutLeadCallNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  team?: Prisma.TeamUpdateOneWithoutMembersNestedInput
+  createdLeads?: Prisma.LeadUpdateManyWithoutCreatedByNestedInput
+  assignedLeads?: Prisma.LeadUpdateManyWithoutBdNestedInput
+  updatedLeads?: Prisma.LeadUpdateManyWithoutUpdatedByNestedInput
+  leadStageEvents?: Prisma.LeadStageEventUpdateManyWithoutChangedByNestedInput
+  createdTargets?: Prisma.TargetUpdateManyWithoutCreatedByNestedInput
+  salesHeadTeams?: Prisma.TeamUpdateManyWithoutSalesHeadNestedInput
+  teamLeadOf?: Prisma.TeamUpdateOneWithoutTeamLeadNestedInput
+  insuranceCases?: Prisma.InsuranceCaseUpdateManyWithoutHandledByNestedInput
+  plRecords?: Prisma.PLRecordUpdateManyWithoutHandledByNestedInput
+  employee?: Prisma.EmployeeUpdateOneWithoutUserNestedInput
+  approvedLeaves?: Prisma.LeaveRequestUpdateManyWithoutApprovedByNestedInput
+  createdLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutCreatedByNestedInput
+  approvedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutApprovedByNestedInput
+  deletedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutDeletedByNestedInput
+  editRequestedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutEditRequestedByNestedInput
+  editApprovedLedgerEntries?: Prisma.LedgerEntryUpdateManyWithoutEditApprovedByNestedInput
+  ledgerAuditLogs?: Prisma.LedgerAuditLogUpdateManyWithoutPerformedByNestedInput
+  createdSalesEntries?: Prisma.SalesEntryUpdateManyWithoutCreatedByNestedInput
+  stockMovementsCreated?: Prisma.StockMovementUpdateManyWithoutCreatedByNestedInput
+  purchasesCreated?: Prisma.PurchaseTransactionUpdateManyWithoutCreatedByNestedInput
+  issuesCreated?: Prisma.IssueTransactionUpdateManyWithoutCreatedByNestedInput
+  issuesReceived?: Prisma.IssueTransactionUpdateManyWithoutIssuedToNestedInput
+  kypSubmissions?: Prisma.KYPSubmissionUpdateManyWithoutSubmittedByNestedInput
+  preAuthHandled?: Prisma.PreAuthorizationUpdateManyWithoutHandledByNestedInput
+  queriesRaised?: Prisma.InsuranceQueryUpdateManyWithoutRaisedByNestedInput
+  queriesAnswered?: Prisma.InsuranceQueryUpdateManyWithoutAnsweredByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  dischargeSheetsCreated?: Prisma.DischargeSheetUpdateManyWithoutCreatedByNestedInput
+  insuranceInitiateFormsCreated?: Prisma.InsuranceInitiateFormUpdateManyWithoutCreatedByNestedInput
+  outstandingCasesHandled?: Prisma.OutstandingCaseUpdateManyWithoutHandledByNestedInput
+  departmentHeadOf?: Prisma.DepartmentUpdateManyWithoutHeadNestedInput
+  preAuthsRaised?: Prisma.PreAuthorizationUpdateManyWithoutPreAuthRaisedByNestedInput
+  pdfsCreated?: Prisma.PreAuthPDFUpdateManyWithoutCreatedByNestedInput
+  admissionsInitiated?: Prisma.AdmissionRecordUpdateManyWithoutInitiatedByNestedInput
+  caseStageChanges?: Prisma.CaseStageHistoryUpdateManyWithoutChangedByNestedInput
+  caseChatMessagesSent?: Prisma.CaseChatMessageUpdateManyWithoutSenderNestedInput
+  tasksAssigned?: Prisma.TaskUpdateManyWithoutAssigneeNestedInput
+  tasksCreated?: Prisma.TaskUpdateManyWithoutCreatedByNestedInput
+  tasksCompleted?: Prisma.TaskUpdateManyWithoutCompletedByNestedInput
+  taskApprovalsRequested?: Prisma.TaskDueDateApprovalUpdateManyWithoutRequestedByNestedInput
+  taskRatingsGiven?: Prisma.TaskRatingUpdateManyWithoutRatedByNestedInput
+  taskRatingsReceived?: Prisma.TaskRatingUpdateManyWithoutEmployeeNestedInput
+  taskProjectsCreated?: Prisma.TaskProjectUpdateManyWithoutCreatedByNestedInput
+  taskComments?: Prisma.TaskCommentUpdateManyWithoutUserNestedInput
+  taskActivityLogs?: Prisma.TaskActivityLogUpdateManyWithoutUserNestedInput
+  workLogs?: Prisma.WorkLogUpdateManyWithoutEmployeeNestedInput
+  pushSubscriptions?: Prisma.PushSubscriptionUpdateManyWithoutUserNestedInput
+  mdTaskTeamsOwned?: Prisma.MDTaskTeamUpdateManyWithoutOwnerNestedInput
+  mdWatchlistOwned?: Prisma.MDWatchlistEmployeeUpdateManyWithoutOwnerNestedInput
+  warningsReceived?: Prisma.WarningUpdateManyWithoutEmployeeNestedInput
+  warningsIssued?: Prisma.WarningUpdateManyWithoutIssuedByNestedInput
+  userTaskSeen?: Prisma.UserTaskSeenUpdateManyWithoutUserNestedInput
+  noticesCreated?: Prisma.NoticeUpdateManyWithoutCreatedByNestedInput
+  noticeRecipients?: Prisma.NoticeRecipientUpdateManyWithoutUserNestedInput
+  mdApprovalRequests?: Prisma.MDApprovalRequestUpdateManyWithoutRequestedByNestedInput
+  mdApprovalsResponded?: Prisma.MDApprovalRequestUpdateManyWithoutRespondedByNestedInput
+  mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUpdateManyWithoutFinanceAcknowledgedByNestedInput
+  featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
+  featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
+  fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutLeadCallNotesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  teamId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  createdLeads?: Prisma.LeadUncheckedUpdateManyWithoutCreatedByNestedInput
+  assignedLeads?: Prisma.LeadUncheckedUpdateManyWithoutBdNestedInput
+  updatedLeads?: Prisma.LeadUncheckedUpdateManyWithoutUpdatedByNestedInput
   leadStageEvents?: Prisma.LeadStageEventUncheckedUpdateManyWithoutChangedByNestedInput
   createdTargets?: Prisma.TargetUncheckedUpdateManyWithoutCreatedByNestedInput
   salesHeadTeams?: Prisma.TeamUncheckedUpdateManyWithoutSalesHeadNestedInput
@@ -3615,6 +3970,7 @@ export type UserCreateWithoutLeadStageEventsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutLeadStageEventsInput = {
@@ -3688,6 +4044,7 @@ export type UserUncheckedCreateWithoutLeadStageEventsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutLeadStageEventsInput = {
@@ -3777,6 +4134,7 @@ export type UserUpdateWithoutLeadStageEventsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLeadStageEventsInput = {
@@ -3850,6 +4208,7 @@ export type UserUncheckedUpdateWithoutLeadStageEventsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCreatedTargetsInput = {
@@ -3923,6 +4282,7 @@ export type UserCreateWithoutCreatedTargetsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCreatedTargetsInput = {
@@ -3996,6 +4356,7 @@ export type UserUncheckedCreateWithoutCreatedTargetsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCreatedTargetsInput = {
@@ -4085,6 +4446,7 @@ export type UserUpdateWithoutCreatedTargetsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedTargetsInput = {
@@ -4158,6 +4520,7 @@ export type UserUncheckedUpdateWithoutCreatedTargetsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutInsuranceCasesInput = {
@@ -4231,6 +4594,7 @@ export type UserCreateWithoutInsuranceCasesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutInsuranceCasesInput = {
@@ -4304,6 +4668,7 @@ export type UserUncheckedCreateWithoutInsuranceCasesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutInsuranceCasesInput = {
@@ -4393,6 +4758,7 @@ export type UserUpdateWithoutInsuranceCasesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInsuranceCasesInput = {
@@ -4466,6 +4832,7 @@ export type UserUncheckedUpdateWithoutInsuranceCasesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPlRecordsInput = {
@@ -4539,6 +4906,7 @@ export type UserCreateWithoutPlRecordsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPlRecordsInput = {
@@ -4612,6 +4980,7 @@ export type UserUncheckedCreateWithoutPlRecordsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPlRecordsInput = {
@@ -4701,6 +5070,7 @@ export type UserUpdateWithoutPlRecordsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlRecordsInput = {
@@ -4774,6 +5144,7 @@ export type UserUncheckedUpdateWithoutPlRecordsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutDepartmentHeadOfInput = {
@@ -4847,6 +5218,7 @@ export type UserCreateWithoutDepartmentHeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutDepartmentHeadOfInput = {
@@ -4920,6 +5292,7 @@ export type UserUncheckedCreateWithoutDepartmentHeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutDepartmentHeadOfInput = {
@@ -5009,6 +5382,7 @@ export type UserUpdateWithoutDepartmentHeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDepartmentHeadOfInput = {
@@ -5082,6 +5456,7 @@ export type UserUncheckedUpdateWithoutDepartmentHeadOfInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutEmployeeInput = {
@@ -5155,6 +5530,7 @@ export type UserCreateWithoutEmployeeInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutEmployeeInput = {
@@ -5228,6 +5604,7 @@ export type UserUncheckedCreateWithoutEmployeeInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutEmployeeInput = {
@@ -5306,6 +5683,7 @@ export type UserCreateWithoutFnfCompletedForEmployeesInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestCreateNestedManyWithoutFinanceAcknowledgedByInput
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutFnfCompletedForEmployeesInput = {
@@ -5379,6 +5757,7 @@ export type UserUncheckedCreateWithoutFnfCompletedForEmployeesInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedCreateNestedManyWithoutFinanceAcknowledgedByInput
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutFnfCompletedForEmployeesInput = {
@@ -5468,6 +5847,7 @@ export type UserUpdateWithoutEmployeeInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEmployeeInput = {
@@ -5541,6 +5921,7 @@ export type UserUncheckedUpdateWithoutEmployeeInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutFnfCompletedForEmployeesInput = {
@@ -5625,6 +6006,7 @@ export type UserUpdateWithoutFnfCompletedForEmployeesInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUpdateManyWithoutFinanceAcknowledgedByNestedInput
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFnfCompletedForEmployeesInput = {
@@ -5698,6 +6080,7 @@ export type UserUncheckedUpdateWithoutFnfCompletedForEmployeesInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedUpdateManyWithoutFinanceAcknowledgedByNestedInput
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutApprovedLeavesInput = {
@@ -5771,6 +6154,7 @@ export type UserCreateWithoutApprovedLeavesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutApprovedLeavesInput = {
@@ -5844,6 +6228,7 @@ export type UserUncheckedCreateWithoutApprovedLeavesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutApprovedLeavesInput = {
@@ -5933,6 +6318,7 @@ export type UserUpdateWithoutApprovedLeavesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApprovedLeavesInput = {
@@ -6006,6 +6392,7 @@ export type UserUncheckedUpdateWithoutApprovedLeavesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutDeletedLedgerEntriesInput = {
@@ -6079,6 +6466,7 @@ export type UserCreateWithoutDeletedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutDeletedLedgerEntriesInput = {
@@ -6152,6 +6540,7 @@ export type UserUncheckedCreateWithoutDeletedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutDeletedLedgerEntriesInput = {
@@ -6230,6 +6619,7 @@ export type UserCreateWithoutEditRequestedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutEditRequestedLedgerEntriesInput = {
@@ -6303,6 +6693,7 @@ export type UserUncheckedCreateWithoutEditRequestedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutEditRequestedLedgerEntriesInput = {
@@ -6381,6 +6772,7 @@ export type UserCreateWithoutEditApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutEditApprovedLedgerEntriesInput = {
@@ -6454,6 +6846,7 @@ export type UserUncheckedCreateWithoutEditApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutEditApprovedLedgerEntriesInput = {
@@ -6532,6 +6925,7 @@ export type UserCreateWithoutCreatedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCreatedLedgerEntriesInput = {
@@ -6605,6 +6999,7 @@ export type UserUncheckedCreateWithoutCreatedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCreatedLedgerEntriesInput = {
@@ -6683,6 +7078,7 @@ export type UserCreateWithoutApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutApprovedLedgerEntriesInput = {
@@ -6756,6 +7152,7 @@ export type UserUncheckedCreateWithoutApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutApprovedLedgerEntriesInput = {
@@ -6845,6 +7242,7 @@ export type UserUpdateWithoutDeletedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeletedLedgerEntriesInput = {
@@ -6918,6 +7316,7 @@ export type UserUncheckedUpdateWithoutDeletedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutEditRequestedLedgerEntriesInput = {
@@ -7002,6 +7401,7 @@ export type UserUpdateWithoutEditRequestedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEditRequestedLedgerEntriesInput = {
@@ -7075,6 +7475,7 @@ export type UserUncheckedUpdateWithoutEditRequestedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutEditApprovedLedgerEntriesInput = {
@@ -7159,6 +7560,7 @@ export type UserUpdateWithoutEditApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEditApprovedLedgerEntriesInput = {
@@ -7232,6 +7634,7 @@ export type UserUncheckedUpdateWithoutEditApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutCreatedLedgerEntriesInput = {
@@ -7316,6 +7719,7 @@ export type UserUpdateWithoutCreatedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedLedgerEntriesInput = {
@@ -7389,6 +7793,7 @@ export type UserUncheckedUpdateWithoutCreatedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutApprovedLedgerEntriesInput = {
@@ -7473,6 +7878,7 @@ export type UserUpdateWithoutApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutApprovedLedgerEntriesInput = {
@@ -7546,6 +7952,7 @@ export type UserUncheckedUpdateWithoutApprovedLedgerEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutLedgerAuditLogsInput = {
@@ -7619,6 +8026,7 @@ export type UserCreateWithoutLedgerAuditLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutLedgerAuditLogsInput = {
@@ -7692,6 +8100,7 @@ export type UserUncheckedCreateWithoutLedgerAuditLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutLedgerAuditLogsInput = {
@@ -7781,6 +8190,7 @@ export type UserUpdateWithoutLedgerAuditLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLedgerAuditLogsInput = {
@@ -7854,6 +8264,7 @@ export type UserUncheckedUpdateWithoutLedgerAuditLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCreatedSalesEntriesInput = {
@@ -7927,6 +8338,7 @@ export type UserCreateWithoutCreatedSalesEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCreatedSalesEntriesInput = {
@@ -8000,6 +8412,7 @@ export type UserUncheckedCreateWithoutCreatedSalesEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCreatedSalesEntriesInput = {
@@ -8089,6 +8502,7 @@ export type UserUpdateWithoutCreatedSalesEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedSalesEntriesInput = {
@@ -8162,6 +8576,7 @@ export type UserUncheckedUpdateWithoutCreatedSalesEntriesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutStockMovementsCreatedInput = {
@@ -8235,6 +8650,7 @@ export type UserCreateWithoutStockMovementsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutStockMovementsCreatedInput = {
@@ -8308,6 +8724,7 @@ export type UserUncheckedCreateWithoutStockMovementsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutStockMovementsCreatedInput = {
@@ -8397,6 +8814,7 @@ export type UserUpdateWithoutStockMovementsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStockMovementsCreatedInput = {
@@ -8470,6 +8888,7 @@ export type UserUncheckedUpdateWithoutStockMovementsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPurchasesCreatedInput = {
@@ -8543,6 +8962,7 @@ export type UserCreateWithoutPurchasesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPurchasesCreatedInput = {
@@ -8616,6 +9036,7 @@ export type UserUncheckedCreateWithoutPurchasesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPurchasesCreatedInput = {
@@ -8705,6 +9126,7 @@ export type UserUpdateWithoutPurchasesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPurchasesCreatedInput = {
@@ -8778,6 +9200,7 @@ export type UserUncheckedUpdateWithoutPurchasesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutIssuesReceivedInput = {
@@ -8851,6 +9274,7 @@ export type UserCreateWithoutIssuesReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutIssuesReceivedInput = {
@@ -8924,6 +9348,7 @@ export type UserUncheckedCreateWithoutIssuesReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutIssuesReceivedInput = {
@@ -9002,6 +9427,7 @@ export type UserCreateWithoutIssuesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutIssuesCreatedInput = {
@@ -9075,6 +9501,7 @@ export type UserUncheckedCreateWithoutIssuesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutIssuesCreatedInput = {
@@ -9164,6 +9591,7 @@ export type UserUpdateWithoutIssuesReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIssuesReceivedInput = {
@@ -9237,6 +9665,7 @@ export type UserUncheckedUpdateWithoutIssuesReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutIssuesCreatedInput = {
@@ -9321,6 +9750,7 @@ export type UserUpdateWithoutIssuesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIssuesCreatedInput = {
@@ -9394,6 +9824,7 @@ export type UserUncheckedUpdateWithoutIssuesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutKypSubmissionsInput = {
@@ -9467,6 +9898,7 @@ export type UserCreateWithoutKypSubmissionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutKypSubmissionsInput = {
@@ -9540,6 +9972,7 @@ export type UserUncheckedCreateWithoutKypSubmissionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutKypSubmissionsInput = {
@@ -9629,6 +10062,7 @@ export type UserUpdateWithoutKypSubmissionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutKypSubmissionsInput = {
@@ -9702,6 +10136,7 @@ export type UserUncheckedUpdateWithoutKypSubmissionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPreAuthsRaisedInput = {
@@ -9775,6 +10210,7 @@ export type UserCreateWithoutPreAuthsRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPreAuthsRaisedInput = {
@@ -9848,6 +10284,7 @@ export type UserUncheckedCreateWithoutPreAuthsRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPreAuthsRaisedInput = {
@@ -9926,6 +10363,7 @@ export type UserCreateWithoutPreAuthHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPreAuthHandledInput = {
@@ -9999,6 +10437,7 @@ export type UserUncheckedCreateWithoutPreAuthHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPreAuthHandledInput = {
@@ -10088,6 +10527,7 @@ export type UserUpdateWithoutPreAuthsRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPreAuthsRaisedInput = {
@@ -10161,6 +10601,7 @@ export type UserUncheckedUpdateWithoutPreAuthsRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutPreAuthHandledInput = {
@@ -10245,6 +10686,7 @@ export type UserUpdateWithoutPreAuthHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPreAuthHandledInput = {
@@ -10318,6 +10760,7 @@ export type UserUncheckedUpdateWithoutPreAuthHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -10391,6 +10834,7 @@ export type UserCreateWithoutNotificationsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -10464,6 +10908,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -10553,6 +10998,7 @@ export type UserUpdateWithoutNotificationsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -10626,6 +11072,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutNoticesCreatedInput = {
@@ -10699,6 +11146,7 @@ export type UserCreateWithoutNoticesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutNoticesCreatedInput = {
@@ -10772,6 +11220,7 @@ export type UserUncheckedCreateWithoutNoticesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutNoticesCreatedInput = {
@@ -10861,6 +11310,7 @@ export type UserUpdateWithoutNoticesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNoticesCreatedInput = {
@@ -10934,6 +11384,7 @@ export type UserUncheckedUpdateWithoutNoticesCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutNoticeRecipientsInput = {
@@ -11007,6 +11458,7 @@ export type UserCreateWithoutNoticeRecipientsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutNoticeRecipientsInput = {
@@ -11080,6 +11532,7 @@ export type UserUncheckedCreateWithoutNoticeRecipientsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutNoticeRecipientsInput = {
@@ -11169,6 +11622,7 @@ export type UserUpdateWithoutNoticeRecipientsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNoticeRecipientsInput = {
@@ -11242,6 +11696,7 @@ export type UserUncheckedUpdateWithoutNoticeRecipientsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutMdApprovalRequestsInput = {
@@ -11315,6 +11770,7 @@ export type UserCreateWithoutMdApprovalRequestsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutMdApprovalRequestsInput = {
@@ -11388,6 +11844,7 @@ export type UserUncheckedCreateWithoutMdApprovalRequestsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutMdApprovalRequestsInput = {
@@ -11466,6 +11923,7 @@ export type UserCreateWithoutMdApprovalsRespondedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutMdApprovalsRespondedInput = {
@@ -11539,6 +11997,7 @@ export type UserUncheckedCreateWithoutMdApprovalsRespondedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutMdApprovalsRespondedInput = {
@@ -11617,6 +12076,7 @@ export type UserCreateWithoutMdApprovalsFinanceAckedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutMdApprovalsFinanceAckedInput = {
@@ -11690,6 +12150,7 @@ export type UserUncheckedCreateWithoutMdApprovalsFinanceAckedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutMdApprovalsFinanceAckedInput = {
@@ -11779,6 +12240,7 @@ export type UserUpdateWithoutMdApprovalRequestsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdApprovalRequestsInput = {
@@ -11852,6 +12314,7 @@ export type UserUncheckedUpdateWithoutMdApprovalRequestsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutMdApprovalsRespondedInput = {
@@ -11936,6 +12399,7 @@ export type UserUpdateWithoutMdApprovalsRespondedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdApprovalsRespondedInput = {
@@ -12009,6 +12473,7 @@ export type UserUncheckedUpdateWithoutMdApprovalsRespondedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutMdApprovalsFinanceAckedInput = {
@@ -12093,6 +12558,7 @@ export type UserUpdateWithoutMdApprovalsFinanceAckedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdApprovalsFinanceAckedInput = {
@@ -12166,6 +12632,7 @@ export type UserUncheckedUpdateWithoutMdApprovalsFinanceAckedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutFeaturePermissionsInput = {
@@ -12239,6 +12706,7 @@ export type UserCreateWithoutFeaturePermissionsInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestCreateNestedManyWithoutFinanceAcknowledgedByInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutFeaturePermissionsInput = {
@@ -12312,6 +12780,7 @@ export type UserUncheckedCreateWithoutFeaturePermissionsInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedCreateNestedManyWithoutFinanceAcknowledgedByInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutFeaturePermissionsInput = {
@@ -12390,6 +12859,7 @@ export type UserCreateWithoutFeaturePermissionsGrantedInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestCreateNestedManyWithoutFinanceAcknowledgedByInput
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutFeaturePermissionsGrantedInput = {
@@ -12463,6 +12933,7 @@ export type UserUncheckedCreateWithoutFeaturePermissionsGrantedInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedCreateNestedManyWithoutFinanceAcknowledgedByInput
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutFeaturePermissionsGrantedInput = {
@@ -12552,6 +13023,7 @@ export type UserUpdateWithoutFeaturePermissionsInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUpdateManyWithoutFinanceAcknowledgedByNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFeaturePermissionsInput = {
@@ -12625,6 +13097,7 @@ export type UserUncheckedUpdateWithoutFeaturePermissionsInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedUpdateManyWithoutFinanceAcknowledgedByNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutFeaturePermissionsGrantedInput = {
@@ -12709,6 +13182,7 @@ export type UserUpdateWithoutFeaturePermissionsGrantedInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUpdateManyWithoutFinanceAcknowledgedByNestedInput
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutFeaturePermissionsGrantedInput = {
@@ -12782,6 +13256,7 @@ export type UserUncheckedUpdateWithoutFeaturePermissionsGrantedInput = {
   mdApprovalsFinanceAcked?: Prisma.MDApprovalRequestUncheckedUpdateManyWithoutFinanceAcknowledgedByNestedInput
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutQueriesRaisedInput = {
@@ -12855,6 +13330,7 @@ export type UserCreateWithoutQueriesRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutQueriesRaisedInput = {
@@ -12928,6 +13404,7 @@ export type UserUncheckedCreateWithoutQueriesRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutQueriesRaisedInput = {
@@ -13006,6 +13483,7 @@ export type UserCreateWithoutQueriesAnsweredInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutQueriesAnsweredInput = {
@@ -13079,6 +13557,7 @@ export type UserUncheckedCreateWithoutQueriesAnsweredInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutQueriesAnsweredInput = {
@@ -13168,6 +13647,7 @@ export type UserUpdateWithoutQueriesRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQueriesRaisedInput = {
@@ -13241,6 +13721,7 @@ export type UserUncheckedUpdateWithoutQueriesRaisedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutQueriesAnsweredInput = {
@@ -13325,6 +13806,7 @@ export type UserUpdateWithoutQueriesAnsweredInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutQueriesAnsweredInput = {
@@ -13398,6 +13880,7 @@ export type UserUncheckedUpdateWithoutQueriesAnsweredInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPdfsCreatedInput = {
@@ -13471,6 +13954,7 @@ export type UserCreateWithoutPdfsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPdfsCreatedInput = {
@@ -13544,6 +14028,7 @@ export type UserUncheckedCreateWithoutPdfsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPdfsCreatedInput = {
@@ -13633,6 +14118,7 @@ export type UserUpdateWithoutPdfsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPdfsCreatedInput = {
@@ -13706,6 +14192,7 @@ export type UserUncheckedUpdateWithoutPdfsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutAdmissionsInitiatedInput = {
@@ -13779,6 +14266,7 @@ export type UserCreateWithoutAdmissionsInitiatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutAdmissionsInitiatedInput = {
@@ -13852,6 +14340,7 @@ export type UserUncheckedCreateWithoutAdmissionsInitiatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutAdmissionsInitiatedInput = {
@@ -13941,6 +14430,7 @@ export type UserUpdateWithoutAdmissionsInitiatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAdmissionsInitiatedInput = {
@@ -14014,6 +14504,7 @@ export type UserUncheckedUpdateWithoutAdmissionsInitiatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutInsuranceInitiateFormsCreatedInput = {
@@ -14087,6 +14578,7 @@ export type UserCreateWithoutInsuranceInitiateFormsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutInsuranceInitiateFormsCreatedInput = {
@@ -14160,6 +14652,7 @@ export type UserUncheckedCreateWithoutInsuranceInitiateFormsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutInsuranceInitiateFormsCreatedInput = {
@@ -14249,6 +14742,7 @@ export type UserUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInsuranceInitiateFormsCreatedInput = {
@@ -14322,6 +14816,7 @@ export type UserUncheckedUpdateWithoutInsuranceInitiateFormsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCaseStageChangesInput = {
@@ -14395,6 +14890,7 @@ export type UserCreateWithoutCaseStageChangesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCaseStageChangesInput = {
@@ -14468,6 +14964,7 @@ export type UserUncheckedCreateWithoutCaseStageChangesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCaseStageChangesInput = {
@@ -14557,6 +15054,7 @@ export type UserUpdateWithoutCaseStageChangesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCaseStageChangesInput = {
@@ -14630,6 +15128,7 @@ export type UserUncheckedUpdateWithoutCaseStageChangesInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutCaseChatMessagesSentInput = {
@@ -14703,6 +15202,7 @@ export type UserCreateWithoutCaseChatMessagesSentInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutCaseChatMessagesSentInput = {
@@ -14776,6 +15276,7 @@ export type UserUncheckedCreateWithoutCaseChatMessagesSentInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutCaseChatMessagesSentInput = {
@@ -14865,6 +15366,7 @@ export type UserUpdateWithoutCaseChatMessagesSentInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCaseChatMessagesSentInput = {
@@ -14938,6 +15440,7 @@ export type UserUncheckedUpdateWithoutCaseChatMessagesSentInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutDischargeSheetsCreatedInput = {
@@ -15011,6 +15514,7 @@ export type UserCreateWithoutDischargeSheetsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutDischargeSheetsCreatedInput = {
@@ -15084,6 +15588,7 @@ export type UserUncheckedCreateWithoutDischargeSheetsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutDischargeSheetsCreatedInput = {
@@ -15173,6 +15678,7 @@ export type UserUpdateWithoutDischargeSheetsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDischargeSheetsCreatedInput = {
@@ -15246,6 +15752,7 @@ export type UserUncheckedUpdateWithoutDischargeSheetsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutOutstandingCasesHandledInput = {
@@ -15319,6 +15826,7 @@ export type UserCreateWithoutOutstandingCasesHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutOutstandingCasesHandledInput = {
@@ -15392,6 +15900,7 @@ export type UserUncheckedCreateWithoutOutstandingCasesHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutOutstandingCasesHandledInput = {
@@ -15481,6 +15990,7 @@ export type UserUpdateWithoutOutstandingCasesHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOutstandingCasesHandledInput = {
@@ -15554,6 +16064,7 @@ export type UserUncheckedUpdateWithoutOutstandingCasesHandledInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTasksAssignedInput = {
@@ -15627,6 +16138,7 @@ export type UserCreateWithoutTasksAssignedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTasksAssignedInput = {
@@ -15700,6 +16212,7 @@ export type UserUncheckedCreateWithoutTasksAssignedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTasksAssignedInput = {
@@ -15778,6 +16291,7 @@ export type UserCreateWithoutTasksCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTasksCreatedInput = {
@@ -15851,6 +16365,7 @@ export type UserUncheckedCreateWithoutTasksCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTasksCreatedInput = {
@@ -15929,6 +16444,7 @@ export type UserCreateWithoutTasksCompletedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTasksCompletedInput = {
@@ -16002,6 +16518,7 @@ export type UserUncheckedCreateWithoutTasksCompletedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTasksCompletedInput = {
@@ -16091,6 +16608,7 @@ export type UserUpdateWithoutTasksAssignedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTasksAssignedInput = {
@@ -16164,6 +16682,7 @@ export type UserUncheckedUpdateWithoutTasksAssignedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutTasksCreatedInput = {
@@ -16248,6 +16767,7 @@ export type UserUpdateWithoutTasksCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTasksCreatedInput = {
@@ -16321,6 +16841,7 @@ export type UserUncheckedUpdateWithoutTasksCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutTasksCompletedInput = {
@@ -16405,6 +16926,7 @@ export type UserUpdateWithoutTasksCompletedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTasksCompletedInput = {
@@ -16478,6 +17000,7 @@ export type UserUncheckedUpdateWithoutTasksCompletedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTaskApprovalsRequestedInput = {
@@ -16551,6 +17074,7 @@ export type UserCreateWithoutTaskApprovalsRequestedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTaskApprovalsRequestedInput = {
@@ -16624,6 +17148,7 @@ export type UserUncheckedCreateWithoutTaskApprovalsRequestedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTaskApprovalsRequestedInput = {
@@ -16713,6 +17238,7 @@ export type UserUpdateWithoutTaskApprovalsRequestedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskApprovalsRequestedInput = {
@@ -16786,6 +17312,7 @@ export type UserUncheckedUpdateWithoutTaskApprovalsRequestedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutUserTaskSeenInput = {
@@ -16859,6 +17386,7 @@ export type UserCreateWithoutUserTaskSeenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutUserTaskSeenInput = {
@@ -16932,6 +17460,7 @@ export type UserUncheckedCreateWithoutUserTaskSeenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutUserTaskSeenInput = {
@@ -17021,6 +17550,7 @@ export type UserUpdateWithoutUserTaskSeenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUserTaskSeenInput = {
@@ -17094,6 +17624,7 @@ export type UserUncheckedUpdateWithoutUserTaskSeenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTaskRatingsGivenInput = {
@@ -17167,6 +17698,7 @@ export type UserCreateWithoutTaskRatingsGivenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTaskRatingsGivenInput = {
@@ -17240,6 +17772,7 @@ export type UserUncheckedCreateWithoutTaskRatingsGivenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTaskRatingsGivenInput = {
@@ -17318,6 +17851,7 @@ export type UserCreateWithoutTaskRatingsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTaskRatingsReceivedInput = {
@@ -17391,6 +17925,7 @@ export type UserUncheckedCreateWithoutTaskRatingsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTaskRatingsReceivedInput = {
@@ -17480,6 +18015,7 @@ export type UserUpdateWithoutTaskRatingsGivenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskRatingsGivenInput = {
@@ -17553,6 +18089,7 @@ export type UserUncheckedUpdateWithoutTaskRatingsGivenInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutTaskRatingsReceivedInput = {
@@ -17637,6 +18174,7 @@ export type UserUpdateWithoutTaskRatingsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskRatingsReceivedInput = {
@@ -17710,6 +18248,7 @@ export type UserUncheckedUpdateWithoutTaskRatingsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTaskProjectsCreatedInput = {
@@ -17783,6 +18322,7 @@ export type UserCreateWithoutTaskProjectsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTaskProjectsCreatedInput = {
@@ -17856,6 +18396,7 @@ export type UserUncheckedCreateWithoutTaskProjectsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTaskProjectsCreatedInput = {
@@ -17945,6 +18486,7 @@ export type UserUpdateWithoutTaskProjectsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskProjectsCreatedInput = {
@@ -18018,6 +18560,7 @@ export type UserUncheckedUpdateWithoutTaskProjectsCreatedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTaskCommentsInput = {
@@ -18091,6 +18634,7 @@ export type UserCreateWithoutTaskCommentsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTaskCommentsInput = {
@@ -18164,6 +18708,7 @@ export type UserUncheckedCreateWithoutTaskCommentsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTaskCommentsInput = {
@@ -18253,6 +18798,7 @@ export type UserUpdateWithoutTaskCommentsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskCommentsInput = {
@@ -18326,6 +18872,7 @@ export type UserUncheckedUpdateWithoutTaskCommentsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutTaskActivityLogsInput = {
@@ -18399,6 +18946,7 @@ export type UserCreateWithoutTaskActivityLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutTaskActivityLogsInput = {
@@ -18472,6 +19020,7 @@ export type UserUncheckedCreateWithoutTaskActivityLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutTaskActivityLogsInput = {
@@ -18561,6 +19110,7 @@ export type UserUpdateWithoutTaskActivityLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTaskActivityLogsInput = {
@@ -18634,6 +19184,7 @@ export type UserUncheckedUpdateWithoutTaskActivityLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutWarningsReceivedInput = {
@@ -18707,6 +19258,7 @@ export type UserCreateWithoutWarningsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutWarningsReceivedInput = {
@@ -18780,6 +19332,7 @@ export type UserUncheckedCreateWithoutWarningsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutWarningsReceivedInput = {
@@ -18858,6 +19411,7 @@ export type UserCreateWithoutWarningsIssuedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutWarningsIssuedInput = {
@@ -18931,6 +19485,7 @@ export type UserUncheckedCreateWithoutWarningsIssuedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutWarningsIssuedInput = {
@@ -19020,6 +19575,7 @@ export type UserUpdateWithoutWarningsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
@@ -19093,6 +19649,7 @@ export type UserUncheckedUpdateWithoutWarningsReceivedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUpsertWithoutWarningsIssuedInput = {
@@ -19177,6 +19734,7 @@ export type UserUpdateWithoutWarningsIssuedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWarningsIssuedInput = {
@@ -19250,6 +19808,7 @@ export type UserUncheckedUpdateWithoutWarningsIssuedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutMdTaskTeamsOwnedInput = {
@@ -19323,6 +19882,7 @@ export type UserCreateWithoutMdTaskTeamsOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutMdTaskTeamsOwnedInput = {
@@ -19396,6 +19956,7 @@ export type UserUncheckedCreateWithoutMdTaskTeamsOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutMdTaskTeamsOwnedInput = {
@@ -19485,6 +20046,7 @@ export type UserUpdateWithoutMdTaskTeamsOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdTaskTeamsOwnedInput = {
@@ -19558,6 +20120,7 @@ export type UserUncheckedUpdateWithoutMdTaskTeamsOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutMdWatchlistOwnedInput = {
@@ -19631,6 +20194,7 @@ export type UserCreateWithoutMdWatchlistOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutMdWatchlistOwnedInput = {
@@ -19704,6 +20268,7 @@ export type UserUncheckedCreateWithoutMdWatchlistOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutMdWatchlistOwnedInput = {
@@ -19793,6 +20358,7 @@ export type UserUpdateWithoutMdWatchlistOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMdWatchlistOwnedInput = {
@@ -19866,6 +20432,7 @@ export type UserUncheckedUpdateWithoutMdWatchlistOwnedInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutWorkLogsInput = {
@@ -19939,6 +20506,7 @@ export type UserCreateWithoutWorkLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutWorkLogsInput = {
@@ -20012,6 +20580,7 @@ export type UserUncheckedCreateWithoutWorkLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutWorkLogsInput = {
@@ -20101,6 +20670,7 @@ export type UserUpdateWithoutWorkLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWorkLogsInput = {
@@ -20174,6 +20744,7 @@ export type UserUncheckedUpdateWithoutWorkLogsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateWithoutPushSubscriptionsInput = {
@@ -20247,6 +20818,7 @@ export type UserCreateWithoutPushSubscriptionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
@@ -20320,6 +20892,7 @@ export type UserUncheckedCreateWithoutPushSubscriptionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutUserInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedCreateNestedManyWithoutGrantedByInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedCreateNestedManyWithoutFnfCompletedByInput
+  leadCallNotes?: Prisma.CallNoteUncheckedCreateNestedManyWithoutCreatedByInput
 }
 
 export type UserCreateOrConnectWithoutPushSubscriptionsInput = {
@@ -20409,6 +20982,7 @@ export type UserUpdateWithoutPushSubscriptionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
@@ -20482,6 +21056,7 @@ export type UserUncheckedUpdateWithoutPushSubscriptionsInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserCreateManyTeamInput = {
@@ -20568,6 +21143,7 @@ export type UserUpdateWithoutTeamInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTeamInput = {
@@ -20641,6 +21217,7 @@ export type UserUncheckedUpdateWithoutTeamInput = {
   featurePermissions?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutUserNestedInput
   featurePermissionsGranted?: Prisma.UserFeaturePermissionUncheckedUpdateManyWithoutGrantedByNestedInput
   fnfCompletedForEmployees?: Prisma.EmployeeUncheckedUpdateManyWithoutFnfCompletedByNestedInput
+  leadCallNotes?: Prisma.CallNoteUncheckedUpdateManyWithoutCreatedByNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutTeamInput = {
@@ -20720,6 +21297,7 @@ export type UserCountOutputType = {
   featurePermissions: number
   featurePermissionsGranted: number
   fnfCompletedForEmployees: number
+  leadCallNotes: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -20781,6 +21359,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   featurePermissions?: boolean | UserCountOutputTypeCountFeaturePermissionsArgs
   featurePermissionsGranted?: boolean | UserCountOutputTypeCountFeaturePermissionsGrantedArgs
   fnfCompletedForEmployees?: boolean | UserCountOutputTypeCountFnfCompletedForEmployeesArgs
+  leadCallNotes?: boolean | UserCountOutputTypeCountLeadCallNotesArgs
 }
 
 /**
@@ -21199,6 +21778,13 @@ export type UserCountOutputTypeCountFnfCompletedForEmployeesArgs<ExtArgs extends
   where?: Prisma.EmployeeWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountLeadCallNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CallNoteWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -21273,6 +21859,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   featurePermissions?: boolean | Prisma.User$featurePermissionsArgs<ExtArgs>
   featurePermissionsGranted?: boolean | Prisma.User$featurePermissionsGrantedArgs<ExtArgs>
   fnfCompletedForEmployees?: boolean | Prisma.User$fnfCompletedForEmployeesArgs<ExtArgs>
+  leadCallNotes?: boolean | Prisma.User$leadCallNotesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -21383,6 +21970,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   featurePermissions?: boolean | Prisma.User$featurePermissionsArgs<ExtArgs>
   featurePermissionsGranted?: boolean | Prisma.User$featurePermissionsGrantedArgs<ExtArgs>
   fnfCompletedForEmployees?: boolean | Prisma.User$fnfCompletedForEmployeesArgs<ExtArgs>
+  leadCallNotes?: boolean | Prisma.User$leadCallNotesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -21456,6 +22044,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     featurePermissions: Prisma.$UserFeaturePermissionPayload<ExtArgs>[]
     featurePermissionsGranted: Prisma.$UserFeaturePermissionPayload<ExtArgs>[]
     fnfCompletedForEmployees: Prisma.$EmployeePayload<ExtArgs>[]
+    leadCallNotes: Prisma.$CallNotePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -21924,6 +22513,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   featurePermissions<T extends Prisma.User$featurePermissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$featurePermissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserFeaturePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   featurePermissionsGranted<T extends Prisma.User$featurePermissionsGrantedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$featurePermissionsGrantedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserFeaturePermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   fnfCompletedForEmployees<T extends Prisma.User$fnfCompletedForEmployeesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$fnfCompletedForEmployeesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  leadCallNotes<T extends Prisma.User$leadCallNotesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$leadCallNotesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CallNotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -23811,6 +24401,30 @@ export type User$fnfCompletedForEmployeesArgs<ExtArgs extends runtime.Types.Exte
   take?: number
   skip?: number
   distinct?: Prisma.EmployeeScalarFieldEnum | Prisma.EmployeeScalarFieldEnum[]
+}
+
+/**
+ * User.leadCallNotes
+ */
+export type User$leadCallNotesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CallNote
+   */
+  select?: Prisma.CallNoteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CallNote
+   */
+  omit?: Prisma.CallNoteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CallNoteInclude<ExtArgs> | null
+  where?: Prisma.CallNoteWhereInput
+  orderBy?: Prisma.CallNoteOrderByWithRelationInput | Prisma.CallNoteOrderByWithRelationInput[]
+  cursor?: Prisma.CallNoteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CallNoteScalarFieldEnum | Prisma.CallNoteScalarFieldEnum[]
 }
 
 /**

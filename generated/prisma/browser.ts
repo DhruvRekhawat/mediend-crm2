@@ -33,6 +33,11 @@ export type Team = Prisma.TeamModel
  */
 export type Lead = Prisma.LeadModel
 /**
+ * Model CallNote
+ * 
+ */
+export type CallNote = Prisma.CallNoteModel
+/**
  * Model LeadStageEvent
  * 
  */
